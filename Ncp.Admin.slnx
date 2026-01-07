@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="eng/versions.props" />
+    <File Path="global.json" />
+    <File Path="NuGet.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Ncp.Admin.Domain/Ncp.Admin.Domain.csproj" />
+    <Project Path="src/Ncp.Admin.Infrastructure/Ncp.Admin.Infrastructure.csproj" />
+    <Project Path="src/Ncp.Admin.Web/Ncp.Admin.Web.csproj" />
+    <Project Path="src/Ncp.Admin.AppHost/Ncp.Admin.AppHost.csproj" />
+    <Project Path="src/Ncp.Admin.ServiceDefaults/Ncp.Admin.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Ncp.Admin.AppHost.Tests/Ncp.Admin.AppHost.Tests.csproj" />
+    <Project Path="test/Ncp.Admin.TestAppHost/Ncp.Admin.TestAppHost.csproj" />
+    <Project Path="test/Ncp.Admin.Domain.Tests/Ncp.Admin.Domain.Tests.csproj" />
+    <Project Path="test/Ncp.Admin.Infrastructure.Tests/Ncp.Admin.Infrastructure.Tests.csproj" />
+    <Project Path="test/Ncp.Admin.Web.Tests/Ncp.Admin.Web.Tests.csproj" />
+  </Folder>
+</Solution>
