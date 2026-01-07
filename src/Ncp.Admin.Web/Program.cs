@@ -1,24 +1,26 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Prometheus;
-using System.Reflection;
-using System.Text.Json;
-using Microsoft.AspNetCore.DataProtection;
-using StackExchange.Redis;
-using FluentValidation.AspNetCore;
-using Ncp.Admin.Web.Application.IntegrationEventHandlers;
-using Ncp.Admin.Web.Clients;
-using Ncp.Admin.Web.Extensions;
 using FastEndpoints;
-using Serilog;
-using Serilog.Formatting.Json;
+using FluentValidation.AspNetCore;
 using Hangfire;
 using Hangfire.Redis.StackExchange;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Ncp.Admin.Web.Application.IntegrationEventHandlers;
+using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Clients;
+using Ncp.Admin.Web.Extensions;
+using Ncp.Admin.Web.Utils;
+using NetCorePal.Extensions.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Prometheus;
 using Refit;
-using NetCorePal.Extensions.CodeAnalysis;
+using Serilog;
+using Serilog.Formatting.Json;
+using StackExchange.Redis;
+using System.Reflection;
+using System.Text.Json;
 
 // Create a minimal logger for startup
 Log.Logger = new LoggerConfiguration()
@@ -87,6 +89,8 @@ try
     builder.Services.Configure<JsonOptions>(o =>
         o.SerializerOptions.AddNetCorePalJsonConverters());
 
+    builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("AppConfiguration"));
+
     #endregion
 
     #region 模型验证器
@@ -95,6 +99,12 @@ try
     builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
     builder.Services.AddKnownExceptionErrorModelInterceptor();
 
+    #endregion
+
+    #region Query
+    builder.Services.AddScoped<UserQuery>();
+    builder.Services.AddScoped<RoleQuery>();
+    builder.Services.AddScoped<OrganizationUnitQuery>();
     #endregion
 
     #region 基础设施
@@ -216,6 +226,9 @@ try
         using var scope = app.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await dbContext.Database.MigrateAsync();
+
+        // 添加种子数据
+        app.SeedDatabase();
     }
 
 

@@ -1,8 +1,11 @@
-﻿using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using NetCorePal.Extensions.DistributedTransactions.CAP.Persistence;
 using Ncp.Admin.Domain.AggregatesModel.DeliverAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
+using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using NetCorePal.Extensions.DistributedTransactions.CAP.Persistence;
 
 namespace Ncp.Admin.Infrastructure;
 
@@ -31,4 +34,11 @@ public partial class ApplicationDbContext(DbContextOptions<ApplicationDbContext>
 
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<DeliverRecord> DeliverRecords => Set<DeliverRecord>();
+
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
+    public DbSet<UserOrganizationUnit> UserOrganizationUnits => Set<UserOrganizationUnit>();
 }
