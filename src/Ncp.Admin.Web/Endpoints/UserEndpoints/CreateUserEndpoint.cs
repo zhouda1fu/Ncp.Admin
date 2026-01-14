@@ -71,14 +71,12 @@ public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpo
         // 确保角色存在且可用于分配
         var rolesToBeAssigned = await roleQuery.GetAdminRolesForAssignmentAsync(request.RoleIds, ct);
 
-        // 对用户密码进行哈希处理，确保安全性
-        var passwordHash = PasswordHasher.HashPassword(request.Password);
-
         // 创建用户命令对象，包含所有用户信息和角色分配
+        // 密码哈希处理统一在命令处理器中完成
         var cmd = new CreateUserCommand(
             request.Name,                // 用户名
             request.Email,               // 邮箱
-            passwordHash,                // 密码哈希
+            request.Password,            // 原始密码（将在命令处理器中哈希）
             request.Phone,               // 电话
             request.RealName,            // 真实姓名
             request.Status,              // 状态

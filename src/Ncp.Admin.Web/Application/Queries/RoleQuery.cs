@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 
 namespace Ncp.Admin.Web.Application.Queries;
@@ -14,9 +15,11 @@ public class RoleQueryInput : PageRequest
 
 public record AssignAdminUserRoleQueryDto(RoleId RoleId, string RoleName, IEnumerable<string> PermissionCodes);
 
-public class RoleQuery(ApplicationDbContext applicationDbContext) : IQuery
+public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache memoryCache) : IQuery
 {
     private DbSet<Role> RoleSet { get; } = applicationDbContext.Roles;
+    private const string RoleCacheKeyPrefix = "role:";
+    private static readonly TimeSpan RoleCacheExpiry = TimeSpan.FromMinutes(10);
 
     public async Task<bool> DoesRoleExist(string name, CancellationToken cancellationToken)
     {
@@ -42,21 +45,31 @@ public class RoleQuery(ApplicationDbContext applicationDbContext) : IQuery
             return Enumerable.Empty<string>();
         }
 
-        var distinctIds = ids.Distinct().ToList();
-
+        // 将 ids 转换为列表，避免多次枚举
+        var roleIds = ids.ToList();
+        
+        // 直接在数据库查询中使用 Distinct，让数据库处理去重，提高性能
         return await RoleSet.AsNoTracking()
-            .Where(r => distinctIds.Contains(r.Id))
+            .Where(r => roleIds.Contains(r.Id))
             .SelectMany(r => r.Permissions)
             .Select(rp => rp.PermissionCode)
+            .Distinct()
             .ToListAsync(cancellationToken);
     }
 
     public async Task<RoleQueryDto?> GetRoleByIdAsync(RoleId id, CancellationToken cancellationToken = default)
     {
-        return await RoleSet.AsNoTracking()
-            .Where(r => r.Id == id)
-            .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
-            .FirstOrDefaultAsync(cancellationToken);
+        var cacheKey = $"{RoleCacheKeyPrefix}{id}";
+        
+        return await memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = RoleCacheExpiry;
+            
+            return await RoleSet.AsNoTracking()
+                .Where(r => r.Id == id)
+                .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
+                .FirstOrDefaultAsync(cancellationToken);
+        });
     }
 
     public async Task<PagedData<RoleQueryDto>> GetAllRolesAsync(RoleQueryInput query, CancellationToken cancellationToken)

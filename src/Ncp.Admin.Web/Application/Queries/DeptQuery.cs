@@ -84,53 +84,60 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
 
     /// <summary>
     /// 获取部门树
+    /// 优化：使用投影只选择需要的字段，减少内存占用
     /// </summary>
     public async Task<IEnumerable<DeptTreeDto>> GetDeptTreeAsync(bool includeInactive = false, CancellationToken cancellationToken = default)
     {
+        // 使用投影只选择构建树所需的字段，减少内存占用
         var allDepts = await DeptSet.AsNoTracking()
+            .WhereIf(!includeInactive, d => d.Status != 0)
+            .Select(d => new DeptTreeNode
+            {
+                Id = d.Id,
+                Name = d.Name,
+                Remark = d.Remark,
+                ParentId = d.ParentId,
+                Status = d.Status,
+                CreatedAt = d.CreatedAt
+            })
             .ToListAsync(cancellationToken);
 
         // 构建树形结构
-        var treeStructure = BuildTreeStructure(allDepts, includeInactive);
+        var treeStructure = BuildTreeStructureFromProjection(allDepts);
 
         // 转换为应用层DTO
-        return treeStructure.Select(d => ConvertToTreeDto(d));
+        return treeStructure.Select(d => ConvertToTreeDtoFromProjection(d));
     }
 
     /// <summary>
-    /// 构建部门树形结构
+    /// 构建部门树形结构（基于投影数据）
     /// </summary>
-    private static IEnumerable<Dept> BuildTreeStructure(
-        IEnumerable<Dept> allDepts,
-        bool includeInactive = false)
+    private static List<DeptTreeNode> BuildTreeStructureFromProjection(
+        List<DeptTreeNode> allDepts)
     {
         var deptDict = allDepts.ToDictionary(d => d.Id);
-        var result = new List<Dept>();
+        var result = new List<DeptTreeNode>();
 
         foreach (var dept in allDepts)
         {
-            if (!includeInactive && dept.Status == 0)
-                continue;
-
             // 只处理根节点（ParentId为0）
             if (dept.ParentId == new DeptId(0))
             {
-                result.Add(BuildTreeDto(dept, deptDict, includeInactive));
+                result.Add(BuildTreeDtoFromProjection(dept, deptDict));
             }
         }
 
-        return result.OrderBy(d => d.CreatedAt);
+        return result.OrderBy(d => d.CreatedAt).ToList();
     }
 
     /// <summary>
-    /// 构建单个部门的树形结构
+    /// 构建单个部门的树形结构（基于投影数据）
     /// </summary>
-    private static Dept BuildTreeDto(
-        Dept dept,
-        Dictionary<DeptId, Dept> allDepts,
-        bool includeInactive)
+    private static DeptTreeNode BuildTreeDtoFromProjection(
+        DeptTreeNode dept,
+        Dictionary<DeptId, DeptTreeNode> allDepts)
     {
-        var children = new List<Dept>();
+        var children = new List<DeptTreeNode>();
 
         // 查找所有以当前部门为父级的子部门
         var childDepts = allDepts.Values
@@ -139,40 +146,53 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
 
         foreach (var child in childDepts)
         {
-            if (!includeInactive && child.Status == 0)
-                continue;
-
-            children.Add(BuildTreeDto(child, allDepts, includeInactive));
+            children.Add(BuildTreeDtoFromProjection(child, allDepts));
         }
 
-        // 设置子部门
-        dept.Children.Clear();
-        foreach (var child in children)
+        return new DeptTreeNode
         {
-            dept.Children.Add(child);
-        }
-
-        return dept;
+            Id = dept.Id,
+            Name = dept.Name,
+            Remark = dept.Remark,
+            ParentId = dept.ParentId,
+            Status = dept.Status,
+            CreatedAt = dept.CreatedAt,
+            Children = children
+        };
     }
 
     /// <summary>
-    /// 将单个部门领域模型转换为树形DTO
+    /// 将投影节点转换为树形DTO
     /// </summary>
-    private static DeptTreeDto ConvertToTreeDto(Dept dept)
+    private static DeptTreeDto ConvertToTreeDtoFromProjection(DeptTreeNode node)
     {
-        var children = dept.Children
+        var children = node.Children
             .OrderBy(d => d.CreatedAt)
-            .Select(d => ConvertToTreeDto(d))
+            .Select(d => ConvertToTreeDtoFromProjection(d))
             .ToList();
 
         return new DeptTreeDto(
-            dept.Id,
-            dept.Name,
-            dept.Remark,
-            dept.ParentId,
-            dept.Status,
-            dept.CreatedAt,
+            node.Id,
+            node.Name,
+            node.Remark,
+            node.ParentId,
+            node.Status,
+            node.CreatedAt,
             children
         );
+    }
+
+    /// <summary>
+    /// 部门树节点（用于内存中的树构建）
+    /// </summary>
+    private sealed class DeptTreeNode
+    {
+        public DeptId Id { get; set; }=default!;
+        public string Name { get; set; } = string.Empty;
+        public string Remark { get; set; } = string.Empty;
+        public DeptId ParentId { get; set; }=default!;
+        public int Status { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public List<DeptTreeNode> Children { get; set; } = new();
     }
 }

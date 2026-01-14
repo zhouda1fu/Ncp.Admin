@@ -61,6 +61,9 @@ try
     // DataProtection - use custom extension that resolves IConnectionMultiplexer from DI
     builder.Services.AddDataProtection()
         .PersistKeysToStackExchangeRedis("DataProtection-Keys");
+    
+    // 内存缓存服务（用于查询结果缓存）
+    builder.Services.AddMemoryCache();
 
     // 配置JWT认证
     builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("AppConfiguration"));
@@ -122,9 +125,8 @@ try
     #endregion
 
     #region Query
-    builder.Services.AddScoped<UserQuery>();
-    builder.Services.AddScoped<RoleQuery>();
-    builder.Services.AddScoped<DeptQuery>();
+    // 自动注册所有实现 IQuery 接口的查询类
+    builder.Services.AddQueries(Assembly.GetExecutingAssembly());
     #endregion
 
     #region 基础设施

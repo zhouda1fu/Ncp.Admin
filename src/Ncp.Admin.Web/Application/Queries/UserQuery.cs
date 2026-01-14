@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
@@ -18,9 +19,11 @@ public class UserQueryInput : PageRequest
     public int? Status { get; set; }
 }
 
-public class UserQuery(ApplicationDbContext applicationDbContext) : IQuery
+public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache memoryCache) : IQuery
 {
     private DbSet<User> UserSet { get; } = applicationDbContext.Users;
+    private const string UserCacheKeyPrefix = "user:";
+    private static readonly TimeSpan UserCacheExpiry = TimeSpan.FromMinutes(10);
 
     public async Task<UserId> GetUserIdByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
     {
@@ -51,27 +54,34 @@ public class UserQuery(ApplicationDbContext applicationDbContext) : IQuery
     }
 
     /// <summary>
-    /// 根据ID获取用户信息
+    /// 根据ID获取用户信息（带缓存）
     /// </summary>
     public async Task<UserInfoQueryDto?> GetUserByIdAsync(UserId userId, CancellationToken cancellationToken)
     {
-        return await UserSet.AsNoTracking()
-            .Where(u => u.Id == userId)
-            .Select(au => new UserInfoQueryDto(
-                au.Id,
-                au.Name,
-                au.Phone,
-                au.Roles.Select(r => r.RoleName),
-                au.RealName,
-                au.Status,
-                au.Email,
-                au.CreatedAt,
-                au.Gender,
-                au.Age,
-                au.BirthDate,
-                au.Dept != null ? au.Dept.DeptId : null,
-                au.Dept != null ? au.Dept.DeptName : string.Empty))
-            .FirstOrDefaultAsync(cancellationToken);
+        var cacheKey = $"{UserCacheKeyPrefix}{userId}";
+        
+        return await memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = UserCacheExpiry;
+            
+            return await UserSet.AsNoTracking()
+                .Where(u => u.Id == userId)
+                .Select(au => new UserInfoQueryDto(
+                    au.Id,
+                    au.Name,
+                    au.Phone,
+                    au.Roles.Select(r => r.RoleName),
+                    au.RealName,
+                    au.Status,
+                    au.Email,
+                    au.CreatedAt,
+                    au.Gender,
+                    au.Age,
+                    au.BirthDate,
+                    au.Dept != null ? au.Dept.DeptId : null,
+                    au.Dept != null ? au.Dept.DeptName : string.Empty))
+                .FirstOrDefaultAsync(cancellationToken);
+        });
     }
 
     public async Task<List<UserId>> GetUserIdsByRoleIdAsync(RoleId roleId, CancellationToken cancellationToken = default)

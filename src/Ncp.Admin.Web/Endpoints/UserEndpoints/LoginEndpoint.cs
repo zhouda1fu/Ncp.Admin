@@ -9,6 +9,7 @@ using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Commands.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Utils;
+using Serilog;
 
 namespace Ncp.Admin.Web.Endpoints.UserEndpoints;
 
@@ -25,12 +26,15 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
 
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
+        Log.Information("用户登录尝试: Username={Username}", req.Username);
+        
         // 查询用户信息
         var loginInfo = await userQuery.GetUserInfoForLoginAsync(req.Username, ct);
         
         // 统一错误消息，防止时序攻击（通过响应时间推断用户是否存在）
         if (loginInfo == null || !PasswordHasher.VerifyHashedPassword(req.Password, loginInfo.PasswordHash))
         {
+            Log.Warning("用户登录失败: Username={Username}, Reason=InvalidCredentials", req.Username);
             throw new KnownException("用户名或密码错误");
         }
 
@@ -76,6 +80,9 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
         // 更新用户登录时间和刷新令牌
         var updateCmd = new UpdateUserLoginTimeCommand(loginInfo.UserId, nowTime, refreshToken);
         await mediator.Send(updateCmd, ct);
+
+        Log.Information("用户登录成功: UserId={UserId}, Username={Username}, Email={Email}, RoleCount={RoleCount}, PermissionCount={PermissionCount}", 
+            loginInfo.UserId, loginInfo.Name, loginInfo.Email, roles.Count, assignedPermissionCodes.Count());
 
         await Send.OkAsync(response.AsResponseData(), cancellation: ct);
     }
