@@ -50,28 +50,7 @@ public static class SeedDatabaseExtension
                 new RolePermission(PermissionCodes.OrganizationUnitDelete, "删除组织机构", "删除组织机构"),
                 new RolePermission(PermissionCodes.OrganizationUnitAssign, "分配组织架构", "分配组织架构"),
 
-                // 生产计划管理权限
-                new RolePermission(PermissionCodes.ProductionPlanCreate, "创建生产计划", "创建新的生产计划"),
-                new RolePermission(PermissionCodes.ProductionPlanView, "查看生产计划", "查看生产计划信息"),
-                new RolePermission(PermissionCodes.ProductionPlanEdit, "更新生产计划", "更新生产计划信息"),
-                new RolePermission(PermissionCodes.ProductionPlanDelete, "删除生产计划", "删除生产计划"),
-
-                // 工单管理权限
-                new RolePermission(PermissionCodes.WorkOrderCreate, "创建工单", "创建新的工单"),
-                new RolePermission(PermissionCodes.WorkOrderView, "查看工单", "查看工单信息"),
-                new RolePermission(PermissionCodes.WorkOrderEdit, "更新工单", "更新工单信息"),
-                new RolePermission(PermissionCodes.WorkOrderDelete, "删除工单", "删除工单"),
-
-                // 工艺路线管理权限
-                new RolePermission(PermissionCodes.RoutingCreate, "创建工艺路线", "创建新的工艺路线"),
-                new RolePermission(PermissionCodes.RoutingView, "查看工艺路线", "查看工艺路线信息"),
-                new RolePermission(PermissionCodes.RoutingEdit, "更新工艺路线", "更新工艺路线信息"),
-                new RolePermission(PermissionCodes.RoutingDelete, "删除工艺路线", "删除工艺路线"),
-
-                // 系统管理权限
-                new RolePermission(PermissionCodes.SystemAdmin, "系统管理员权限", "拥有系统管理员权限"),
-                new RolePermission(PermissionCodes.SystemMonitor, "系统监控权限", "拥有系统监控权限"),
-
+              
                 // 所有接口访问权限
                 new RolePermission(PermissionCodes.AllApiAccess, "所有接口访问权限", "所有接口访问权限"),
             };
@@ -80,9 +59,6 @@ public static class SeedDatabaseExtension
             {
                 new RolePermission(PermissionCodes.UserView, "查看用户", "查看用户信息"),
                 new RolePermission(PermissionCodes.UserEdit, "更新用户", "更新自己的用户信息"),
-                new RolePermission(PermissionCodes.ProductionPlanView, "查看生产计划", "查看生产计划信息"),
-                new RolePermission(PermissionCodes.WorkOrderView, "查看工单", "查看工单信息"),
-                new RolePermission(PermissionCodes.RoutingView, "查看工艺路线", "查看工艺路线信息"),
                 new RolePermission(PermissionCodes.AllApiAccess, "所有接口访问权限", "所有接口访问权限"),
             };
 

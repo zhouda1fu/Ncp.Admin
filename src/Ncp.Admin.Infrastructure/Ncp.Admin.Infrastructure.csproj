@@ -7,16 +7,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql"/>
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Json.Microsoft"/>
-        <PackageReference Include="NetCorePal.Extensions.DistributedTransactions.CAP.MySql"/>
-        <PackageReference Include="NetCorePal.Extensions.Repository.EntityFrameworkCore"/>
-        <PackageReference Include="NetCorePal.Extensions.Repository.EntityFrameworkCore.Snowflake"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
+        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Json.Microsoft" />
+        <PackageReference Include="NetCorePal.Extensions.DistributedTransactions.CAP.MySql" />
+        <PackageReference Include="NetCorePal.Extensions.Repository.EntityFrameworkCore" />
+        <PackageReference Include="NetCorePal.Extensions.Repository.EntityFrameworkCore.Snowflake" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Ncp.Admin.Domain\Ncp.Admin.Domain.csproj"/>
+        <ProjectReference Include="..\Ncp.Admin.Domain\Ncp.Admin.Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -24,6 +28,10 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Migrations\" />
     </ItemGroup>
 
 </Project>

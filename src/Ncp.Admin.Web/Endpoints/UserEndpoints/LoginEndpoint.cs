@@ -14,7 +14,7 @@ namespace Ncp.Admin.Web.Endpoints.UserEndpoints;
 
 public record LoginRequest(string Username, string Password);
 
-public record LoginResponse(string Token, string RefreshToken, UserId UserId, string Name, string Email, string Permissions, DateTimeOffset TokenExpiryTime);
+public record LoginResponse(string Token, string RefreshToken, UserId UserId, string Name, string Email, string Roles, DateTimeOffset TokenExpiryTime);
 
 [Tags("Users")]
 [HttpPost("/api/user/login")]
@@ -23,50 +23,73 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
 {
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
-        var loginInfo = await userQuery.GetUserInfoForLoginAsync(req.Username, ct) ?? throw new KnownException("无效的用户");
-
-        if (!PasswordHasher.VerifyHashedPassword(req.Password, loginInfo.PasswordHash))
+        // 查询用户信息
+        var loginInfo = await userQuery.GetUserInfoForLoginAsync(req.Username, ct);
+        
+        // 统一错误消息，防止时序攻击（通过响应时间推断用户是否存在）
+        if (loginInfo == null || !PasswordHasher.VerifyHashedPassword(req.Password, loginInfo.PasswordHash))
+        {
             throw new KnownException("用户名或密码错误");
-
-        var refreshToken = TokenGenerator.GenerateRefreshToken();
-        var nowTime = DateTimeOffset.Now;
-        var tokenExpiryTime = nowTime.AddMinutes(appConfiguration.Value.TokenExpiryInMinutes);
-
-        var roles = loginInfo.UserRoles.Select(r => r.RoleId).ToList();
-
-        var assignedPermissionCode = await roleQuery.GetAssignedPermissionCodesAsync(roles, ct);
-
-        var claims = new List<Claim>
-        {
-            new("name", loginInfo.Name),
-            new("email", loginInfo.Email),
-            new("sub", loginInfo.UserId.ToString()),
-            new("user_id", loginInfo.UserId.ToString())
-        };
-
-        if (assignedPermissionCode != null)
-        {
-            foreach (var permissionCode in assignedPermissionCode)
-            {
-                claims.Add(new Claim("permissions", permissionCode));
-            }
         }
 
-        var token = await jwtProvider.GenerateJwtToken(new JwtData("issuer-x", "audience-y", claims, nowTime.UtcDateTime, tokenExpiryTime.UtcDateTime), ct);
+        // 统一使用UTC时间
+        var nowTime = DateTimeOffset.UtcNow;
+        var tokenExpiryTime = nowTime.AddMinutes(appConfiguration.Value.TokenExpiryInMinutes);
+        var refreshToken = TokenGenerator.GenerateRefreshToken();
 
+        // 获取用户角色ID列表
+        var roles = loginInfo.UserRoles.Select(r => r.RoleId).ToList();
+
+        // 查询权限代码（如果用户没有角色，则跳过查询）
+        var assignedPermissionCodes = roles.Count > 0
+            ? await roleQuery.GetAssignedPermissionCodesAsync(roles, ct)
+            : Enumerable.Empty<string>();
+
+        // 构建JWT Claims
+        var claims = BuildClaims(loginInfo);
+
+        // 生成JWT Token
+        var config = appConfiguration.Value;
+        var token = await jwtProvider.GenerateJwtToken(
+            new JwtData(
+                config.JwtIssuer,
+                config.JwtAudience,
+                claims,
+                nowTime.UtcDateTime,
+                tokenExpiryTime.UtcDateTime),
+            ct);
+
+        // 构建响应
         var response = new LoginResponse(
             token,
             refreshToken,
             loginInfo.UserId,
             loginInfo.Name,
             loginInfo.Email,
-            JsonSerializer.Serialize(assignedPermissionCode),
+            JsonSerializer.Serialize(roles) ?? "[]",
             tokenExpiryTime
         );
 
-        var updateCmd = new UpdateUserLoginTimeCommand(loginInfo.UserId, DateTimeOffset.UtcNow, refreshToken);
+        // 更新用户登录时间和刷新令牌
+        var updateCmd = new UpdateUserLoginTimeCommand(loginInfo.UserId, nowTime, refreshToken);
         await mediator.Send(updateCmd, ct);
 
         await Send.OkAsync(response.AsResponseData(), cancellation: ct);
+    }
+
+    /// <summary>
+    /// 构建JWT Claims
+    /// </summary>
+    private static List<Claim> BuildClaims(UserLoginInfoQueryDto loginInfo)
+    {
+        var userIdString = loginInfo.UserId.ToString();
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, loginInfo.Name),
+            new(ClaimTypes.Email, loginInfo.Email),
+            new(ClaimTypes.NameIdentifier, userIdString)
+        };
+
+        return claims;
     }
 }

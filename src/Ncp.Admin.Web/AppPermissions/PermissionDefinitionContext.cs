@@ -32,9 +32,6 @@ public static class PermissionDefinitionContext
         roleManagement.AddChild(PermissionCodes.RoleView, "查看角色");
         roleManagement.AddChild(PermissionCodes.RoleUpdatePermissions, "更新角色权限");
 
-        // 系统管理权限
-        var systemAdmin = systemAccess.AddPermission(PermissionCodes.SystemAdmin, "系统管理员权限");
-        var systemMonitor = systemAccess.AddPermission(PermissionCodes.SystemMonitor, "系统监控");
 
         // 组织架构管理权限
         var organizationUnitManagement = systemAccess.AddPermission(PermissionCodes.OrganizationUnitManagement, "组织架构管理");
@@ -44,26 +41,6 @@ public static class PermissionDefinitionContext
         organizationUnitManagement.AddChild(PermissionCodes.OrganizationUnitView, "查看组织架构");
         organizationUnitManagement.AddChild(PermissionCodes.OrganizationUnitAssign, "分配组织架构");
 
-        // 生产计划管理权限
-        var productionPlanManagement = systemAccess.AddPermission(PermissionCodes.ProductionPlanManagement, "生产计划管理");
-        productionPlanManagement.AddChild(PermissionCodes.ProductionPlanCreate, "创建生产计划");
-        productionPlanManagement.AddChild(PermissionCodes.ProductionPlanEdit, "编辑生产计划");
-        productionPlanManagement.AddChild(PermissionCodes.ProductionPlanDelete, "删除生产计划");
-        productionPlanManagement.AddChild(PermissionCodes.ProductionPlanView, "查看生产计划");
-
-        // 工单管理权限
-        var workOrderManagement = systemAccess.AddPermission(PermissionCodes.WorkOrderManagement, "工单管理");
-        workOrderManagement.AddChild(PermissionCodes.WorkOrderCreate, "创建工单");
-        workOrderManagement.AddChild(PermissionCodes.WorkOrderEdit, "编辑工单");
-        workOrderManagement.AddChild(PermissionCodes.WorkOrderDelete, "删除工单");
-        workOrderManagement.AddChild(PermissionCodes.WorkOrderView, "查看工单");
-
-        // 工艺路线管理权限
-        var routingManagement = systemAccess.AddPermission(PermissionCodes.RoutingManagement, "工艺路线管理");
-        routingManagement.AddChild(PermissionCodes.RoutingCreate, "创建工艺路线");
-        routingManagement.AddChild(PermissionCodes.RoutingEdit, "编辑工艺路线");
-        routingManagement.AddChild(PermissionCodes.RoutingDelete, "删除工艺路线");
-        routingManagement.AddChild(PermissionCodes.RoutingView, "查看工艺路线");
 
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");

@@ -62,12 +62,16 @@ try
     builder.Services.AddDataProtection()
         .PersistKeysToStackExchangeRedis("DataProtection-Keys");
 
+    // 配置JWT认证
+    builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("AppConfiguration"));
+    var appConfig = builder.Configuration.GetSection("AppConfiguration").Get<AppConfiguration>() ?? new AppConfiguration { JwtIssuer = "netcorepal", JwtAudience = "netcorepal" };
+    
     builder.Services.AddAuthentication().AddJwtBearer(options =>
     {
         options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters.ValidAudience = "netcorepal";
+        options.TokenValidationParameters.ValidAudience = appConfig.JwtAudience;
         options.TokenValidationParameters.ValidateAudience = true;
-        options.TokenValidationParameters.ValidIssuer = "netcorepal";
+        options.TokenValidationParameters.ValidIssuer = appConfig.JwtIssuer;
         options.TokenValidationParameters.ValidateIssuer = true;
     });
     builder.Services.AddNetCorePalJwt().AddRedisStore();
@@ -88,8 +92,6 @@ try
     builder.Services.AddFastEndpoints(o => o.IncludeAbstractValidators = true);
     builder.Services.Configure<JsonOptions>(o =>
         o.SerializerOptions.AddNetCorePalJsonConverters());
-
-    builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("AppConfiguration"));
 
     #endregion
 
