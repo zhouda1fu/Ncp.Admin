@@ -33,15 +33,21 @@ export const useAuthStore = defineStore('auth', () => {
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
-      const { accessToken } = await loginApi(params);
+      const loginResult = await loginApi(params);
 
-      // 如果成功获取到 accessToken
-      if (accessToken) {
-        accessStore.setAccessToken(accessToken);
+      // 如果成功获取到 token
+      if (loginResult.token) {
+        accessStore.setAccessToken(loginResult.token);
+        
+        // 保存 userId 到 localStorage，以便后续使用
+        if (loginResult.userId) {
+          localStorage.setItem('userId', loginResult.userId);
+        }
 
         // 获取用户信息并存储到 accessStore 中
+        // 注意：需要从登录响应中获取 userId 来调用用户信息接口
         const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
+          fetchUserInfo(loginResult.userId),
           getAccessCodesApi(),
         ]);
 
@@ -83,6 +89,8 @@ export const useAuthStore = defineStore('auth', () => {
     } catch {
       // 不做任何处理
     }
+    // 清除保存的 userId
+    localStorage.removeItem('userId');
     resetAllStores();
     accessStore.setLoginExpired(false);
 
@@ -97,10 +105,36 @@ export const useAuthStore = defineStore('auth', () => {
     });
   }
 
-  async function fetchUserInfo() {
+  async function fetchUserInfo(userId?: string) {
     let userInfo: null | UserInfo = null;
-    userInfo = await getUserInfoApi();
-    userStore.setUserInfo(userInfo);
+    try {
+      // 如果没有提供 userId，尝试从 localStorage 获取
+      const targetUserId = userId || localStorage.getItem('userId');
+      
+      if (targetUserId) {
+        userInfo = await getUserInfoApi(targetUserId);
+      } else {
+        // 如果没有 userId，使用已存储的用户信息
+        if (userStore.userInfo) {
+          return userStore.userInfo;
+        }
+        // 如果都没有，返回默认值
+        throw new Error('无法获取用户信息：缺少 userId');
+      }
+      if (userInfo) {
+        userStore.setUserInfo(userInfo);
+      }
+    } catch (error) {
+      // 如果获取用户信息失败，使用已存储的用户信息或返回默认值
+      console.warn('获取用户信息失败:', error);
+      if (userStore.userInfo) {
+        return userStore.userInfo;
+      }
+      // 返回一个基本的用户信息对象，避免后续代码报错
+      userInfo = {
+        roles: [],
+      } as UserInfo;
+    }
     return userInfo;
   }
 

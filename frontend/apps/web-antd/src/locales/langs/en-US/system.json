@@ -1,0 +1,26 @@
+{
+  "title": "System Management",
+  "dept": {
+    "name": "Department",
+    "title": "Department Management",
+    "deptName": "Department Name",
+    "status": "Status",
+    "createTime": "Create Time",
+    "remark": "Remark",
+    "operation": "Operation",
+    "parentDept": "Parent Department"
+  },
+  "role": {
+    "title": "Role Management",
+    "list": "Role List",
+    "name": "Role",
+    "roleName": "Role Name",
+    "id": "Role ID",
+    "status": "Status",
+    "remark": "Remark",
+    "createTime": "Creation Time",
+    "operation": "Operation",
+    "permissions": "Permissions",
+    "setPermissions": "Permissions"
+  }
+}

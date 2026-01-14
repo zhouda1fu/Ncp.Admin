@@ -11,21 +11,6 @@ import { getUserInfoApi } from '#/api';
 
 const profileBaseSettingRef = ref();
 
-const MOCK_ROLES_OPTIONS: BasicOption[] = [
-  {
-    label: '管理员',
-    value: 'super',
-  },
-  {
-    label: '用户',
-    value: 'user',
-  },
-  {
-    label: '测试',
-    value: 'test',
-  },
-];
-
 const formSchema = computed((): VbenFormSchema[] => {
   return [
     {
@@ -43,7 +28,7 @@ const formSchema = computed((): VbenFormSchema[] => {
       component: 'Select',
       componentProps: {
         mode: 'tags',
-        options: MOCK_ROLES_OPTIONS,
+        disabled: true,
       },
       label: '角色',
     },

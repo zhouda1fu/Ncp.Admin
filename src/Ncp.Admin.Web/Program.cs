@@ -78,6 +78,24 @@ try
 
     #endregion
 
+    #region CORS
+
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+        ?? new[] { "http://localhost:5666", "http://localhost:5173", "http://localhost:3000" };
+    
+    builder.Services.AddCors(options =>
+    {
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        });
+    });
+
+    #endregion
+
     #region Controller
 
     builder.Services.AddControllers().AddNetCorePalSystemTextJson();
@@ -244,7 +262,9 @@ try
 
     app.UseStaticFiles();
     //app.UseHttpsRedirection();
+    app.UseCors(); // CORS 必须在 UseRouting 之前
     app.UseRouting();
+    app.UseAuthentication(); // Authentication 必须在 Authorization 之前
     app.UseAuthorization();
 
     app.MapControllers();

@@ -21,6 +21,8 @@ public record LoginResponse(string Token, string RefreshToken, UserId UserId, st
 [AllowAnonymous]
 public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider jwtProvider, IOptions<AppConfiguration> appConfiguration, RoleQuery roleQuery) : Endpoint<LoginRequest, ResponseData<LoginResponse>>
 {
+    private const string PermissionClaimType = "permissions";
+
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
         // 查询用户信息
@@ -45,8 +47,8 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
             ? await roleQuery.GetAssignedPermissionCodesAsync(roles, ct)
             : Enumerable.Empty<string>();
 
-        // 构建JWT Claims
-        var claims = BuildClaims(loginInfo);
+        // 构建JWT Claims（包含权限代码）
+        var claims = BuildClaims(loginInfo, assignedPermissionCodes);
 
         // 生成JWT Token
         var config = appConfiguration.Value;
@@ -80,7 +82,7 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
     /// <summary>
     /// 构建JWT Claims
     /// </summary>
-    private static List<Claim> BuildClaims(UserLoginInfoQueryDto loginInfo)
+    private static List<Claim> BuildClaims(UserLoginInfoQueryDto loginInfo, IEnumerable<string> permissionCodes)
     {
         var userIdString = loginInfo.UserId.ToString();
         var claims = new List<Claim>
@@ -89,6 +91,8 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
             new(ClaimTypes.Email, loginInfo.Email),
             new(ClaimTypes.NameIdentifier, userIdString)
         };
+       
+        claims.AddRange(permissionCodes.Select(code => new Claim(PermissionClaimType, code)));
 
         return claims;
     }

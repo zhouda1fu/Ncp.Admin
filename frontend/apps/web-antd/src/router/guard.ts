@@ -1,4 +1,5 @@
 import type { Router } from 'vue-router';
+import type { UserInfo } from '@vben/types';
 
 import { LOGIN_PATH } from '@vben/constants';
 import { preferences } from '@vben/preferences';
@@ -92,16 +93,38 @@ function setupAccessGuard(router: Router) {
 
     // 生成路由表
     // 当前登录用户拥有的角色标识列表
-    const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
-    const userRoles = userInfo.roles ?? [];
+    let userInfo: UserInfo | null = null;
+    let accessibleMenus: any[] = [];
+    let accessibleRoutes = accessRoutes;
+    
+    try {
+      // 优先使用已存储的用户信息
+      if (userStore.userInfo) {
+        userInfo = userStore.userInfo as UserInfo;
+      } else {
+        // 如果没有用户信息，尝试获取（fetchUserInfo 会从 localStorage 获取 userId）
+        const fetchedUserInfo = await authStore.fetchUserInfo();
+        userInfo = fetchedUserInfo as UserInfo | null;
+      }
+      
+      const userRoles = userInfo?.roles ?? [];
 
-    // 生成菜单和路由
-    const { accessibleMenus, accessibleRoutes } = await generateAccess({
-      roles: userRoles,
-      router,
-      // 则会在菜单中显示，但是访问会被重定向到403
-      routes: accessRoutes,
-    });
+      // 生成菜单和路由
+      const result = await generateAccess({
+        roles: userRoles,
+        router,
+        // 则会在菜单中显示，但是访问会被重定向到403
+        routes: accessRoutes,
+      });
+      accessibleMenus = result.accessibleMenus;
+      accessibleRoutes = result.accessibleRoutes;
+    } catch (error) {
+      // 如果生成路由失败，使用静态路由
+      console.error('生成路由失败，使用静态路由:', error);
+      accessibleMenus = [];
+      accessibleRoutes = accessRoutes;
+      userInfo = (userStore.userInfo as UserInfo | null) || null;
+    }
 
     // 保存菜单信息和路由信息
     accessStore.setAccessMenus(accessibleMenus);
@@ -109,7 +132,7 @@ function setupAccessGuard(router: Router) {
     accessStore.setIsAccessChecked(true);
     const redirectPath = (from.query.redirect ??
       (to.path === preferences.app.defaultHomePath
-        ? userInfo.homePath || preferences.app.defaultHomePath
+        ? userInfo?.homePath || preferences.app.defaultHomePath
         : to.fullPath)) as string;
 
     return {

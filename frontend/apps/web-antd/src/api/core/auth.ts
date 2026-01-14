@@ -9,7 +9,13 @@ export namespace AuthApi {
 
   /** 登录接口返回值 */
   export interface LoginResult {
-    accessToken: string;
+    token: string;
+    refreshToken: string;
+    userId: string;
+    name: string;
+    email: string;
+    roles: string;
+    tokenExpiryTime: string;
   }
 
   export interface RefreshTokenResult {
@@ -22,7 +28,7 @@ export namespace AuthApi {
  * 登录
  */
 export async function loginApi(data: AuthApi.LoginParams) {
-  return requestClient.post<AuthApi.LoginResult>('/auth/login', data);
+  return requestClient.post<AuthApi.LoginResult>('/user/login', data);
 }
 
 /**
@@ -45,7 +51,14 @@ export async function logoutApi() {
 
 /**
  * 获取用户权限码
+ * 注意：如果后端没有此接口，将返回空数组
  */
 export async function getAccessCodesApi() {
-  return requestClient.get<string[]>('/auth/codes');
+  try {
+    return await requestClient.get<string[]>('/auth/codes');
+  } catch (error) {
+    // 如果后端没有权限码接口，返回空数组
+    console.warn('权限码接口不可用:', error);
+    return [];
+  }
 }
