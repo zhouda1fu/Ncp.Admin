@@ -95,6 +95,68 @@ docker run --restart unless-stopped --name netcorepal-rabbitmq -p 5672:5672 -p 1
 - **Kafka**: `localhost:9092`
 - **Kafka UI**: http://localhost:8080
 
+## 前端项目启动
+
+前端项目基于 [Vben Admin](https://github.com/vbenjs/vue-vben-admin) 构建，使用 Vue 3 + Vite + TypeScript + Ant Design Vue。
+
+### 环境要求
+
+- **Node.js**: >= 20.12.0
+- **pnpm**: >= 10.0.0
+
+### 安装依赖
+
+```bash
+# 进入前端目录
+cd frontend
+
+# 安装依赖
+npm i -g corepack
+pnpm install
+```
+
+### 启动开发服务器
+
+```bash
+# 在 frontend 目录下执行
+pnpm dev:antd
+```
+
+启动成功后，前端应用将在 **http://localhost:5666** 运行。
+
+### 构建生产版本
+
+```bash
+# 在 frontend 目录下执行
+pnpm build:antd
+```
+
+构建产物将输出到 `frontend/apps/web-antd/dist` 目录。
+
+### 其他常用命令
+
+```bash
+# 代码检查
+pnpm lint
+
+# 代码格式化
+pnpm format
+
+# 类型检查
+pnpm check:type
+
+# 预览构建结果
+pnpm preview
+```
+
+### 环境变量配置
+
+前端项目的环境变量配置文件位于 `frontend/apps/web-antd/.env.development`：
+
+- `VITE_PORT`: 开发服务器端口（默认：5666）
+- `VITE_GLOB_API_URL`: 后端 API 地址（默认：http://localhost:5511/api）
+- `VITE_NITRO_MOCK`: 是否开启 Mock 服务（默认：false）
+
 ## IDE 代码片段配置
 
 本模板提供了丰富的代码片段，帮助您快速生成常用的代码结构。
