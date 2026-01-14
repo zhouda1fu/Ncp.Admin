@@ -1,6 +1,6 @@
 using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.Commands.UserCommands;
@@ -8,7 +8,7 @@ namespace Ncp.Admin.Web.Application.Commands.UserCommands;
 /// <summary>
 /// 更新用户命令
 /// </summary>
-public record UpdateUserCommand(UserId UserId, string Name, string Email, string Phone, string RealName, int Status, string Gender, int Age, DateTimeOffset BirthDate, OrganizationUnitId OrganizationUnitId, string OrganizationUnitName, string PasswordHash) : ICommand<UserId>;
+public record UpdateUserCommand(UserId UserId, string Name, string Email, string Phone, string RealName, int Status, string Gender, int Age, DateTimeOffset BirthDate, DeptId DeptId, string DeptName, string PasswordHash) : ICommand<UserId>;
 
 /// <summary>
 /// 更新用户命令验证器
@@ -40,11 +40,11 @@ public class UpdateUserCommandHandler(IUserRepository userRepository) : ICommand
             user.UpdatePassword(request.PasswordHash);
         }
 
-        // 分配组织架构
-        if (request.OrganizationUnitId != new OrganizationUnitId(0) && !string.IsNullOrEmpty(request.OrganizationUnitName))
+        // 分配部门
+        if (request.DeptId != new DeptId(0) && !string.IsNullOrEmpty(request.DeptName))
         {
-            var organizationUnit = new UserOrganizationUnit(user.Id, request.OrganizationUnitId, request.OrganizationUnitName);
-            user.AssignOrganizationUnit(organizationUnit);
+            var dept = new UserDept(user.Id, request.DeptId, request.DeptName);
+            user.AssignDept(dept);
         }
 
         return user.Id;

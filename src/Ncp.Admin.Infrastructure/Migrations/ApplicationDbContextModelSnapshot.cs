@@ -35,6 +35,50 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.ToTable("deliverrecord", (string)null);
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.DeptAggregate.Dept", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTimeOffset>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<long>("ParentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Remark")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("dept", (string)null);
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.OrderAggregate.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -61,55 +105,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("order", (string)null);
-                });
-
-            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate.OrganizationUnit", b =>
-                {
-                    b.Property<long>("Id")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTimeOffset>("DeletedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<long>("ParentId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("UpdateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsActive");
-
-                    b.HasIndex("IsDeleted");
-
-                    b.HasIndex("ParentId");
-
-                    b.HasIndex("SortOrder");
-
-                    b.ToTable("organization_unit", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", b =>
@@ -242,7 +237,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.ToTable("user", (string)null);
                 });
 
-            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.UserOrganizationUnit", b =>
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.UserDept", b =>
                 {
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
@@ -250,21 +245,21 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("AssignedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<long>("OrganizationUnitId")
+                    b.Property<long>("DeptId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("OrganizationUnitName")
+                    b.Property<string>("DeptName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("OrganizationUnitId");
+                    b.HasIndex("DeptId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("user_organization_unit", (string)null);
+                    b.ToTable("user_dept", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.UserRefreshToken", b =>
@@ -436,11 +431,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.UserOrganizationUnit", b =>
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.UserDept", b =>
                 {
                     b.HasOne("Ncp.Admin.Domain.AggregatesModel.UserAggregate.User", null)
-                        .WithOne("OrganizationUnit")
-                        .HasForeignKey("Ncp.Admin.Domain.AggregatesModel.UserAggregate.UserOrganizationUnit", "UserId")
+                        .WithOne("Dept")
+                        .HasForeignKey("Ncp.Admin.Domain.AggregatesModel.UserAggregate.UserDept", "UserId")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
                 });
@@ -470,7 +465,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.User", b =>
                 {
-                    b.Navigation("OrganizationUnit")
+                    b.Navigation("Dept")
                         .IsRequired();
 
                     b.Navigation("RefreshTokens");

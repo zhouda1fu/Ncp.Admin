@@ -39,43 +39,31 @@ export function useSchema(): VbenFormSchema[] {
       label: $t('system.dept.parentDept'),
     },
     {
-      component: 'InputNumber',
-      componentProps: {
-        min: 0,
-      },
-      defaultValue: 0,
-      fieldName: 'sortOrder',
-      label: '排序',
-    },
-    {
       component: 'RadioGroup',
       componentProps: {
         buttonStyle: 'solid',
         options: [
-          { label: $t('common.enabled'), value: true },
-          { label: $t('common.disabled'), value: false },
+          { label: $t('common.enabled'), value: 1 },
+          { label: $t('common.disabled'), value: 0 },
         ],
         optionType: 'button',
       },
-      defaultValue: true,
-      fieldName: 'isActive',
+      defaultValue: 1,
+      fieldName: 'status',
       label: $t('system.dept.status'),
     },
     {
       component: 'Textarea',
       componentProps: {
-        maxLength: 200,
+        maxLength: 50,
         rows: 3,
         showCount: true,
       },
-      fieldName: 'description',
+      fieldName: 'remark',
       label: $t('system.dept.remark'),
       rules: z
         .string()
-        .max(
-          200,
-          $t('ui.formRules.maxLength', [$t('system.dept.remark'), 200]),
-        )
+        .max(50, $t('ui.formRules.maxLength', [$t('system.dept.remark'), 50]))
         .optional(),
     },
   ];
@@ -100,17 +88,18 @@ export function useColumns(
     },
     {
       cellRender: { name: 'CellTag' },
-      field: 'isActive',
+      field: 'status',
       title: $t('system.dept.status'),
       width: 100,
     },
     {
+      formatter: 'formatDateTime',
       field: 'createdAt',
       title: $t('system.dept.createTime'),
       width: 180,
     },
     {
-      field: 'description',
+      field: 'remark',
       title: $t('system.dept.remark'),
     },
     {

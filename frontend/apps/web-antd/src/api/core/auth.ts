@@ -15,6 +15,7 @@ export namespace AuthApi {
     name: string;
     email: string;
     roles: string;
+    permissionCodes: string[]; // 权限代码列表
     tokenExpiryTime: string;
   }
 

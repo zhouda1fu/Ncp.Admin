@@ -1,8 +1,8 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.DeliverAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using NetCorePal.Extensions.DistributedTransactions.CAP.Persistence;
@@ -39,6 +39,6 @@ public partial class ApplicationDbContext(DbContextOptions<ApplicationDbContext>
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
-    public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
-    public DbSet<UserOrganizationUnit> UserOrganizationUnits => Set<UserOrganizationUnit>();
+    public DbSet<Dept> Depts => Set<Dept>();
+    public DbSet<UserDept> UserDepts => Set<UserDept>();
 }

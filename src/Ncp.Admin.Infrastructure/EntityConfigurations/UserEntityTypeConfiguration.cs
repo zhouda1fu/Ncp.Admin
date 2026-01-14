@@ -39,32 +39,32 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey("UserId")
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 配置 User 与 UserOrganizationUnit 的一对一关系
-        builder.HasOne(au => au.OrganizationUnit)
+        // 配置 User 与 UserDept 的一对一关系
+        builder.HasOne(au => au.Dept)
             .WithOne()
-            .HasForeignKey<UserOrganizationUnit>(uou => uou.UserId)
+            .HasForeignKey<UserDept>(ud => ud.UserId)
             .OnDelete(DeleteBehavior.ClientCascade);
-        builder.Navigation(au => au.OrganizationUnit).AutoInclude();
+        builder.Navigation(au => au.Dept).AutoInclude();
     }
 }
 
-internal class UserOrganizationUnitEntityTypeConfiguration : IEntityTypeConfiguration<UserOrganizationUnit>
+internal class UserDeptEntityTypeConfiguration : IEntityTypeConfiguration<UserDept>
 {
-    public void Configure(EntityTypeBuilder<UserOrganizationUnit> builder)
+    public void Configure(EntityTypeBuilder<UserDept> builder)
     {
-        builder.ToTable("user_organization_unit");
+        builder.ToTable("user_dept");
 
-        builder.HasKey(uo => uo.UserId);
+        builder.HasKey(ud => ud.UserId);
 
-        builder.Property(uo => uo.UserId);
-        builder.Property(uo => uo.OrganizationUnitId);
-        builder.Property(uo => uo.OrganizationUnitName).HasMaxLength(100);
-        builder.Property(uo => uo.AssignedAt)
+        builder.Property(ud => ud.UserId);
+        builder.Property(ud => ud.DeptId);
+        builder.Property(ud => ud.DeptName).HasMaxLength(100);
+        builder.Property(ud => ud.AssignedAt)
             .IsRequired();
 
         // 索引
-        builder.HasIndex(uo => uo.UserId);
-        builder.HasIndex(uo => uo.OrganizationUnitId);
+        builder.HasIndex(ud => ud.UserId);
+        builder.HasIndex(ud => ud.DeptId);
     }
 }
 

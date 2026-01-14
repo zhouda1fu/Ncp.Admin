@@ -95,6 +95,28 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "dept",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Remark = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ParentId = table.Column<long>(type: "bigint", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    DeletedAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    UpdateTime = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_dept", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "order",
                 columns: table => new
                 {
@@ -109,29 +131,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_order", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "organization_unit",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false),
-                    Name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ParentId = table.Column<long>(type: "bigint", nullable: false),
-                    SortOrder = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
-                    IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DeletedAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_organization_unit", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -213,20 +212,20 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "user_organization_unit",
+                name: "user_dept",
                 columns: table => new
                 {
                     UserId = table.Column<long>(type: "bigint", nullable: false),
-                    OrganizationUnitId = table.Column<long>(type: "bigint", nullable: false),
-                    OrganizationUnitName = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                    DeptId = table.Column<long>(type: "bigint", nullable: false),
+                    DeptName = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     AssignedAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_user_organization_unit", x => x.UserId);
+                    table.PrimaryKey("PK_user_dept", x => x.UserId);
                     table.ForeignKey(
-                        name: "FK_user_organization_unit_user_UserId",
+                        name: "FK_user_dept_user_UserId",
                         column: x => x.UserId,
                         principalTable: "user",
                         principalColumn: "Id");
@@ -300,24 +299,19 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 columns: new[] { "Version", "ExpiresAt", "StatusName" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_organization_unit_IsActive",
-                table: "organization_unit",
-                column: "IsActive");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_organization_unit_IsDeleted",
-                table: "organization_unit",
+                name: "IX_dept_IsDeleted",
+                table: "dept",
                 column: "IsDeleted");
 
             migrationBuilder.CreateIndex(
-                name: "IX_organization_unit_ParentId",
-                table: "organization_unit",
+                name: "IX_dept_ParentId",
+                table: "dept",
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_organization_unit_SortOrder",
-                table: "organization_unit",
-                column: "SortOrder");
+                name: "IX_dept_Status",
+                table: "dept",
+                column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_role_Name",
@@ -336,13 +330,13 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 column: "Name");
 
             migrationBuilder.CreateIndex(
-                name: "IX_user_organization_unit_OrganizationUnitId",
-                table: "user_organization_unit",
-                column: "OrganizationUnitId");
+                name: "IX_user_dept_DeptId",
+                table: "user_dept",
+                column: "DeptId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_user_organization_unit_UserId",
-                table: "user_organization_unit",
+                name: "IX_user_dept_UserId",
+                table: "user_dept",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -367,16 +361,16 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "deliverrecord");
 
             migrationBuilder.DropTable(
-                name: "order");
+                name: "dept");
 
             migrationBuilder.DropTable(
-                name: "organization_unit");
+                name: "order");
 
             migrationBuilder.DropTable(
                 name: "role_permission");
 
             migrationBuilder.DropTable(
-                name: "user_organization_unit");
+                name: "user_dept");
 
             migrationBuilder.DropTable(
                 name: "user_refresh_token");

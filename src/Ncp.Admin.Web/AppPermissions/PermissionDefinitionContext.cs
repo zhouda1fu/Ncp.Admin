@@ -32,15 +32,12 @@ public static class PermissionDefinitionContext
         roleManagement.AddChild(PermissionCodes.RoleView, "查看角色");
         roleManagement.AddChild(PermissionCodes.RoleUpdatePermissions, "更新角色权限");
 
-
-        // 组织架构管理权限
-        var organizationUnitManagement = systemAccess.AddPermission(PermissionCodes.OrganizationUnitManagement, "组织架构管理");
-        organizationUnitManagement.AddChild(PermissionCodes.OrganizationUnitCreate, "创建组织架构");
-        organizationUnitManagement.AddChild(PermissionCodes.OrganizationUnitEdit, "编辑组织架构");
-        organizationUnitManagement.AddChild(PermissionCodes.OrganizationUnitDelete, "删除组织架构");
-        organizationUnitManagement.AddChild(PermissionCodes.OrganizationUnitView, "查看组织架构");
-        organizationUnitManagement.AddChild(PermissionCodes.OrganizationUnitAssign, "分配组织架构");
-
+        // 部门管理权限
+        var deptManagement = systemAccess.AddPermission(PermissionCodes.DeptManagement, "部门管理");
+        deptManagement.AddChild(PermissionCodes.DeptCreate, "创建部门");
+        deptManagement.AddChild(PermissionCodes.DeptEdit, "编辑部门");
+        deptManagement.AddChild(PermissionCodes.DeptDelete, "删除部门");
+        deptManagement.AddChild(PermissionCodes.DeptView, "查看部门");
 
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");

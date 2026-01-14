@@ -39,21 +39,24 @@ const [Modal, modalApi] = useVbenModal({
       modalApi.lock();
       const data = await formApi.getValues();
       try {
-        if (formData.value?.id) {
-          await updateDept(formData.value.id, {
-            name: data.name,
-            description: data.description || '',
-            parentId: data.parentId || undefined,
-            sortOrder: data.sortOrder || 0,
-          });
-        } else {
-          await createDept({
-            name: data.name,
-            description: data.description || '',
-            parentId: data.parentId || undefined,
-            sortOrder: data.sortOrder || 0,
-          });
-        }
+        // 处理 parentId：如果是 '0' 或空字符串，设置为 undefined
+        const submitData: {
+          name: string;
+          remark?: string;
+          parentId?: string;
+          status: 0 | 1;
+        } = {
+          name: data.name,
+          remark: data.remark || '',
+          status: data.status ?? 1,
+          parentId:
+            data.parentId === '0' || data.parentId === '' || !data.parentId
+              ? undefined
+              : data.parentId,
+        };
+        await (formData.value?.id
+          ? updateDept(formData.value.id, submitData)
+          : createDept(submitData));
         modalApi.close();
         emit('success');
       } finally {
@@ -64,18 +67,13 @@ const [Modal, modalApi] = useVbenModal({
   onOpenChange(isOpen) {
     if (isOpen) {
       const data = modalApi.getData<SystemDeptApi.SystemDept>();
-      if (data && data.id) {
+      if (data) {
+        // 处理 parentId：如果是 '0' 或空字符串，设置为 undefined
         if (data.parentId === '0' || data.parentId === '') {
           data.parentId = undefined;
         }
         formData.value = data;
-        formApi.setValues({
-          name: data.name,
-          description: data.description || '',
-          parentId: data.parentId,
-          sortOrder: data.sortOrder || 0,
-          isActive: data.isActive,
-        });
+        formApi.setValues(formData.value);
       } else {
         formData.value = undefined;
         formApi.resetForm();

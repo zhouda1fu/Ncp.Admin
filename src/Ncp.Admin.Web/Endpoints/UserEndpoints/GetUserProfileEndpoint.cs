@@ -1,7 +1,7 @@
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.AppPermissions;
 
@@ -27,9 +27,9 @@ public record GetUserProfileRequest(UserId UserId);
 /// <param name="Gender">性别</param>
 /// <param name="Age">年龄</param>
 /// <param name="BirthDate">出生日期</param>
-/// <param name="OrganizationUnitId">组织单位ID（可为空）</param>
-/// <param name="OrganizationUnitName">组织单位名称</param>
-public record UserProfileResponse(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, OrganizationUnitId? OrganizationUnitId, string OrganizationUnitName);
+    /// <param name="DeptId">部门ID（可为空）</param>
+    /// <param name="DeptName">部门名称</param>
+public record UserProfileResponse(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, DeptId? DeptId, string DeptName);
 
 /// <summary>
 /// 获取用户资料的API端点
@@ -85,8 +85,8 @@ public class GetUserProfileEndpoint(UserQuery userQuery) : Endpoint<GetUserProfi
             userInfo.Gender,              // 性别
             userInfo.Age,                 // 年龄
             userInfo.BirthDate,           // 出生日期
-            userInfo.OrganizationUnitId,  // 组织单位ID
-            userInfo.OrganizationUnitName // 组织单位名称
+            userInfo.DeptId,  // 部门ID
+            userInfo.DeptName // 部门名称
         );
 
         // 返回成功响应，使用统一的响应数据格式包装

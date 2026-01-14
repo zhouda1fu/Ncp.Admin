@@ -14,7 +14,7 @@ namespace Ncp.Admin.Web.Endpoints.UserEndpoints;
 
 public record LoginRequest(string Username, string Password);
 
-public record LoginResponse(string Token, string RefreshToken, UserId UserId, string Name, string Email, string Roles, DateTimeOffset TokenExpiryTime);
+public record LoginResponse(string Token, string RefreshToken, UserId UserId, string Name, string Email, string Roles, IEnumerable<string> PermissionCodes, DateTimeOffset TokenExpiryTime);
 
 [Tags("Users")]
 [HttpPost("/api/user/login")]
@@ -69,6 +69,7 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
             loginInfo.Name,
             loginInfo.Email,
             JsonSerializer.Serialize(roles) ?? "[]",
+            assignedPermissionCodes, // 直接返回权限代码列表
             tokenExpiryTime
         );
 

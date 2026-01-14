@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
 /// <summary>
 /// 用户信息查询DTO
 /// </summary>
-public record UserInfoQueryDto(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, OrganizationUnitId? OrganizationUnitId, string OrganizationUnitName);
+public record UserInfoQueryDto(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, DeptId? DeptId, string DeptName);
 
 public record UserLoginInfoQueryDto(UserId UserId, string Name, string Email, string PasswordHash, IEnumerable<UserRole> UserRoles);
 
@@ -69,8 +69,8 @@ public class UserQuery(ApplicationDbContext applicationDbContext) : IQuery
                 au.Gender,
                 au.Age,
                 au.BirthDate,
-                au.OrganizationUnit != null ? au.OrganizationUnit.OrganizationUnitId : null,
-                au.OrganizationUnit != null ? au.OrganizationUnit.OrganizationUnitName : string.Empty))
+                au.Dept != null ? au.Dept.DeptId : null,
+                au.Dept != null ? au.Dept.DeptName : string.Empty))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -126,8 +126,8 @@ public class UserQuery(ApplicationDbContext applicationDbContext) : IQuery
                 u.Gender,
                 u.Age,
                 u.BirthDate,
-                u.OrganizationUnit != null ? u.OrganizationUnit.OrganizationUnitId : null,
-                u.OrganizationUnit != null ? u.OrganizationUnit.OrganizationUnitName : string.Empty))
+                u.Dept != null ? u.Dept.DeptId : null,
+                u.Dept != null ? u.Dept.DeptName : string.Empty))
             .ToPagedDataAsync(query, cancellationToken);
     }
 }

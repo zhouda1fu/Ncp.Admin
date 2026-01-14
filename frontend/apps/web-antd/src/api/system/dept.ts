@@ -6,10 +6,9 @@ export namespace SystemDeptApi {
     children?: SystemDept[];
     id: string;
     name: string;
-    description: string;
-    parentId: string;
-    sortOrder: number;
-    isActive: boolean;
+    remark?: string;
+    parentId?: string;
+    status: 0 | 1;
     createdAt: string;
   }
 }
@@ -18,18 +17,14 @@ export namespace SystemDeptApi {
  * 获取部门列表数据
  */
 async function getDeptList() {
-  return requestClient.get<Array<SystemDeptApi.SystemDept>>(
-    '/organization-units',
-  );
+  return requestClient.get<Array<SystemDeptApi.SystemDept>>('/dept');
 }
 
 /**
  * 获取部门树数据
  */
 async function getDeptTree() {
-  return requestClient.get<Array<SystemDeptApi.SystemDept>>(
-    '/organization-units/tree',
-  );
+  return requestClient.get<Array<SystemDeptApi.SystemDept>>('/dept/tree');
 }
 
 /**
@@ -37,9 +32,7 @@ async function getDeptTree() {
  * @param id 部门 ID
  */
 async function getDept(id: string) {
-  return requestClient.get<SystemDeptApi.SystemDept>(
-    `/organization-units/${id}`,
-  );
+  return requestClient.get<SystemDeptApi.SystemDept>(`/dept/${id}`);
 }
 
 /**
@@ -48,11 +41,11 @@ async function getDept(id: string) {
  */
 async function createDept(data: {
   name: string;
-  description: string;
+  remark?: string;
   parentId?: string;
-  sortOrder: number;
+  status: 0 | 1;
 }) {
-  return requestClient.post('/organization-units', data);
+  return requestClient.post('/dept', data);
 }
 
 /**
@@ -65,12 +58,12 @@ async function updateDept(
   id: string,
   data: {
     name: string;
-    description: string;
+    remark?: string;
     parentId?: string;
-    sortOrder: number;
+    status: 0 | 1;
   },
 ) {
-  return requestClient.put('/organization-units', {
+  return requestClient.put('/dept', {
     id,
     ...data,
   });
@@ -81,7 +74,7 @@ async function updateDept(
  * @param id 部门 ID
  */
 async function deleteDept(id: string) {
-  return requestClient.delete(`/organization-units/${id}`);
+  return requestClient.delete(`/dept/${id}`);
 }
 
 export {

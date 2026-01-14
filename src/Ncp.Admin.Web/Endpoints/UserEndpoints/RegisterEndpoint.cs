@@ -2,7 +2,7 @@ using FastEndpoints;
 using MediatR;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Web.Application.Commands.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Utils;
@@ -21,10 +21,10 @@ namespace Ncp.Admin.Web.Endpoints.UserEndpoints;
 /// <param name="Gender">性别</param>
 /// <param name="Age">年龄</param>
 /// <param name="BirthDate">出生日期</param>
-/// <param name="OrganizationUnitId">组织单位ID（可选）</param>
-/// <param name="OrganizationUnitName">组织单位名称（可选）</param>
-/// <param name="RoleIds">要分配的角色ID列表</param>
-public record RegisterRequest(string Name, string Email, string Password, string Phone, string RealName, int Status, string Gender, int Age, DateTimeOffset BirthDate, OrganizationUnitId? OrganizationUnitId, string? OrganizationUnitName, IEnumerable<RoleId> RoleIds);
+    /// <param name="DeptId">部门ID（可选）</param>
+    /// <param name="DeptName">部门名称（可选）</param>
+    /// <param name="RoleIds">要分配的角色ID列表</param>
+public record RegisterRequest(string Name, string Email, string Password, string Phone, string RealName, int Status, string Gender, int Age, DateTimeOffset BirthDate, DeptId? DeptId, string? DeptName, IEnumerable<RoleId> RoleIds);
 
 /// <summary>
 /// 用户注册的响应模型
@@ -80,8 +80,8 @@ public class RegisterEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpoin
             request.Status,              // 状态
             request.Gender,              // 性别
             request.BirthDate,           // 出生日期
-            request.OrganizationUnitId,  // 组织单位ID
-            request.OrganizationUnitName, // 组织单位名称
+            request.DeptId,  // 部门ID
+            request.DeptName, // 部门名称
             rolesToBeAssigned            // 要分配的角色列表
         );
 

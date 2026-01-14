@@ -124,7 +124,7 @@ try
     #region Query
     builder.Services.AddScoped<UserQuery>();
     builder.Services.AddScoped<RoleQuery>();
-    builder.Services.AddScoped<OrganizationUnitQuery>();
+    builder.Services.AddScoped<DeptQuery>();
     #endregion
 
     #region 基础设施

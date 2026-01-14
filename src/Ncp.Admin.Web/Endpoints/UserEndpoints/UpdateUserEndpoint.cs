@@ -2,7 +2,7 @@ using FastEndpoints;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Web.Application.Commands.UserCommands;
 using Ncp.Admin.Web.AppPermissions;
 using Ncp.Admin.Web.Utils;
@@ -21,10 +21,10 @@ namespace Ncp.Admin.Web.Endpoints.UserEndpoints;
 /// <param name="Gender">性别</param>
 /// <param name="Age">年龄</param>
 /// <param name="BirthDate">出生日期</param>
-/// <param name="OrganizationUnitId">组织单位ID</param>
-/// <param name="OrganizationUnitName">组织单位名称</param>
-/// <param name="Password">密码（可选，为空则不更新）</param>
-public record UpdateUserRequest(UserId UserId, string Name, string Email, string Phone, string RealName, int Status, string Gender, int Age, DateTimeOffset BirthDate, OrganizationUnitId OrganizationUnitId, string OrganizationUnitName, string Password);
+    /// <param name="DeptId">部门ID</param>
+    /// <param name="DeptName">部门名称</param>
+    /// <param name="Password">密码（可选，为空则不更新）</param>
+public record UpdateUserRequest(UserId UserId, string Name, string Email, string Phone, string RealName, int Status, string Gender, int Age, DateTimeOffset BirthDate, DeptId DeptId, string DeptName, string Password);
 
 /// <summary>
 /// 更新用户信息的响应模型
@@ -86,8 +86,8 @@ public class UpdateUserEndpoint(IMediator mediator) : Endpoint<UpdateUserRequest
             request.Gender,              // 性别
             request.Age,                 // 年龄
             request.BirthDate,           // 出生日期
-            request.OrganizationUnitId,  // 组织单位ID
-            request.OrganizationUnitName, // 组织单位名称
+            request.DeptId,  // 部门ID
+            request.DeptName, // 部门名称
             passwordHash                 // 密码哈希（如果提供了新密码）
         );
 

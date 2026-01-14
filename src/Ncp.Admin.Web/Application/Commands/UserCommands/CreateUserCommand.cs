@@ -1,6 +1,6 @@
 using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
 
@@ -9,7 +9,7 @@ namespace Ncp.Admin.Web.Application.Commands.UserCommands;
 /// <summary>
 /// 创建用户命令
 /// </summary>
-public record CreateUserCommand(string Name, string Email, string Password, string Phone, string RealName, int Status, string Gender, DateTimeOffset BirthDate, OrganizationUnitId? OrganizationUnitId, string? OrganizationUnitName, IEnumerable<AssignAdminUserRoleQueryDto> RolesToBeAssigned) : ICommand<UserId>;
+public record CreateUserCommand(string Name, string Email, string Password, string Phone, string RealName, int Status, string Gender, DateTimeOffset BirthDate, DeptId? DeptId, string? DeptName, IEnumerable<AssignAdminUserRoleQueryDto> RolesToBeAssigned) : ICommand<UserId>;
 
 public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 {
@@ -39,11 +39,11 @@ public class CreateUserCommandHandler(IUserRepository userRepository) : ICommand
 
         var user = new User(request.Name, request.Phone, passwordHash, roles, request.RealName, request.Status, request.Email, request.Gender, request.BirthDate);
 
-        // 分配组织架构
-        if (request.OrganizationUnitId != null && !string.IsNullOrEmpty(request.OrganizationUnitName))
+        // 分配部门
+        if (request.DeptId != null && !string.IsNullOrEmpty(request.DeptName))
         {
-            var organizationUnit = new UserOrganizationUnit(user.Id, request.OrganizationUnitId, request.OrganizationUnitName);
-            user.AssignOrganizationUnit(organizationUnit);
+            var dept = new UserDept(user.Id, request.DeptId, request.DeptName);
+            user.AssignDept(dept);
         }
 
         await userRepository.AddAsync(user, cancellationToken);

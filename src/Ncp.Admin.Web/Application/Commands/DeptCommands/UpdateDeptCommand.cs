@@ -1,0 +1,35 @@
+using FluentValidation;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Infrastructure.Repositories;
+
+namespace Ncp.Admin.Web.Application.Commands.DeptCommands;
+
+/// <summary>
+/// 更新部门命令
+/// </summary>
+public record UpdateDeptCommand(DeptId Id, string Name, string Remark, DeptId ParentId, int Status) : ICommand;
+
+public class UpdateDeptCommandValidator : AbstractValidator<UpdateDeptCommand>
+{
+    public UpdateDeptCommandValidator()
+    {
+        RuleFor(d => d.Name).NotEmpty().WithMessage("部门名称不能为空");
+        RuleFor(d => d.Status).InclusiveBetween(0, 1).WithMessage("状态值必须为0或1");
+    }
+}
+
+/// <summary>
+/// 更新部门命令处理器
+/// </summary>
+public class UpdateDeptCommandHandler(IDeptRepository deptRepository) : ICommandHandler<UpdateDeptCommand>
+{
+    public async Task Handle(UpdateDeptCommand request, CancellationToken cancellationToken)
+    {
+        var dept = await deptRepository.GetAsync(request.Id, cancellationToken)
+            ?? throw new KnownException($"未找到部门，Id = {request.Id}");
+
+        dept.UpdateInfo(request.Name, request.Remark, request.ParentId, request.Status);
+
+        await deptRepository.UpdateAsync(dept, cancellationToken);
+    }
+}

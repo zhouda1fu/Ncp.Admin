@@ -46,15 +46,12 @@ export const useAuthStore = defineStore('auth', () => {
 
         // 获取用户信息并存储到 accessStore 中
         // 注意：需要从登录响应中获取 userId 来调用用户信息接口
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(loginResult.userId),
-          getAccessCodesApi(),
-        ]);
-
-        userInfo = fetchUserInfoResult;
+        // 权限代码直接从登录响应中获取，无需额外调用 API
+        userInfo = await fetchUserInfo(loginResult.userId);
 
         userStore.setUserInfo(userInfo);
-        accessStore.setAccessCodes(accessCodes);
+        // 从登录响应中获取权限代码，如果没有则返回空数组
+        accessStore.setAccessCodes(loginResult.permissionCodes || []);
 
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);

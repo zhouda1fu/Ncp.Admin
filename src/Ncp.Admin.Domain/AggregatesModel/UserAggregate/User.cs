@@ -1,5 +1,5 @@
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrganizationUnitAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
@@ -30,8 +30,8 @@ public class User : Entity<UserId>, IAggregateRoot
     // 用户角色关系
     public virtual ICollection<UserRole> Roles { get; } = [];
 
-    // 用户组织架构关系 - 1对1关系
-    public virtual UserOrganizationUnit OrganizationUnit { get; private set; } = default!;
+    // 用户部门关系 - 1对1关系
+    public virtual UserDept Dept { get; private set; } = default!;
 
     public ICollection<UserRefreshToken> RefreshTokens { get; } = [];
 
@@ -133,17 +133,17 @@ public class User : Entity<UserId>, IAggregateRoot
     }
 
     /// <summary>
-    /// 分配组织架构
+    /// 分配部门
     /// </summary>
-    /// <param name="organizationUnit">组织架构</param>
-    public void AssignOrganizationUnit(UserOrganizationUnit organizationUnit)
+    /// <param name="dept">部门</param>
+    public void AssignDept(UserDept dept)
     {
-        if (organizationUnit == null)
+        if (dept == null)
         {
-            throw new KnownException("组织架构不能为空");
+            throw new KnownException("部门不能为空");
         }
 
-        OrganizationUnit = organizationUnit;
+        Dept = dept;
     }
 }
 

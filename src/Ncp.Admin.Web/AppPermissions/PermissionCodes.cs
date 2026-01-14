@@ -24,13 +24,12 @@ public static class PermissionCodes
     public const string UserResetPassword = nameof(UserResetPassword);
     #endregion
 
-    #region 组织架构管理权限
-    public const string OrganizationUnitManagement = nameof(OrganizationUnitManagement);
-    public const string OrganizationUnitCreate = nameof(OrganizationUnitCreate);
-    public const string OrganizationUnitEdit = nameof(OrganizationUnitEdit);
-    public const string OrganizationUnitDelete = nameof(OrganizationUnitDelete);
-    public const string OrganizationUnitView = nameof(OrganizationUnitView);
-    public const string OrganizationUnitAssign = nameof(OrganizationUnitAssign);
+    #region 部门管理权限
+    public const string DeptManagement = nameof(DeptManagement);
+    public const string DeptCreate = nameof(DeptCreate);
+    public const string DeptEdit = nameof(DeptEdit);
+    public const string DeptDelete = nameof(DeptDelete);
+    public const string DeptView = nameof(DeptView);
     #endregion
 
     #region 所有接口访问权限
