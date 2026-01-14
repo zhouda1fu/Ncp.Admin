@@ -1,10 +1,7 @@
 <script lang="ts" setup>
 import type { Recordable } from '@vben/types';
 
-import type {
-  OnActionClickParams,
-  VxeTableGridOptions,
-} from '#/adapter/vxe-table';
+import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { SystemRoleApi } from '#/api/system/role';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
@@ -13,7 +10,12 @@ import { Plus } from '@vben/icons';
 import { Button, message, Modal } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { deleteRole, getRoleList, updateRole } from '#/api/system/role';
+import {
+  activateRole,
+  deactivateRole,
+  deleteRole,
+  getRoleList,
+} from '#/api/system/role';
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
@@ -24,7 +26,7 @@ const [FormDrawer, formDrawerApi] = useVbenDrawer({
   destroyOnClose: true,
 });
 
-const [Grid, gridApi] = useVbenVxeGrid({
+const [Grid, gridApi] = useVbenVxeGrid<SystemRoleApi.SystemRole>({
   formOptions: {
     fieldMappingTime: [['createdAt', ['startTime', 'endTime']]],
     schema: useGridFormSchema(),
@@ -36,17 +38,17 @@ const [Grid, gridApi] = useVbenVxeGrid({
     keepSource: true,
     proxyConfig: {
       ajax: {
-        query: async ({ page }, formValues) => {
+        query: async ({ page }: { page: { currentPage: number; pageSize: number } }, formValues: Recordable<any>) => {
           const result = await getRoleList({
-            page: page.currentPage,
+            pageIndex: page.currentPage, // 后端期望 pageIndex（从1开始），而不是 page
             pageSize: page.pageSize,
+            countTotal: true, // 需要总数用于分页显示
             ...formValues,
           });
+          // vxe-table 根据全局配置 response: { result: 'items', total: 'total' } 读取数据
           return {
-            page: {
-              total: result.total,
-            },
-            result: result.items,
+            items: result.items,
+            total: result.total,
           };
         },
       },
@@ -62,7 +64,7 @@ const [Grid, gridApi] = useVbenVxeGrid({
       search: true,
       zoom: true,
     },
-  } as VxeTableGridOptions<SystemRoleApi.SystemRole>,
+  },
 });
 
 function onActionClick(e: OnActionClickParams<SystemRoleApi.SystemRole>) {
@@ -117,11 +119,14 @@ async function onStatusChange(
       `你要将${row.name}的状态切换为 【${status[newStatus.toString()]}】 吗？`,
       `切换状态`,
     );
-    await updateRole(row.roleId, {
-      name: row.name,
-      description: row.description || '',
-      permissionCodes: row.permissionCodes || [],
-    });
+    // 根据新状态调用对应的端点
+    if (newStatus) {
+      await activateRole(row.roleId);
+    } else {
+      await deactivateRole(row.roleId);
+    }
+    // 刷新列表以获取最新状态
+    onRefresh();
     return true;
   } catch {
     return false;

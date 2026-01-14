@@ -82,4 +82,32 @@ async function deleteRole(id: string) {
   return requestClient.delete(`/roles/${id}`);
 }
 
-export { createRole, deleteRole, getRole, getRoleList, updateRole };
+/**
+ * 激活角色
+ * @param id 角色 ID
+ */
+async function activateRole(id: string) {
+  return requestClient.put('/roles/activate', {
+    roleId: id,
+  });
+}
+
+/**
+ * 停用角色
+ * @param id 角色 ID
+ */
+async function deactivateRole(id: string) {
+  return requestClient.put('/roles/deactivate', {
+    roleId: id,
+  });
+}
+
+export {
+  activateRole,
+  createRole,
+  deactivateRole,
+  deleteRole,
+  getRole,
+  getRoleList,
+  updateRole,
+};

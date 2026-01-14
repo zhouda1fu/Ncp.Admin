@@ -37,6 +37,7 @@ export function useFormSchema(): VbenFormSchema[] {
       formItemClass: 'items-start',
       label: $t('system.role.setPermissions'),
       modelPropName: 'modelValue',
+      slot: 'permissionCodes',
     },
   ];
 }
@@ -72,7 +73,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
     },
     {
       component: 'RangePicker',
-      fieldName: 'createTime',
+      fieldName: 'createdAt',
       label: $t('system.role.createTime'),
     },
   ];
@@ -112,6 +113,7 @@ export function useColumns<T = SystemRoleApi.SystemRole>(
     },
     {
       field: 'createdAt',
+      formatter: 'formatDateTime',
       title: $t('system.role.createTime'),
       width: 200,
     },
