@@ -6,11 +6,7 @@ import type {
 import { generateAccessible } from '@vben/access';
 import { preferences } from '@vben/preferences';
 
-import { message } from 'ant-design-vue';
-
-import { getAllMenusApi } from '#/api';
 import { BasicLayout, IFrameView } from '#/layouts';
-import { $t } from '#/locales';
 
 const forbiddenComponent = () => import('#/views/_core/fallback/forbidden.vue');
 
@@ -22,22 +18,12 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
     IFrameView,
   };
 
+  // 使用前端访问控制模式，不再调用后端菜单接口
+  // 所有路由通过静态配置（router/routes/modules/*.ts）定义
+  // 权限控制通过 meta.authority 中的 PermissionCodes 实现
   return await generateAccessible(preferences.app.accessMode, {
     ...options,
-    fetchMenuListAsync: async () => {
-      try {
-        message.loading({
-          content: `${$t('common.loadingMenu')}...`,
-          duration: 1.5,
-        });
-        const menus = await getAllMenusApi();
-        return menus;
-      } catch (error) {
-        // 如果获取菜单失败，返回空数组，使用静态路由
-        console.warn('获取菜单失败，使用静态路由:', error);
-        return [];
-      }
-    },
+    // 移除 fetchMenuListAsync，不再调用菜单 API
     // 可以指定没有权限跳转403页面
     forbiddenComponent,
     // 如果 route.meta.menuVisibleWithForbidden = true

@@ -107,11 +107,13 @@ function setupAccessGuard(router: Router) {
         userInfo = fetchedUserInfo as UserInfo | null;
       }
       
-      const userRoles = userInfo?.roles ?? [];
+      // 获取用户的权限码（已从登录响应中获取并存储）
+      // 使用权限码而不是角色来控制权限，与后端保持一致
+      const permissionCodes = accessStore.accessCodes || [];
 
-      // 生成菜单和路由
+      // 生成菜单和路由，使用权限码而不是角色
       const result = await generateAccess({
-        roles: userRoles,
+        roles: permissionCodes, // 使用权限码而不是角色
         router,
         // 则会在菜单中显示，但是访问会被重定向到403
         routes: accessRoutes,

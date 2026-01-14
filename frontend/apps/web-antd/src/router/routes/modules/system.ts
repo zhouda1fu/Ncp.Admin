@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 
+import { PermissionCodes } from '#/constants/permission-codes';
 import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
@@ -8,6 +9,8 @@ const routes: RouteRecordRaw[] = [
       icon: 'ion:settings-outline',
       order: 9997,
       title: $t('system.title'),
+      // 父路由需要任一权限即可显示
+      authority: [PermissionCodes.RoleManagement, PermissionCodes.DeptManagement],
     },
     name: 'System',
     path: '/system',
@@ -18,6 +21,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           icon: 'mdi:account-group',
           title: $t('system.role.title'),
+          authority: [PermissionCodes.RoleManagement], // 使用权限码控制访问
         },
         component: () => import('#/views/system/role/list.vue'),
       },
@@ -27,6 +31,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           icon: 'charm:organisation',
           title: $t('system.dept.title'),
+          authority: [PermissionCodes.DeptManagement], // 使用权限码控制访问
         },
         component: () => import('#/views/system/dept/list.vue'),
       },

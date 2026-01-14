@@ -9,5 +9,6 @@ export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
     name: import.meta.env.VITE_APP_TITLE,
+    accessMode: 'frontend', // 设置为前端访问控制模式，使用 PermissionCodes 控制权限
   },
 });

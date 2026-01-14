@@ -28,6 +28,11 @@ public static class SeedDatabaseExtension
         {
             var adminPermissions = new List<RolePermission>
             {
+                // 父权限码（用于菜单和路由权限控制）
+                new RolePermission(PermissionCodes.UserManagement, "用户管理", "用户管理"),
+                new RolePermission(PermissionCodes.RoleManagement, "角色管理", "角色管理"),
+                new RolePermission(PermissionCodes.DeptManagement, "部门管理", "部门管理"),
+
                 // 用户管理权限
                 new RolePermission(PermissionCodes.UserCreate, "创建用户", "创建新用户"),
                 new RolePermission(PermissionCodes.UserView, "查看用户", "查看用户信息"),
@@ -49,7 +54,6 @@ public static class SeedDatabaseExtension
                 new RolePermission(PermissionCodes.DeptEdit, "更新部门", "更新部门信息"),
                 new RolePermission(PermissionCodes.DeptDelete, "删除部门", "删除部门"),
 
-              
                 // 所有接口访问权限
                 new RolePermission(PermissionCodes.AllApiAccess, "所有接口访问权限", "所有接口访问权限"),
             };
