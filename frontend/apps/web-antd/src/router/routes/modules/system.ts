@@ -10,7 +10,7 @@ const routes: RouteRecordRaw[] = [
       order: 9997,
       title: $t('system.title'),
       // 父路由需要任一权限即可显示
-      authority: [PermissionCodes.RoleManagement, PermissionCodes.DeptManagement],
+      authority: [PermissionCodes.RoleManagement, PermissionCodes.DeptManagement, PermissionCodes.UserManagement],
     },
     name: 'System',
     path: '/system',
@@ -34,6 +34,16 @@ const routes: RouteRecordRaw[] = [
           authority: [PermissionCodes.DeptManagement], // 使用权限码控制访问
         },
         component: () => import('#/views/system/dept/list.vue'),
+      },
+      {
+        path: '/system/user',
+        name: 'SystemUser',
+        meta: {
+          icon: 'mdi:account',
+          title: $t('system.user.title'),
+          authority: [PermissionCodes.UserManagement], // 使用权限码控制访问
+        },
+        component: () => import('#/views/system/user/list.vue'),
       },
     ],
   },

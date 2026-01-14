@@ -4,10 +4,12 @@ import type { SystemUserApi } from '#/api/system/user';
 import { computed, nextTick, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
+import { message } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
 import { createUser, updateUser, updateUserRoles } from '#/api/system/user';
 import { getDeptTree } from '#/api/system/dept';
+import { getRoleList } from '#/api/system/role';
 import { $t } from '#/locales';
 
 import { useFormSchema } from '../data';
@@ -34,7 +36,6 @@ const emits = defineEmits(['success']);
 
 const formData = ref<SystemUserApi.SystemUser>();
 const id = ref<string>();
-const isEdit = computed(() => !!id.value);
 
 const [Form, formApi] = useVbenForm({
   layout: 'vertical',
@@ -79,7 +80,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       } else {
         // 创建用户 - 验证密码必填
         if (!values.password || values.password.trim() === '') {
-          formApi.setFieldError('password', $t('ui.formRules.required', [$t('system.user.password')]));
+          message.error($t('ui.formRules.required', [$t('system.user.password')]));
           drawerApi.unlock();
           return;
         }
@@ -120,6 +121,24 @@ const [Drawer, drawerApi] = useVbenDrawer({
       // Wait for Vue to flush DOM updates (form fields mounted)
       await nextTick();
       if (data && data.userId) {
+        // 编辑模式：需要将角色名称转换为角色ID
+        let roleIds: string[] = [];
+        if (data.roles && data.roles.length > 0) {
+          // 获取所有角色列表
+          const roleListResult = await getRoleList({
+            pageIndex: 1,
+            pageSize: 1000,
+            countTotal: false,
+          });
+          // 根据角色名称查找对应的角色ID
+          const roleMap = new Map(
+            roleListResult.items.map((role) => [role.name, role.roleId]),
+          );
+          roleIds = data.roles
+            .map((roleName) => roleMap.get(roleName))
+            .filter((id): id is string => !!id);
+        }
+
         // 编辑模式：设置表单值
         formApi.setValues({
           name: data.name,
@@ -131,7 +150,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           birthDate: data.birthDate,
           deptId: data.deptId || undefined,
           deptName: data.deptName || '',
-          roleIds: data.roles || [],
+          roleIds: roleIds,
           password: '', // 编辑时不显示密码
         });
       } else {

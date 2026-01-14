@@ -23,10 +23,6 @@ package-lock.json
 .VSCodeCounter
 **/backend-mock/data
 
-# Allow packages directory (override root .gitignore rule)
-!packages/
-!packages/**
-
 # local env files
 .env.local
 .env.*.local
