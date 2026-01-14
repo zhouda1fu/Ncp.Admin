@@ -22,5 +22,27 @@
     "operation": "Operation",
     "permissions": "Permissions",
     "setPermissions": "Permissions"
+  },
+  "user": {
+    "title": "User Management",
+    "list": "User List",
+    "name": "User",
+    "userName": "Username",
+    "realName": "Real Name",
+    "email": "Email",
+    "phone": "Phone",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "age": "Age",
+    "birthDate": "Birth Date",
+    "dept": "Department",
+    "roles": "Roles",
+    "status": "Status",
+    "password": "Password",
+    "createTime": "Create Time",
+    "operation": "Operation",
+    "keyword": "Keyword"
   }
 }
