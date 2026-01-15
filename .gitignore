@@ -373,6 +373,7 @@ FodyWeavers.xsd
 !.vscode/extensions.json
 !.vscode/csharp.code-snippets
 *.code-workspace
+!frontend/vben-admin.code-workspace
 
 # Local History for Visual Studio Code
 .history/
