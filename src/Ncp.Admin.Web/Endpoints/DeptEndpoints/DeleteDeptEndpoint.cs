@@ -20,19 +20,10 @@ public record DeleteDeptRequest(DeptId Id);
 [Tags("Depts")]
 public class DeleteDeptEndpoint(IMediator mediator) : Endpoint<DeleteDeptRequest, ResponseData<bool>>
 {
-    /// <summary>
-    /// 配置端点的基本设置
-    /// 包括HTTP方法、认证方案、权限要求等
-    /// </summary>
     public override void Configure()
     {
-        // 设置HTTP DELETE方法，通过路由参数获取部门ID
         Delete("/api/dept/{id}");
-
-        // 设置JWT Bearer认证方案，要求用户必须提供有效的JWT令牌
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-
-        // 设置权限要求：用户必须同时拥有API访问权限和部门删除权限
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptDelete);
     }
 
@@ -45,13 +36,8 @@ public class DeleteDeptEndpoint(IMediator mediator) : Endpoint<DeleteDeptRequest
     public override async Task HandleAsync(DeleteDeptRequest request,CancellationToken ct)
     {
 
-        // 创建删除部门命令
         var command = new DeleteDeptCommand(request.Id);
-
-        // 通过中介者发送命令，执行实际的业务逻辑
         await mediator.Send(command, ct);
-
-        // 返回成功响应
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }

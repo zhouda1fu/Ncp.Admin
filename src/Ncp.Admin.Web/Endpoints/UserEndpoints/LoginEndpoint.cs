@@ -28,33 +28,22 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
     {
         Log.Information("用户登录尝试: Username={Username}", req.Username);
         
-        // 查询用户信息
         var loginInfo = await userQuery.GetUserInfoForLoginAsync(req.Username, ct);
         
-        // 统一错误消息，防止时序攻击（通过响应时间推断用户是否存在）
         if (loginInfo == null || !PasswordHasher.VerifyHashedPassword(req.Password, loginInfo.PasswordHash))
         {
             Log.Warning("用户登录失败: Username={Username}, Reason=InvalidCredentials", req.Username);
             throw new KnownException("用户名或密码错误");
         }
 
-        // 统一使用UTC时间
         var nowTime = DateTimeOffset.UtcNow;
         var tokenExpiryTime = nowTime.AddMinutes(appConfiguration.Value.TokenExpiryInMinutes);
         var refreshToken = TokenGenerator.GenerateRefreshToken();
-
-        // 获取用户角色ID列表
         var roles = loginInfo.UserRoles.Select(r => r.RoleId).ToList();
-
-        // 查询权限代码（如果用户没有角色，则跳过查询）
         var assignedPermissionCodes = roles.Count > 0
             ? await roleQuery.GetAssignedPermissionCodesAsync(roles, ct)
             : Enumerable.Empty<string>();
-
-        // 构建JWT Claims（包含权限代码）
         var claims = BuildClaims(loginInfo, assignedPermissionCodes);
-
-        // 生成JWT Token
         var config = appConfiguration.Value;
         var token = await jwtProvider.GenerateJwtToken(
             new JwtData(
@@ -64,8 +53,6 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
                 nowTime.UtcDateTime,
                 tokenExpiryTime.UtcDateTime),
             ct);
-
-        // 构建响应
         var response = new LoginResponse(
             token,
             refreshToken,
@@ -73,7 +60,7 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
             loginInfo.Name,
             loginInfo.Email,
             JsonSerializer.Serialize(roles) ?? "[]",
-            assignedPermissionCodes, // 直接返回权限代码列表
+            assignedPermissionCodes,
             tokenExpiryTime
         );
 

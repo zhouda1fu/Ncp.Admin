@@ -27,10 +27,8 @@ public class User : Entity<UserId>, IAggregateRoot
     public int Age { get; private set; }
     public DateTimeOffset BirthDate { get; private set; } = default!;
 
-    // 用户角色关系
     public virtual ICollection<UserRole> Roles { get; } = [];
 
-    // 用户部门关系 - 1对1关系
     public virtual UserDept Dept { get; private set; } = default!;
 
     public ICollection<UserRefreshToken> RefreshTokens { get; } = [];
@@ -138,10 +136,7 @@ public class User : Entity<UserId>, IAggregateRoot
     /// <param name="dept">部门</param>
     public void AssignDept(UserDept dept)
     {
-        if (dept == null)
-        {
-            throw new KnownException("部门不能为空");
-        }
+        ArgumentNullException.ThrowIfNull(dept);
 
         Dept = dept;
     }

@@ -42,63 +42,31 @@ public record CreateUserResponse(UserId UserId, string Name, string Email);
 [Tags("Users")]
 public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpoint<CreateUserRequest, ResponseData<CreateUserResponse>>
 {
-    /// <summary>
-    /// 配置端点的基本设置
-    /// 包括HTTP方法、认证方案、权限要求等
-    /// </summary>
     public override void Configure()
     {
-        // 设置HTTP POST方法，用于创建新用户
         Post("/api/users");
-
-        // 设置JWT Bearer认证方案，要求用户必须提供有效的JWT令牌
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-
-        // 设置权限要求：用户必须同时拥有API访问权限和用户创建权限
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserCreate);
     }
 
-    /// <summary>
-    /// 处理HTTP请求的核心方法
-    /// 验证角色信息，处理密码哈希，创建用户账户并返回结果
-    /// </summary>
-    /// <param name="request">包含用户创建信息的请求对象</param>
-    /// <param name="ct">取消令牌，用于支持异步操作的取消</param>
-    /// <returns>异步任务</returns>
     public override async Task HandleAsync(CreateUserRequest request, CancellationToken ct)
     {
-        // 通过角色查询服务验证要分配的角色信息
-        // 确保角色存在且可用于分配
         var rolesToBeAssigned = await roleQuery.GetAdminRolesForAssignmentAsync(request.RoleIds, ct);
-
-        // 创建用户命令对象，包含所有用户信息和角色分配
-        // 密码哈希处理统一在命令处理器中完成
         var cmd = new CreateUserCommand(
-            request.Name,                // 用户名
-            request.Email,               // 邮箱
-            request.Password,            // 原始密码（将在命令处理器中哈希）
-            request.Phone,               // 电话
-            request.RealName,            // 真实姓名
-            request.Status,              // 状态
-            request.Gender,              // 性别
-            request.BirthDate,           // 出生日期
-            request.DeptId,              // 部门ID
-            request.DeptName,            // 部门名称
-            rolesToBeAssigned            // 要分配的角色列表
+            request.Name,
+            request.Email,
+            request.Password,
+            request.Phone,
+            request.RealName,
+            request.Status,
+            request.Gender,
+            request.BirthDate,
+            request.DeptId,
+            request.DeptName,
+            rolesToBeAssigned
         );
-
-        // 通过中介者发送命令，执行实际的用户创建业务逻辑
-        // 返回新创建的用户ID
         var userId = await mediator.Send(cmd, ct);
-
-        // 创建响应对象，包含新创建的用户信息
-        var response = new CreateUserResponse(
-            userId,        // 用户ID
-            request.Name,  // 用户名
-            request.Email  // 邮箱
-        );
-
-        // 返回成功响应，使用统一的响应数据格式包装
+        var response = new CreateUserResponse(userId, request.Name, request.Email);
         await Send.OkAsync(response.AsResponseData(), cancellation: ct);
     }
 }

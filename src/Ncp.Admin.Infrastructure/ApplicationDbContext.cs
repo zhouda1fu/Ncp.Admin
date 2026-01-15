@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.DeliverAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;

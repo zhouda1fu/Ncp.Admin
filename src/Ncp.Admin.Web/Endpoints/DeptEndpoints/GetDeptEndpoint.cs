@@ -30,29 +30,15 @@ public record GetDeptResponse(DeptId Id, string Name, string Remark, DeptId Pare
 [Tags("Depts")]
 public class GetDeptEndpoint(DeptQuery deptQuery) : Endpoint<GetDeptRequest, ResponseData<GetDeptResponse?>>
 {
-    /// <summary>
-    /// 配置端点的基本设置
-    /// 包括HTTP方法、认证方案、权限要求等
-    /// </summary>
+   
     public override void Configure()
     {
-        // 设置HTTP GET方法，通过路由参数获取部门ID
+      
         Get("/api/dept/{id}");
-
-        // 设置JWT Bearer认证方案，要求用户必须提供有效的JWT令牌
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-
-        // 设置权限要求：用户必须同时拥有API访问权限和部门查看权限
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptView);
     }
 
-    /// <summary>
-    /// 处理HTTP请求的核心方法
-    /// 根据部门ID查询详细信息并返回结果
-    /// </summary>
-    /// <param name="req">包含部门ID的请求对象</param>
-    /// <param name="ct">取消令牌，用于支持异步操作的取消</param>
-    /// <returns>异步任务</returns>
     public override async Task HandleAsync(GetDeptRequest req, CancellationToken ct)
     {
         // 从路由参数中获取部门ID（如果请求对象中没有）

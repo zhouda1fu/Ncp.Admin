@@ -20,21 +20,10 @@ public class GetUserAccessCodesEndpoint(RoleQuery roleQuery, UserQuery userQuery
     /// </summary>
     public override void Configure()
     {
-        // 设置HTTP GET方法，用于获取当前用户的权限码
         Get("/api/auth/codes");
-
-        // 设置JWT Bearer认证方案，要求用户必须提供有效的JWT令牌
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-
-        // 只需要认证，不需要特定权限（因为用户总是可以查看自己的权限）
     }
 
-    /// <summary>
-    /// 处理HTTP请求的核心方法
-    /// 从JWT token中获取用户ID，查询用户的角色和权限代码
-    /// </summary>
-    /// <param name="ct">取消令牌，用于支持异步操作的取消</param>
-    /// <returns>异步任务</returns>
     public override async Task HandleAsync(CancellationToken ct)
     {
         // 从JWT token中获取用户ID

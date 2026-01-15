@@ -62,7 +62,6 @@ try
     builder.Services.AddDataProtection()
         .PersistKeysToStackExchangeRedis("DataProtection-Keys");
     
-    // 内存缓存服务（用于查询结果缓存）
     builder.Services.AddMemoryCache();
 
     // 配置JWT认证

@@ -50,9 +50,7 @@ public static class PasswordHasher
         var salt = parts[0];
         var hash = parts[1];
 
-        return Validate(password, salt, hash);
+        return HashPassword(password, salt) == hash;
     }
-
-    private static bool Validate(string password, string salt, string hash) => HashPassword(password, salt) == hash;
 }
 

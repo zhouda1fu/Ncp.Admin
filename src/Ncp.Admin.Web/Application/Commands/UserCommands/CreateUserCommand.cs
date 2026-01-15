@@ -23,9 +23,6 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     }
 }
 
-/// <summary>
-/// 创建用户命令处理器
-/// </summary>
 public class CreateUserCommandHandler(IUserRepository userRepository) : ICommandHandler<CreateUserCommand, UserId>
 {
     public async Task<UserId> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -34,15 +31,11 @@ public class CreateUserCommandHandler(IUserRepository userRepository) : ICommand
 
         var passwordHash = Utils.PasswordHasher.HashPassword(request.Password);
 
-        List<UserRole> roles = [];
-        foreach (var assignAdminUserRoleDto in request.RolesToBeAssigned)
-        {
-            roles.Add(new UserRole(assignAdminUserRoleDto.RoleId, assignAdminUserRoleDto.RoleName));
-        }
+        var roles = request.RolesToBeAssigned
+            .Select(r => new UserRole(r.RoleId, r.RoleName))
+            .ToList();
 
         var user = new User(request.Name, request.Phone, passwordHash, roles, request.RealName, request.Status, request.Email, request.Gender, request.BirthDate);
-
-        // 分配部门
         if (request.DeptId != null && !string.IsNullOrEmpty(request.DeptName))
         {
             var dept = new UserDept(user.Id, request.DeptId, request.DeptName);
