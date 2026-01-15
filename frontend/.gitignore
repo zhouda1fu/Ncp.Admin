@@ -1,9 +1,5 @@
 node_modules
 .DS_Store
-
-# Explicitly unignore script bin directories (prevents issues with global gitignore)
-!/scripts/*/bin/
-
 dist
 dist-ssr
 dist.zip
