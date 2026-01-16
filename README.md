@@ -108,7 +108,7 @@ docker run --restart unless-stopped --name netcorepal-rabbitmq -p 5672:5672 -p 1
 
 ```bash
 # 进入前端目录
-cd frontend
+cd src/frontend
 
 # 安装依赖
 npm i -g corepack
@@ -131,7 +131,7 @@ pnpm dev:antd
 pnpm build:antd
 ```
 
-构建产物将输出到 `frontend/apps/web-antd/dist` 目录。
+构建产物将输出到 `frontend/apps/admin-antd/dist` 目录。
 
 ### 其他常用命令
 
@@ -151,7 +151,7 @@ pnpm preview
 
 ### 环境变量配置
 
-前端项目的环境变量配置文件位于 `frontend/apps/web-antd/.env.development`：
+前端项目的环境变量配置文件位于 `frontend/apps/admin-antd/.env.development`：
 
 - `VITE_PORT`: 开发服务器端口（默认：5666）
 - `VITE_GLOB_API_URL`: 后端 API 地址（默认：http://localhost:5511/api）

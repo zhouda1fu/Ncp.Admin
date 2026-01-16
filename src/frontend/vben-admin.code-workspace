@@ -5,8 +5,8 @@
       "path": "apps/backend-mock",
     },
     {
-      "name": "@vben/web-antd",
-      "path": "apps/web-antd",
+      "name": "@vben/admin-antd",
+      "path": "apps/admin-antd",
     },
     {
       "name": "@vben/web-ele",
