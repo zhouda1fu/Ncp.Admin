@@ -3,7 +3,7 @@ import { createJiti } from "../../../../node_modules/.pnpm/jiti@2.6.1/node_modul
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben/eslint-config": "D:/github/Ncp.Admin/frontend/internal/lint-configs/eslint-config"
+    "@vben/eslint-config": "D:/github/Ncp.Admin/src/frontend/internal/lint-configs/eslint-config"
   },
   "transformOptions": {
     "babel": {
@@ -12,7 +12,7 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("D:/github/Ncp.Admin/frontend/internal/lint-configs/eslint-config/src/index.js")} */
-const _module = await jiti.import("D:/github/Ncp.Admin/frontend/internal/lint-configs/eslint-config/src/index.ts");
+/** @type {import("D:/github/Ncp.Admin/src/frontend/internal/lint-configs/eslint-config/src/index.js")} */
+const _module = await jiti.import("D:/github/Ncp.Admin/src/frontend/internal/lint-configs/eslint-config/src/index.ts");
 
 export const defineConfig = _module.defineConfig;

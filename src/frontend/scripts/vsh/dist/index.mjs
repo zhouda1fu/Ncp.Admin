@@ -3,7 +3,7 @@ import { createJiti } from "../../../node_modules/.pnpm/jiti@2.6.1/node_modules/
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben/vsh": "D:/github/Ncp.Admin/frontend/scripts/vsh"
+    "@vben/vsh": "D:/github/Ncp.Admin/src/frontend/scripts/vsh"
   },
   "transformOptions": {
     "babel": {
@@ -12,7 +12,7 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("D:/github/Ncp.Admin/frontend/scripts/vsh/src/index.js")} */
-const _module = await jiti.import("D:/github/Ncp.Admin/frontend/scripts/vsh/src/index.ts");
+/** @type {import("D:/github/Ncp.Admin/src/frontend/scripts/vsh/src/index.js")} */
+const _module = await jiti.import("D:/github/Ncp.Admin/src/frontend/scripts/vsh/src/index.ts");
 
 export default _module?.default ?? _module;

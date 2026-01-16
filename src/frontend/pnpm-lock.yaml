@@ -585,7 +585,7 @@ importers:
         specifier: 'catalog:'
         version: 3.2.1(typescript@5.9.3)
 
-  apps/web-antd:
+  apps/admin-antd:
     dependencies:
       '@vben/access':
         specifier: workspace:*

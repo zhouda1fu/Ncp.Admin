@@ -3,7 +3,7 @@ import { createJiti } from "../../../../../../node_modules/.pnpm/jiti@2.6.1/node
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben-core/shared": "D:/github/Ncp.Admin/frontend/packages/@core/base/shared"
+    "@vben-core/shared": "D:/github/Ncp.Admin/src/frontend/packages/@core/base/shared"
   },
   "transformOptions": {
     "babel": {
@@ -12,8 +12,8 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("D:/github/Ncp.Admin/frontend/packages/@core/base/shared/src/color/index.js")} */
-const _module = await jiti.import("D:/github/Ncp.Admin/frontend/packages/@core/base/shared/src/color/index.ts");
+/** @type {import("D:/github/Ncp.Admin/src/frontend/packages/@core/base/shared/src/color/index.js")} */
+const _module = await jiti.import("D:/github/Ncp.Admin/src/frontend/packages/@core/base/shared/src/color/index.ts");
 
 export const isDarkColor = _module.isDarkColor;
 export const isLightColor = _module.isLightColor;

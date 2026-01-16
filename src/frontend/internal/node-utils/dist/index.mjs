@@ -3,7 +3,7 @@ import { createJiti } from "../../../node_modules/.pnpm/jiti@2.6.1/node_modules/
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben/node-utils": "D:/github/Ncp.Admin/frontend/internal/node-utils"
+    "@vben/node-utils": "D:/github/Ncp.Admin/src/frontend/internal/node-utils"
   },
   "transformOptions": {
     "babel": {
@@ -12,8 +12,8 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("D:/github/Ncp.Admin/frontend/internal/node-utils/src/index.js")} */
-const _module = await jiti.import("D:/github/Ncp.Admin/frontend/internal/node-utils/src/index.ts");
+/** @type {import("D:/github/Ncp.Admin/src/frontend/internal/node-utils/src/index.js")} */
+const _module = await jiti.import("D:/github/Ncp.Admin/src/frontend/internal/node-utils/src/index.ts");
 
 export const getStagedFiles = _module.getStagedFiles;
 export const gitAdd = _module.gitAdd;

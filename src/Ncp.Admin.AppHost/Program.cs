@@ -1,3 +1,5 @@
+using Aspire.Hosting.JavaScript;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 //Enable Docker publisher
@@ -28,7 +30,7 @@ var rabbitmq = builder.AddRabbitMQ("rabbitmq", password: rabbitmqPassword)
     .WithManagementPlugin();
 
 // Add web project with infrastructure dependencies
-builder.AddProject<Projects.Ncp_Admin_Web>("web")
+var web = builder.AddProject<Projects.Ncp_Admin_Web>("web")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(redis)
@@ -38,5 +40,15 @@ builder.AddProject<Projects.Ncp_Admin_Web>("web")
     .WithReference(rabbitmq)
     .WaitFor(rabbitmq)
     ;
+
+var frontend = builder.AddJavaScriptApp("frontend", "../frontend")
+    .WithPnpm()
+    .WithExternalHttpEndpoints()
+    .WithReference(web)
+    .WaitFor(web);
+frontend.WithDeveloperCertificateTrust(true);
+frontend.WithEnvironment("VITE_API_BASE", web.GetEndpoint("http"));
+//frontend.WithEnvironment("VITE_GLOB_API_URL", "http://localhost:5511");
+frontend.WithExternalHttpEndpoints();
 
 await builder.Build().RunAsync();

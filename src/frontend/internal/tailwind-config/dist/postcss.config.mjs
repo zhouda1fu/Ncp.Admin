@@ -3,7 +3,7 @@ import { createJiti } from "../../../node_modules/.pnpm/jiti@2.6.1/node_modules/
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben/tailwind-config": "D:/github/Ncp.Admin/frontend/internal/tailwind-config"
+    "@vben/tailwind-config": "D:/github/Ncp.Admin/src/frontend/internal/tailwind-config"
   },
   "transformOptions": {
     "babel": {
@@ -12,7 +12,7 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("D:/github/Ncp.Admin/frontend/internal/tailwind-config/src/postcss.config.js")} */
-const _module = await jiti.import("D:/github/Ncp.Admin/frontend/internal/tailwind-config/src/postcss.config.ts");
+/** @type {import("D:/github/Ncp.Admin/src/frontend/internal/tailwind-config/src/postcss.config.js")} */
+const _module = await jiti.import("D:/github/Ncp.Admin/src/frontend/internal/tailwind-config/src/postcss.config.ts");
 
 export default _module?.default ?? _module;

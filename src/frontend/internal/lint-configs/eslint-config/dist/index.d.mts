@@ -1,1 +1,1 @@
-export * from "D:/github/Ncp.Admin/frontend/internal/lint-configs/eslint-config/src/index.js";
+export * from "D:/github/Ncp.Admin/src/frontend/internal/lint-configs/eslint-config/src/index.js";

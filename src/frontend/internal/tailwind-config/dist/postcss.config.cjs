@@ -3,7 +3,7 @@ const { createJiti } = require("../../../node_modules/.pnpm/jiti@2.6.1/node_modu
 const jiti = createJiti(__filename, {
   "interopDefault": true,
   "alias": {
-    "@vben/tailwind-config": "D:/github/Ncp.Admin/frontend/internal/tailwind-config"
+    "@vben/tailwind-config": "D:/github/Ncp.Admin/src/frontend/internal/tailwind-config"
   },
   "transformOptions": {
     "babel": {
@@ -12,5 +12,5 @@ const jiti = createJiti(__filename, {
   }
 })
 
-/** @type {import("D:/github/Ncp.Admin/frontend/internal/tailwind-config/src/postcss.config.js")} */
-module.exports = jiti("D:/github/Ncp.Admin/frontend/internal/tailwind-config/src/postcss.config.ts")
+/** @type {import("D:/github/Ncp.Admin/src/frontend/internal/tailwind-config/src/postcss.config.js")} */
+module.exports = jiti("D:/github/Ncp.Admin/src/frontend/internal/tailwind-config/src/postcss.config.ts")

@@ -2,7 +2,6 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-
   <PropertyGroup>
     <!-- Third-party package versions -->
     <NetCorePalVersion>3.1.0</NetCorePalVersion>
@@ -13,14 +12,13 @@
     <NetCorePalTestcontainerVersion>1.0.1</NetCorePalTestcontainerVersion>
     <NetCorePalAspireVersion>1.1.0</NetCorePalAspireVersion>
   </PropertyGroup>
-
   <ItemGroup>
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="10.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
     <PackageVersion Include="AspNet.Security.OAuth.Feishu" Version="9.0.0" />
     <PackageVersion Include="AspNet.Security.OAuth.Weixin" Version="9.0.0" />
-
     <!-- Database providers - framework specific versions -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0" />
@@ -39,7 +37,6 @@
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis" Version="4.12.0" />
-
     <!-- CAP packages for .NET 9.0+ -->
     <PackageVersion Include="DotNetCore.CAP.Dashboard" Version="8.4.1" />
     <PackageVersion Include="DotNetCore.CAP.RabbitMQ" Version="8.4.1" />
@@ -50,13 +47,10 @@
     <PackageVersion Include="DotNetCore.CAP.RedisStreams" Version="8.4.1" />
     <PackageVersion Include="DotNetCore.CAP.Pulsar" Version="8.4.1" />
     <PackageVersion Include="DotNetCore.CAP.OpenTelemetry" Version="8.4.1" />
-
     <!-- FastEndpoints -->
     <PackageVersion Include="FastEndpoints" Version="$(FastEndpointsVersion)" />
     <PackageVersion Include="FastEndpoints.Swagger" Version="$(FastEndpointsVersion)" />
     <PackageVersion Include="FastEndpoints.Swagger.Swashbuckle" Version="2.3.0" />
-
-    
     <!-- Other packages -->
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.17" />
@@ -70,7 +64,6 @@
     <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.1.0" />
     <PackageVersion Include="StackExchange.Redis" Version="2.9.32" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
-
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Docker" Version="13.1.0-preview.1.25616.3" />
@@ -98,7 +91,6 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.13.0-beta.1" />
     <PackageVersion Include="Npgsql.OpenTelemetry" Version="8.0.8" />
-
     <!-- NetCorePal packages -->
     <PackageVersion Include="NetCorePal.Context.AspNetCore" Version="$(NetCorePalVersion)" />
     <PackageVersion Include="NetCorePal.Context.CAP" Version="$(NetCorePalVersion)" />
@@ -126,7 +118,6 @@
     <PackageVersion Include="NetCorePal.Aspire.Hosting.DMDB" Version="$(NetCorePalAspireVersion)" />
     <PackageVersion Include="NetCorePal.Aspire.Hosting.OpenGauss" Version="$(NetCorePalAspireVersion)" />
     <PackageVersion Include="NetCorePal.Aspire.Hosting.MongoDB" Version="$(NetCorePalAspireVersion)" />
-
     <!-- Testing packages -->
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Testcontainers" Version="$(TestcontainersVersion)" />
@@ -145,7 +136,6 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FastEndpoints.Testing" Version="$(FastEndpointsVersion)" />
-
     <!-- Code analysis -->
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.3.0.106239" />
   </ItemGroup>

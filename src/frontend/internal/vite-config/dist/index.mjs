@@ -3,7 +3,7 @@ import { createJiti } from "../../../node_modules/.pnpm/jiti@2.6.1/node_modules/
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben/vite-config": "D:/github/Ncp.Admin/frontend/internal/vite-config"
+    "@vben/vite-config": "D:/github/Ncp.Admin/src/frontend/internal/vite-config"
   },
   "transformOptions": {
     "babel": {
@@ -12,8 +12,8 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("D:/github/Ncp.Admin/frontend/internal/vite-config/src/index.js")} */
-const _module = await jiti.import("D:/github/Ncp.Admin/frontend/internal/vite-config/src/index.ts");
+/** @type {import("D:/github/Ncp.Admin/src/frontend/internal/vite-config/src/index.js")} */
+const _module = await jiti.import("D:/github/Ncp.Admin/src/frontend/internal/vite-config/src/index.ts");
 
 export const loadAndConvertEnv = _module.loadAndConvertEnv;
 export const defineConfig = _module.defineConfig;
