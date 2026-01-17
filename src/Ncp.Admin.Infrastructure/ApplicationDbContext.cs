@@ -1,8 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Ncp.Admin.Domain.AggregatesModel.DeliverAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
-using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using NetCorePal.Extensions.DistributedTransactions.CAP.Persistence;
@@ -31,9 +29,6 @@ public partial class ApplicationDbContext(DbContextOptions<ApplicationDbContext>
         ConfigureStronglyTypedIdValueConverter(configurationBuilder);
         base.ConfigureConventions(configurationBuilder);
     }
-
-    public DbSet<Order> Orders => Set<Order>();
-    public DbSet<DeliverRecord> DeliverRecords => Set<DeliverRecord>();
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();

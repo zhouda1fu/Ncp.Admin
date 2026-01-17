@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Ncp.Admin.Web.Application.IntegrationEventHandlers;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Clients;
 using Ncp.Admin.Web.Extensions;
@@ -287,7 +286,7 @@ try
         var html = VisualizationHtmlBuilder.GenerateVisualizationHtml(
             CodeFlowAnalysisHelper.GetResultFromAssemblies(typeof(Program).Assembly,
                 typeof(ApplicationDbContext).Assembly,
-                typeof(Ncp.Admin.Domain.AggregatesModel.OrderAggregate.Order).Assembly)
+                typeof(Ncp.Admin.Domain.AggregatesModel.UserAggregate.User).Assembly)
         );
         return Results.Content(html, "text/html; charset=utf-8");
     });

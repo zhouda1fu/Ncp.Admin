@@ -1,5 +1,5 @@
 using Ncp.Admin.Domain.DomainEvents.RoleEvents;
-using Ncp.Admin.Web.Application.Commands.UserCommands;
+using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;
