@@ -92,6 +92,20 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// 根据部门ID获取所有用户ID列表
+    /// </summary>
+    /// <param name="deptId">部门ID</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>属于指定部门的所有用户ID列表</returns>
+    public async Task<List<UserId>> GetUserIdsByDeptIdAsync(DeptId deptId, CancellationToken cancellationToken = default)
+    {
+        return await UserSet.AsNoTracking()
+            .Where(u => u.Dept != null && u.Dept.DeptId == deptId)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<UserLoginInfoQueryDto?> GetUserInfoForLoginAsync(string name, CancellationToken cancellationToken)
     {
         return await UserSet

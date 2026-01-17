@@ -100,6 +100,7 @@ public class User : Entity<UserId>, IAggregateRoot
     {
         var savedRole = Roles.FirstOrDefault(r => r.RoleId == roleId);
         savedRole?.UpdateRoleInfo(roleName);
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
     public void UpdatePassword(string newPasswordHash)
@@ -139,6 +140,21 @@ public class User : Entity<UserId>, IAggregateRoot
         ArgumentNullException.ThrowIfNull(dept);
 
         Dept = dept;
+    }
+
+    /// <summary>
+    /// 更新部门名称
+    /// </summary>
+    /// <param name="deptName">新的部门名称</param>
+    public void UpdateDeptName(string deptName)
+    {
+        if (Dept == null)
+        {
+            return;
+        }
+
+        Dept.UpdateDeptName(deptName);
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 }
 

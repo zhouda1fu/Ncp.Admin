@@ -30,7 +30,5 @@ public class DeleteDeptCommandHandler(IDeptRepository deptRepository, Applicatio
         }
 
         dept.SoftDelete();
-
-        await deptRepository.UpdateAsync(dept, cancellationToken);
     }
 }

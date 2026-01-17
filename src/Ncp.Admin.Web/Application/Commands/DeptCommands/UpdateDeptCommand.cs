@@ -29,7 +29,5 @@ public class UpdateDeptCommandHandler(IDeptRepository deptRepository) : ICommand
             ?? throw new KnownException($"未找到部门，Id = {request.Id}");
 
         dept.UpdateInfo(request.Name, request.Remark, request.ParentId, request.Status);
-
-        await deptRepository.UpdateAsync(dept, cancellationToken);
     }
 }

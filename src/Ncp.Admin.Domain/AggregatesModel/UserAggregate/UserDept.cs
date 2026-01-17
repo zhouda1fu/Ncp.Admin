@@ -45,4 +45,18 @@ public class UserDept
         AssignedAt = DateTimeOffset.UtcNow;
         DeptName = deptName;
     }
+
+    /// <summary>
+    /// 更新部门名称
+    /// </summary>
+    /// <param name="deptName">新的部门名称</param>
+    public void UpdateDeptName(string deptName)
+    {
+        if (string.IsNullOrWhiteSpace(deptName))
+        {
+            throw new KnownException("部门名称不能为空");
+        }
+
+        DeptName = deptName;
+    }
 }
