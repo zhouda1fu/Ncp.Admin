@@ -28,7 +28,7 @@ public record GetDeptResponse(DeptId Id, string Name, string Remark, DeptId Pare
 /// 该端点用于根据ID查询特定部门的详细信息
 /// </summary>
 [Tags("Depts")]
-public class GetDeptEndpoint(DeptQuery deptQuery) : Endpoint<GetDeptRequest, ResponseData<GetDeptResponse?>>
+public class GetDeptEndpoint(DeptQuery deptQuery) : Endpoint<GetDeptRequest, ResponseData<GetDeptResponse>>
 {
    
     public override void Configure()
@@ -41,42 +41,29 @@ public class GetDeptEndpoint(DeptQuery deptQuery) : Endpoint<GetDeptRequest, Res
 
     public override async Task HandleAsync(GetDeptRequest req, CancellationToken ct)
     {
-        // 从路由参数中获取部门ID（如果请求对象中没有）
-        DeptId deptId;
-        if (req.Id != default)
-        {
-            deptId = req.Id;
-        }
-        else
-        {
-            var idString = Route<string>("id");
-            if (string.IsNullOrEmpty(idString) || !long.TryParse(idString, out var idValue))
-            {
-                throw new KnownException("无效的部门ID");
-            }
-            deptId = new DeptId(idValue);
-        }
+       
 
         // 通过查询服务获取部门详细信息
-        var dept = await deptQuery.GetDeptByIdAsync(deptId, ct);
+        var dept = await deptQuery.GetDeptByIdAsync(req.Id, ct);
 
         // 验证部门是否存在
         if (dept == null)
         {
-            throw new KnownException($"未找到部门，Id = {deptId}");
+            await Send.NotFoundAsync(ct);
         }
-
-        // 创建响应对象
-        var response = new GetDeptResponse(
-            dept.Id,
-            dept.Name,
-            dept.Remark,
-            dept.ParentId,
-            dept.Status,
-            dept.CreatedAt
-        );
-
-        // 返回成功响应，使用统一的响应数据格式包装
-        await Send.OkAsync(response.AsResponseData(), cancellation: ct);
+        else
+        {
+            // 创建响应对象
+            var response = new GetDeptResponse(
+                dept.Id,
+                dept.Name,
+                dept.Remark,
+                dept.ParentId,
+                dept.Status,
+                dept.CreatedAt
+            );
+            // 返回成功响应，使用统一的响应数据格式包装
+            await Send.OkAsync(response.AsResponseData(), cancellation: ct);
+        }
     }
 }

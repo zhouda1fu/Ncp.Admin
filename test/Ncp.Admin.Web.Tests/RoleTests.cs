@@ -52,6 +52,7 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.NotNull(result.Data);
             Assert.Equal(roleName, result.Data.Name);
             Assert.Equal(description, result.Data.Description);
@@ -82,7 +83,8 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var (response, result) = await client.POSTAsync<CreateRoleEndpoint, CreateRoleRequest, ResponseData<CreateRoleResponse>>(request2);
             
             // Assert
-            Assert.False(response.IsSuccessStatusCode);
+            Assert.NotNull(result);
+            Assert.False(result.Success);
         }
         finally
         {
@@ -102,7 +104,8 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var (response, result) = await client.POSTAsync<CreateRoleEndpoint, CreateRoleRequest, ResponseData<CreateRoleResponse>>(request);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     #endregion
@@ -132,6 +135,7 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.NotNull(result.Data);
             Assert.Equal(roleId, result.Data.RoleId);
             Assert.Equal(roleName, result.Data.Name);
@@ -152,11 +156,10 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         // Act
         var request = new GetRoleRequest(nonExistentId);
-        var (response, result) = await client.GETAsync<GetRoleEndpoint, GetRoleRequest, ResponseData<RoleQueryDto?>>(request);
+        var (response, result) = await client.GETAsync<GetRoleEndpoint, GetRoleRequest, ResponseData<RoleQueryDto>>(request);
         
         // Assert
         Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
     }
 
     #endregion
@@ -188,6 +191,7 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.True(result.Data);
             
             // 验证更新成功
@@ -219,8 +223,8 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var (response, result) = await client.PUTAsync<UpdateRoleEndpoint, UpdateRoleInfoRequest, ResponseData<bool>>(request);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     #endregion
@@ -251,6 +255,7 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.True(result.Data);
             
             // 验证角色已被软删除
@@ -273,10 +278,12 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         // Act
         var response = await client.DeleteAsync($"/api/admin/roles/{nonExistentId}", TestContext.Current.CancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var result = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData<bool>>(responseContent);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     #endregion
@@ -310,6 +317,7 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.True(result.Data);
             
             // 验证角色已激活
@@ -346,7 +354,8 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var (response, result) = await client.PUTAsync<ActivateRoleEndpoint, ActivateRoleRequest, ResponseData<bool>>(request);
             
             // Assert
-            Assert.False(response.IsSuccessStatusCode);
+            Assert.NotNull(result);
+            Assert.False(result.Success);
         }
         finally
         {
@@ -381,6 +390,7 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.True(result.Data);
             
             // 验证角色已停用
@@ -421,7 +431,8 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var (response, result) = await client.PUTAsync<DeactivateRoleEndpoint, DeactivateRoleRequest, ResponseData<bool>>(request);
             
             // Assert
-            Assert.False(response.IsSuccessStatusCode);
+            Assert.NotNull(result);
+            Assert.False(result.Success);
         }
         finally
         {

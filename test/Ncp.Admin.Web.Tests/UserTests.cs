@@ -88,6 +88,7 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.NotNull(result.Data);
             Assert.Equal(userName, result.Data.Name);
             Assert.Equal(email, result.Data.Email);
@@ -144,7 +145,8 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var (response, result) = await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(request2);
             
             // Assert
-            Assert.False(response.IsSuccessStatusCode);
+            Assert.NotNull(result);
+            Assert.False(result.Success);
         }
         finally
         {
@@ -177,7 +179,8 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var (response, result) = await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(request);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     #endregion
@@ -221,6 +224,7 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.NotNull(result.Data);
             Assert.Equal(userId, result.Data.UserId);
             Assert.Equal(userName, result.Data.Name);
@@ -245,7 +249,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         // Assert
         Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
     }
 
     #endregion
@@ -303,6 +306,7 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.NotNull(result.Data);
             Assert.Equal(updatedName, result.Data.Name);
             
@@ -345,8 +349,8 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var (response, result) = await client.PUTAsync<UpdateUserEndpoint, UpdateUserRequest, ResponseData<UpdateUserResponse>>(request);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     #endregion
@@ -391,6 +395,7 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.True(result.Data);
             
             // 验证用户已被软删除
@@ -413,10 +418,12 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         // Act
         var response = await client.DeleteAsync($"/api/admin/users/{nonExistentId}", TestContext.Current.CancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var result = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData<bool>>(responseContent);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     #endregion

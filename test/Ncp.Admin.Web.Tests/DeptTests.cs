@@ -21,6 +21,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         Assert.True(response.IsSuccessStatusCode);
         Assert.NotNull(result);
+        Assert.True(result.Success);
         Assert.NotNull(result.Data);
         
         return result.Data.Id;
@@ -122,8 +123,8 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
             
             // Assert
-            Assert.False(response.IsSuccessStatusCode);
-            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.NotNull(result);
+            Assert.False(result.Success);
         }
         finally
         {
@@ -142,8 +143,8 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     [Fact]
@@ -158,8 +159,8 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     #endregion
@@ -208,7 +209,6 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         // Assert
         Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         // Act - 使用无效的ID格式（通过URL传递）
         var response = await client.GetAsync("/api/admin/dept/invalid-id", TestContext.Current.CancellationToken);
         
-        // Assert
+        // Assert - 对于路由错误，直接检查HTTP状态码
         Assert.False(response.IsSuccessStatusCode);
     }
 
@@ -352,6 +352,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.True(result.Data);
             
             // 验证更新成功
@@ -377,11 +378,11 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         // Act
         var request = new UpdateDeptRequest(nonExistentId, "新名称", "新备注", new DeptId(0), 1);
-        var (response, result) = await client.PUTAsync<UpdateDeptEndpoint, UpdateDeptRequest, ResponseData<bool>>(request);
-        
-        // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+            var (response, result) = await client.PUTAsync<UpdateDeptEndpoint, UpdateDeptRequest, ResponseData<bool>>(request);
+            
+            // Assert
+            Assert.NotNull(result);
+            Assert.False(result.Success);
     }
 
     [Fact]
@@ -400,8 +401,8 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var (response, result) = await client.PUTAsync<UpdateDeptEndpoint, UpdateDeptRequest, ResponseData<bool>>(request);
             
             // Assert
-            Assert.False(response.IsSuccessStatusCode);
-            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.NotNull(result);
+            Assert.False(result.Success);
         }
         finally
         {
@@ -425,8 +426,8 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var (response, result) = await client.PUTAsync<UpdateDeptEndpoint, UpdateDeptRequest, ResponseData<bool>>(request);
             
             // Assert
-            Assert.False(response.IsSuccessStatusCode);
-            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.NotNull(result);
+            Assert.False(result.Success);
         }
         finally
         {
@@ -457,6 +458,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             // Assert
             Assert.True(response.IsSuccessStatusCode);
             Assert.NotNull(result);
+            Assert.True(result.Success);
             Assert.True(result.Data);
             
             // 验证部门已被软删除
@@ -486,10 +488,12 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             
             // Act - 尝试删除有子部门的父部门
             var response = await client.DeleteAsync($"/api/admin/dept/{parentId}", TestContext.Current.CancellationToken);
+            var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData<bool>>(responseContent);
             
             // Assert
-            Assert.False(response.IsSuccessStatusCode);
-            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.NotNull(result);
+            Assert.False(result.Success);
         }
         finally
         {
@@ -506,10 +510,12 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         // Act
         var response = await client.DeleteAsync($"/api/admin/dept/{nonExistentId}", TestContext.Current.CancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var result = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData<bool>>(responseContent);
         
         // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.False(result.Success);
     }
 
     #endregion

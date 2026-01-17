@@ -17,7 +17,7 @@ public record GetUserRequest(UserId Id);
 /// 该端点用于根据用户ID查询用户的详细信息
 /// </summary>
 [Tags("Users")]
-public class GetUserEndpoint(UserQuery userQuery) : Endpoint<GetUserRequest, ResponseData<UserInfoQueryDto?>>
+public class GetUserEndpoint(UserQuery userQuery) : Endpoint<GetUserRequest, ResponseData<UserInfoQueryDto>>
 {
     public override void Configure()
     {
@@ -31,9 +31,12 @@ public class GetUserEndpoint(UserQuery userQuery) : Endpoint<GetUserRequest, Res
         var userInfo = await userQuery.GetUserByIdAsync(req.Id, ct);
         if (userInfo == null)
         {
-            throw new KnownException($"未找到用户，Id = {req.Id}");
+            await Send.NotFoundAsync(ct);
         }
-        await Send.OkAsync(userInfo.AsResponseData(), cancellation: ct);
+        else
+        {
+            await Send.OkAsync(userInfo.AsResponseData(), cancellation: ct);
+        }
     }
 }
 

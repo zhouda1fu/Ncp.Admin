@@ -17,9 +17,9 @@ public record GetRoleRequest(RoleId Id);
 /// 该端点用于根据角色ID查询角色的详细信息，包括权限列表
 /// </summary>
 [Tags("Roles")]
-public class GetRoleEndpoint(RoleQuery roleQuery) : Endpoint<GetRoleRequest, ResponseData<RoleQueryDto?>>
+public class GetRoleEndpoint(RoleQuery roleQuery) : Endpoint<GetRoleRequest, ResponseData<RoleQueryDto>>
 {
-  
+
     public override void Configure()
     {
         Get("/api/admin/roles/{id}");
@@ -27,7 +27,7 @@ public class GetRoleEndpoint(RoleQuery roleQuery) : Endpoint<GetRoleRequest, Res
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleView);
     }
 
-   
+
     public override async Task HandleAsync(GetRoleRequest req, CancellationToken ct)
     {
         // 通过查询服务获取角色详细信息
@@ -36,9 +36,12 @@ public class GetRoleEndpoint(RoleQuery roleQuery) : Endpoint<GetRoleRequest, Res
         // 验证角色是否存在
         if (roleInfo == null)
         {
-            throw new KnownException($"未找到角色，Id = {req.Id}");
+            await Send.NotFoundAsync(ct);
         }
-        await Send.OkAsync(roleInfo!.AsResponseData(), cancellation: ct);
+        else
+        {
+            await Send.OkAsync(roleInfo!.AsResponseData(), cancellation: ct);
+        }
     }
 }
 
