@@ -200,7 +200,7 @@ export function useColumns<T = SystemUserApi.SystemUser>(
     {
       field: 'roles',
       title: $t('system.user.roles'),
-      width: 200,
+      minWidth: 200,
       formatter: ({ cellValue }) => {
         if (Array.isArray(cellValue)) {
           return cellValue.join(', ');
