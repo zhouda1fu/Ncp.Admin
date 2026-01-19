@@ -52,6 +52,9 @@ export const useAuthStore = defineStore('auth', () => {
         userStore.setUserInfo(userInfo);
         // 从登录响应中获取权限代码，如果没有则返回空数组
         accessStore.setAccessCodes(loginResult.permissionCodes || []);
+        
+        // 重置访问检查状态，确保路由守卫会重新生成菜单
+        accessStore.setIsAccessChecked(false);
 
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);

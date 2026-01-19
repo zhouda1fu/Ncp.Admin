@@ -86,6 +86,7 @@ docker run --restart unless-stopped --name netcorepal-rabbitmq -p 5672:5672 -p 1
 
 启动后，可以通过以下地址访问各个服务：
 
+- **前端应用**: http://localhost:5666/
 - **Redis**: `localhost:6379`
 - **MySQL**: `localhost:3306` (root/123456)  
 - **RabbitMQ AMQP**: `localhost:5672` (guest/guest)
