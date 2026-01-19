@@ -156,5 +156,22 @@ public class User : Entity<UserId>, IAggregateRoot
         Dept.UpdateDeptName(deptName);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
+
+    /// <summary>
+    /// 撤销所有未过期的刷新令牌（用于退出登录）
+    /// </summary>
+    public void RevokeAllRefreshTokens()
+    {
+        var now = DateTimeOffset.UtcNow;
+        foreach (var token in RefreshTokens)
+        {
+            // 只撤销未过期且未使用的令牌
+            if (!token.IsRevoked && !token.IsUsed && token.ExpiresTime > now)
+            {
+                token.Revoke();
+            }
+        }
+        UpdateTime = new UpdateTime(now);
+    }
 }
 
