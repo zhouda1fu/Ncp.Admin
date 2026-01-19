@@ -13,7 +13,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 // Add Redis infrastructure
 var redis = builder.AddRedis("Redis").WithRedisInsight();
 
-var databasePassword = builder.AddParameter("database-password", value:"1234@Dev", secret: true);
+var databasePassword = builder.AddParameter("database-password", value: "1234@Dev", secret: true);
 // Add MySQL database infrastructure
 var mysql = builder.AddMySql("Database", password: databasePassword)
     // Configure the container to store data in a volume so that it persists across instances.
@@ -38,17 +38,15 @@ var web = builder.AddProject<Projects.Ncp_Admin_Web>("web")
     .WithReference(mysqlDb)
     .WaitFor(mysqlDb)
     .WithReference(rabbitmq)
-    .WaitFor(rabbitmq)
-    ;
+    .WaitFor(rabbitmq);
 
 var frontend = builder.AddJavaScriptApp("frontend", "../frontend")
     .WithPnpm()
+    .WithDeveloperCertificateTrust(true)
+    .WithHttpEndpoint(port: 5666, env: "VITE_PORT", name: "http", isProxied: false)
     .WithExternalHttpEndpoints()
+    .WithEnvironment("VITE_API_BASE", web.GetEndpoint("http"))
     .WithReference(web)
     .WaitFor(web);
-frontend.WithDeveloperCertificateTrust(true);
-frontend.WithEnvironment("VITE_API_BASE", web.GetEndpoint("http"));
-//frontend.WithEnvironment("VITE_GLOB_API_URL", "http://localhost:5511");
-frontend.WithExternalHttpEndpoints();
 
 await builder.Build().RunAsync();
