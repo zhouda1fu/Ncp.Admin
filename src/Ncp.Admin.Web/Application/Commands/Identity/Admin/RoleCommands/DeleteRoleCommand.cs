@@ -1,6 +1,7 @@
 using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 
@@ -31,13 +32,13 @@ public class DeleteRoleCommandHandler(IRoleRepository roleRepository) : ICommand
         var role = await roleRepository.GetAsync(request.RoleId, cancellationToken);
         if (role == null)
         {
-            throw new KnownException("角色不存在");
+            throw new KnownException("角色不存在", ErrorCodes.RoleNotFound);
         }
 
         // 检查是否为管理员用户，防止删除管理员
         if (role.Name.ToLower() == "admin")
         {
-            throw new KnownException("不能删除管理员角色");
+            throw new KnownException("不能删除管理员角色", ErrorCodes.CannotDeleteAdminRole);
         }
         role.SoftDelete();
     }

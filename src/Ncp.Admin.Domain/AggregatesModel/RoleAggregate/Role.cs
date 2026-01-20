@@ -1,4 +1,5 @@
 using Ncp.Admin.Domain.DomainEvents.RoleEvents;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 
@@ -59,7 +60,7 @@ public class Role : Entity<RoleId>, IAggregateRoot
     {
         if (!IsActive)
         {
-            throw new KnownException("角色已经被停用");
+            throw new KnownException("角色已经被停用", ErrorCodes.RoleAlreadyDeactivated);
         }
 
         IsActive = false;
@@ -69,7 +70,7 @@ public class Role : Entity<RoleId>, IAggregateRoot
     {
         if (IsActive)
         {
-            throw new KnownException("角色已经是激活状态");
+            throw new KnownException("角色已经是激活状态", ErrorCodes.RoleAlreadyActivated);
         }
 
         IsActive = true;

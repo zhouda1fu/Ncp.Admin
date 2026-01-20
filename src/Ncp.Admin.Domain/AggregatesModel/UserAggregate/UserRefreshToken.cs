@@ -1,3 +1,4 @@
+using Ncp.Admin.Domain;
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 public partial record UserRefreshTokenId : IInt64StronglyTypedId;
@@ -27,7 +28,7 @@ public class UserRefreshToken : Entity<UserRefreshTokenId>
         if (IsUsed ||
             IsRevoked ||
             ExpiresTime < DateTimeOffset.Now)
-            throw new KnownException("无效的刷新令牌");
+            throw new KnownException("无效的刷新令牌", ErrorCodes.InvalidRefreshToken);
 
         IsUsed = true;
     }

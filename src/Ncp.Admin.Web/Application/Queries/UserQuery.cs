@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
@@ -32,7 +33,7 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
                    .Where(t => t.Token == refreshToken)
                    .Select(t => t.UserId)
                    .SingleOrDefaultAsync(cancellationToken)
-               ?? throw new KnownException("无效的令牌");
+               ?? throw new KnownException("无效的令牌", ErrorCodes.InvalidToken);
     }
 
     public async Task<bool> DoesUserExist(string username, CancellationToken cancellationToken)

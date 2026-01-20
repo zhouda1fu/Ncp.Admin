@@ -2,6 +2,7 @@ using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 
@@ -30,7 +31,7 @@ public class UpdateUserCommandHandler(IUserRepository userRepository) : ICommand
     public async Task<UserId> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetAsync(request.UserId, cancellationToken) ??
-                   throw new KnownException($"未找到用户，UserId = {request.UserId}");
+                   throw new KnownException($"未找到用户，UserId = {request.UserId}", ErrorCodes.UserNotFound);
 
         user.UpdateUserInfo(request.Name, request.Phone, request.RealName, request.Status, request.Email, request.Gender, request.BirthDate);
 

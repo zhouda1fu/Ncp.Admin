@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Ncp.Admin.Domain.DomainEvents.DeptEvents;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 
@@ -105,7 +106,7 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     {
         if (Status == 1)
         {
-            throw new KnownException("部门已经是激活状态");
+            throw new KnownException("部门已经是激活状态", ErrorCodes.DeptAlreadyActivated);
         }
 
         Status = 1;
@@ -119,7 +120,7 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     {
         if (Status == 0)
         {
-            throw new KnownException("部门已经被停用");
+            throw new KnownException("部门已经被停用", ErrorCodes.DeptAlreadyDeactivated);
         }
 
         Status = 0;
@@ -133,7 +134,7 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     {
         if (IsDeleted)
         {
-            throw new KnownException("部门已经被删除");
+            throw new KnownException("部门已经被删除", ErrorCodes.DeptAlreadyDeleted);
         }
 
         IsDeleted = true;
@@ -148,7 +149,7 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     {
         if (child == null)
         {
-            throw new KnownException("子部门不能为空");
+            throw new KnownException("子部门不能为空", ErrorCodes.ChildDeptCannotBeEmpty);
         }
 
         Children.Add(child);
@@ -162,7 +163,7 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     {
         if (child == null)
         {
-            throw new KnownException("子部门不能为空");
+            throw new KnownException("子部门不能为空", ErrorCodes.ChildDeptCannotBeEmpty);
         }
 
         Children.Remove(child);

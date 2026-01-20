@@ -2,6 +2,7 @@ using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 
@@ -30,7 +31,7 @@ public class PasswordResetCommandHandler(IUserRepository userRepository) : IComm
     public async Task<UserId> Handle(PasswordResetCommand request, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetAsync(request.UserId, cancellationToken) 
-                   ?? throw new KnownException($"用户不存在，UserId={request.UserId}");
+                   ?? throw new KnownException($"用户不存在，UserId={request.UserId}", ErrorCodes.UserNotFound);
         user.PasswordReset(request.Password);
         return user.Id;
     }

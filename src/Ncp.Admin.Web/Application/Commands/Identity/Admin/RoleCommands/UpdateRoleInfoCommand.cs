@@ -2,6 +2,7 @@ using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 
@@ -34,7 +35,7 @@ public class UpdateRoleInfoCommandHandler(IRoleRepository roleRepository) : ICom
     public async Task Handle(UpdateRoleInfoCommand request, CancellationToken cancellationToken)
     {
         var role = await roleRepository.GetAsync(request.RoleId, cancellationToken) ??
-                   throw new KnownException($"未找到角色，RoleId = {request.RoleId}");
+                   throw new KnownException($"未找到角色，RoleId = {request.RoleId}", ErrorCodes.RoleNotFound);
         role.UpdateRoleInfo(request.Name, request.Description);
 
         // 更新角色权限

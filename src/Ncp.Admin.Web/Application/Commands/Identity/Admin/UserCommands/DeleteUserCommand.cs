@@ -1,6 +1,7 @@
 using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 
@@ -29,7 +30,7 @@ public class DeleteUserCommandHandler(IUserRepository userRepository) : ICommand
     public async Task Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetAsync(request.UserId, cancellationToken) ??
-                   throw new KnownException($"未找到用户，UserId = {request.UserId}");
+                   throw new KnownException($"未找到用户，UserId = {request.UserId}", ErrorCodes.UserNotFound);
 
         user.SoftDelete();
     }

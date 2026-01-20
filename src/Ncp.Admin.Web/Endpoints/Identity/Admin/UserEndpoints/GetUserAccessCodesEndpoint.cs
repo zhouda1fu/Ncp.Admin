@@ -3,7 +3,7 @@ using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Queries;
-using Ncp.Admin.Web.AppPermissions;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 
@@ -30,7 +30,7 @@ public class GetUserAccessCodesEndpoint(RoleQuery roleQuery, UserQuery userQuery
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdString) || !long.TryParse(userIdString, out var userIdValue))
         {
-            throw new KnownException("无效的用户身份");
+            throw new KnownException("无效的用户身份", ErrorCodes.InvalidUserIdentity);
         }
 
         var userId = new UserId(userIdValue);
@@ -39,7 +39,7 @@ public class GetUserAccessCodesEndpoint(RoleQuery roleQuery, UserQuery userQuery
         var userInfo = await userQuery.GetUserInfoForLoginByIdAsync(userId, ct);
         if (userInfo == null)
         {
-            throw new KnownException("用户不存在");
+            throw new KnownException("用户不存在", ErrorCodes.UserNotFound);
         }
 
         // 获取用户角色ID列表

@@ -1,6 +1,7 @@
 using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 
@@ -29,7 +30,7 @@ public class DeactivateRoleCommandHandler(IRoleRepository roleRepository) : ICom
     public async Task Handle(DeactivateRoleCommand request, CancellationToken cancellationToken)
     {
         var role = await roleRepository.GetAsync(request.RoleId, cancellationToken) ??
-                   throw new KnownException($"未找到角色，RoleId = {request.RoleId}");
+                   throw new KnownException($"未找到角色，RoleId = {request.RoleId}", ErrorCodes.RoleNotFound);
         role.Deactivate();
     }
 }

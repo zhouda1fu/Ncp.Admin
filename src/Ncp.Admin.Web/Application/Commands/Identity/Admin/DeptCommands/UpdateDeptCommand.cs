@@ -1,6 +1,7 @@
 using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.DeptCommands;
 
@@ -26,7 +27,7 @@ public class UpdateDeptCommandHandler(IDeptRepository deptRepository) : ICommand
     public async Task Handle(UpdateDeptCommand request, CancellationToken cancellationToken)
     {
         var dept = await deptRepository.GetAsync(request.Id, cancellationToken)
-            ?? throw new KnownException($"未找到部门，Id = {request.Id}");
+            ?? throw new KnownException($"未找到部门，Id = {request.Id}", ErrorCodes.DeptNotFound);
 
         dept.UpdateInfo(request.Name, request.Remark, request.ParentId, request.Status);
     }

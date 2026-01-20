@@ -1,4 +1,5 @@
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
@@ -54,7 +55,7 @@ public class UserDept
     {
         if (string.IsNullOrWhiteSpace(deptName))
         {
-            throw new KnownException("部门名称不能为空");
+            throw new KnownException("部门名称不能为空", ErrorCodes.DeptNameCannotBeEmpty);
         }
 
         DeptName = deptName;

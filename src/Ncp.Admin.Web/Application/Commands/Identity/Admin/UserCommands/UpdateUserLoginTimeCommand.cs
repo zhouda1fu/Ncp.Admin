@@ -1,5 +1,6 @@
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 
@@ -10,7 +11,7 @@ public class UpdateUserLoginTimeCommandHandler(IUserRepository userRepository) :
     public async Task Handle(UpdateUserLoginTimeCommand request, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetAsync(request.UserId, cancellationToken)
-                   ?? throw new KnownException($"未找到用户，UserId = {request.UserId}");
+                   ?? throw new KnownException($"未找到用户，UserId = {request.UserId}", ErrorCodes.UserNotFound);
 
         user.UpdateLastLoginTime(request.LoginTime);
         user.SetUserRefreshToken(request.RefreshToken);

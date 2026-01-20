@@ -8,6 +8,7 @@ using NetCorePal.Extensions.Jwt;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Domain;
 using Ncp.Admin.Web.Utils;
 using Serilog;
 
@@ -32,8 +33,7 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
         
         if (loginInfo == null || !PasswordHasher.VerifyHashedPassword(req.Password, loginInfo.PasswordHash))
         {
-            Log.Warning("用户登录失败: Username={Username}, Reason=InvalidCredentials", req.Username);
-            throw new KnownException("用户名或密码错误");
+            throw new KnownException("用户名或密码错误", ErrorCodes.UserNameOrPasswordError);
         }
 
         var nowTime = DateTimeOffset.UtcNow;

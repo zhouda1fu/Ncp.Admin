@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Infrastructure;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.DeptCommands;
 
@@ -18,7 +19,7 @@ public class DeleteDeptCommandHandler(IDeptRepository deptRepository, Applicatio
     public async Task Handle(DeleteDeptCommand request, CancellationToken cancellationToken)
     {
         var dept = await deptRepository.GetAsync(request.Id, cancellationToken)
-            ?? throw new KnownException($"未找到部门，Id = {request.Id}");
+            ?? throw new KnownException($"未找到部门，Id = {request.Id}", ErrorCodes.DeptNotFound);
 
         // 检查是否有子部门
         var hasChildren = await dbContext.Depts
@@ -26,7 +27,7 @@ public class DeleteDeptCommandHandler(IDeptRepository deptRepository, Applicatio
 
         if (hasChildren)
         {
-            throw new KnownException("该部门下存在子部门，无法删除");
+            throw new KnownException("该部门下存在子部门，无法删除", ErrorCodes.DeptHasChildrenCannotDelete);
         }
 
         dept.SoftDelete();

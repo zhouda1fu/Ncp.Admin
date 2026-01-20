@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Domain;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
@@ -50,7 +51,7 @@ public class GetUserProfileEndpoint(UserQuery userQuery) : Endpoint<GetUserProfi
         var userInfo = await userQuery.GetUserByIdAsync(req.UserId, ct);
         if (userInfo == null)
         {
-            throw new KnownException("无效的用户");
+            throw new KnownException("无效的用户", ErrorCodes.InvalidUser);
         }
         var response = new UserProfileResponse(
             userInfo.UserId,
