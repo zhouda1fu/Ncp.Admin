@@ -46,8 +46,13 @@ const [Grid, gridApi] = useVbenVxeGrid<SystemRoleApi.SystemRole>({
             ...formValues,
           });
           // vxe-table 根据全局配置 response: { result: 'items', total: 'total' } 读取数据
+          // 将 isActive 布尔值转换为 0/1，以匹配 Switch 组件的配置
+          const items = result.items.map((item) => ({
+            ...item,
+            isActive: item.isActive ? 1 : 0,
+          }));
           return {
-            items: result.items,
+            items,
             total: result.total,
           };
         },
@@ -102,17 +107,17 @@ function confirm(content: string, title: string) {
 
 /**
  * 状态开关即将改变
- * @param newStatus 期望改变的状态值
+ * @param newStatus 期望改变的状态值（0或1）
  * @param row 行数据
  * @returns 返回false则中止改变，返回其他值（undefined、true）则允许改变
  */
 async function onStatusChange(
-  newStatus: boolean,
+  newStatus: 0 | 1,
   row: SystemRoleApi.SystemRole,
 ) {
   const status: Recordable<string> = {
-    false: '禁用',
-    true: '启用',
+    0: '禁用',
+    1: '启用',
   };
   try {
     await confirm(
@@ -120,7 +125,7 @@ async function onStatusChange(
       `切换状态`,
     );
     // 根据新状态调用对应的端点
-    if (newStatus) {
+    if (newStatus === 1) {
       await activateRole(row.roleId);
     } else {
       await deactivateRole(row.roleId);
