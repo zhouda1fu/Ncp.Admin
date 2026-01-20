@@ -11,6 +11,8 @@ public class RoleQueryInput : PageRequest
     public string? Name { get; set; }
     public string? Description { get; set; }
     public bool? IsActive { get; set; }
+    public DateTimeOffset? StartTime { get; set; }
+    public DateTimeOffset? EndTime { get; set; }
 }
 
 public record AssignAdminUserRoleQueryDto(RoleId RoleId, string RoleName, IEnumerable<string> PermissionCodes);
@@ -78,6 +80,8 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
             .WhereIf(!string.IsNullOrWhiteSpace(query.Name), r => r.Name.Contains(query.Name!))
             .WhereIf(!string.IsNullOrWhiteSpace(query.Description), r => r.Description.Contains(query.Description!))
             .WhereIf(query.IsActive.HasValue, r => r.IsActive == query.IsActive)
+            .WhereIf(query.StartTime.HasValue, r => r.CreatedAt >= query.StartTime!.Value)
+            .WhereIf(query.EndTime.HasValue, r => r.CreatedAt <= query.EndTime!.Value)
             .OrderBy(r => r.Id)
             .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
             .ToPagedDataAsync(query, cancellationToken);
