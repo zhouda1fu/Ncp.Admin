@@ -1,7 +1,9 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using FluentValidation.AspNetCore;
 using Hangfire;
 using Hangfire.Redis.StackExchange;
+using IGeekFan.AspNetCore.Knife4jUI;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
@@ -109,6 +111,26 @@ try
     #region FastEndpoints
 
     builder.Services.AddFastEndpoints(o => o.IncludeAbstractValidators = true);
+
+    builder.Services.SwaggerDocument(settings =>
+    {
+        settings.DocumentSettings = s =>
+        {
+            s.Title = "Ncp.AdminAPI接口文档";
+            s.Version = "v1";
+            s.Description = "Ncp.AdminAPI接口文档";
+
+            s.UseControllerSummaryAsTagDescription = true;
+        };
+
+        // 过滤端点 - 只显示指定标签的端点
+        //settings.EndpointFilter = ep => ep.EndpointTags?.Any(tag =>
+        //    new[] { "Users","test" }.Contains(tag)) is true;
+
+        // 启用授权支持
+        settings.EnableJWTBearerAuth = true;
+    });
+
     builder.Services.Configure<JsonOptions>(o =>
         o.SerializerOptions.AddNetCorePalJsonConverters());
 
@@ -254,11 +276,11 @@ try
 
     app.UseKnownExceptionHandler();
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
+    //if (app.Environment.IsDevelopment())
+    //{
+    //    app.UseSwagger();
+    //    app.UseSwaggerUI();
+    //}
 
     app.UseStaticFiles();
     //app.UseHttpsRedirection();
@@ -267,8 +289,16 @@ try
     app.UseAuthentication(); // Authentication 必须在 Authorization 之前
     app.UseAuthorization();
 
-    app.MapControllers();
-    app.UseFastEndpoints();
+    #region Knife4UI
+
+    app.UseKnife4UI(c =>
+    {
+        c.RoutePrefix = "swagger";
+        c.SwaggerEndpoint("/v1/swagger.json", "v1");
+    });
+    //app.MapControllers();
+    app.UseFastEndpoints().UseSwaggerGen();
+    #endregion
 
     #region SignalR
 
