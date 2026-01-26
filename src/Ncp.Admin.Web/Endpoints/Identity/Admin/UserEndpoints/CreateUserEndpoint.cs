@@ -1,9 +1,10 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.AppPermissions;
@@ -36,14 +37,16 @@ public record CreateUserRequest(string Name, string Email, string Password, stri
 public record CreateUserResponse(UserId UserId, string Name, string Email);
 
 /// <summary>
-/// 创建用户的API端点
-/// 该端点用于管理员在系统中创建新的用户账户，支持角色分配和组织单位设置
+/// 创建用户
 /// </summary>
-[Tags("Users")]
+/// <param name="mediator"></param>
+/// <param name="roleQuery"></param>
 public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpoint<CreateUserRequest, ResponseData<CreateUserResponse>>
 {
     public override void Configure()
     {
+        Tags("Users");
+        Description(b => b.AutoTagOverride("Users"));
         Post("/api/admin/users");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserCreate);

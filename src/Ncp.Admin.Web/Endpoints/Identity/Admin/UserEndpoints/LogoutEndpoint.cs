@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using NetCorePal.Extensions.Dto;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
@@ -9,16 +10,18 @@ using Serilog;
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 
 /// <summary>
-/// 用户退出登录端点
+/// 退出登录
 /// </summary>
-[Tags("Users")]
+/// <param name="mediator"></param>
 public class LogoutEndpoint(IMediator mediator) : EndpointWithoutRequest<ResponseData<bool>>
 {
     public override void Configure()
     {
+        Tags("Users");
+        Description(b => b.AutoTagOverride("Users"));
         Post("/api/admin/auth/logout");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        AllowAnonymous(); // 允许匿名访问，因为token可能已过期
+        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

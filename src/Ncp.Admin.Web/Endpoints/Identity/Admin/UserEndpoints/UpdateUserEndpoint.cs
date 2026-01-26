@@ -1,8 +1,9 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.AppPermissions;
 using Ncp.Admin.Web.Utils;
@@ -21,9 +22,9 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 /// <param name="Gender">性别</param>
 /// <param name="Age">年龄</param>
 /// <param name="BirthDate">出生日期</param>
-    /// <param name="DeptId">部门ID</param>
-    /// <param name="DeptName">部门名称</param>
-    /// <param name="Password">密码（可选，为空则不更新）</param>
+/// <param name="DeptId">部门ID</param>
+/// <param name="DeptName">部门名称</param>
+/// <param name="Password">密码（可选，为空则不更新）</param>
 public record UpdateUserRequest(UserId UserId, string Name, string Email, string Phone, string RealName, int Status, string Gender, int Age, DateTimeOffset BirthDate, DeptId DeptId, string DeptName, string Password);
 
 /// <summary>
@@ -35,14 +36,15 @@ public record UpdateUserRequest(UserId UserId, string Name, string Email, string
 public record UpdateUserResponse(UserId UserId, string Name, string Email);
 
 /// <summary>
-/// 更新用户信息的API端点
-/// 该端点用于修改现有用户的基本信息，包括个人信息、组织单位和密码
+/// 更新用户
 /// </summary>
-[Tags("Users")]
+/// <param name="mediator"></param>
 public class UpdateUserEndpoint(IMediator mediator) : Endpoint<UpdateUserRequest, ResponseData<UpdateUserResponse>>
 {
     public override void Configure()
     {
+        Tags("Users");
+        Description(b => b.AutoTagOverride("Users"));
         Put("/api/admin/user/update");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserEdit);

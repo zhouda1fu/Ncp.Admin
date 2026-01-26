@@ -1,9 +1,10 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
-using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
@@ -28,19 +29,20 @@ public record GetUserProfileRequest(UserId UserId);
 /// <param name="Gender">性别</param>
 /// <param name="Age">年龄</param>
 /// <param name="BirthDate">出生日期</param>
-    /// <param name="DeptId">部门ID（可为空）</param>
-    /// <param name="DeptName">部门名称</param>
+/// <param name="DeptId">部门ID（可为空）</param>
+/// <param name="DeptName">部门名称</param>
 public record UserProfileResponse(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, DeptId? DeptId, string DeptName);
 
 /// <summary>
-/// 获取用户资料的API端点
-/// 该端点用于根据用户ID查询用户的详细资料信息，包括基本信息、角色、状态和组织单位等
+/// 获取用户资料
 /// </summary>
-[Tags("Users")]
+/// <param name="userQuery"></param>
 public class GetUserProfileEndpoint(UserQuery userQuery) : Endpoint<GetUserProfileRequest, ResponseData<UserProfileResponse?>>
 {
     public override void Configure()
     {
+        Tags("Users");
+        Description(b => b.AutoTagOverride("Users"));
         Get("/api/admin/user/profile/{userId}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserView);

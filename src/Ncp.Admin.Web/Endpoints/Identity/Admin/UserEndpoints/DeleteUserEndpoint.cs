@@ -1,4 +1,5 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
@@ -14,14 +15,15 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 public record DeleteUserRequest(UserId UserId);
 
 /// <summary>
-/// 删除用户的API端点
-/// 该端点用于从系统中删除指定的用户账户（软删除）
+/// 删除用户
 /// </summary>
-[Tags("Users")]
+/// <param name="mediator"></param>
 public class DeleteUserEndpoint(IMediator mediator) : Endpoint<DeleteUserRequest, ResponseData<bool>>
 {
     public override void Configure()
     {
+        Tags("Users");
+        Description(b => b.AutoTagOverride("Users"));
         Delete("/api/admin/users/{userId}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserDelete);
@@ -29,9 +31,7 @@ public class DeleteUserEndpoint(IMediator mediator) : Endpoint<DeleteUserRequest
 
     public override async Task HandleAsync(DeleteUserRequest request, CancellationToken ct)
     {
-        var command = new DeleteUserCommand(request.UserId);
-        await mediator.Send(command, ct);
+        await mediator.Send(new DeleteUserCommand(request.UserId), ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }
-

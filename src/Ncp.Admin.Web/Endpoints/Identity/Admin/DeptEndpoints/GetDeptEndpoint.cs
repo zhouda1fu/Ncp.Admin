@@ -1,4 +1,5 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Web.Application.Queries;
@@ -24,16 +25,15 @@ public record GetDeptRequest(DeptId Id);
 public record GetDeptResponse(DeptId Id, string Name, string Remark, DeptId ParentId, int Status, DateTimeOffset CreatedAt);
 
 /// <summary>
-/// 获取单个部门的API端点
-/// 该端点用于根据ID查询特定部门的详细信息
+/// 获取部门
 /// </summary>
-[Tags("Depts")]
+/// <param name="deptQuery"></param>
 public class GetDeptEndpoint(DeptQuery deptQuery) : Endpoint<GetDeptRequest, ResponseData<GetDeptResponse>>
 {
-   
     public override void Configure()
     {
-      
+        Tags("Depts");
+        Description(b => b.AutoTagOverride("Depts"));
         Get("/api/admin/dept/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptView);
@@ -41,29 +41,10 @@ public class GetDeptEndpoint(DeptQuery deptQuery) : Endpoint<GetDeptRequest, Res
 
     public override async Task HandleAsync(GetDeptRequest req, CancellationToken ct)
     {
-       
-
-        // 通过查询服务获取部门详细信息
         var dept = await deptQuery.GetDeptByIdAsync(req.Id, ct);
-
-        // 验证部门是否存在
         if (dept == null)
-        {
             await Send.NotFoundAsync(ct);
-        }
         else
-        {
-            // 创建响应对象
-            var response = new GetDeptResponse(
-                dept.Id,
-                dept.Name,
-                dept.Remark,
-                dept.ParentId,
-                dept.Status,
-                dept.CreatedAt
-            );
-            // 返回成功响应，使用统一的响应数据格式包装
-            await Send.OkAsync(response.AsResponseData(), cancellation: ct);
-        }
+            await Send.OkAsync(new GetDeptResponse(dept.Id, dept.Name, dept.Remark, dept.ParentId, dept.Status, dept.CreatedAt).AsResponseData(), cancellation: ct);
     }
 }

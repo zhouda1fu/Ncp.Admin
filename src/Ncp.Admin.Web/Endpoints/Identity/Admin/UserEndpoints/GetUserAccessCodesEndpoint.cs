@@ -1,25 +1,24 @@
 using System.Security.Claims;
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Queries;
-using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 
 /// <summary>
-/// 获取当前用户权限码的API端点
-/// 该端点用于获取当前登录用户的所有权限代码
+/// 获取当前用户权限码
 /// </summary>
-[Tags("Users")]
+/// <param name="roleQuery"></param>
+/// <param name="userQuery"></param>
 public class GetUserAccessCodesEndpoint(RoleQuery roleQuery, UserQuery userQuery) : EndpointWithoutRequest<ResponseData<IEnumerable<string>>>
 {
-    /// <summary>
-    /// 配置端点的基本设置
-    /// 包括HTTP方法、认证方案、权限要求等
-    /// </summary>
     public override void Configure()
     {
+        Tags("Users");
+        Description(b => b.AutoTagOverride("Users"));
         Get("/api/admin/auth/codes");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
     }

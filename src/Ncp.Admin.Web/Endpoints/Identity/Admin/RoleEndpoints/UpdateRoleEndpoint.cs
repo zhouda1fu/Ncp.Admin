@@ -1,4 +1,5 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
@@ -17,21 +18,20 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.RoleEndpoints;
 public record UpdateRoleInfoRequest(RoleId RoleId, string Name, string Description, IEnumerable<string> PermissionCodes);
 
 /// <summary>
-/// 更新角色信息的API端点
-/// 该端点用于修改现有角色的基本信息和权限分配
+/// 更新角色
 /// </summary>
-[Tags("Roles")]
+/// <param name="mediator"></param>
 public class UpdateRoleEndpoint(IMediator mediator) : Endpoint<UpdateRoleInfoRequest, ResponseData<bool>>
 {
- 
     public override void Configure()
     {
+        Tags("Roles");
+        Description(b => b.AutoTagOverride("Roles"));
         Put("/api/admin/roles/update");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleEdit);
     }
 
-   
     public override async Task HandleAsync(UpdateRoleInfoRequest request, CancellationToken ct)
     {
         var cmd = new UpdateRoleInfoCommand(

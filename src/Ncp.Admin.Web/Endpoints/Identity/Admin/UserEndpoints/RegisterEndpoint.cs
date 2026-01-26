@@ -1,8 +1,9 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using MediatR;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Utils;
@@ -21,9 +22,9 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 /// <param name="Gender">性别</param>
 /// <param name="Age">年龄</param>
 /// <param name="BirthDate">出生日期</param>
-    /// <param name="DeptId">部门ID（可选）</param>
-    /// <param name="DeptName">部门名称（可选）</param>
-    /// <param name="RoleIds">要分配的角色ID列表</param>
+/// <param name="DeptId">部门ID（可选）</param>
+/// <param name="DeptName">部门名称（可选）</param>
+/// <param name="RoleIds">要分配的角色ID列表</param>
 public record RegisterRequest(string Name, string Email, string Password, string Phone, string RealName, int Status, string Gender, int Age, DateTimeOffset BirthDate, DeptId? DeptId, string? DeptName, IEnumerable<RoleId> RoleIds);
 
 /// <summary>
@@ -35,14 +36,16 @@ public record RegisterRequest(string Name, string Email, string Password, string
 public record RegisterResponse(UserId UserId, string Name, string Email);
 
 /// <summary>
-/// 用户注册的API端点
-/// 该端点用于在系统中创建新的用户账户，支持角色分配和组织单位设置
+/// 用户注册
 /// </summary>
-[Tags("Users")]
+/// <param name="mediator"></param>
+/// <param name="roleQuery"></param>
 public class RegisterEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpoint<RegisterRequest, ResponseData<RegisterResponse>>
 {
     public override void Configure()
     {
+        Tags("Users");
+        Description(b => b.AutoTagOverride("Users"));
         Post("/api/admin/user/register");
         AllowAnonymous();
     }

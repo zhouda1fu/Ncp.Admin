@@ -1,4 +1,5 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
@@ -18,14 +19,15 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.DeptEndpoints;
 public record UpdateDeptRequest(DeptId Id, string Name, string Remark, DeptId? ParentId, int Status);
 
 /// <summary>
-/// 更新部门的API端点
-/// 该端点用于更新现有部门的信息
+/// 更新部门
 /// </summary>
-[Tags("Depts")]
+/// <param name="mediator"></param>
 public class UpdateDeptEndpoint(IMediator mediator) : Endpoint<UpdateDeptRequest, ResponseData<bool>>
 {
     public override void Configure()
     {
+        Tags("Depts");
+        Description(b => b.AutoTagOverride("Depts"));
         Put("/api/admin/dept");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptEdit);
