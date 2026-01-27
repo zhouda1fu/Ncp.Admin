@@ -1,8 +1,9 @@
 using FluentValidation;
+using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
-using Ncp.Admin.Domain;
+using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 
@@ -38,8 +39,11 @@ public class UpdateRoleInfoCommandHandler(IRoleRepository roleRepository) : ICom
                    throw new KnownException($"未找到角色，RoleId = {request.RoleId}", ErrorCodes.RoleNotFound);
         role.UpdateRoleInfo(request.Name, request.Description);
 
-        // 更新角色权限
-        var permissions = request.PermissionCodes.Select(perm => new RolePermission(perm));
+        var permissions = request.PermissionCodes.Select(perm =>
+        {
+            var (name, description) = PermissionMapper.GetPermissionInfo(perm);
+            return new RolePermission(perm, name, description);
+        });
         role.UpdateRolePermissions(permissions);
     }
 }

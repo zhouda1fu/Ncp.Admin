@@ -2,8 +2,10 @@ using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
+
 
 public record CreateRoleCommand(string Name, string Description, IEnumerable<string> PermissionCodes) : ICommand<RoleId>;
 
@@ -22,7 +24,11 @@ public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
 {
     public async Task<RoleId> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
-        var permissions = request.PermissionCodes.Select(perm => new RolePermission(perm));
+        var permissions = request.PermissionCodes.Select(perm =>
+        {
+            var (name, description) = PermissionMapper.GetPermissionInfo(perm);
+            return new RolePermission(perm, name, description);
+        });
 
         var role = new Role(request.Name, request.Description, permissions);
 
@@ -31,4 +37,3 @@ public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
         return role.Id;
     }
 }
-
