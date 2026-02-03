@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using FluentValidation.AspNetCore;
 using Hangfire;
 using Hangfire.Redis.StackExchange;
-using IGeekFan.AspNetCore.Knife4jUI;
+using Scalar.AspNetCore;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
@@ -295,15 +295,15 @@ try
     app.UseAuthentication(); // Authentication 必须在 Authorization 之前
     app.UseAuthorization();
 
-    #region Knife4UI
+    #region Scalar
 
-    app.UseKnife4UI(c =>
+    app.UseFastEndpoints();
+    app.UseOpenApi(c => c.Path = "/openapi/{documentName}.json");
+    app.MapScalarApiReference("swagger", options =>
     {
-        c.RoutePrefix = "swagger";
-        c.SwaggerEndpoint("/v1/swagger.json", "v1");
+        options.WithOpenApiRoutePattern("/openapi/v1.json");
     });
-    //app.MapControllers();
-    app.UseFastEndpoints().UseSwaggerGen();
+  
     #endregion
 
     #region SignalR

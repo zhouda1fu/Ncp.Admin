@@ -19,7 +19,6 @@
     <PackageReference Include="FluentValidation.AspNetCore" />
     <PackageReference Include="Hangfire.AspNetCore" />
     <PackageReference Include="Hangfire.Redis.StackExchange" />
-    <PackageReference Include="IGeekFan.AspNetCore.Knife4jUI" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
@@ -42,6 +41,7 @@
     <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" />
     <PackageReference Include="Refit.HttpClientFactory" />
     <PackageReference Include="Refit.Newtonsoft.Json" />
+    <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Enrichers.ClientInfo" />
     <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
