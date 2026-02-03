@@ -31,7 +31,7 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public virtual UserDept Dept { get; private set; } = default!;
 
-    public ICollection<UserRefreshToken> RefreshTokens { get; } = [];
+    public virtual ICollection<UserRefreshToken> RefreshTokens { get; } = [];
 
     public User(string name, string phone, string password, IEnumerable<UserRole> roles, string realName, int status, string email, string gender, DateTimeOffset birthDate)
     {

@@ -18,11 +18,7 @@ public class RoleInfoChangedDomainEventHandlerForUpdateUserRoleName(IMediator me
         // 查询所有拥有该角色的用户ID
         var userIds = await userQuery.GetUserIdsByRoleIdAsync(roleId, cancellationToken);
 
-        // 遍历用户ID，通过Command更新每个用户的角色名称
-        foreach (var userId in userIds)
-        {
-            var command = new UpdateUserRoleNameCommand(userId, roleId, newRoleName);
-            await mediator.Send(command, cancellationToken);
-        }
+        // 通过批量命令一次更新所有用户的角色名称，避免 N+1 性能问题
+        await mediator.Send(new BatchUpdateUserRoleNamesCommand(userIds, roleId, newRoleName), cancellationToken);
     }
 }
