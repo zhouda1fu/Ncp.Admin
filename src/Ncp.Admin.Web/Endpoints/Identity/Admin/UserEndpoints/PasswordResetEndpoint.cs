@@ -3,9 +3,9 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.AppPermissions;
-using Ncp.Admin.Web.Utils;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 
@@ -25,7 +25,8 @@ public record PasswordResetResponse(UserId UserId);
 /// 密码重置
 /// </summary>
 /// <param name="mediator"></param>
-public class PasswordResetEndpoint(IMediator mediator) : Endpoint<PasswordResetRequest, ResponseData<PasswordResetResponse>>
+/// <param name="passwordHasher"></param>
+public class PasswordResetEndpoint(IMediator mediator, IPasswordHasher passwordHasher) : Endpoint<PasswordResetRequest, ResponseData<PasswordResetResponse>>
 {
     public override void Configure()
     {
@@ -38,7 +39,7 @@ public class PasswordResetEndpoint(IMediator mediator) : Endpoint<PasswordResetR
 
     public override async Task HandleAsync(PasswordResetRequest request, CancellationToken ct)
     {
-        var passwordHash = PasswordHasher.HashPassword("123456");
+        var passwordHash = passwordHasher.Hash("123456");
         var cmd = new PasswordResetCommand(request.UserId, passwordHash);
         var userId = await mediator.Send(cmd, ct);
         var response = new PasswordResetResponse(userId);

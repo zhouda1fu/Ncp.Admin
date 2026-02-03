@@ -8,9 +8,11 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Clients;
 using Ncp.Admin.Web.Extensions;
+using Ncp.Admin.Web.Services;
 using Ncp.Admin.Web.Utils;
 using NetCorePal.Extensions.CodeAnalysis;
 using Newtonsoft.Json;
@@ -64,6 +66,10 @@ try
         .PersistKeysToStackExchangeRedis("DataProtection-Keys");
     
     builder.Services.AddMemoryCache();
+
+    // 密码哈希与刷新令牌（可测试、可替换）
+    builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
+    builder.Services.AddSingleton<IRefreshTokenGenerator, DefaultRefreshTokenGenerator>();
 
     // 配置JWT认证
     builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("AppConfiguration"));

@@ -7,6 +7,7 @@ using NetCorePal.Extensions.Dto;
 using NetCorePal.Extensions.Jwt;
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Utils;
@@ -42,7 +43,9 @@ public record LoginResponse(string Token, string RefreshToken, UserId UserId, st
 /// <param name="jwtProvider"></param>
 /// <param name="appConfiguration"></param>
 /// <param name="roleQuery"></param>
-public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider jwtProvider, IOptions<AppConfiguration> appConfiguration, RoleQuery roleQuery) : Endpoint<LoginRequest, ResponseData<LoginResponse>>
+/// <param name="passwordHasher"></param>
+/// <param name="refreshTokenGenerator"></param>
+public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider jwtProvider, IOptions<AppConfiguration> appConfiguration, RoleQuery roleQuery, IPasswordHasher passwordHasher, IRefreshTokenGenerator refreshTokenGenerator) : Endpoint<LoginRequest, ResponseData<LoginResponse>>
 {
     private const string PermissionClaimType = "permissions";
 
@@ -60,14 +63,14 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
         
         var loginInfo = await userQuery.GetUserInfoForLoginAsync(req.Username, ct);
         
-        if (loginInfo == null || !PasswordHasher.VerifyHashedPassword(req.Password, loginInfo.PasswordHash))
+        if (loginInfo == null || !passwordHasher.Verify(req.Password, loginInfo.PasswordHash))
         {
             throw new KnownException("用户名或密码错误", ErrorCodes.UserNameOrPasswordError);
         }
 
         var nowTime = DateTimeOffset.UtcNow;
         var tokenExpiryTime = nowTime.AddMinutes(appConfiguration.Value.TokenExpiryInMinutes);
-        var refreshToken = TokenGenerator.GenerateRefreshToken();
+        var refreshToken = refreshTokenGenerator.Generate();
         var roles = loginInfo.UserRoles.Select(r => r.RoleId).ToList();
         var assignedPermissionCodes = roles.Count > 0
             ? await roleQuery.GetAssignedPermissionCodesAsync(roles, ct)

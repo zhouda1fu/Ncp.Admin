@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.AppPermissions;
 using Ncp.Admin.Web.Utils;
@@ -39,7 +40,7 @@ public record UpdateUserResponse(UserId UserId, string Name, string Email);
 /// 更新用户
 /// </summary>
 /// <param name="mediator"></param>
-public class UpdateUserEndpoint(IMediator mediator) : Endpoint<UpdateUserRequest, ResponseData<UpdateUserResponse>>
+public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHasher) : Endpoint<UpdateUserRequest, ResponseData<UpdateUserResponse>>
 {
     public override void Configure()
     {
@@ -55,7 +56,7 @@ public class UpdateUserEndpoint(IMediator mediator) : Endpoint<UpdateUserRequest
         var passwordHash = string.Empty;
         if (!string.IsNullOrWhiteSpace(request.Password))
         {
-            passwordHash = PasswordHasher.HashPassword(request.Password);
+            passwordHash = passwordHasher.Hash(request.Password);
         }
         var cmd = new UpdateUserCommand(
             request.UserId,

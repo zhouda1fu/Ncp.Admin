@@ -6,7 +6,6 @@ using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
-using Ncp.Admin.Web.Utils;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 
@@ -53,11 +52,10 @@ public class RegisterEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpoin
     public override async Task HandleAsync(RegisterRequest request, CancellationToken ct)
     {
         var rolesToBeAssigned = await roleQuery.GetAdminRolesForAssignmentAsync(request.RoleIds, ct);
-        var passwordHash = PasswordHasher.HashPassword(request.Password);
         var cmd = new CreateUserCommand(
             request.Name,
             request.Email,
-            passwordHash,
+            request.Password,
             request.Phone,
             request.RealName,
             request.Status,

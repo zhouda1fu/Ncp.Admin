@@ -2,6 +2,7 @@ using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure;
+using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.AppPermissions;
 using Serilog;
 
@@ -26,6 +27,7 @@ public static class SeedDatabaseExtension
             Log.Information("开始初始化数据库种子数据...");
             using var serviceScope = app.ApplicationServices.CreateScope();
             var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var passwordHasher = serviceScope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
             // 初始化角色和权限
             if (!dbContext.Roles.Any())
@@ -140,7 +142,7 @@ public static class SeedDatabaseExtension
                 var adminUser = new User(
                     "admin",
                     "13800138000",
-                    PasswordHasher.HashPassword("123456"),
+                    passwordHasher.Hash("123456"),
                     new List<UserRole> { new UserRole(adminRole.Id, adminRole.Name) },
                     "系统管理员",
                     1,
@@ -174,7 +176,7 @@ public static class SeedDatabaseExtension
                 var testUser = new User(
                     "test",
                     "13800138001",
-                    PasswordHasher.HashPassword("123456"),
+                    passwordHasher.Hash("123456"),
                     new List<UserRole> { new UserRole(userRole.Id, userRole.Name) },
                     "测试用户",
                     1,

@@ -2,6 +2,7 @@ using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Queries;
 using Serilog;
 
@@ -23,13 +24,13 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     }
 }
 
-public class CreateUserCommandHandler(IUserRepository userRepository) : ICommandHandler<CreateUserCommand, UserId>
+public class CreateUserCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher) : ICommandHandler<CreateUserCommand, UserId>
 {
     public async Task<UserId> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         Log.Information("开始创建用户: {UserName}, Email: {Email}", request.Name, request.Email);
 
-        var passwordHash = Utils.PasswordHasher.HashPassword(request.Password);
+        var passwordHash = passwordHasher.Hash(request.Password);
 
         var roles = request.RolesToBeAssigned
             .Select(r => new UserRole(r.RoleId, r.RoleName))
