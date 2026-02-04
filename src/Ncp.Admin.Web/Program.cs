@@ -299,7 +299,7 @@ try
 
     app.UseFastEndpoints();
     app.UseOpenApi(c => c.Path = "/openapi/{documentName}.json");
-    app.MapScalarApiReference("swagger", options =>
+    app.MapScalarApiReference("scalar", options =>
     {
         options.WithOpenApiRoutePattern("/openapi/v1.json");
     });

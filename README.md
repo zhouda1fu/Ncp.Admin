@@ -1,10 +1,40 @@
 # Ncp.Admin
 
+基于 [NetCorePal Cloud Framework](https://github.com/netcorepal/netcorepal-cloud-framework) 的后台管理模板，后端采用 ASP.NET Core + DDD，前端基于 [Vben Admin](https://github.com/vbenjs/vue-vben-admin)（Vue 3 + Vite + TypeScript + Ant Design Vue）。
+
+---
+
+## 项目预览
+
+以下为前端管理界面效果图。
+
+**登录页**
+
+![登录页](docs/imgs/login.png)
+
+**仪表盘 / 数据分析**
+
+![数据分析](docs/imgs/analytics.png)
+
+**部门管理**
+
+![部门管理](docs/imgs/dept.png)
+
+**角色管理**
+
+![角色管理](docs/imgs/role.png)
+
+**API 文档（Scalar）**
+
+![Scalar API](docs/imgs/scalar-api.png)
+
+---
+
 ## 环境准备
 
 ### 使用 Aspire（推荐）
 
-如果您的项目启用了 Aspire 支持（使用 `--UseAspire` 参数创建），只需要 Docker 环境即可，无需手动配置各种基础设施服务。
+项目启用了 Aspire 支持，只需要 Docker 环境即可，无需手动配置各种基础设施服务。
 
 ```bash
 # 仅需确保 Docker 环境运行
@@ -87,6 +117,7 @@ docker run --restart unless-stopped --name netcorepal-rabbitmq -p 5672:5672 -p 1
 启动后，可以通过以下地址访问各个服务：
 
 - **前端应用**: http://localhost:5666/
+- **API 文档 (Scalar)**: http://localhost:5511/scalar（后端启动后访问）
 - **Redis**: `localhost:6379`
 - **MySQL**: `localhost:3306` (root/123456)  
 - **RabbitMQ AMQP**: `localhost:5672` (guest/guest)
@@ -98,7 +129,7 @@ docker run --restart unless-stopped --name netcorepal-rabbitmq -p 5672:5672 -p 1
 
 ## 前端项目启动
 
-前端项目基于 [Vben Admin](https://github.com/vbenjs/vue-vben-admin) 构建，使用 Vue 3 + Vite + TypeScript + Ant Design Vue。
+前端基于 [Vben Admin](https://github.com/vbenjs/vue-vben-admin)，使用 Vue 3 + Vite + TypeScript + Ant Design Vue。界面效果见上方 **项目预览**。
 
 ### 环境要求
 
@@ -216,7 +247,7 @@ Rider 用户可以直接使用 `Ncp.Admin.sln.DotSettings` 文件中的 Live Tem
 
 更多详细配置请参考：[vs-snippets/README.md](vs-snippets/README.md)
 
-## 依赖对框架与组件
+## 依赖与框架
 
 + [NetCorePal Cloud Framework](https://github.com/netcorepal/netcorepal-cloud-framework)
 + [ASP.NET Core](https://github.com/dotnet/aspnetcore)
