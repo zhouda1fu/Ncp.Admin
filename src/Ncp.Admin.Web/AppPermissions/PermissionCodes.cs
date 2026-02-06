@@ -32,6 +32,20 @@ public static class PermissionCodes
     public const string DeptView = nameof(DeptView);
     #endregion
 
+    #region 工作流管理权限
+    public const string WorkflowManagement = nameof(WorkflowManagement);
+    public const string WorkflowDefinitionView = nameof(WorkflowDefinitionView);
+    public const string WorkflowDefinitionCreate = nameof(WorkflowDefinitionCreate);
+    public const string WorkflowDefinitionEdit = nameof(WorkflowDefinitionEdit);
+    public const string WorkflowDefinitionDelete = nameof(WorkflowDefinitionDelete);
+    public const string WorkflowDefinitionPublish = nameof(WorkflowDefinitionPublish);
+    public const string WorkflowStart = nameof(WorkflowStart);
+    public const string WorkflowCancel = nameof(WorkflowCancel);
+    public const string WorkflowTaskApprove = nameof(WorkflowTaskApprove);
+    public const string WorkflowInstanceView = nameof(WorkflowInstanceView);
+    public const string WorkflowMonitor = nameof(WorkflowMonitor);
+    #endregion
+
     #region 所有接口访问权限
     public const string AllApiAccess = nameof(AllApiAccess);
     #endregion

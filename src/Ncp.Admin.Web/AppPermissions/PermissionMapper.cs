@@ -1,4 +1,4 @@
-﻿namespace Ncp.Admin.Web.AppPermissions
+namespace Ncp.Admin.Web.AppPermissions
 {
     /// <summary>
     /// 权限映射辅助类，用于通过权限代码自动获取权限名称和描述
@@ -36,6 +36,19 @@
         { PermissionCodes.DeptView, "查看部门信息" },
         { PermissionCodes.DeptEdit, "更新部门信息" },
         { PermissionCodes.DeptDelete, "删除部门" },
+
+        // 工作流管理权限
+        { PermissionCodes.WorkflowManagement, "工作流管理" },
+        { PermissionCodes.WorkflowDefinitionView, "查看流程定义" },
+        { PermissionCodes.WorkflowDefinitionCreate, "创建流程定义" },
+        { PermissionCodes.WorkflowDefinitionEdit, "编辑流程定义" },
+        { PermissionCodes.WorkflowDefinitionDelete, "删除流程定义" },
+        { PermissionCodes.WorkflowDefinitionPublish, "发布流程定义" },
+        { PermissionCodes.WorkflowStart, "发起流程" },
+        { PermissionCodes.WorkflowCancel, "撤销流程" },
+        { PermissionCodes.WorkflowTaskApprove, "审批任务" },
+        { PermissionCodes.WorkflowInstanceView, "查看流程实例" },
+        { PermissionCodes.WorkflowMonitor, "流程监控" },
 
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },

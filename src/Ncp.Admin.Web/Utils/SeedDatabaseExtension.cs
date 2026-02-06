@@ -60,6 +60,19 @@ public static class SeedDatabaseExtension
                 PermissionCodes.DeptEdit,
                 PermissionCodes.DeptDelete,
 
+                // 工作流管理权限
+                PermissionCodes.WorkflowManagement,
+                PermissionCodes.WorkflowDefinitionView,
+                PermissionCodes.WorkflowDefinitionCreate,
+                PermissionCodes.WorkflowDefinitionEdit,
+                PermissionCodes.WorkflowDefinitionDelete,
+                PermissionCodes.WorkflowDefinitionPublish,
+                PermissionCodes.WorkflowStart,
+                PermissionCodes.WorkflowCancel,
+                PermissionCodes.WorkflowTaskApprove,
+                PermissionCodes.WorkflowInstanceView,
+                PermissionCodes.WorkflowMonitor,
+
                 // 所有接口访问权限
                 PermissionCodes.AllApiAccess,
             };

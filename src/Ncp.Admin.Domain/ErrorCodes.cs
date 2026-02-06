@@ -111,4 +111,58 @@ public sealed class ErrorCodes
     public const int ChildDeptCannotBeEmpty = 120007;
     
     #endregion
+
+    #region 工作流相关错误 (130xxx)
+
+    /// <summary>
+    /// 未找到流程定义
+    /// </summary>
+    public const int WorkflowDefinitionNotFound = 130001;
+
+    /// <summary>
+    /// 流程定义已发布
+    /// </summary>
+    public const int WorkflowDefinitionAlreadyPublished = 130002;
+
+    /// <summary>
+    /// 流程定义已归档
+    /// </summary>
+    public const int WorkflowDefinitionAlreadyArchived = 130003;
+
+    /// <summary>
+    /// 流程定义已删除
+    /// </summary>
+    public const int WorkflowDefinitionAlreadyDeleted = 130004;
+
+    /// <summary>
+    /// 未找到流程实例
+    /// </summary>
+    public const int WorkflowInstanceNotFound = 130101;
+
+    /// <summary>
+    /// 流程未在运行中
+    /// </summary>
+    public const int WorkflowInstanceNotRunning = 130102;
+
+    /// <summary>
+    /// 流程未处于挂起状态
+    /// </summary>
+    public const int WorkflowInstanceNotSuspended = 130103;
+
+    /// <summary>
+    /// 只有发起人可以撤销流程
+    /// </summary>
+    public const int WorkflowOnlyInitiatorCanCancel = 130104;
+
+    /// <summary>
+    /// 未找到工作流任务
+    /// </summary>
+    public const int WorkflowTaskNotFound = 130201;
+
+    /// <summary>
+    /// 工作流任务已处理
+    /// </summary>
+    public const int WorkflowTaskAlreadyProcessed = 130202;
+
+    #endregion
 }

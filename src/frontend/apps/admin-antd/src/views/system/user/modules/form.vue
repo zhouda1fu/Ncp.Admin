@@ -4,12 +4,13 @@ import type { SystemUserApi } from '#/api/system/user';
 import { computed, nextTick, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
-import { message } from 'ant-design-vue';
+import { Button, message, Modal, Space } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
 import { createUser, updateUser, updateUserRoles } from '#/api/system/user';
 import { getDeptTree } from '#/api/system/dept';
 import { getRoleList } from '#/api/system/role';
+import { getPublishedDefinitions, startWorkflow } from '#/api/system/workflow';
 import { $t } from '#/locales';
 
 import { useFormSchema } from '../data';
@@ -168,9 +169,87 @@ const getDrawerTitle = computed(() => {
     ? $t('common.edit', [$t('system.user.name')])
     : $t('common.create', [$t('system.user.name')]);
 });
+
+const isCreateMode = computed(() => !id.value);
+
+/** 提交审批：将用户数据序列化后发起工作流 */
+async function onSubmitForApproval() {
+  const { valid } = await formApi.validate();
+  if (!valid) return;
+  const values = await formApi.getValues();
+
+  // 验证密码（新建时必填）
+  if (!values.password || values.password.trim() === '') {
+    message.error($t('ui.formRules.required', [$t('system.user.password')]));
+    return;
+  }
+
+  // 获取已发布的流程定义，找到「新增用户审批」流程
+  const definitions = await getPublishedDefinitions();
+  const userCreateDef = definitions.find(
+    (d) => d.category === 'UserManagement',
+  );
+
+  if (!userCreateDef) {
+    // 没有配置审批流程，提示用户先去创建
+    Modal.warning({
+      content: $t('system.workflow.noDefinitionForUser'),
+      title: $t('system.workflow.noDefinitionTitle'),
+    });
+    return;
+  }
+
+  // 获取部门名称
+  let deptName = '';
+  if (values.deptId) {
+    const deptTree = await getDeptTree();
+    deptName = findDeptName(deptTree, values.deptId);
+  }
+
+  // 将用户数据序列化为工作流变量
+  const variables = JSON.stringify({
+    name: values.name,
+    email: values.email,
+    password: values.password,
+    phone: values.phone || '',
+    realName: values.realName,
+    status: values.status ?? 1,
+    gender: values.gender || '',
+    birthDate: values.birthDate,
+    deptId: values.deptId || '',
+    deptName: deptName,
+    roleIds: values.roleIds || [],
+  });
+
+  Modal.confirm({
+    content: $t('system.workflow.submitApprovalConfirmContent'),
+    title: $t('system.workflow.submitApprovalConfirmTitle'),
+    async onOk() {
+      await startWorkflow({
+        workflowDefinitionId: userCreateDef.id,
+        businessKey: values.name, // 用户名作为业务键
+        businessType: 'CreateUser',
+        title: `新增用户申请 - ${values.realName || values.name}`,
+        variables,
+        remark: '',
+      });
+      message.success($t('system.workflow.submitApprovalSuccess'));
+      emits('success');
+      drawerApi.close();
+    },
+  });
+}
 </script>
 <template>
   <Drawer :title="getDrawerTitle">
     <Form />
+    <!-- 新建模式下显示「提交审批」按钮 -->
+    <template v-if="isCreateMode" #prepend-footer>
+      <Space>
+        <Button type="dashed" @click="onSubmitForApproval">
+          {{ $t('system.workflow.submitForApproval') }}
+        </Button>
+      </Space>
+    </template>
   </Drawer>
 </template>

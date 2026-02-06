@@ -27,6 +27,19 @@ export const PermissionCodes = {
   DeptDelete: 'DeptDelete',
   DeptView: 'DeptView',
 
+  // 工作流管理权限
+  WorkflowManagement: 'WorkflowManagement',
+  WorkflowDefinitionView: 'WorkflowDefinitionView',
+  WorkflowDefinitionCreate: 'WorkflowDefinitionCreate',
+  WorkflowDefinitionEdit: 'WorkflowDefinitionEdit',
+  WorkflowDefinitionDelete: 'WorkflowDefinitionDelete',
+  WorkflowDefinitionPublish: 'WorkflowDefinitionPublish',
+  WorkflowStart: 'WorkflowStart',
+  WorkflowCancel: 'WorkflowCancel',
+  WorkflowTaskApprove: 'WorkflowTaskApprove',
+  WorkflowInstanceView: 'WorkflowInstanceView',
+  WorkflowMonitor: 'WorkflowMonitor',
+
   // 所有接口访问权限
   AllApiAccess: 'AllApiAccess',
 } as const;

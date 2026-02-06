@@ -39,6 +39,19 @@ public static class PermissionDefinitionContext
         deptManagement.AddChild(PermissionCodes.DeptDelete, "删除部门");
         deptManagement.AddChild(PermissionCodes.DeptView, "查看部门");
 
+        // 工作流管理权限
+        var workflowManagement = systemAccess.AddPermission(PermissionCodes.WorkflowManagement, "工作流管理");
+        workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionView, "查看流程定义");
+        workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionCreate, "创建流程定义");
+        workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionEdit, "编辑流程定义");
+        workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionDelete, "删除流程定义");
+        workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionPublish, "发布流程定义");
+        workflowManagement.AddChild(PermissionCodes.WorkflowStart, "发起流程");
+        workflowManagement.AddChild(PermissionCodes.WorkflowCancel, "撤销流程");
+        workflowManagement.AddChild(PermissionCodes.WorkflowTaskApprove, "审批任务");
+        workflowManagement.AddChild(PermissionCodes.WorkflowInstanceView, "查看流程实例");
+        workflowManagement.AddChild(PermissionCodes.WorkflowMonitor, "流程监控");
+
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");
     }
