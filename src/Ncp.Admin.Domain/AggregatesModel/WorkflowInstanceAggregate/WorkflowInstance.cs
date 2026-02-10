@@ -1,3 +1,4 @@
+using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
@@ -85,6 +86,11 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     public string Remark { get; private set; } = string.Empty;
 
     /// <summary>
+    /// 业务执行失败原因（当 Status 为 Faulted 时使用）
+    /// </summary>
+    public string? FailureReason { get; private set; }
+
+    /// <summary>
     /// 流程任务集合
     /// </summary>
     public virtual ICollection<WorkflowTask> Tasks { get; } = [];
@@ -119,7 +125,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     }
 
     /// <summary>
-    /// 创建审批任务
+    /// 创建审批任务（指定用户）
     /// </summary>
     public WorkflowTask CreateTask(
         string nodeName,
@@ -128,6 +134,23 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         string assigneeName)
     {
         var task = new WorkflowTask(nodeName, taskType, assigneeId, assigneeName);
+        Tasks.Add(task);
+        CurrentNodeName = nodeName;
+
+        AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, task));
+        return task;
+    }
+
+    /// <summary>
+    /// 创建审批任务（指定角色，一条记录，待办按角色 ID 查）
+    /// </summary>
+    public WorkflowTask CreateTaskForRole(
+        string nodeName,
+        WorkflowTaskType taskType,
+        RoleId assigneeRoleId,
+        string assigneeName)
+    {
+        var task = new WorkflowTask(nodeName, taskType, assigneeRoleId, assigneeName);
         Tasks.Add(task);
         CurrentNodeName = nodeName;
 
@@ -171,7 +194,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         CompletedAt = DateTimeOffset.UtcNow;
 
         AddDomainEvent(new WorkflowTaskCompletedDomainEvent(this, task));
-        AddDomainEvent(new WorkflowInstanceCompletedDomainEvent(this));
+        AddDomainEvent(new WorkflowInstanceRejectedDomainEvent(this));
     }
 
     /// <summary>
@@ -271,6 +294,20 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     public void UpdateVariables(string variables)
     {
         Variables = variables;
+    }
+
+    /// <summary>
+    /// 标记为异常（审批通过后业务执行失败时调用，仅允许对已完成状态的实例调用）
+    /// </summary>
+    public void MarkFaulted(string failureReason)
+    {
+        if (Status != WorkflowInstanceStatus.Completed)
+        {
+            throw new KnownException("仅能对已完成的流程标记业务执行异常", ErrorCodes.WorkflowInstanceNotRunning);
+        }
+
+        Status = WorkflowInstanceStatus.Faulted;
+        FailureReason = failureReason;
     }
 }
 

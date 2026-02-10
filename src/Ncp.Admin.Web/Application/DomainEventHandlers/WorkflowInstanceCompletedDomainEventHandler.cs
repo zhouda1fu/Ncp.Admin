@@ -3,6 +3,7 @@ using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
+using Ncp.Admin.Web.Application.Commands.Workflow;
 using Ncp.Admin.Web.Application.Queries;
 using Serilog;
 
@@ -85,7 +86,7 @@ public class WorkflowInstanceCompletedDomainEventHandler(IMediator mediator, Rol
         catch (Exception ex)
         {
             Log.Error(ex, "工作流审批通过后创建用户失败: InstanceId={InstanceId}", instance.Id);
-            throw;
+            await mediator.Send(new MarkWorkflowInstanceFaultedCommand(instance.Id, ex.Message), cancellationToken);
         }
     }
 }

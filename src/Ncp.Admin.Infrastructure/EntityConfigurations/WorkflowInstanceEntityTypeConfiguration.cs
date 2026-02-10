@@ -55,6 +55,9 @@ internal class WorkflowInstanceEntityTypeConfiguration : IEntityTypeConfiguratio
         builder.Property(i => i.Remark)
             .HasMaxLength(1000);
 
+        builder.Property(i => i.FailureReason)
+            .HasMaxLength(2000);
+
         // 索引
         builder.HasIndex(i => i.WorkflowDefinitionId);
         builder.HasIndex(i => i.BusinessKey);
@@ -93,8 +96,12 @@ internal class WorkflowTaskEntityTypeConfiguration : IEntityTypeConfiguration<Wo
         builder.Property(t => t.TaskType)
             .IsRequired();
 
-        builder.Property(t => t.AssigneeId)
+        builder.Property(t => t.AssigneeType)
             .IsRequired();
+
+        builder.Property(t => t.AssigneeId);
+
+        builder.Property(t => t.AssigneeRoleId);
 
         builder.Property(t => t.AssigneeName)
             .HasMaxLength(100);
@@ -113,6 +120,7 @@ internal class WorkflowTaskEntityTypeConfiguration : IEntityTypeConfiguration<Wo
         // 索引
         builder.HasIndex(t => t.WorkflowInstanceId);
         builder.HasIndex(t => t.AssigneeId);
+        builder.HasIndex(t => t.AssigneeRoleId);
         builder.HasIndex(t => t.Status);
         builder.HasIndex(t => new { t.AssigneeId, t.Status });
     }

@@ -94,6 +94,19 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
     }
 
     /// <summary>
+    /// 根据用户ID获取其所属角色ID列表（用于待办按角色查询）
+    /// </summary>
+    public async Task<List<RoleId>> GetRoleIdsByUserIdAsync(UserId userId, CancellationToken cancellationToken = default)
+    {
+        return await UserSet.AsNoTracking()
+            .Where(u => u.Id == userId)
+            .SelectMany(u => u.Roles)
+            .Select(r => r.RoleId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
     /// 根据部门ID获取所有用户ID列表
     /// </summary>
     /// <param name="deptId">部门ID</param>

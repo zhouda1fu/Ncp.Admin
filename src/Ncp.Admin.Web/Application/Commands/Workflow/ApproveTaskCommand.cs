@@ -2,6 +2,7 @@ using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Web.Application.Queries;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflow;
 
@@ -29,11 +30,12 @@ public class ApproveTaskCommandValidator : AbstractValidator<ApproveTaskCommand>
 
 /// <summary>
 /// 审批通过命令处理器
-/// Handler 负责编排，流程流转逻辑（获取下一节点）下沉到 WorkflowDefinition 聚合根
+/// Handler 负责编排，流程流转逻辑（获取下一节点）下沉到 WorkflowDefinition 聚合根，审批人由 WorkflowAssigneeResolverQuery 解析
 /// </summary>
 public class ApproveTaskCommandHandler(
     IWorkflowInstanceRepository instanceRepository,
-    IWorkflowDefinitionRepository definitionRepository)
+    IWorkflowDefinitionRepository definitionRepository,
+    WorkflowAssigneeResolverQuery assigneeResolverQuery)
     : ICommandHandler<ApproveTaskCommand>
 {
     public async Task Handle(ApproveTaskCommand request, CancellationToken cancellationToken)
@@ -41,7 +43,6 @@ public class ApproveTaskCommandHandler(
         var instance = await instanceRepository.GetAsync(request.WorkflowInstanceId, cancellationToken)
             ?? throw new KnownException("未找到流程实例", ErrorCodes.WorkflowInstanceNotFound);
 
-        // 通过聚合根方法审批任务
         instance.ApproveTask(request.TaskId, request.OperatorId, request.Comment);
 
         // 通过流程定义聚合根的领域方法获取下一节点
@@ -53,15 +54,13 @@ public class ApproveTaskCommandHandler(
 
         if (nextNode != null)
         {
-            // 还有下一个审批节点，创建新任务
-            if (long.TryParse(nextNode.AssigneeValue, out var assigneeIdValue))
+            var assignee = await assigneeResolverQuery.ResolveAssigneeAsync(nextNode, instance, cancellationToken);
+            if (assignee != null)
             {
-                var assigneeId = new UserId(assigneeIdValue);
-                instance.CreateTask(
-                    nextNode.NodeName,
-                    WorkflowTaskType.Approval,
-                    assigneeId,
-                    string.Empty);
+                if (assignee.AssigneeId != null)
+                    instance.CreateTask(nextNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeId!, assignee.DisplayName);
+                else
+                    instance.CreateTaskForRole(nextNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeRoleId!, assignee.DisplayName);
             }
         }
         else

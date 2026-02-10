@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflow;
 
@@ -22,7 +24,9 @@ public class PublishWorkflowDefinitionCommandValidator : AbstractValidator<Publi
 /// <summary>
 /// 发布流程定义命令处理器
 /// </summary>
-public class PublishWorkflowDefinitionCommandHandler(IWorkflowDefinitionRepository repository)
+public class PublishWorkflowDefinitionCommandHandler(
+    IWorkflowDefinitionRepository repository,
+    IMemoryCache memoryCache)
     : ICommandHandler<PublishWorkflowDefinitionCommand>
 {
     public async Task Handle(PublishWorkflowDefinitionCommand request, CancellationToken cancellationToken)
@@ -31,5 +35,8 @@ public class PublishWorkflowDefinitionCommandHandler(IWorkflowDefinitionReposito
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
 
         definition.Publish();
+
+        memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(request.Id));
+        memoryCache.Remove(WorkflowCacheKeys.PublishedListKey);
     }
 }

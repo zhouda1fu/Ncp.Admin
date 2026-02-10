@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
@@ -47,8 +48,8 @@ public class WorkflowDefinitionQueryInput : PageRequest
 public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, IMemoryCache memoryCache) : IQuery
 {
     private DbSet<WorkflowDefinition> DefinitionSet { get; } = applicationDbContext.WorkflowDefinitions;
-    private const string DefinitionCacheKeyPrefix = "workflow_definition:";
     private static readonly TimeSpan DefinitionCacheExpiry = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan PublishedListCacheExpiry = TimeSpan.FromMinutes(3);
 
     /// <summary>
     /// 获取流程定义列表（分页）
@@ -87,7 +88,7 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
     public async Task<WorkflowDefinitionQueryDto?> GetDefinitionByIdAsync(
         WorkflowDefinitionId id, CancellationToken cancellationToken)
     {
-        var cacheKey = $"{DefinitionCacheKeyPrefix}{id}";
+        var cacheKey = WorkflowCacheKeys.DefinitionKey(id);
 
         return await memoryCache.GetOrCreateAsync(cacheKey, async entry =>
         {
@@ -117,32 +118,36 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
     }
 
     /// <summary>
-    /// 获取已发布的流程定义列表（供发起流程时选择）
+    /// 获取已发布的流程定义列表（供发起流程时选择），带短期缓存
     /// </summary>
     public async Task<List<WorkflowDefinitionQueryDto>> GetPublishedDefinitionsAsync(
         CancellationToken cancellationToken)
     {
-        return await DefinitionSet.AsNoTracking()
-            .Where(d => d.Status == WorkflowDefinitionStatus.Published)
-            .OrderBy(d => d.Category)
-            .ThenBy(d => d.Name)
-            .Select(d => new WorkflowDefinitionQueryDto(
-                d.Id,
-                d.Name,
-                d.Description,
-                d.Version,
-                d.Category,
-                d.Status,
-                d.CreatedBy,
-                d.CreatedAt,
-                d.Nodes.OrderBy(n => n.SortOrder).Select(n => new WorkflowNodeQueryDto(
-                    n.Id,
-                    n.NodeName,
-                    n.NodeType,
-                    n.AssigneeType,
-                    n.AssigneeValue,
-                    n.SortOrder,
-                    n.Description))))
-            .ToListAsync(cancellationToken);
+        return (await memoryCache.GetOrCreateAsync(WorkflowCacheKeys.PublishedListKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = PublishedListCacheExpiry;
+            return await DefinitionSet.AsNoTracking()
+                .Where(d => d.Status == WorkflowDefinitionStatus.Published)
+                .OrderBy(d => d.Category)
+                .ThenBy(d => d.Name)
+                .Select(d => new WorkflowDefinitionQueryDto(
+                    d.Id,
+                    d.Name,
+                    d.Description,
+                    d.Version,
+                    d.Category,
+                    d.Status,
+                    d.CreatedBy,
+                    d.CreatedAt,
+                    d.Nodes.OrderBy(n => n.SortOrder).Select(n => new WorkflowNodeQueryDto(
+                        n.Id,
+                        n.NodeName,
+                        n.NodeType,
+                        n.AssigneeType,
+                        n.AssigneeValue,
+                        n.SortOrder,
+                        n.Description))))
+                .ToListAsync(cancellationToken);
+        }))!;
     }
 }

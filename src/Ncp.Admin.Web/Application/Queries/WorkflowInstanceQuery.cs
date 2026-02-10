@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
@@ -51,7 +52,9 @@ public record WorkflowTaskQueryDto(
     WorkflowInstanceId WorkflowInstanceId,
     string NodeName,
     WorkflowTaskType TaskType,
-    UserId AssigneeId,
+    AssigneeType AssigneeType,
+    UserId? AssigneeId,
+    RoleId? AssigneeRoleId,
     string AssigneeName,
     WorkflowTaskStatus Status,
     string Comment,
@@ -118,10 +121,26 @@ public class CompletedTaskQueryInput : PageRequest
 /// <summary>
 /// 流程实例查询
 /// </summary>
-public class WorkflowInstanceQuery(ApplicationDbContext applicationDbContext) : IQuery
+public class WorkflowInstanceQuery(ApplicationDbContext applicationDbContext, UserQuery userQuery) : IQuery
 {
     private DbSet<WorkflowInstance> InstanceSet { get; } = applicationDbContext.WorkflowInstances;
     private DbSet<WorkflowTask> TaskSet { get; } = applicationDbContext.WorkflowTasks;
+
+    /// <summary>
+    /// 是否存在相同 businessType + businessKey 且状态为运行中的流程实例（用于防重复发起）
+    /// </summary>
+    public async Task<bool> ExistsRunningInstanceByBusinessKeyAsync(
+        string businessType,
+        string businessKey,
+        CancellationToken cancellationToken)
+    {
+        return await InstanceSet.AsNoTracking()
+            .AnyAsync(
+                i => i.BusinessType == businessType
+                    && i.BusinessKey == businessKey
+                    && i.Status == WorkflowInstanceStatus.Running,
+                cancellationToken);
+    }
 
     /// <summary>
     /// 获取流程实例列表（分页）
@@ -181,7 +200,9 @@ public class WorkflowInstanceQuery(ApplicationDbContext applicationDbContext) : 
                     t.WorkflowInstanceId,
                     t.NodeName,
                     t.TaskType,
+                    t.AssigneeType,
                     t.AssigneeId,
+                    t.AssigneeRoleId,
                     t.AssigneeName,
                     t.Status,
                     t.Comment,
@@ -220,14 +241,18 @@ public class WorkflowInstanceQuery(ApplicationDbContext applicationDbContext) : 
 
     /// <summary>
     /// 获取我的待办任务（分页）
-    /// 使用 LINQ 查询语法，先在实体层面排序再投影，避免 EF Core 翻译问题
+    /// 指定用户：AssigneeId == 当前用户；指定角色：AssigneeRoleId 属于当前用户所属角色
     /// </summary>
     public async Task<PagedData<MyPendingTaskQueryDto>> GetMyPendingTasksAsync(
         UserId assigneeId, PendingTaskQueryInput query, CancellationToken cancellationToken)
     {
+        var userRoleIds = await userQuery.GetRoleIdsByUserIdAsync(assigneeId, cancellationToken);
+
         var baseQuery = from i in InstanceSet.AsNoTracking()
                         from t in i.Tasks
-                        where t.AssigneeId == assigneeId && t.Status == WorkflowTaskStatus.Pending
+                        where t.Status == WorkflowTaskStatus.Pending
+                              && (t.AssigneeId == assigneeId
+                                  || (t.AssigneeRoleId != null && userRoleIds.Contains(t.AssigneeRoleId!)))
                         select new { Instance = i, Task = t };
 
         if (!string.IsNullOrWhiteSpace(query.Title))
@@ -251,14 +276,18 @@ public class WorkflowInstanceQuery(ApplicationDbContext applicationDbContext) : 
 
     /// <summary>
     /// 获取我的已办任务（分页）
-    /// 使用 LINQ 查询语法，先在实体层面排序再投影，避免 EF Core 翻译问题
+    /// 指定用户：AssigneeId == 当前用户；指定角色：AssigneeRoleId 属于当前用户所属角色
     /// </summary>
     public async Task<PagedData<MyCompletedTaskQueryDto>> GetMyCompletedTasksAsync(
         UserId assigneeId, CompletedTaskQueryInput query, CancellationToken cancellationToken)
     {
+        var userRoleIds = await userQuery.GetRoleIdsByUserIdAsync(assigneeId, cancellationToken);
+
         var baseQuery = from i in InstanceSet.AsNoTracking()
                         from t in i.Tasks
-                        where t.AssigneeId == assigneeId && t.Status != WorkflowTaskStatus.Pending
+                        where t.Status != WorkflowTaskStatus.Pending
+                              && (t.AssigneeId == assigneeId
+                                  || (t.AssigneeRoleId != null && userRoleIds.Contains(t.AssigneeRoleId!)))
                         select new { Instance = i, Task = t };
 
         if (!string.IsNullOrWhiteSpace(query.Title))

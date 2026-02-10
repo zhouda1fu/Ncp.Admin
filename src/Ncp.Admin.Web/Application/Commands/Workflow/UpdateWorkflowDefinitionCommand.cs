@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflow;
 
@@ -32,7 +34,9 @@ public class UpdateWorkflowDefinitionCommandValidator : AbstractValidator<Update
 /// <summary>
 /// 更新流程定义命令处理器
 /// </summary>
-public class UpdateWorkflowDefinitionCommandHandler(IWorkflowDefinitionRepository repository)
+public class UpdateWorkflowDefinitionCommandHandler(
+    IWorkflowDefinitionRepository repository,
+    IMemoryCache memoryCache)
     : ICommandHandler<UpdateWorkflowDefinitionCommand>
 {
     public async Task Handle(UpdateWorkflowDefinitionCommand request, CancellationToken cancellationToken)
@@ -49,5 +53,7 @@ public class UpdateWorkflowDefinitionCommandHandler(IWorkflowDefinitionRepositor
             n.Description));
 
         definition.UpdateInfo(request.Name, request.Description, request.Category, request.DefinitionJson, nodes);
+
+        memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(request.Id));
     }
 }

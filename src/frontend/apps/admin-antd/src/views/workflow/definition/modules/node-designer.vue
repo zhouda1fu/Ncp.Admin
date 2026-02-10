@@ -34,12 +34,10 @@ const nodeTypeOptions = computed(() => [
   { label: $t('system.workflow.node.typeNotification'), value: 3 },
 ]);
 
-// 审批人类型选项
+// 审批人类型选项（指定用户、指定角色；部门主管与发起人自选暂不支持）
 const assigneeTypeOptions = computed(() => [
   { label: $t('system.workflow.node.assigneeUser'), value: 0 },
   { label: $t('system.workflow.node.assigneeRole'), value: 1 },
-  { label: $t('system.workflow.node.assigneeDeptManager'), value: 2 },
-  { label: $t('system.workflow.node.assigneeInitiator'), value: 3 },
 ]);
 
 // 用户列表和角色列表缓存

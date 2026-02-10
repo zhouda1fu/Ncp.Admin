@@ -1,4 +1,6 @@
+using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 
@@ -33,12 +35,22 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     public WorkflowTaskType TaskType { get; private set; }
 
     /// <summary>
-    /// 处理人ID
+    /// 处理人类型（指定用户 / 指定角色）
     /// </summary>
-    public UserId AssigneeId { get; private set; } = default!;
+    public AssigneeType AssigneeType { get; private set; }
 
     /// <summary>
-    /// 处理人姓名（冗余存储）
+    /// 处理人用户ID（指定用户时有值）
+    /// </summary>
+    public UserId? AssigneeId { get; private set; }
+
+    /// <summary>
+    /// 处理人角色ID（指定角色时有值）
+    /// </summary>
+    public RoleId? AssigneeRoleId { get; private set; }
+
+    /// <summary>
+    /// 处理人姓名/角色名（冗余存储，用于展示）
     /// </summary>
     public string AssigneeName { get; private set; } = string.Empty;
 
@@ -63,14 +75,36 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     public DateTimeOffset? CompletedAt { get; private set; }
 
     /// <summary>
-    /// 创建工作流任务
+    /// 行版本号（框架自动处理并发检查）
+    /// </summary>
+    public RowVersion Version { get; private set; } = new RowVersion();
+
+    /// <summary>
+    /// 创建工作流任务（指定用户）
     /// </summary>
     public WorkflowTask(string nodeName, WorkflowTaskType taskType, UserId assigneeId, string assigneeName)
     {
         CreatedAt = DateTimeOffset.UtcNow;
         NodeName = nodeName;
         TaskType = taskType;
+        AssigneeType = AssigneeType.User;
         AssigneeId = assigneeId;
+        AssigneeRoleId = null;
+        AssigneeName = assigneeName;
+        Status = WorkflowTaskStatus.Pending;
+    }
+
+    /// <summary>
+    /// 创建工作流任务（指定角色，一条记录，待办按角色查）
+    /// </summary>
+    public WorkflowTask(string nodeName, WorkflowTaskType taskType, RoleId assigneeRoleId, string assigneeName)
+    {
+        CreatedAt = DateTimeOffset.UtcNow;
+        NodeName = nodeName;
+        TaskType = taskType;
+        AssigneeType = AssigneeType.Role;
+        AssigneeId = null;
+        AssigneeRoleId = assigneeRoleId;
         AssigneeName = assigneeName;
         Status = WorkflowTaskStatus.Pending;
     }

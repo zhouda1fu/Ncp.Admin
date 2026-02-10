@@ -24,9 +24,14 @@ public record WorkflowDefinitionArchivedDomainEvent(WorkflowDefinition WorkflowD
 public record WorkflowInstanceStartedDomainEvent(WorkflowInstance WorkflowInstance) : IDomainEvent;
 
 /// <summary>
-/// 流程实例完成领域事件
+/// 流程实例完成领域事件（审批通过）
 /// </summary>
 public record WorkflowInstanceCompletedDomainEvent(WorkflowInstance WorkflowInstance) : IDomainEvent;
+
+/// <summary>
+/// 流程实例驳回领域事件
+/// </summary>
+public record WorkflowInstanceRejectedDomainEvent(WorkflowInstance WorkflowInstance) : IDomainEvent;
 
 /// <summary>
 /// 工作流任务创建领域事件

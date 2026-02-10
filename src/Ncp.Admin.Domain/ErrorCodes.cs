@@ -164,5 +164,20 @@ public sealed class ErrorCodes
     /// </summary>
     public const int WorkflowTaskAlreadyProcessed = 130202;
 
+    /// <summary>
+    /// 无法解析审批人（指定角色下无用户、部门主管未配置或发起人未选择审批人）
+    /// </summary>
+    public const int WorkflowAssigneeResolutionFailed = 130203;
+
+    /// <summary>
+    /// 任务并发冲突（该任务已被他人处理）
+    /// </summary>
+    public const int WorkflowTaskConcurrencyConflict = 130204;
+
+    /// <summary>
+    /// 同一业务键已有运行中的流程，请勿重复发起
+    /// </summary>
+    public const int WorkflowDuplicateBusinessKey = 130205;
+
     #endregion
 }

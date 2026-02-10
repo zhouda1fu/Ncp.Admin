@@ -3,6 +3,8 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Web.Application.Commands.Workflow;
@@ -46,7 +48,15 @@ public class RejectTaskEndpoint(IMediator mediator) : Endpoint<RejectTaskRequest
             new UserId(userIdValue),
             req.Comment);
 
-        await mediator.Send(cmd, ct);
+        try
+        {
+            await mediator.Send(cmd, ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new KnownException("该任务已被处理，请刷新后重试", ErrorCodes.WorkflowTaskConcurrencyConflict);
+        }
+
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }
