@@ -133,8 +133,8 @@ function onCreate() {
     <FormDrawer @success="onRefresh" />
     <Grid :table-title="$t('system.workflow.definition.list')">
       <template #toolbar-tools>
-        <Button type="primary" @click="onCreate">
-          <Plus class="size-5" />
+        <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">
+          <Plus class="size-5 shrink-0" />
           {{
             $t('ui.actionTitle.create', [
               $t('system.workflow.definition.name'),

@@ -133,8 +133,8 @@ function refreshGrid() {
     <FormModal @success="refreshGrid" />
     <Grid table-title="部门列表">
       <template #toolbar-tools>
-        <Button type="primary" @click="onCreate">
-          <Plus class="size-5" />
+        <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">
+          <Plus class="size-5 shrink-0" />
           {{ $t('ui.actionTitle.create', [$t('system.dept.name')]) }}
         </Button>
       </template>
