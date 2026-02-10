@@ -29,6 +29,7 @@ export function useFormSchema(): VbenFormSchema[] {
       componentProps: {
         allowClear: true,
         options: useCategoryOptions(),
+        class: 'w-full',
       },
       fieldName: 'category',
       label: $t('system.workflow.definition.category'),

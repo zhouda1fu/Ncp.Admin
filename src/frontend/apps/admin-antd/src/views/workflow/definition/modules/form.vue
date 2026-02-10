@@ -3,7 +3,7 @@ import type { WorkflowApi } from '#/api/system/workflow';
 
 import { computed, nextTick, ref } from 'vue';
 
-import { useVbenDrawer } from '@vben/common-ui';
+import { useVbenModal } from '@vben/common-ui';
 
 import { Divider } from 'ant-design-vue';
 
@@ -29,12 +29,12 @@ const [Form, formApi] = useVbenForm({
 });
 
 const id = ref<string>();
-const [Drawer, drawerApi] = useVbenDrawer({
+const [Modal, modalApi] = useVbenModal({
   async onConfirm() {
     const { valid } = await formApi.validate();
     if (!valid) return;
     const values = await formApi.getValues();
-    drawerApi.lock();
+    modalApi.lock();
     try {
       if (id.value) {
         await updateDefinition({
@@ -55,15 +55,15 @@ const [Drawer, drawerApi] = useVbenDrawer({
         });
       }
       emits('success');
-      drawerApi.close();
+      modalApi.close();
     } catch {
-      drawerApi.unlock();
+      modalApi.unlock();
     }
   },
 
   async onOpenChange(isOpen) {
     if (isOpen) {
-      const data = drawerApi.getData<WorkflowApi.WorkflowDefinition>();
+      const data = modalApi.getData<WorkflowApi.WorkflowDefinition>();
       formApi.resetForm();
       nodes.value = [];
 
@@ -97,7 +97,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
   },
 });
 
-const getDrawerTitle = computed(() => {
+const getModalTitle = computed(() => {
   return formData.value?.id
     ? $t('common.edit', [$t('system.workflow.definition.name')])
     : $t('common.create', [$t('system.workflow.definition.name')]);
@@ -106,9 +106,9 @@ const getDrawerTitle = computed(() => {
 const isPublished = computed(() => formData.value?.status === 1);
 </script>
 <template>
-  <Drawer :title="getDrawerTitle" class="w-[560px]">
-    <Form />
+  <Modal :title="getModalTitle" class="w-[720px]">
+    <Form class="mx-4" />
     <Divider>{{ $t('system.workflow.node.title') }}</Divider>
     <NodeDesigner v-model="nodes" :disabled="isPublished" />
-  </Drawer>
+  </Modal>
 </template>
