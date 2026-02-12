@@ -4,7 +4,7 @@ using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
-public record RoleQueryDto(RoleId RoleId, string Name, string Description, bool IsActive, DateTimeOffset CreatedAt, IEnumerable<string> PermissionCodes);
+public record RoleQueryDto(RoleId RoleId, string Name, string Description, DataScope DataScope, bool IsActive, DateTimeOffset CreatedAt, IEnumerable<string> PermissionCodes);
 
 public class RoleQueryInput : PageRequest
 {
@@ -15,7 +15,7 @@ public class RoleQueryInput : PageRequest
     public DateTimeOffset? EndTime { get; set; }
 }
 
-public record AssignAdminUserRoleQueryDto(RoleId RoleId, string RoleName, IEnumerable<string> PermissionCodes);
+public record AssignAdminUserRoleQueryDto(RoleId RoleId, string RoleName, DataScope DataScope, IEnumerable<string> PermissionCodes);
 
 public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache memoryCache) : IQuery
 {
@@ -36,6 +36,7 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
             .Select(r => new AssignAdminUserRoleQueryDto(
                 r.Id,
                 r.Name,
+                r.DataScope,
                 r.Permissions.Select(rp => rp.PermissionCode)))
             .ToListAsync(cancellationToken);
     }
@@ -69,7 +70,7 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
             
             return await RoleSet.AsNoTracking()
                 .Where(r => r.Id == id)
-                .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
+                .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.DataScope, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
                 .FirstOrDefaultAsync(cancellationToken);
         });
     }
@@ -83,7 +84,7 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
             .WhereIf(query.StartTime.HasValue, r => r.CreatedAt >= query.StartTime!.Value)
             .WhereIf(query.EndTime.HasValue, r => r.CreatedAt <= query.EndTime!.Value)
             .OrderBy(r => r.Id)
-            .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
+            .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.DataScope, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
             .ToPagedDataAsync(query, cancellationToken);
     }
 }

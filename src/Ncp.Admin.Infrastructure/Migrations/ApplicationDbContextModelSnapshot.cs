@@ -66,6 +66,131 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.ToTable("dept", (string)null);
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.NotificationAggregate.Notification", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("BusinessId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("BusinessType")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTimeOffset>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("ReceiverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("SenderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("IsRead");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("ReceiverId", "IsRead", "IsDeleted");
+
+                    b.ToTable("notification", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.PositionAggregate.Position", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTimeOffset>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("DeptId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("DeptId");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("position", (string)null);
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -73,6 +198,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DataScope")
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("DeletedAt")
                         .HasColumnType("datetime(6)");
@@ -334,6 +462,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)");
 
+                    b.Property<int>("ApprovalMode")
+                        .HasColumnType("int");
+
                     b.Property<int>("AssigneeType")
                         .HasColumnType("int");
 
@@ -397,6 +528,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
+                    b.Property<long>("InitiatorDeptId")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("InitiatorId")
                         .HasColumnType("bigint");
 
@@ -438,6 +572,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasIndex("BusinessKey");
 
                     b.HasIndex("BusinessType");
+
+                    b.HasIndex("InitiatorDeptId");
 
                     b.HasIndex("InitiatorId");
 

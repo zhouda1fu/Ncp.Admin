@@ -27,6 +27,13 @@ export const PermissionCodes = {
   DeptDelete: 'DeptDelete',
   DeptView: 'DeptView',
 
+  // 岗位管理权限
+  PositionManagement: 'PositionManagement',
+  PositionCreate: 'PositionCreate',
+  PositionEdit: 'PositionEdit',
+  PositionDelete: 'PositionDelete',
+  PositionView: 'PositionView',
+
   // 工作流管理权限
   WorkflowManagement: 'WorkflowManagement',
   WorkflowDefinitionView: 'WorkflowDefinitionView',

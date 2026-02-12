@@ -162,6 +162,30 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
     }
 
     /// <summary>
+    /// 获取指定部门及其所有子部门的 ID 列表
+    /// </summary>
+    public async Task<List<DeptId>> GetAllChildDeptIdsAsync(DeptId parentDeptId, CancellationToken cancellationToken = default)
+    {
+        var allDepts = await DeptSet.AsNoTracking()
+            .Select(d => new { d.Id, d.ParentId })
+            .ToListAsync(cancellationToken);
+
+        var result = new List<DeptId> { parentDeptId };
+        AddChildIdsRecursive(parentDeptId, allDepts.Select(d => (d.Id, d.ParentId)).ToList(), result);
+        return result;
+    }
+
+    private static void AddChildIdsRecursive(DeptId parentId, List<(DeptId Id, DeptId ParentId)> allDepts, List<DeptId> result)
+    {
+        var children = allDepts.Where(d => d.ParentId == parentId).Select(d => d.Id).ToList();
+        foreach (var childId in children)
+        {
+            result.Add(childId);
+            AddChildIdsRecursive(childId, allDepts, result);
+        }
+    }
+
+    /// <summary>
     /// 将投影节点转换为树形DTO
     /// </summary>
     private static DeptTreeDto ConvertToTreeDtoFromProjection(DeptTreeNode node)

@@ -1,3 +1,4 @@
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
@@ -54,6 +55,11 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// 发起人姓名（冗余存储）
     /// </summary>
     public string InitiatorName { get; private set; } = string.Empty;
+    
+    /// <summary>
+    /// 发起人部门ID（用于数据权限过滤）
+    /// </summary>
+    public DeptId InitiatorDeptId { get; private set; } = default!;
 
     /// <summary>
     /// 流程状态
@@ -106,6 +112,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         string title,
         UserId initiatorId,
         string initiatorName,
+        DeptId initiatorDeptId,
         string variables,
         string remark)
     {
@@ -117,6 +124,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         Title = title;
         InitiatorId = initiatorId;
         InitiatorName = initiatorName;
+        InitiatorDeptId = initiatorDeptId;
         Status = WorkflowInstanceStatus.Running;
         Variables = variables;
         Remark = remark;
@@ -217,6 +225,47 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         Tasks.Add(newTask);
 
         AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, newTask));
+    }
+
+    /// <summary>
+    /// 委托任务（将任务委托给其他人处理，原任务标记为已委托）
+    /// </summary>
+    public WorkflowTask DelegateTask(WorkflowTaskId taskId, UserId delegateToUserId, string delegateToUserName, string comment)
+    {
+        var task = Tasks.FirstOrDefault(t => t.Id == taskId)
+            ?? throw new KnownException("未找到该任务", ErrorCodes.WorkflowTaskNotFound);
+
+        if (task.Status != WorkflowTaskStatus.Pending)
+        {
+            throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
+        }
+
+        // 原任务标记为已委托
+        task.Delegate(comment, delegateToUserName);
+
+        // 创建新任务给被委托人
+        var newTask = new WorkflowTask(task.NodeName, task.TaskType, delegateToUserId, delegateToUserName);
+        Tasks.Add(newTask);
+
+        AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, newTask));
+        return newTask;
+    }
+
+    /// <summary>
+    /// 检查当前节点的会签任务是否全部完成
+    /// </summary>
+    public bool AreAllCounterSignTasksApproved(string nodeName)
+    {
+        var nodeTasks = Tasks.Where(t => t.NodeName == nodeName).ToList();
+        return nodeTasks.Count > 0 && nodeTasks.All(t => t.Status == WorkflowTaskStatus.Approved);
+    }
+
+    /// <summary>
+    /// 检查当前节点是否有任一或签任务已审批通过
+    /// </summary>
+    public bool IsAnyOrSignTaskApproved(string nodeName)
+    {
+        return Tasks.Any(t => t.NodeName == nodeName && t.Status == WorkflowTaskStatus.Approved);
     }
 
     /// <summary>

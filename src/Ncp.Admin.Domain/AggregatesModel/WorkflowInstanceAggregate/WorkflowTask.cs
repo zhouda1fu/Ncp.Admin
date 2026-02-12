@@ -147,6 +147,16 @@ public class WorkflowTask : Entity<WorkflowTaskId>
         Status = WorkflowTaskStatus.Cancelled;
         CompletedAt = DateTimeOffset.UtcNow;
     }
+
+    /// <summary>
+    /// 委托（当前任务标记为已委托）
+    /// </summary>
+    public void Delegate(string comment, string delegateToUserName)
+    {
+        Status = WorkflowTaskStatus.Delegated;
+        Comment = $"已委托给 {delegateToUserName}。备注：{comment}";
+        CompletedAt = DateTimeOffset.UtcNow;
+    }
 }
 
 /// <summary>
@@ -198,5 +208,10 @@ public enum WorkflowTaskStatus
     /// <summary>
     /// 已取消
     /// </summary>
-    Cancelled = 4
+    Cancelled = 4,
+
+    /// <summary>
+    /// 已委托
+    /// </summary>
+    Delegated = 5
 }

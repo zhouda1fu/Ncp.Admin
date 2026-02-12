@@ -34,6 +34,13 @@ const nodeTypeOptions = computed(() => [
   { label: $t('system.workflow.node.typeNotification'), value: 3 },
 ]);
 
+// 审批方式选项（仅审批节点有效）：0=或签 1=会签 2=依次审批
+const approvalModeOptions = computed(() => [
+  { label: $t('system.workflow.node.approvalModeOrSign'), value: 0 },
+  { label: $t('system.workflow.node.approvalModeCounterSign'), value: 1 },
+  { label: $t('system.workflow.node.approvalModeSequential'), value: 2 },
+]);
+
 // 审批人类型选项（指定用户、指定角色；部门主管与发起人自选暂不支持）
 const assigneeTypeOptions = computed(() => [
   { label: $t('system.workflow.node.assigneeUser'), value: 0 },
@@ -111,6 +118,7 @@ function addNode(index?: number) {
     assigneeValue: '',
     sortOrder: 0,
     description: '',
+    approvalMode: 0,
   };
   if (index !== undefined) {
     nodes.value.splice(index + 1, 0, newNode);
@@ -362,6 +370,18 @@ function onAssigneeDropdownOpen(assigneeType: number) {
               @dropdown-visible-change="
                 (open: boolean) => open && onAssigneeDropdownOpen(node.assigneeType)
               "
+            />
+          </div>
+
+          <div v-if="node.nodeType === 1" class="nd-field">
+            <label>{{ $t('system.workflow.node.approvalMode') }}</label>
+            <Select
+              :value="node.approvalMode ?? 0"
+              :disabled="disabled"
+              :options="approvalModeOptions"
+              size="small"
+              style="width: 100%"
+              @update:value="(v: any) => updateField(index, 'approvalMode', v)"
             />
           </div>
 

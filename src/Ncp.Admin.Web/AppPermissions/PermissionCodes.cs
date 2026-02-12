@@ -46,6 +46,20 @@ public static class PermissionCodes
     public const string WorkflowMonitor = nameof(WorkflowMonitor);
     #endregion
 
+    #region 岗位管理权限
+    public const string PositionManagement = nameof(PositionManagement);
+    public const string PositionCreate = nameof(PositionCreate);
+    public const string PositionEdit = nameof(PositionEdit);
+    public const string PositionDelete = nameof(PositionDelete);
+    public const string PositionView = nameof(PositionView);
+    #endregion
+
+    #region 通知管理权限
+    public const string NotificationManagement = nameof(NotificationManagement);
+    public const string NotificationView = nameof(NotificationView);
+    public const string NotificationSend = nameof(NotificationSend);
+    #endregion
+
     #region 所有接口访问权限
     public const string AllApiAccess = nameof(AllApiAccess);
     #endregion

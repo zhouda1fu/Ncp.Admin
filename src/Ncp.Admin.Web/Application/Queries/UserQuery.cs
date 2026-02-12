@@ -10,7 +10,7 @@ namespace Ncp.Admin.Web.Application.Queries;
 /// <summary>
 /// 用户信息查询DTO
 /// </summary>
-public record UserInfoQueryDto(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, DeptId? DeptId, string DeptName);
+public record UserInfoQueryDto(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, DeptId DeptId, string DeptName);
 
 public record UserLoginInfoQueryDto(UserId UserId, string Name, string Email, string PasswordHash, IEnumerable<UserRole> UserRoles);
 
@@ -57,32 +57,38 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
     /// <summary>
     /// 根据ID获取用户信息（带缓存）
     /// </summary>
-    public async Task<UserInfoQueryDto?> GetUserByIdAsync(UserId userId, CancellationToken cancellationToken)
+    public async Task<UserInfoQueryDto> GetUserByIdAsync(UserId userId, CancellationToken cancellationToken)
     {
         var cacheKey = $"{UserCacheKeyPrefix}{userId}";
-        
-        return await memoryCache.GetOrCreateAsync(cacheKey, async entry =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = UserCacheExpiry;
-            
-            return await UserSet.AsNoTracking()
-                .Where(u => u.Id == userId)
-                .Select(au => new UserInfoQueryDto(
-                    au.Id,
-                    au.Name,
-                    au.Phone,
-                    au.Roles.Select(r => r.RoleName),
-                    au.RealName,
-                    au.Status,
-                    au.Email,
-                    au.CreatedAt,
-                    au.Gender,
-                    au.Age,
-                    au.BirthDate,
-                    au.Dept != null ? au.Dept.DeptId : null,
-                    au.Dept != null ? au.Dept.DeptName : string.Empty))
-                .FirstOrDefaultAsync(cancellationToken);
-        });
+
+        var user = await UserSet.AsNoTracking()
+               .Where(u => u.Id == userId)
+               .Select(au => new UserInfoQueryDto(
+                   au.Id,
+                   au.Name,
+                   au.Phone,
+                   au.Roles.Select(r => r.RoleName),
+                   au.RealName,
+                   au.Status,
+                   au.Email,
+                   au.CreatedAt,
+                   au.Gender,
+                   au.Age,
+                   au.BirthDate,
+                   au.Dept.DeptId,
+                   au.Dept != null ? au.Dept.DeptName : string.Empty))
+               .FirstOrDefaultAsync(cancellationToken);
+        await memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+       {
+           entry.AbsoluteExpirationRelativeToNow = UserCacheExpiry;
+           return user;
+
+       });
+
+
+        return user ?? throw new KnownException("用户不存在", ErrorCodes.UserNotFound);
+
+
     }
 
     public async Task<List<UserId>> GetUserIdsByRoleIdAsync(RoleId roleId, CancellationToken cancellationToken = default)
@@ -90,6 +96,17 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
         return await UserSet.AsNoTracking()
             .Where(u => u.Roles.Any(r => r.RoleId == roleId))
             .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// 根据角色ID获取该角色下所有用户（UserId + 显示名），用于会签按人创建任务
+    /// </summary>
+    public async Task<List<(UserId Id, string DisplayName)>> GetUserAssigneesByRoleIdAsync(RoleId roleId, CancellationToken cancellationToken = default)
+    {
+        return await UserSet.AsNoTracking()
+            .Where(u => u.Roles.Any(r => r.RoleId == roleId))
+            .Select(u => new ValueTuple<UserId, string>(u.Id, u.RealName != null && u.RealName.Length > 0 ? u.RealName : u.Name))
             .ToListAsync(cancellationToken);
     }
 
@@ -164,7 +181,7 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
                 u.Gender,
                 u.Age,
                 u.BirthDate,
-                u.Dept != null ? u.Dept.DeptId : null,
+                u.Dept.DeptId,
                 u.Dept != null ? u.Dept.DeptName : string.Empty))
             .ToPagedDataAsync(query, cancellationToken);
     }

@@ -45,27 +45,43 @@ public class ApproveTaskCommandHandler(
 
         instance.ApproveTask(request.TaskId, request.OperatorId, request.Comment);
 
-        // 通过流程定义聚合根的领域方法获取下一节点
         var definition = await definitionRepository.GetAsync(instance.WorkflowDefinitionId, cancellationToken);
         if (definition == null) return;
 
         var approvedTask = instance.Tasks.First(t => t.Id == request.TaskId);
+        var currentNode = definition.GetOrderedApprovalNodes().FirstOrDefault(n => n.NodeName == approvedTask.NodeName);
+
+        // 会签：仅当当前节点所有任务均已通过时才进入下一节点或完成
+        if (currentNode?.ApprovalMode == ApprovalMode.CounterSign && !instance.AreAllCounterSignTasksApproved(approvedTask.NodeName))
+            return;
+
         var nextNode = definition.GetNextApprovalNode(approvedTask.NodeName);
 
         if (nextNode != null)
         {
-            var assignee = await assigneeResolverQuery.ResolveAssigneeAsync(nextNode, instance, cancellationToken);
-            if (assignee != null)
+            if (nextNode.ApprovalMode == ApprovalMode.CounterSign)
             {
-                if (assignee.AssigneeId != null)
-                    instance.CreateTask(nextNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeId!, assignee.DisplayName);
-                else
-                    instance.CreateTaskForRole(nextNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeRoleId!, assignee.DisplayName);
+                var assignees = await assigneeResolverQuery.ResolveAssigneesAsync(nextNode, instance, cancellationToken);
+                foreach (var a in assignees)
+                {
+                    if (a.AssigneeId != null)
+                        instance.CreateTask(nextNode.NodeName, WorkflowTaskType.Approval, a.AssigneeId, a.DisplayName);
+                }
+            }
+            else
+            {
+                var assignee = await assigneeResolverQuery.ResolveAssigneeAsync(nextNode, instance, cancellationToken);
+                if (assignee != null)
+                {
+                    if (assignee.AssigneeId != null)
+                        instance.CreateTask(nextNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeId!, assignee.DisplayName);
+                    else
+                        instance.CreateTaskForRole(nextNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeRoleId!, assignee.DisplayName);
+                }
             }
         }
         else
         {
-            // 所有审批节点都已通过，完成流程
             instance.Complete();
         }
     }

@@ -7,7 +7,7 @@ using Ncp.Admin.Web.AppPermissions;
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 
 
-public record CreateRoleCommand(string Name, string Description, IEnumerable<string> PermissionCodes) : ICommand<RoleId>;
+public record CreateRoleCommand(string Name, string Description, IEnumerable<string> PermissionCodes, DataScope DataScope = DataScope.All) : ICommand<RoleId>;
 
 public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
 {
@@ -30,7 +30,7 @@ public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
             return new RolePermission(perm, name, description);
         });
 
-        var role = new Role(request.Name, request.Description, permissions);
+        var role = new Role(request.Name, request.Description, permissions, request.DataScope);
 
         await roleRepository.AddAsync(role, cancellationToken);
 

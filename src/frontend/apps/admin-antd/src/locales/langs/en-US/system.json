@@ -46,6 +46,10 @@
       "assigneeInitiator": "Initiator Select",
       "assignee": "Assignee",
       "assigneePlaceholder": "Select assignee",
+      "approvalMode": "Approval Mode",
+      "approvalModeOrSign": "Or-sign (any one)",
+      "approvalModeCounterSign": "Countersign (all)",
+      "approvalModeSequential": "Sequential",
       "description": "Description",
       "descriptionPlaceholder": "Enter description (optional)",
       "add": "Add Node",
@@ -134,6 +138,19 @@
     "operation": "Operation",
     "permissions": "Permissions",
     "setPermissions": "Permissions"
+  },
+  "position": {
+    "title": "Position",
+    "list": "Position List",
+    "name": "Position",
+    "positionName": "Name",
+    "code": "Code",
+    "description": "Description",
+    "dept": "Department",
+    "sortOrder": "Sort",
+    "status": "Status",
+    "createTime": "Created",
+    "operation": "Action"
   },
   "user": {
     "title": "User Management",

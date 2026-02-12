@@ -38,6 +38,9 @@ internal class WorkflowInstanceEntityTypeConfiguration : IEntityTypeConfiguratio
         builder.Property(i => i.InitiatorName)
             .HasMaxLength(100);
 
+        builder.Property(i => i.InitiatorDeptId)
+            .IsRequired();
+
         builder.Property(i => i.Status)
             .IsRequired();
 
@@ -63,6 +66,7 @@ internal class WorkflowInstanceEntityTypeConfiguration : IEntityTypeConfiguratio
         builder.HasIndex(i => i.BusinessKey);
         builder.HasIndex(i => i.BusinessType);
         builder.HasIndex(i => i.InitiatorId);
+        builder.HasIndex(i => i.InitiatorDeptId);
         builder.HasIndex(i => i.Status);
 
         // 任务关系

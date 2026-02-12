@@ -60,6 +60,18 @@ public static class SeedDatabaseExtension
                 PermissionCodes.DeptEdit,
                 PermissionCodes.DeptDelete,
 
+                // 岗位管理权限
+                PermissionCodes.PositionManagement,
+                PermissionCodes.PositionCreate,
+                PermissionCodes.PositionView,
+                PermissionCodes.PositionEdit,
+                PermissionCodes.PositionDelete,
+
+                // 通知管理权限
+                PermissionCodes.NotificationManagement,
+                PermissionCodes.NotificationView,
+                PermissionCodes.NotificationSend,
+
                 // 工作流管理权限
                 PermissionCodes.WorkflowManagement,
                 PermissionCodes.WorkflowDefinitionView,

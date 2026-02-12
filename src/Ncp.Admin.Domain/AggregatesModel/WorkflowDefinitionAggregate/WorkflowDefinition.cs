@@ -200,7 +200,8 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
             node.AssigneeType,
             node.AssigneeValue,
             node.SortOrder,
-            node.Description));
+            node.Description,
+            node.ApprovalMode));
 
         var newDefinition = new WorkflowDefinition(Name, Description, Category, DefinitionJson, CreatedBy, clonedNodes)
         {

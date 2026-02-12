@@ -52,6 +52,18 @@ public static class PermissionDefinitionContext
         workflowManagement.AddChild(PermissionCodes.WorkflowInstanceView, "查看流程实例");
         workflowManagement.AddChild(PermissionCodes.WorkflowMonitor, "流程监控");
 
+        // 岗位管理权限
+        var positionManagement = systemAccess.AddPermission(PermissionCodes.PositionManagement, "岗位管理");
+        positionManagement.AddChild(PermissionCodes.PositionCreate, "创建岗位");
+        positionManagement.AddChild(PermissionCodes.PositionEdit, "编辑岗位");
+        positionManagement.AddChild(PermissionCodes.PositionDelete, "删除岗位");
+        positionManagement.AddChild(PermissionCodes.PositionView, "查看岗位");
+
+        // 通知管理权限
+        var notificationManagement = systemAccess.AddPermission(PermissionCodes.NotificationManagement, "通知管理");
+        notificationManagement.AddChild(PermissionCodes.NotificationView, "查看通知");
+        notificationManagement.AddChild(PermissionCodes.NotificationSend, "发送通知");
+
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");
     }

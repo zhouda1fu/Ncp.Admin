@@ -185,7 +185,7 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             roleId = createResult!.Data!.RoleId;
             
             // Act
-            var request = new UpdateRoleInfoRequest(roleId, updatedName, "更新后的描述", updatedPermissionCodes);
+            var request = new UpdateRoleInfoRequest(roleId, updatedName, "更新后的描述", DataScope: null, updatedPermissionCodes);
             var (response, result) = await client.PUTAsync<UpdateRoleEndpoint, UpdateRoleInfoRequest, ResponseData<bool>>(request);
             
             // Assert
@@ -219,7 +219,7 @@ public class RoleTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var permissionCodes = new[] { PermissionCodes.UserView };
         
         // Act
-        var request = new UpdateRoleInfoRequest(nonExistentId, "新名称", "新描述", permissionCodes);
+        var request = new UpdateRoleInfoRequest(nonExistentId, "新名称", "新描述", DataScope: null, permissionCodes);
         var (response, result) = await client.PUTAsync<UpdateRoleEndpoint, UpdateRoleInfoRequest, ResponseData<bool>>(request);
         
         // Assert

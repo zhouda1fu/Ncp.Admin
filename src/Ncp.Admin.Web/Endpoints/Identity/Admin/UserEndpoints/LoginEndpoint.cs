@@ -6,6 +6,8 @@ using Microsoft.Extensions.Options;
 using NetCorePal.Extensions.Dto;
 using NetCorePal.Extensions.Jwt;
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
@@ -32,8 +34,10 @@ public record LoginRequest(string Username, string Password);
 /// <param name="Email">邮箱地址</param>
 /// <param name="Roles">角色列表（JSON字符串）</param>
 /// <param name="PermissionCodes">权限代码列表</param>
+/// <param name="DataScope">数据权限范围（与角色一致，取最宽松）</param>
+/// <param name="DeptId">所属部门 ID，无部门时为 null</param>
 /// <param name="TokenExpiryTime">令牌过期时间</param>
-public record LoginResponse(string Token, string RefreshToken, UserId UserId, string Name, string Email, string Roles, IEnumerable<string> PermissionCodes, DateTimeOffset TokenExpiryTime);
+public record LoginResponse(string Token, string RefreshToken, UserId UserId, string Name, string Email, string Roles, IEnumerable<string> PermissionCodes, DataScope DataScope, DeptId? DeptId, DateTimeOffset TokenExpiryTime);
 
 /// <summary>
 /// 登录
@@ -43,9 +47,10 @@ public record LoginResponse(string Token, string RefreshToken, UserId UserId, st
 /// <param name="jwtProvider"></param>
 /// <param name="appConfiguration"></param>
 /// <param name="roleQuery"></param>
+/// <param name="deptQuery">用于登录时计算 authorized_dept_ids（本部门及子部门）</param>
 /// <param name="passwordHasher"></param>
 /// <param name="refreshTokenGenerator"></param>
-public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider jwtProvider, IOptions<AppConfiguration> appConfiguration, RoleQuery roleQuery, IPasswordHasher passwordHasher, IRefreshTokenGenerator refreshTokenGenerator) : Endpoint<LoginRequest, ResponseData<LoginResponse>>
+public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider jwtProvider, IOptions<AppConfiguration> appConfiguration, RoleQuery roleQuery, DeptQuery deptQuery, IPasswordHasher passwordHasher, IRefreshTokenGenerator refreshTokenGenerator) : Endpoint<LoginRequest, ResponseData<LoginResponse>>
 {
     private const string PermissionClaimType = "permissions";
 
@@ -72,10 +77,17 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
         var tokenExpiryTime = nowTime.AddMinutes(appConfiguration.Value.TokenExpiryInMinutes);
         var refreshToken = refreshTokenGenerator.Generate();
         var roles = loginInfo.UserRoles.Select(r => r.RoleId).ToList();
-        var assignedPermissionCodes = roles.Count > 0
-            ? await roleQuery.GetAssignedPermissionCodesAsync(roles, ct)
-            : Enumerable.Empty<string>();
-        var claims = BuildClaims(loginInfo, assignedPermissionCodes);
+        var adminRoles = roles.Count > 0
+            ? await roleQuery.GetAdminRolesForAssignmentAsync(roles, ct)
+            : [];
+        var assignedPermissionCodes = adminRoles.SelectMany(r => r.PermissionCodes).Distinct();
+        var dataScope = adminRoles.Count > 0
+            ? (DataScope)adminRoles.Min(r => (int)r.DataScope)
+            : DataScope.All;
+        var userInfo = await userQuery.GetUserByIdAsync(loginInfo.UserId, ct);
+        var deptId = userInfo?.DeptId;
+        var authorizedDeptIds = await GetAuthorizedDeptIdsAsync(dataScope, deptId, ct);
+        var claims = BuildClaims(loginInfo, assignedPermissionCodes, dataScope, deptId, authorizedDeptIds);
         var config = appConfiguration.Value;
         var token = await jwtProvider.GenerateJwtToken(
             new JwtData(
@@ -93,6 +105,8 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
             loginInfo.Email,
             JsonSerializer.Serialize(roles) ?? "[]",
             assignedPermissionCodes,
+            dataScope,
+            deptId,
             tokenExpiryTime
         );
 
@@ -107,18 +121,32 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
     }
 
     /// <summary>
-    /// 构建JWT Claims
+    /// 登录时计算有权访问的部门 ID 列表（DeptAndSub 含本部门及子部门，供 JWT 写入 authorized_dept_ids）
     /// </summary>
-    private static List<Claim> BuildClaims(UserLoginInfoQueryDto loginInfo, IEnumerable<string> permissionCodes)
+    private async Task<IReadOnlyList<DeptId>> GetAuthorizedDeptIdsAsync(DataScope dataScope, DeptId? deptId, CancellationToken ct)
+    {
+        if (deptId == null) return [];
+        if (dataScope == DataScope.DeptAndSub)
+            return await deptQuery.GetAllChildDeptIdsAsync(deptId, ct);
+        return [deptId];
+    }
+
+    /// <summary>
+    /// 构建JWT Claims（含 data_scope、dept_id、authorized_dept_ids，供服务端从 JWT 解析）
+    /// </summary>
+    private static List<Claim> BuildClaims(UserLoginInfoQueryDto loginInfo, IEnumerable<string> permissionCodes, DataScope dataScope, DeptId? deptId, IReadOnlyList<DeptId> authorizedDeptIds)
     {
         var userIdString = loginInfo.UserId.ToString();
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, loginInfo.Name),
             new(ClaimTypes.Email, loginInfo.Email),
-            new(ClaimTypes.NameIdentifier, userIdString)
+            new(ClaimTypes.NameIdentifier, userIdString),
+            new("data_scope", ((int)dataScope).ToString()),
+            new("dept_id", deptId?.Id.ToString() ?? string.Empty),
+            new("authorized_dept_ids", string.Join(",", authorizedDeptIds.Select(d => d.Id)))
         };
-       
+
         claims.AddRange(permissionCodes.Select(code => new Claim(PermissionClaimType, code)));
 
         return claims;

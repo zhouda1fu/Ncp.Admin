@@ -46,6 +46,10 @@
       "assigneeInitiator": "发起人自选",
       "assignee": "处理人",
       "assigneePlaceholder": "请选择处理人",
+      "approvalMode": "审批方式",
+      "approvalModeOrSign": "或签（任一通过）",
+      "approvalModeCounterSign": "会签（全部通过）",
+      "approvalModeSequential": "依次审批",
       "description": "节点描述",
       "descriptionPlaceholder": "请输入节点描述（可选）",
       "add": "添加节点",
@@ -135,6 +139,19 @@
     "operation": "操作",
     "permissions": "权限",
     "setPermissions": "授权"
+  },
+  "position": {
+    "title": "岗位管理",
+    "list": "岗位列表",
+    "name": "岗位",
+    "positionName": "岗位名称",
+    "code": "岗位编码",
+    "description": "描述",
+    "dept": "所属部门",
+    "sortOrder": "排序",
+    "status": "状态",
+    "createTime": "创建时间",
+    "operation": "操作"
   },
   "user": {
     "title": "用户管理",

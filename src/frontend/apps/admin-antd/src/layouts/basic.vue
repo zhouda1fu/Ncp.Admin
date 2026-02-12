@@ -18,62 +18,67 @@ import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
+import {
+  getNotificationList,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from '#/api/notification';
 import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
-const notifications = ref<NotificationItem[]>([
-  {
-    id: 1,
-    avatar: 'https://avatar.vercel.sh/vercel.svg?text=VB',
-    date: '3小时前',
-    isRead: true,
-    message: '描述信息描述信息描述信息',
-    title: '收到了 14 份新周报',
-  },
-  {
-    id: 2,
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '刚刚',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '朱偏右 回复了你',
-  },
-  {
-    id: 3,
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '2024-01-01',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '曲丽丽 评论了你',
-  },
-  {
-    id: 4,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '代办提醒',
-  },
-  {
-    id: 5,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '跳转Workspace示例',
-    link: '/workspace',
-  },
-  {
-    id: 6,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '跳转外部链接示例',
-    link: 'https://doc.vben.pro',
-  },
-]);
+const notifications = ref<NotificationItem[]>([]);
+const loading = ref(false);
+
+function formatNotificationDate(createdAt: string) {
+  if (!createdAt) return '';
+  const date = new Date(createdAt);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return $t('ui.widgets.justNow') || '刚刚';
+  if (diffMins < 60) return `${diffMins}${$t('ui.widgets.minutesAgo') || '分钟前'}`;
+  if (diffHours < 24) return `${diffHours}${$t('ui.widgets.hoursAgo') || '小时前'}`;
+  if (diffDays < 7) return `${diffDays}${$t('ui.widgets.daysAgo') || '天前'}`;
+  return date.toLocaleDateString();
+}
+
+function mapToLayoutItem(item: {
+  id: string | number;
+  title: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+  businessId?: string;
+  businessType?: string;
+}): NotificationItem {
+  return {
+    id: item.id,
+    title: item.title,
+    message: item.content,
+    date: formatNotificationDate(item.createdAt),
+    isRead: item.isRead,
+    link: item.businessId && item.businessType
+      ? `/workflow/instance/${item.businessId}`
+      : undefined,
+  };
+}
+
+async function loadNotifications() {
+  if (loading.value) return;
+  loading.value = true;
+  try {
+    const res = await getNotificationList({
+      pageIndex: 1,
+      pageSize: 20,
+    });
+    notifications.value = (res.items || []).map(mapToLayoutItem);
+  } finally {
+    loading.value = false;
+  }
+}
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -82,6 +87,18 @@ const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
 const showDot = computed(() =>
   notifications.value.some((item) => !item.isRead),
+);
+
+watch(
+  () => accessStore.accessToken,
+  (token) => {
+    if (token) {
+      loadNotifications();
+    } else {
+      notifications.value = [];
+    }
+  },
+  { immediate: true },
 );
 
 const menus = computed(() => [
@@ -133,10 +150,15 @@ function handleNoticeClear() {
   notifications.value = [];
 }
 
-function markRead(id: number | string) {
-  const item = notifications.value.find((item) => item.id === id);
-  if (item) {
-    item.isRead = true;
+async function markRead(id: number | string) {
+  try {
+    await markNotificationRead(id);
+    const item = notifications.value.find((item) => item.id === id);
+    if (item) {
+      item.isRead = true;
+    }
+  } catch {
+    // ignore
   }
 }
 
@@ -144,8 +166,13 @@ function remove(id: number | string) {
   notifications.value = notifications.value.filter((item) => item.id !== id);
 }
 
-function handleMakeAll() {
-  notifications.value.forEach((item) => (item.isRead = true));
+async function handleMakeAll() {
+  try {
+    await markAllNotificationsRead();
+    notifications.value.forEach((item) => (item.isRead = true));
+  } catch {
+    // ignore
+  }
 }
 watch(
   () => ({

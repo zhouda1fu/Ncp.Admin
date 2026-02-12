@@ -180,4 +180,47 @@ public sealed class ErrorCodes
     public const int WorkflowDuplicateBusinessKey = 130205;
 
     #endregion
+
+    #region 岗位相关错误 (140xxx)
+
+    /// <summary>
+    /// 未找到岗位
+    /// </summary>
+    public const int PositionNotFound = 140001;
+
+    /// <summary>
+    /// 岗位已经是激活状态
+    /// </summary>
+    public const int PositionAlreadyActivated = 140002;
+
+    /// <summary>
+    /// 岗位已经被停用
+    /// </summary>
+    public const int PositionAlreadyDeactivated = 140003;
+
+    /// <summary>
+    /// 岗位已经被删除
+    /// </summary>
+    public const int PositionAlreadyDeleted = 140004;
+
+    /// <summary>
+    /// 岗位编码已存在
+    /// </summary>
+    public const int PositionCodeAlreadyExists = 140005;
+
+    #endregion
+
+    #region 通知相关错误 (150xxx)
+
+    /// <summary>
+    /// 未找到通知
+    /// </summary>
+    public const int NotificationNotFound = 150001;
+
+    /// <summary>
+    /// 通知已经被删除
+    /// </summary>
+    public const int NotificationAlreadyDeleted = 150002;
+
+    #endregion
 }

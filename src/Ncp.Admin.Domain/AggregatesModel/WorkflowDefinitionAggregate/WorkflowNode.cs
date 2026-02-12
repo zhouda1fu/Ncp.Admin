@@ -51,9 +51,14 @@ public class WorkflowNode : Entity<WorkflowNodeId>
     public string Description { get; private set; } = string.Empty;
 
     /// <summary>
+    /// 审批方式（或签=任一同意即通过, 会签=所有人同意才通过）
+    /// </summary>
+    public ApprovalMode ApprovalMode { get; private set; } = ApprovalMode.OrSign;
+
+    /// <summary>
     /// 创建流程节点
     /// </summary>
-    public WorkflowNode(string nodeName, WorkflowNodeType nodeType, AssigneeType assigneeType, string assigneeValue, int sortOrder, string description)
+    public WorkflowNode(string nodeName, WorkflowNodeType nodeType, AssigneeType assigneeType, string assigneeValue, int sortOrder, string description, ApprovalMode approvalMode = ApprovalMode.OrSign)
     {
         NodeName = nodeName;
         NodeType = nodeType;
@@ -61,6 +66,7 @@ public class WorkflowNode : Entity<WorkflowNodeId>
         AssigneeValue = assigneeValue;
         SortOrder = sortOrder;
         Description = description;
+        ApprovalMode = approvalMode;
     }
 }
 
@@ -124,4 +130,25 @@ public enum AssigneeType
     /// 发起人自选
     /// </summary>
     InitiatorSelect = 3
+}
+
+/// <summary>
+/// 审批方式
+/// </summary>
+public enum ApprovalMode
+{
+    /// <summary>
+    /// 或签：任一审批人同意即通过
+    /// </summary>
+    OrSign = 0,
+
+    /// <summary>
+    /// 会签：所有审批人必须同意才通过
+    /// </summary>
+    CounterSign = 1,
+
+    /// <summary>
+    /// 依次审批：按顺序逐一审批
+    /// </summary>
+    Sequential = 2
 }

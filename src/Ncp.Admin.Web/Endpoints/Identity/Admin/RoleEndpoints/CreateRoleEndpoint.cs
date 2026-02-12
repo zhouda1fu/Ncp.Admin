@@ -14,7 +14,7 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.RoleEndpoints;
 /// <param name="Name">角色名称</param>
 /// <param name="Description">角色描述</param>
 /// <param name="PermissionCodes">权限代码列表</param>
-public record CreateRoleRequest(string Name, string Description, IEnumerable<string> PermissionCodes);
+public record CreateRoleRequest(string Name, string Description, IEnumerable<string> PermissionCodes, DataScope DataScope = DataScope.All);
 
 /// <summary>
 /// 创建角色的响应模型
@@ -41,7 +41,7 @@ public class CreateRoleEndpoint(IMediator mediator) : Endpoint<CreateRoleRequest
 
     public override async Task HandleAsync(CreateRoleRequest req, CancellationToken ct)
     {
-        var cmd = new CreateRoleCommand(req.Name, req.Description, req.PermissionCodes);
+        var cmd = new CreateRoleCommand(req.Name, req.Description, req.PermissionCodes, req.DataScope);
         var result = await mediator.Send(cmd, ct);
         var response = new CreateRoleResponse(result, req.Name, req.Description);
         await Send.OkAsync(response.AsResponseData(), cancellation: ct);

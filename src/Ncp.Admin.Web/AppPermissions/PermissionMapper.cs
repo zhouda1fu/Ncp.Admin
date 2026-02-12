@@ -50,6 +50,18 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.WorkflowInstanceView, "查看流程实例" },
         { PermissionCodes.WorkflowMonitor, "流程监控" },
 
+        // 岗位管理权限
+        { PermissionCodes.PositionManagement, "岗位管理" },
+        { PermissionCodes.PositionCreate, "创建岗位" },
+        { PermissionCodes.PositionView, "查看岗位信息" },
+        { PermissionCodes.PositionEdit, "更新岗位信息" },
+        { PermissionCodes.PositionDelete, "删除岗位" },
+
+        // 通知管理权限
+        { PermissionCodes.NotificationManagement, "通知管理" },
+        { PermissionCodes.NotificationView, "查看通知" },
+        { PermissionCodes.NotificationSend, "发送通知" },
+
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },
     };

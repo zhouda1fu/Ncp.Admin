@@ -43,6 +43,7 @@ try
     builder.Services.AddMvc()
         .AddNewtonsoftJson(options => { options.SerializerSettings.AddNetCorePalJsonConverters(); });
     builder.Services.AddSignalR();
+    builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, Ncp.Admin.Web.Application.Hubs.NameUserIdProvider>();
 
     #endregion
 
@@ -173,6 +174,10 @@ try
         }
         options.EnableDetailedErrors();
     });
+    builder.Services.AddScoped<IDataPermissionProvider, DataPermissionProvider>();
+    builder.Services.Configure<LocalFileStorageOptions>(builder.Configuration.GetSection(LocalFileStorageOptions.SectionName));
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+    builder.Services.AddScoped<Ncp.Admin.Web.Application.Services.Notification.INotificationSender, Ncp.Admin.Web.Application.Services.Notification.SignalRNotificationSender>();
     builder.Services.AddUnitOfWork<ApplicationDbContext>();
     // Redis locks use the Aspire-managed Redis connection
     builder.Services.AddRedisLocks();
@@ -294,6 +299,13 @@ try
     app.UseRouting();
     app.UseAuthentication(); // Authentication 必须在 Authorization 之前
     app.UseAuthorization();
+    app.Use(async (context, next) =>
+    {
+        var provider = context.RequestServices.GetService<Ncp.Admin.Infrastructure.Services.IDataPermissionProvider>();
+        if (provider != null)
+            await provider.LoadAsync(context.RequestAborted);
+        await next();
+    });
 
     #region Scalar
 
@@ -309,13 +321,14 @@ try
     #region SignalR
 
     app.MapHub<Ncp.Admin.Web.Application.Hubs.ChatHub>("/chat");
+    app.MapHub<Ncp.Admin.Web.Application.Hubs.NotificationHub>("/notification");
 
     #endregion
 
     app.UseHttpMetrics();
     app.MapMetrics(); // 通过   /metrics  访问指标
     app.MapDefaultEndpoints();
-    
+
     // Code analysis endpoint
     app.MapGet("/code-analysis", () =>
     {

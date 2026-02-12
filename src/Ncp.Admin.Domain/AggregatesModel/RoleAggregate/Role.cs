@@ -3,6 +3,21 @@ using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 
+/// <summary>
+/// 数据权限范围
+/// </summary>
+public enum DataScope
+{
+    /// <summary>全部数据</summary>
+    All = 0,
+    /// <summary>本部门</summary>
+    Dept = 1,
+    /// <summary>本部门及下级部门</summary>
+    DeptAndSub = 2,
+    /// <summary>仅本人</summary>
+    Self = 3,
+}
+
 public partial record RoleId : IGuidStronglyTypedId;
 
 public class Role : Entity<RoleId>, IAggregateRoot
@@ -13,6 +28,8 @@ public class Role : Entity<RoleId>, IAggregateRoot
 
     public string Name { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
+    /// <summary>数据权限范围</summary>
+    public DataScope DataScope { get; private set; } = DataScope.All;
     public DateTimeOffset CreatedAt { get; init; }
     public bool IsActive { get; private set; } = true;
     public Deleted IsDeleted { get; private set; } = new Deleted(false);
@@ -20,19 +37,22 @@ public class Role : Entity<RoleId>, IAggregateRoot
 
     public virtual ICollection<RolePermission> Permissions { get; init; } = [];
 
-    public Role(string name, string description, IEnumerable<RolePermission> permissions)
+    public Role(string name, string description, IEnumerable<RolePermission> permissions, DataScope dataScope = DataScope.All)
     {
         CreatedAt = DateTimeOffset.UtcNow;
         Name = name;
         Description = description;
+        DataScope = dataScope;
         Permissions = new List<RolePermission>(permissions);
         IsActive = true;
     }
 
-    public void UpdateRoleInfo(string name, string description)
+    public void UpdateRoleInfo(string name, string description, DataScope? dataScope = null)
     {
         Name = name;
         Description = description;
+        if (dataScope.HasValue)
+            DataScope = dataScope.Value;
         AddDomainEvent(new RoleInfoChangedDomainEvent(this));
     }
 

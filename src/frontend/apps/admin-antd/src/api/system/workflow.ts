@@ -11,6 +11,8 @@ export namespace WorkflowApi {
     assigneeValue: string;
     sortOrder: number;
     description: string;
+    /** 审批方式：0=或签 1=会签 2=依次审批 */
+    approvalMode?: number;
   }
 
   export interface WorkflowDefinition {

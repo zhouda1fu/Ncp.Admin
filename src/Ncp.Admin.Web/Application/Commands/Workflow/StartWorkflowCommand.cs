@@ -63,6 +63,7 @@ public class StartWorkflowCommandHandler(
     IWorkflowDefinitionRepository definitionRepository,
     IWorkflowInstanceRepository instanceRepository,
     WorkflowInstanceQuery instanceQuery,
+    UserQuery userQuery,
     WorkflowAssigneeResolverQuery assigneeResolverQuery)
     : ICommandHandler<StartWorkflowCommand, WorkflowInstanceId>
 {
@@ -87,6 +88,10 @@ public class StartWorkflowCommandHandler(
             throw new KnownException("流程定义未发布，无法发起流程", ErrorCodes.WorkflowDefinitionAlreadyArchived);
         }
 
+        // 获取发起人信息以获取部门ID
+        var initiator = await userQuery.GetUserByIdAsync(request.InitiatorId, cancellationToken)
+            ?? throw new KnownException("未找到发起人", ErrorCodes.UserNotFound);
+
         // 创建流程实例
         var instance = new WorkflowInstance(
             request.WorkflowDefinitionId,
@@ -96,22 +101,37 @@ public class StartWorkflowCommandHandler(
             request.Title,
             request.InitiatorId,
             request.InitiatorName,
+            initiator.DeptId,
             request.Variables,
             request.Remark);
 
         await instanceRepository.AddAsync(instance, cancellationToken);
 
-        // 通过聚合根领域方法获取第一个审批节点，解析审批人（指定用户一条任务，指定角色一条任务按角色查待办）
+        // 通过聚合根领域方法获取第一个审批节点，解析审批人
         var firstNode = definition.GetFirstApprovalNode();
         if (firstNode != null)
         {
-            var assignee = await assigneeResolverQuery.ResolveAssigneeAsync(firstNode, instance, cancellationToken);
-            if (assignee != null)
+            if (firstNode.ApprovalMode == ApprovalMode.CounterSign)
             {
-                if (assignee.AssigneeId != null)
-                    instance.CreateTask(firstNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeId!, assignee.DisplayName);
-                else
-                    instance.CreateTaskForRole(firstNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeRoleId!, assignee.DisplayName);
+                // 会签：按人创建多条任务
+                var assignees = await assigneeResolverQuery.ResolveAssigneesAsync(firstNode, instance, cancellationToken);
+                foreach (var a in assignees)
+                {
+                    if (a.AssigneeId != null)
+                        instance.CreateTask(firstNode.NodeName, WorkflowTaskType.Approval, a.AssigneeId, a.DisplayName);
+                }
+            }
+            else
+            {
+                // 或签/依次：单条任务（指定用户或按角色查待办）
+                var assignee = await assigneeResolverQuery.ResolveAssigneeAsync(firstNode, instance, cancellationToken);
+                if (assignee != null)
+                {
+                    if (assignee.AssigneeId != null)
+                        instance.CreateTask(firstNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeId!, assignee.DisplayName);
+                    else
+                        instance.CreateTaskForRole(firstNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeRoleId!, assignee.DisplayName);
+                }
             }
         }
 

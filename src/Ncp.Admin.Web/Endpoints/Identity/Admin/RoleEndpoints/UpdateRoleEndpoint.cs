@@ -15,7 +15,7 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.RoleEndpoints;
 /// <param name="Name">新的角色名称</param>
 /// <param name="Description">新的角色描述</param>
 /// <param name="PermissionCodes">新的权限代码列表</param>
-public record UpdateRoleInfoRequest(RoleId RoleId, string Name, string Description, IEnumerable<string> PermissionCodes);
+public record UpdateRoleInfoRequest(RoleId RoleId, string Name, string Description, DataScope? DataScope, IEnumerable<string> PermissionCodes);
 
 /// <summary>
 /// 更新角色
@@ -35,11 +35,11 @@ public class UpdateRoleEndpoint(IMediator mediator) : Endpoint<UpdateRoleInfoReq
     public override async Task HandleAsync(UpdateRoleInfoRequest request, CancellationToken ct)
     {
         var cmd = new UpdateRoleInfoCommand(
-            request.RoleId,           
-            request.Name,            
-            request.Description,      
-            request.PermissionCodes   
-        );
+            request.RoleId,
+            request.Name,
+            request.Description,
+            request.DataScope,
+            request.PermissionCodes);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

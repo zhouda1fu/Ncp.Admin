@@ -14,7 +14,7 @@ namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 /// <param name="Name">角色名称</param>
 /// <param name="Description">角色描述</param>
 /// <param name="PermissionCodes">权限代码列表</param>
-public record UpdateRoleInfoCommand(RoleId RoleId, string Name, string Description, IEnumerable<string> PermissionCodes) : ICommand;
+public record UpdateRoleInfoCommand(RoleId RoleId, string Name, string Description, DataScope? DataScope, IEnumerable<string> PermissionCodes) : ICommand;
 
 /// <summary>
 /// 更新角色信息命令验证器
@@ -37,7 +37,7 @@ public class UpdateRoleInfoCommandHandler(IRoleRepository roleRepository) : ICom
     {
         var role = await roleRepository.GetAsync(request.RoleId, cancellationToken) ??
                    throw new KnownException($"未找到角色，RoleId = {request.RoleId}", ErrorCodes.RoleNotFound);
-        role.UpdateRoleInfo(request.Name, request.Description);
+        role.UpdateRoleInfo(request.Name, request.Description, request.DataScope);
 
         var permissions = request.PermissionCodes.Select(perm =>
         {
