@@ -116,6 +116,107 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       ],
     },
     {
+      value: PermissionCodes.PositionManagement,
+      label: '岗位管理',
+      icon: 'mdi:briefcase',
+      children: [
+        {
+          value: PermissionCodes.PositionView,
+          label: '查看岗位',
+          icon: 'mdi:eye',
+        },
+        {
+          value: PermissionCodes.PositionCreate,
+          label: '创建岗位',
+          icon: 'mdi:plus',
+        },
+        {
+          value: PermissionCodes.PositionEdit,
+          label: '编辑岗位',
+          icon: 'mdi:pencil',
+        },
+        {
+          value: PermissionCodes.PositionDelete,
+          label: '删除岗位',
+          icon: 'mdi:delete',
+        },
+      ],
+    },
+    {
+      value: PermissionCodes.WorkflowManagement,
+      label: '工作流管理',
+      icon: 'mdi:workflow',
+      children: [
+        {
+          value: PermissionCodes.WorkflowDefinitionView,
+          label: '查看流程定义',
+          icon: 'mdi:eye',
+        },
+        {
+          value: PermissionCodes.WorkflowDefinitionCreate,
+          label: '创建流程定义',
+          icon: 'mdi:plus',
+        },
+        {
+          value: PermissionCodes.WorkflowDefinitionEdit,
+          label: '编辑流程定义',
+          icon: 'mdi:pencil',
+        },
+        {
+          value: PermissionCodes.WorkflowDefinitionDelete,
+          label: '删除流程定义',
+          icon: 'mdi:delete',
+        },
+        {
+          value: PermissionCodes.WorkflowDefinitionPublish,
+          label: '发布流程定义',
+          icon: 'mdi:publish',
+        },
+        {
+          value: PermissionCodes.WorkflowStart,
+          label: '发起流程',
+          icon: 'mdi:play',
+        },
+        {
+          value: PermissionCodes.WorkflowCancel,
+          label: '撤销流程',
+          icon: 'mdi:stop',
+        },
+        {
+          value: PermissionCodes.WorkflowTaskApprove,
+          label: '审批任务',
+          icon: 'mdi:check-decagram',
+        },
+        {
+          value: PermissionCodes.WorkflowInstanceView,
+          label: '查看流程实例',
+          icon: 'mdi:eye',
+        },
+        {
+          value: PermissionCodes.WorkflowMonitor,
+          label: '流程监控',
+          icon: 'mdi:monitor',
+        },
+      ],
+    },
+    {
+      value: PermissionCodes.NotificationManagement,
+      label: '通知管理',
+      icon: 'mdi:bell',
+      children: [
+        {
+          value: PermissionCodes.NotificationView,
+          label: '查看通知',
+          icon: 'mdi:eye',
+        },
+        {
+          value: PermissionCodes.NotificationSend,
+          label: '发送通知',
+          icon: 'mdi:send',
+        },
+      ],
+    },
+    {
       value: PermissionCodes.AllApiAccess,
       label: '所有接口访问权限',
       icon: 'mdi:shield-check',

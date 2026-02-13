@@ -47,6 +47,11 @@ export const PermissionCodes = {
   WorkflowInstanceView: 'WorkflowInstanceView',
   WorkflowMonitor: 'WorkflowMonitor',
 
+  // 通知管理权限
+  NotificationManagement: 'NotificationManagement',
+  NotificationView: 'NotificationView',
+  NotificationSend: 'NotificationSend',
+
   // 所有接口访问权限
   AllApiAccess: 'AllApiAccess',
 } as const;
