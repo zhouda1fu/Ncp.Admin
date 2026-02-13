@@ -8,22 +8,22 @@ using Ncp.Admin.Web.Application.Commands.Notification;
 namespace Ncp.Admin.Web.Endpoints.Notification;
 
 /// <summary>
-/// 标记通知为已读
+/// 删除通知
 /// </summary>
-public class MarkNotificationReadEndpoint(IMediator mediator) : EndpointWithoutRequest<ResponseData<bool>>
+public class DeleteNotificationEndpoint(IMediator mediator) : EndpointWithoutRequest<ResponseData<bool>>
 {
     public override void Configure()
     {
         Tags("Notifications");
         Description(b => b.AutoTagOverride("Notifications"));
-        Put("/api/notification/{id}/read");
+        Delete("/api/notification/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
         var id = new NotificationId(Route<long>("id"));
-        await mediator.Send(new MarkNotificationReadCommand(id), ct);
+        await mediator.Send(new DeleteNotificationCommand(id), ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }

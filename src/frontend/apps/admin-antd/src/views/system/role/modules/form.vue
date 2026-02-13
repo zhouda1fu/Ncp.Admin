@@ -39,12 +39,14 @@ const [Drawer, drawerApi] = useVbenDrawer({
         await updateRole(id.value, {
           name: values.name,
           description: values.description || '',
+          dataScope: values.dataScope ?? 0,
           permissionCodes: values.permissionCodes || [],
         });
       } else {
         await createRole({
           name: values.name,
           description: values.description || '',
+          dataScope: values.dataScope ?? 0,
           permissionCodes: values.permissionCodes || [],
         });
       }
@@ -80,6 +82,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           name: data.name,
           description: data.description || '',
           isActive: data.isActive,
+          dataScope: data.dataScope ?? 0,
           permissionCodes: data.permissionCodes || [],
         });
       }

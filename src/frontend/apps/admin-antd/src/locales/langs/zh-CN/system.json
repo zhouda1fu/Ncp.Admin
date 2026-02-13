@@ -57,6 +57,8 @@
       "delete": "删除节点",
       "moveUp": "上移",
       "moveDown": "下移",
+      "copyNode": "复制节点",
+      "copySuffix": "(副本)",
       "empty": "暂无节点，请添加审批节点"
     },
     "submitForApproval": "提交审批",
@@ -113,6 +115,14 @@
       "approve": "通过",
       "reject": "驳回",
       "transfer": "转办",
+      "delegate": "委托",
+      "delegateTitle": "委托任务",
+      "delegateConfirmContent": "确认将该任务委托给 {name} 处理吗？委托后您将不再需要处理此任务。",
+      "delegateSuccess": "委托成功",
+      "selectDelegateUser": "选择被委托人",
+      "selectDelegateUserPlaceholder": "按姓名或部门搜索",
+      "delegateComment": "委托备注",
+      "delegateCommentPlaceholder": "请输入委托原因或说明",
       "operation": "操作"
     }
   },
@@ -138,7 +148,12 @@
     "createTime": "创建时间",
     "operation": "操作",
     "permissions": "权限",
-    "setPermissions": "授权"
+    "setPermissions": "授权",
+    "dataScope": "数据权限",
+    "dataScopeAll": "全部数据",
+    "dataScopeDept": "本部门",
+    "dataScopeDeptAndSub": "本部门及下级部门",
+    "dataScopeSelf": "仅本人"
   },
   "position": {
     "title": "岗位管理",

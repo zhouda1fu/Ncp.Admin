@@ -57,6 +57,8 @@
       "delete": "Delete Node",
       "moveUp": "Move Up",
       "moveDown": "Move Down",
+      "copyNode": "Copy Node",
+      "copySuffix": "(Copy)",
       "empty": "No nodes yet, please add approval nodes"
     },
     "submitForApproval": "Submit for Approval",
@@ -113,6 +115,14 @@
       "approve": "Approve",
       "reject": "Reject",
       "transfer": "Transfer",
+      "delegate": "Delegate",
+      "delegateTitle": "Delegate Task",
+      "delegateConfirmContent": "Confirm delegating this task to {name}? You will no longer need to handle it.",
+      "delegateSuccess": "Delegated successfully",
+      "selectDelegateUser": "Select delegatee",
+      "selectDelegateUserPlaceholder": "Search by name or department",
+      "delegateComment": "Delegate comment",
+      "delegateCommentPlaceholder": "Enter reason or note for delegation",
       "operation": "Action"
     }
   },
@@ -137,7 +147,12 @@
     "createTime": "Creation Time",
     "operation": "Operation",
     "permissions": "Permissions",
-    "setPermissions": "Permissions"
+    "setPermissions": "Permissions",
+    "dataScope": "Data Scope",
+    "dataScopeAll": "All Data",
+    "dataScopeDept": "Own Department",
+    "dataScopeDeptAndSub": "Own Department & Sub-departments",
+    "dataScopeSelf": "Self Only"
   },
   "position": {
     "title": "Position",

@@ -3,14 +3,21 @@ import type { Recordable } from '@vben/types';
 
 import type { WorkflowApi } from '#/api/system/workflow';
 
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, message, Modal } from 'ant-design-vue';
+import { Button, message, Modal, Select } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { approveTask, getMyPendingTasks, rejectTask } from '#/api/system/workflow';
+import {
+  approveTask,
+  delegateTask,
+  getMyPendingTasks,
+  rejectTask,
+} from '#/api/system/workflow';
+import { getUserList } from '#/api/system/user';
 import { $t } from '#/locales';
 
 const router = useRouter();
@@ -72,7 +79,7 @@ const [Grid, gridApi] = useVbenVxeGrid<WorkflowApi.MyPendingTask>({
         field: 'operation',
         fixed: 'right',
         title: $t('system.workflow.task.operation'),
-        width: 240,
+        width: 300,
         slots: { default: 'action' },
       },
     ],
@@ -145,6 +152,91 @@ function onReject(row: WorkflowApi.MyPendingTask) {
 function onViewDetail(row: WorkflowApi.MyPendingTask) {
   router.push(`/workflow/instance/${row.workflowInstanceId}`);
 }
+
+// 委托相关
+const delegateModalVisible = ref(false);
+const delegateModalLoading = ref(false);
+const delegateRow = ref<WorkflowApi.MyPendingTask | null>(null);
+const delegateUserOptions = ref<{ label: string; value: string }[]>([]);
+const delegateUserLoading = ref(false);
+const delegateSelectedUserId = ref<string | undefined>();
+const delegateSelectedUserName = ref('');
+const delegateComment = ref('');
+
+watch(delegateModalVisible, (visible) => {
+  if (visible) {
+    delegateSelectedUserId.value = undefined;
+    delegateSelectedUserName.value = '';
+    delegateComment.value = '';
+    loadDelegateUsers();
+  }
+});
+
+async function loadDelegateUsers() {
+  if (delegateUserOptions.value.length > 0) return;
+  delegateUserLoading.value = true;
+  try {
+    const result = await getUserList({
+      pageIndex: 1,
+      pageSize: 500,
+      countTotal: false,
+    });
+    delegateUserOptions.value = result.items.map((u) => ({
+      label: `${u.realName || u.name}${u.deptName ? ` (${u.deptName})` : ''}`,
+      value: u.userId,
+    }));
+  } finally {
+    delegateUserLoading.value = false;
+  }
+}
+
+function openDelegateModal(row: WorkflowApi.MyPendingTask) {
+  delegateRow.value = row;
+  delegateUserOptions.value = [];
+  delegateModalVisible.value = true;
+}
+
+function filterDelegateUser(input: string, option: unknown) {
+  const opt = option as { label?: string };
+  return (opt?.label ?? '').toLowerCase().includes(input.toLowerCase());
+}
+
+function onDelegateUserChange(value: string | undefined) {
+  const opt = delegateUserOptions.value.find((o) => o.value === value);
+  delegateSelectedUserName.value = opt?.label ?? '';
+}
+
+async function handleDelegateOk() {
+  const row = delegateRow.value;
+  if (!row || !delegateSelectedUserId.value || !delegateSelectedUserName.value) {
+    message.warning($t('system.workflow.task.selectDelegateUser'));
+    throw new Error('Validation failed');
+  }
+  if (!delegateComment.value?.trim()) {
+    message.warning($t('system.workflow.task.delegateCommentPlaceholder'));
+    throw new Error('Validation failed');
+  }
+  delegateModalLoading.value = true;
+  try {
+    await delegateTask({
+      instanceId: row.workflowInstanceId,
+      taskId: row.taskId,
+      delegateToUserId: delegateSelectedUserId.value,
+      delegateToUserName: delegateSelectedUserName.value,
+      comment: delegateComment.value.trim(),
+    });
+    message.success($t('system.workflow.task.delegateSuccess'));
+    delegateModalVisible.value = false;
+    gridApi.query();
+  } catch (e) {
+    if (e instanceof Error && e.message !== 'Validation failed') {
+      message.error((e as Error).message || '委托失败');
+    }
+    throw e;
+  } finally {
+    delegateModalLoading.value = false;
+  }
+}
 </script>
 <template>
   <Page auto-content-height>
@@ -156,10 +248,49 @@ function onViewDetail(row: WorkflowApi.MyPendingTask) {
         <Button danger size="small" class="ml-2" @click="onReject(row)">
           {{ $t('system.workflow.task.reject') }}
         </Button>
+        <Button size="small" class="ml-2" @click="openDelegateModal(row)">
+          {{ $t('system.workflow.task.delegate') }}
+        </Button>
         <Button size="small" class="ml-2" @click="onViewDetail(row)">
           {{ $t('system.workflow.instance.detail') }}
         </Button>
       </template>
     </Grid>
+    <Modal
+      v-model:open="delegateModalVisible"
+      :confirm-loading="delegateModalLoading"
+      :title="$t('system.workflow.task.delegateTitle')"
+      cancel-text="取消"
+      ok-text="确定"
+      @ok="handleDelegateOk"
+    >
+      <div class="mb-4">
+        <div class="mb-2">
+          {{ $t('system.workflow.task.selectDelegateUser') }}
+        </div>
+        <Select
+          v-model:value="delegateSelectedUserId"
+          :loading="delegateUserLoading"
+          :options="delegateUserOptions"
+          :placeholder="$t('system.workflow.task.selectDelegateUserPlaceholder')"
+          allow-clear
+          class="w-full"
+          show-search
+          :filter-option="filterDelegateUser"
+          @change="onDelegateUserChange"
+        />
+      </div>
+      <div>
+        <div class="mb-2">
+          {{ $t('system.workflow.task.delegateComment') }}
+        </div>
+        <textarea
+          v-model="delegateComment"
+          :placeholder="$t('system.workflow.task.delegateCommentPlaceholder')"
+          class="w-full rounded border px-3 py-2"
+          rows="3"
+        />
+      </div>
+    </Modal>
   </Page>
 </template>

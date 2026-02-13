@@ -275,10 +275,27 @@ async function transferTask(data: {
   );
 }
 
+/**
+ * 委托：将审批任务委托给他人处理
+ */
+async function delegateTask(data: {
+  instanceId: string;
+  taskId: string;
+  delegateToUserId: string;
+  delegateToUserName: string;
+  comment: string;
+}) {
+  return requestClient.post<{ data: string }>(
+    '/workflow/delegate',
+    data,
+  );
+}
+
 export {
   approveTask,
   cancelWorkflow,
   createDefinition,
+  delegateTask,
   deleteDefinition,
   getDefinition,
   getDefinitionList,

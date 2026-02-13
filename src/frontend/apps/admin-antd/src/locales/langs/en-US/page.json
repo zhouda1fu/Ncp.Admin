@@ -11,5 +11,19 @@
     "title": "Dashboard",
     "analytics": "Analytics",
     "workspace": "Workspace"
+  },
+  "ui": {
+    "widgets": {
+      "justNow": "Just now",
+      "minutesAgo": " min ago",
+      "hoursAgo": " hours ago",
+      "daysAgo": " days ago",
+      "notifications": "Notifications",
+      "viewAll": "View all messages",
+      "clearNotifications": "Clear",
+      "markAllAsRead": "Mark all as read",
+      "document": "Document",
+      "qa": "Q&A"
+    }
   }
 }

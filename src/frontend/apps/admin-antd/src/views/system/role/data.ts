@@ -1,8 +1,19 @@
 import type { VbenFormSchema } from '#/adapter/form';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { SystemRoleApi } from '#/api/system/role';
+import type { DataScope } from '#/api/system/role';
 
 import { $t } from '#/locales';
+
+function formatDataScope(value: DataScope | undefined) {
+  const labels: Record<DataScope, string> = {
+    0: $t('system.role.dataScopeAll'),
+    1: $t('system.role.dataScopeDept'),
+    2: $t('system.role.dataScopeDeptAndSub'),
+    3: $t('system.role.dataScopeSelf'),
+  };
+  return value !== undefined && value in labels ? labels[value as DataScope] : '-';
+}
 
 export function useFormSchema(): VbenFormSchema[] {
   return [
@@ -30,6 +41,21 @@ export function useFormSchema(): VbenFormSchema[] {
       component: 'Textarea',
       fieldName: 'description',
       label: $t('system.role.remark'),
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        class: 'w-full',
+        options: [
+          { label: $t('system.role.dataScopeAll'), value: 0 },
+          { label: $t('system.role.dataScopeDept'), value: 1 },
+          { label: $t('system.role.dataScopeDeptAndSub'), value: 2 },
+          { label: $t('system.role.dataScopeSelf'), value: 3 },
+        ],
+      },
+      defaultValue: 0,
+      fieldName: 'dataScope',
+      label: $t('system.role.dataScope'),
     },
     {
       component: 'Input',
@@ -110,6 +136,12 @@ export function useColumns<T = SystemRoleApi.SystemRole>(
       field: 'description',
       minWidth: 100,
       title: $t('system.role.remark'),
+    },
+    {
+      field: 'dataScope',
+      title: $t('system.role.dataScope'),
+      width: 160,
+      formatter: ({ row }: { row: T }) => formatDataScope(row.dataScope),
     },
     {
       field: 'createdAt',

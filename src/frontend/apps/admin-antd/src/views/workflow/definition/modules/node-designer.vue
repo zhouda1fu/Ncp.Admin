@@ -92,11 +92,28 @@ async function loadRoles() {
 // 内部节点列表
 const nodes = ref<WorkflowApi.WorkflowNode[]>([]);
 
+// 节点折叠状态（按 index 存储）
+const collapsedMap = ref<Record<number, boolean>>({});
+
+function getNodeKey(node: WorkflowApi.WorkflowNode, index: number) {
+  return node.id ?? `node-${index}-${node.sortOrder}-${node.nodeName}`;
+}
+
+function toggleCollapsed(index: number) {
+  if (props.disabled) return;
+  collapsedMap.value[index] = !collapsedMap.value[index];
+}
+
+function isCollapsed(index: number) {
+  return collapsedMap.value[index] ?? false;
+}
+
 watch(
   () => props.modelValue,
   (val) => {
     if (val) {
       nodes.value = val.map((n, idx) => ({ ...n, sortOrder: idx + 1 }));
+      collapsedMap.value = {};
     }
   },
   { immediate: true, deep: true },
@@ -146,6 +163,19 @@ function moveDown(index: number) {
   const temp = nodes.value[index]!;
   nodes.value[index] = nodes.value[index + 1]!;
   nodes.value[index + 1] = temp;
+  emitUpdate();
+}
+
+function copyNode(index: number) {
+  const src = nodes.value[index];
+  if (!src) return;
+  const suffix = $t('system.workflow.node.copySuffix');
+  const newNode: WorkflowApi.WorkflowNode = {
+    ...JSON.parse(JSON.stringify(src)),
+    nodeName: src.nodeName ? `${src.nodeName} ${suffix}` : '',
+    sortOrder: 0,
+  };
+  nodes.value.splice(index + 1, 0, newNode);
   emitUpdate();
 }
 
@@ -214,6 +244,7 @@ function onAssigneeDropdownOpen(assigneeType: number) {
 </script>
 
 <template>
+  <div class="nd-wrapper">
   <div class="nd">
     <!-- ========== 开始节点 ========== -->
     <div class="nd-terminal">
@@ -238,7 +269,7 @@ function onAssigneeDropdownOpen(assigneeType: number) {
     </template>
 
     <!-- ========== 节点列表 ========== -->
-    <template v-for="(node, index) in nodes" :key="index">
+    <template v-for="(node, index) in nodes" :key="getNodeKey(node, index)">
       <!-- 添加按钮（节点上方） -->
       <div v-if="!disabled" class="nd-add-wrapper">
         <Tooltip :title="$t('system.workflow.node.addAfter')">
@@ -260,8 +291,12 @@ function onAssigneeDropdownOpen(assigneeType: number) {
           :style="{ backgroundColor: getTypeConfig(node.nodeType).color }"
         />
 
-        <!-- 头部 -->
-        <div class="nd-card-head">
+        <!-- 头部（可点击折叠） -->
+        <div
+          class="nd-card-head"
+          :class="{ 'nd-card-head-collapsed': isCollapsed(index) }"
+          @click="toggleCollapsed(index)"
+        >
           <div class="nd-card-title">
             <div
               class="nd-card-icon"
@@ -284,8 +319,16 @@ function onAssigneeDropdownOpen(assigneeType: number) {
                 {{ getNodeTypeLabel(node.nodeType) }}
               </Tag>
             </div>
+            <span v-if="!disabled" class="nd-collapse-icon">
+              {{ isCollapsed(index) ? '▶' : '▼' }}
+            </span>
           </div>
-          <div v-if="!disabled" class="nd-card-actions">
+          <div v-if="!disabled" class="nd-card-actions" @click.stop>
+            <Tooltip :title="$t('system.workflow.node.copyNode')">
+              <Button type="text" size="small" @click="copyNode(index)">
+                <span style="font-size: 14px">📋</span>
+              </Button>
+            </Tooltip>
             <Tooltip :title="$t('system.workflow.node.moveUp')">
               <Button type="text" size="small" :disabled="index === 0" @click="moveUp(index)">
                 <span style="font-size: 16px">↑</span>
@@ -313,8 +356,8 @@ function onAssigneeDropdownOpen(assigneeType: number) {
           </div>
         </div>
 
-        <!-- 表单 -->
-        <div class="nd-card-form">
+        <!-- 表单（可折叠） -->
+        <div v-show="!isCollapsed(index)" class="nd-card-form">
           <div class="nd-field">
             <label>{{ $t('system.workflow.node.name') }}</label>
             <Input
@@ -419,9 +462,18 @@ function onAssigneeDropdownOpen(assigneeType: number) {
       <span class="nd-terminal-text">{{ $t('system.workflow.node.end') }}</span>
     </div>
   </div>
+  </div>
 </template>
 
 <style scoped>
+.nd-wrapper {
+  max-height: 480px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 8px;
+  margin: 0 -8px;
+}
+
 .nd {
   display: flex;
   flex-direction: column;
@@ -563,6 +615,19 @@ function onAssigneeDropdownOpen(assigneeType: number) {
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.nd-card-head-collapsed {
+  margin-bottom: 0;
+}
+
+.nd-collapse-icon {
+  font-size: 10px;
+  color: #8c8c8c;
+  margin-left: 6px;
+  flex-shrink: 0;
 }
 
 .nd-card-title {

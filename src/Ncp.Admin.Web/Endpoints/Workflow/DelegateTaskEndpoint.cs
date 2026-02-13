@@ -1,4 +1,5 @@
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
@@ -25,10 +26,11 @@ public class DelegateTaskEndpoint(IMediator mediator) : Endpoint<DelegateTaskReq
 {
     public override void Configure()
     {
-        Tags("Workflow");
-        Post("/api/workflow/delegate");
+        Tags("WorkflowTasks");
+        Description(b => b.AutoTagOverride("WorkflowTasks"));
+        Post("/api/admin/workflow/delegate");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        // 通常审批人都有权委托，或者可以加特定权限校验
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async Task HandleAsync(DelegateTaskRequest req, CancellationToken ct)

@@ -63,9 +63,17 @@ async function markAllNotificationsRead() {
   );
 }
 
+/**
+ * 删除通知
+ */
+async function deleteNotification(id: string | number) {
+  return requestClient.delete<boolean>(`${NOTIFICATION_BASE}/${id}`);
+}
+
 export {
   getNotificationList,
   getUnreadCount,
   markNotificationRead,
   markAllNotificationsRead,
+  deleteNotification,
 };

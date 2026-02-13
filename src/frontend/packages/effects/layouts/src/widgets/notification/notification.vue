@@ -85,6 +85,14 @@ function navigateTo(
     });
   }
 }
+
+const FALLBACK_AVATAR =
+  'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%239ca3af"%3E%3Cpath d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/%3E%3C/svg%3E';
+
+function handleAvatarError(e: Event) {
+  const target = e.target as HTMLImageElement;
+  if (target) target.src = FALLBACK_AVATAR;
+}
 </script>
 <template>
   <VbenPopover
@@ -127,11 +135,12 @@ function navigateTo(
               ></span>
 
               <span
-                class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full"
+                class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted"
               >
                 <img
                   :src="item.avatar"
                   class="aspect-square h-full w-full object-cover"
+                  @error="handleAvatarError"
                 />
               </span>
               <div class="flex flex-col gap-1 leading-none">

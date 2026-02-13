@@ -1,8 +1,10 @@
 using System.Text.Json;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.NotificationAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
+using Ncp.Admin.Web.Application.Commands.Notification;
 using Ncp.Admin.Web.Application.Commands.Workflow;
 using Ncp.Admin.Web.Application.Queries;
 using Serilog;
@@ -27,6 +29,20 @@ public class WorkflowInstanceCompletedDomainEventHandler(IMediator mediator, Rol
 
         Log.Information("工作流实例审批通过，开始执行业务逻辑: InstanceId={InstanceId}, BusinessType={BusinessType}",
             instance.Id, instance.BusinessType);
+
+        // 向发起人发送审批通过通知
+        await mediator.Send(
+            new SendNotificationCommand(
+                "您的流程已审批通过",
+                $"流程「{instance.Title}」已审批通过，系统将自动执行后续操作。",
+                NotificationType.Workflow,
+                NotificationLevel.Success,
+                null,
+                string.Empty,
+                instance.InitiatorId.Id,
+                instance.Id.ToString(),
+                "WorkflowInstance"),
+            cancellationToken);
 
         switch (instance.BusinessType)
         {

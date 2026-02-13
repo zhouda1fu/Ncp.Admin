@@ -83,6 +83,20 @@ try
         options.TokenValidationParameters.ValidateAudience = true;
         options.TokenValidationParameters.ValidIssuer = appConfig.JwtIssuer;
         options.TokenValidationParameters.ValidateIssuer = true;
+        // SignalR 通过 WebSocket 连接时无法发送 Authorization 头，需从 query 读取 access_token
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                var accessToken = ctx.Request.Query["access_token"];
+                var path = ctx.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notification"))
+                {
+                    ctx.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
     builder.Services.AddNetCorePalJwt().AddRedisStore();
 

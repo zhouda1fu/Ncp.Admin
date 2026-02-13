@@ -19,10 +19,12 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
 import {
+  deleteNotification,
   getNotificationList,
   markAllNotificationsRead,
   markNotificationRead,
 } from '#/api/notification';
+import { useNotificationHub } from '#/hooks/useNotificationHub';
 import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
@@ -38,10 +40,10 @@ function formatNotificationDate(createdAt: string) {
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-  if (diffMins < 1) return $t('ui.widgets.justNow') || '刚刚';
-  if (diffMins < 60) return `${diffMins}${$t('ui.widgets.minutesAgo') || '分钟前'}`;
-  if (diffHours < 24) return `${diffHours}${$t('ui.widgets.hoursAgo') || '小时前'}`;
-  if (diffDays < 7) return `${diffDays}${$t('ui.widgets.daysAgo') || '天前'}`;
+  if (diffMins < 1) return $t('page.ui.widgets.justNow');
+  if (diffMins < 60) return `${diffMins}${$t('page.ui.widgets.minutesAgo')}`;
+  if (diffHours < 24) return `${diffHours}${$t('page.ui.widgets.hoursAgo')}`;
+  if (diffDays < 7) return `${diffDays}${$t('page.ui.widgets.daysAgo')}`;
   return date.toLocaleDateString();
 }
 
@@ -60,6 +62,7 @@ function mapToLayoutItem(item: {
     message: item.content,
     date: formatNotificationDate(item.createdAt),
     isRead: item.isRead,
+    avatar: preferences.app.defaultAvatar,
     link: item.businessId && item.businessType
       ? `/workflow/instance/${item.businessId}`
       : undefined,
@@ -100,6 +103,9 @@ watch(
   },
   { immediate: true },
 );
+
+// SignalR 实时推送：收到新通知时刷新列表
+useNotificationHub(loadNotifications);
 
 const menus = computed(() => [
   {
@@ -162,8 +168,17 @@ async function markRead(id: number | string) {
   }
 }
 
-function remove(id: number | string) {
-  notifications.value = notifications.value.filter((item) => item.id !== id);
+async function remove(id: number | string) {
+  try {
+    await deleteNotification(id);
+    notifications.value = notifications.value.filter((item) => item.id !== id);
+  } catch {
+    // ignore - error already shown by request interceptor
+  }
+}
+
+function handleViewAll() {
+  router.push('/workflow/pending');
 }
 
 async function handleMakeAll() {
@@ -213,9 +228,10 @@ watch(
         :dot="showDot"
         :notifications="notifications"
         @clear="handleNoticeClear"
-        @read="(item) => item.id && markRead(item.id)"
-        @remove="(item) => item.id && remove(item.id)"
+        @read="(item) => item?.id != null && markRead(item.id)"
+        @remove="(item) => item?.id != null && remove(item.id)"
         @make-all="handleMakeAll"
+        @view-all="handleViewAll"
       />
     </template>
     <template #extra>

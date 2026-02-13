@@ -11,5 +11,19 @@
     "title": "概览",
     "analytics": "分析页",
     "workspace": "工作台"
+  },
+  "ui": {
+    "widgets": {
+      "justNow": "刚刚",
+      "minutesAgo": "分钟前",
+      "hoursAgo": "小时前",
+      "daysAgo": "天前",
+      "notifications": "通知",
+      "viewAll": "查看所有消息",
+      "clearNotifications": "清空",
+      "markAllAsRead": "全部已读",
+      "document": "文档",
+      "qa": "问答"
+    }
   }
 }
