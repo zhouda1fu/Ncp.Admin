@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -17,6 +17,7 @@
         <PackageReference Include="NetCorePal.Extensions.DistributedTransactions.CAP.MySql" />
         <PackageReference Include="NetCorePal.Extensions.Repository.EntityFrameworkCore" />
         <PackageReference Include="NetCorePal.Extensions.Repository.EntityFrameworkCore.Snowflake" />
+        <PackageReference Include="NetCorePal.Context.Shared" />
     </ItemGroup>
 
     <ItemGroup>

@@ -13,6 +13,7 @@ using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Clients;
 using Ncp.Admin.Web.Extensions;
 using Ncp.Admin.Web.Services;
+using Ncp.Admin.Web.Middleware;
 using Ncp.Admin.Web.Utils;
 using NetCorePal.Extensions.CodeAnalysis;
 using Newtonsoft.Json;
@@ -188,14 +189,13 @@ try
         }
         options.EnableDetailedErrors();
     });
-    builder.Services.AddScoped<IDataPermissionProvider, DataPermissionProvider>();
     builder.Services.Configure<LocalFileStorageOptions>(builder.Configuration.GetSection(LocalFileStorageOptions.SectionName));
     builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
     builder.Services.AddScoped<Ncp.Admin.Web.Application.Services.Notification.INotificationSender, Ncp.Admin.Web.Application.Services.Notification.SignalRNotificationSender>();
     builder.Services.AddUnitOfWork<ApplicationDbContext>();
     // Redis locks use the Aspire-managed Redis connection
     builder.Services.AddRedisLocks();
-    builder.Services.AddContext().AddEnvContext().AddCapContextProcessor();
+    builder.Services.AddContext().AddEnvContext().AddDataPermissionContext().AddCapContextProcessor();
     builder.Services.AddNetCorePalServiceDiscoveryClient();
     builder.Services.AddIntegrationEvents(typeof(Program))
         .UseCap<ApplicationDbContext>(b =>
@@ -313,13 +313,8 @@ try
     app.UseRouting();
     app.UseAuthentication(); // Authentication 必须在 Authorization 之前
     app.UseAuthorization();
-    app.Use(async (context, next) =>
-    {
-        var provider = context.RequestServices.GetService<Ncp.Admin.Infrastructure.Services.IDataPermissionProvider>();
-        if (provider != null)
-            await provider.LoadAsync(context.RequestAborted);
-        await next();
-    });
+    app.UseContext();
+    app.UseMiddleware<DataPermissionContextMiddleware>();
 
     #region Scalar
 

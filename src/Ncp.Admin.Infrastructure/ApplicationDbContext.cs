@@ -8,6 +8,7 @@ using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Services;
+using NetCorePal.Context;
 using NetCorePal.Extensions.DistributedTransactions.CAP.Persistence;
 
 namespace Ncp.Admin.Infrastructure;
@@ -15,14 +16,14 @@ namespace Ncp.Admin.Infrastructure;
 public partial class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     IMediator mediator,
-    IDataPermissionProvider? dataPermissionProvider = null)
+    IContextAccessor? contextAccessor = null)
     : AppDbContextBase(options, mediator)
     , IMySqlCapDataStorage
 {
     /// <summary>
-    /// 数据权限提供者；为 null 时不应用数据权限过滤。
+    /// 上下文访问器（NetCorePal）；为 null 时不应用数据权限过滤。
     /// </summary>
-    private readonly IDataPermissionProvider? _dataPermissionProvider = dataPermissionProvider;
+    private readonly IContextAccessor? _contextAccessor = contextAccessor;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,13 +35,14 @@ public partial class ApplicationDbContext(
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
 
-        if (_dataPermissionProvider != null)
+        if (_contextAccessor != null)
         {
             modelBuilder.Entity<WorkflowInstance>().HasQueryFilter(wi =>
-                _dataPermissionProvider.Scope == DataScope.All
-                || (_dataPermissionProvider.Scope == DataScope.Self && wi.InitiatorId == _dataPermissionProvider.UserId)
-                || (_dataPermissionProvider.Scope == DataScope.Dept && wi.InitiatorDeptId == _dataPermissionProvider.DeptId)
-                || (_dataPermissionProvider.Scope == DataScope.DeptAndSub && _dataPermissionProvider.AuthorizedDeptIds.Contains(wi.InitiatorDeptId)));
+                _contextAccessor.GetContext<DataPermissionContext>() == null
+                || _contextAccessor.GetContext<DataPermissionContext>()!.Scope == DataScope.All
+                || (_contextAccessor.GetContext<DataPermissionContext>()!.Scope == DataScope.Self && wi.InitiatorId == _contextAccessor.GetContext<DataPermissionContext>()!.UserId)
+                || (_contextAccessor.GetContext<DataPermissionContext>()!.Scope == DataScope.Dept && wi.InitiatorDeptId == _contextAccessor.GetContext<DataPermissionContext>()!.DeptId)
+                || (_contextAccessor.GetContext<DataPermissionContext>()!.Scope == DataScope.DeptAndSub && _contextAccessor.GetContext<DataPermissionContext>()!.AuthorizedDeptIds.Contains(wi.InitiatorDeptId)));
         }
     }
 
