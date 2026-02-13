@@ -6,8 +6,11 @@ import { computed, ref, watch } from 'vue';
 import {
   Button,
   Card,
+  Drawer,
+  Dropdown,
   Empty,
   Input,
+  Menu,
   Popconfirm,
   Select,
   Tag,
@@ -18,6 +21,7 @@ import { getRoleList } from '#/api/system/role';
 import { getUserList } from '#/api/system/user';
 import { $t } from '#/locales';
 
+// Node types: 1=Approval, 2=CarbonCopy, 3=Notification, 4=Condition. Parallel(5) not in backend, UI only as disabled.
 const props = defineProps<{
   modelValue: WorkflowApi.WorkflowNode[];
   disabled?: boolean;
@@ -27,27 +31,17 @@ const emit = defineEmits<{
   'update:modelValue': [nodes: WorkflowApi.WorkflowNode[]];
 }>();
 
-// 节点类型选项
-const nodeTypeOptions = computed(() => [
-  { label: $t('system.workflow.node.typeApproval'), value: 1 },
-  { label: $t('system.workflow.node.typeCarbonCopy'), value: 2 },
-  { label: $t('system.workflow.node.typeNotification'), value: 3 },
-]);
-
-// 审批方式选项（仅审批节点有效）：0=或签 1=会签 2=依次审批
 const approvalModeOptions = computed(() => [
   { label: $t('system.workflow.node.approvalModeOrSign'), value: 0 },
   { label: $t('system.workflow.node.approvalModeCounterSign'), value: 1 },
   { label: $t('system.workflow.node.approvalModeSequential'), value: 2 },
 ]);
 
-// 审批人类型选项（指定用户、指定角色；部门主管与发起人自选暂不支持）
 const assigneeTypeOptions = computed(() => [
   { label: $t('system.workflow.node.assigneeUser'), value: 0 },
   { label: $t('system.workflow.node.assigneeRole'), value: 1 },
 ]);
 
-// 用户列表和角色列表缓存
 const userOptions = ref<Array<{ label: string; value: string }>>([]);
 const roleOptions = ref<Array<{ label: string; value: string }>>([]);
 const loadingUsers = ref(false);
@@ -89,56 +83,47 @@ async function loadRoles() {
   }
 }
 
-// 内部节点列表
 const nodes = ref<WorkflowApi.WorkflowNode[]>([]);
-
-// 节点折叠状态（按 index 存储）
-const collapsedMap = ref<Record<number, boolean>>({});
-
-function getNodeKey(node: WorkflowApi.WorkflowNode, index: number) {
-  return node.id ?? `node-${index}-${node.sortOrder}-${node.nodeName}`;
-}
-
-function toggleCollapsed(index: number) {
-  if (props.disabled) return;
-  collapsedMap.value[index] = !collapsedMap.value[index];
-}
-
-function isCollapsed(index: number) {
-  return collapsedMap.value[index] ?? false;
-}
 
 watch(
   () => props.modelValue,
   (val) => {
     if (val) {
       nodes.value = val.map((n, idx) => ({ ...n, sortOrder: idx + 1 }));
-      collapsedMap.value = {};
     }
   },
   { immediate: true, deep: true },
 );
 
 function emitUpdate() {
-  const updated = nodes.value.map((n, idx) => ({
-    ...n,
-    sortOrder: idx + 1,
-  }));
-  emit('update:modelValue', updated);
+  emit(
+    'update:modelValue',
+    nodes.value.map((n, idx) => ({ ...n, sortOrder: idx + 1 })),
+  );
 }
 
-function addNode(index?: number) {
+function getNodeKey(node: WorkflowApi.WorkflowNode, index: number) {
+  return node.id ?? `node-${index}-${node.sortOrder}-${node.nodeName}`;
+}
+
+function addNode(insertIndex: number | undefined, nodeType: number) {
+  if (nodeType === 5) return; // Parallel: coming soon, no backend support
   const newNode: WorkflowApi.WorkflowNode = {
     nodeName: '',
-    nodeType: 1,
+    nodeType,
     assigneeType: 0,
     assigneeValue: '',
     sortOrder: 0,
     description: '',
     approvalMode: 0,
+    ...(nodeType === 4
+      ? { conditionExpression: '', trueNextNodeName: '', falseNextNodeName: '' }
+      : {}),
   };
-  if (index !== undefined) {
-    nodes.value.splice(index + 1, 0, newNode);
+  if (insertIndex !== undefined && insertIndex >= 0) {
+    nodes.value.splice(insertIndex + 1, 0, newNode);
+  } else if (insertIndex === -1) {
+    nodes.value.splice(0, 0, newNode);
   } else {
     nodes.value.push(newNode);
   }
@@ -194,7 +179,6 @@ function updateField(
   }
 }
 
-// 节点类型配置
 const nodeTypeConfig: Record<
   number,
   { color: string; bg: string; icon: string }
@@ -202,6 +186,8 @@ const nodeTypeConfig: Record<
   1: { color: '#1677ff', bg: '#e6f4ff', icon: '✓' },
   2: { color: '#52c41a', bg: '#f6ffed', icon: '📋' },
   3: { color: '#faad14', bg: '#fffbe6', icon: '🔔' },
+  4: { color: '#722ed1', bg: '#f9f0ff', icon: '◇' },
+  5: { color: '#8c8c8c', bg: '#f5f5f5', icon: '∥' }, // Parallel (placeholder)
 };
 
 function getTypeConfig(type: number) {
@@ -216,13 +202,47 @@ function getNodeTypeLabel(type: number) {
       return $t('system.workflow.node.typeCarbonCopy');
     case 3:
       return $t('system.workflow.node.typeNotification');
+    case 4:
+      return $t('system.workflow.node.typeCondition');
+    case 5:
+      return $t('system.workflow.node.typeParallel');
     default:
       return '';
   }
 }
 
-function needsAssigneeSelect(assigneeType: number) {
-  return assigneeType === 0 || assigneeType === 1;
+function getAssigneeDisplayText(node: WorkflowApi.WorkflowNode): string {
+  if (node.nodeType === 4) return ''; // Condition has no assignee
+  if (!node.assigneeValue) return '-';
+  if (node.assigneeType === 0) {
+    const u = userOptions.value.find((o) => o.value === node.assigneeValue);
+    return u?.label ?? node.assigneeValue;
+  }
+  if (node.assigneeType === 1) {
+    const r = roleOptions.value.find((o) => o.value === node.assigneeValue);
+    return r?.label ?? node.assigneeValue;
+  }
+  return node.assigneeValue;
+}
+
+const drawerVisible = ref(false);
+const editingIndex = ref<number | null>(null);
+
+const editingNode = computed(() =>
+  editingIndex.value !== null ? nodes.value[editingIndex.value] ?? null : null,
+);
+
+function openDrawer(index: number) {
+  if (props.disabled) return;
+  editingIndex.value = index;
+  drawerVisible.value = true;
+  if (nodes.value[index]?.assigneeType === 0) loadUsers();
+  if (nodes.value[index]?.assigneeType === 1) loadRoles();
+}
+
+function closeDrawer() {
+  drawerVisible.value = false;
+  editingIndex.value = null;
 }
 
 function getAssigneeOptions(assigneeType: number) {
@@ -241,166 +261,260 @@ function onAssigneeDropdownOpen(assigneeType: number) {
   if (assigneeType === 0) loadUsers();
   if (assigneeType === 1) loadRoles();
 }
+
+const addInsertIndex = ref<number | undefined>(undefined);
+
+const addMenuItems = computed(() => [
+  { key: '1', label: $t('system.workflow.node.typeApproval') },
+  { key: '2', label: $t('system.workflow.node.typeCarbonCopy') },
+  { key: '3', label: $t('system.workflow.node.typeNotification') },
+  { key: '4', label: $t('system.workflow.node.typeCondition') },
+  {
+    key: '5',
+    disabled: true,
+    label: `${$t('system.workflow.node.typeParallel')}（${$t('system.workflow.node.comingSoon')}）`,
+  },
+]);
+
+function handleAddMenuItem(key: string) {
+  const type = Number(key);
+  if (type === 5) return;
+  const idx = addInsertIndex.value;
+  addNode(idx === undefined ? undefined : idx, type);
+  addInsertIndex.value = undefined;
+}
+
+function setAddInsertIndex(i: number | undefined) {
+  addInsertIndex.value = i;
+}
+
+const nextNodeNameOptions = computed(() =>
+  nodes.value
+    .filter((n) => n.nodeName)
+    .map((n) => ({ label: n.nodeName!, value: n.nodeName! })),
+);
 </script>
 
 <template>
   <div class="nd-wrapper">
-  <div class="nd">
-    <!-- ========== 开始节点 ========== -->
-    <div class="nd-terminal">
-      <div class="nd-terminal-dot nd-terminal-start">
-        <span>▶</span>
-      </div>
-      <span class="nd-terminal-text">{{ $t('system.workflow.node.start') }}</span>
-    </div>
-
-    <div class="nd-line" />
-
-    <!-- ========== 空状态 ========== -->
-    <template v-if="nodes.length === 0">
-      <div class="nd-empty">
-        <Empty :description="$t('system.workflow.node.empty')" :image-style="{ height: '48px' }">
-          <Button v-if="!disabled" type="primary" size="small" @click="addNode()">
-            + {{ $t('system.workflow.node.add') }}
-          </Button>
-        </Empty>
+    <div class="nd">
+      <div class="nd-terminal">
+        <div class="nd-terminal-dot nd-terminal-start"><span>▶</span></div>
+        <span class="nd-terminal-text">{{ $t('system.workflow.node.start') }}</span>
       </div>
       <div class="nd-line" />
-    </template>
 
-    <!-- ========== 节点列表 ========== -->
-    <template v-for="(node, index) in nodes" :key="getNodeKey(node, index)">
-      <!-- 添加按钮（节点上方） -->
-      <div v-if="!disabled" class="nd-add-wrapper">
-        <Tooltip :title="$t('system.workflow.node.addAfter')">
-          <button class="nd-add-btn" @click="addNode(index - 1)">
-            <span>+</span>
-          </button>
-        </Tooltip>
-      </div>
-      <div v-if="!disabled" class="nd-line nd-line-short" />
-
-      <Card
-        class="nd-card"
-        :bordered="false"
-        :body-style="{ padding: '16px' }"
-      >
-        <!-- 卡片顶部色条 -->
-        <div
-          class="nd-card-accent"
-          :style="{ backgroundColor: getTypeConfig(node.nodeType).color }"
-        />
-
-        <!-- 头部（可点击折叠） -->
-        <div
-          class="nd-card-head"
-          :class="{ 'nd-card-head-collapsed': isCollapsed(index) }"
-          @click="toggleCollapsed(index)"
-        >
-          <div class="nd-card-title">
-            <div
-              class="nd-card-icon"
-              :style="{
-                backgroundColor: getTypeConfig(node.nodeType).bg,
-                color: getTypeConfig(node.nodeType).color,
-              }"
-            >
-              {{ getTypeConfig(node.nodeType).icon }}
-            </div>
-            <div>
-              <div class="nd-card-name">
-                {{ node.nodeName || $t('system.workflow.node.namePlaceholder') }}
-              </div>
-              <Tag
-                :color="getTypeConfig(node.nodeType).color"
-                :bordered="false"
-                style="font-size: 11px; margin: 0; line-height: 18px"
-              >
-                {{ getNodeTypeLabel(node.nodeType) }}
-              </Tag>
-            </div>
-            <span v-if="!disabled" class="nd-collapse-icon">
-              {{ isCollapsed(index) ? '▶' : '▼' }}
-            </span>
-          </div>
-          <div v-if="!disabled" class="nd-card-actions" @click.stop>
-            <Tooltip :title="$t('system.workflow.node.copyNode')">
-              <Button type="text" size="small" @click="copyNode(index)">
-                <span style="font-size: 14px">📋</span>
+      <template v-if="nodes.length === 0">
+        <div class="nd-empty">
+          <Empty :description="$t('system.workflow.node.empty')" :image-style="{ height: '48px' }">
+            <Dropdown v-if="!disabled" :trigger="['click']" @open-change="(open: boolean) => open && setAddInsertIndex(undefined)">
+              <Button type="primary" size="small">
+                + {{ $t('system.workflow.node.add') }}
               </Button>
-            </Tooltip>
-            <Tooltip :title="$t('system.workflow.node.moveUp')">
-              <Button type="text" size="small" :disabled="index === 0" @click="moveUp(index)">
-                <span style="font-size: 16px">↑</span>
-              </Button>
-            </Tooltip>
-            <Tooltip :title="$t('system.workflow.node.moveDown')">
-              <Button
-                type="text"
-                size="small"
-                :disabled="index === nodes.length - 1"
-                @click="moveDown(index)"
-              >
-                <span style="font-size: 16px">↓</span>
-              </Button>
-            </Tooltip>
-            <Popconfirm
-              :title="$t('system.workflow.node.delete') + '?'"
-              placement="left"
-              @confirm="removeNode(index)"
-            >
-              <Button type="text" size="small" danger>
-                <span style="font-size: 14px">✕</span>
-              </Button>
-            </Popconfirm>
-          </div>
+              <template #overlay>
+                <Menu :items="addMenuItems" @click="({ key }) => handleAddMenuItem(String(key))" />
+              </template>
+            </Dropdown>
+          </Empty>
         </div>
+        <div class="nd-line" />
+      </template>
 
-        <!-- 表单（可折叠） -->
-        <div v-show="!isCollapsed(index)" class="nd-card-form">
+      <template v-for="(node, index) in nodes" :key="getNodeKey(node, index)">
+        <div v-if="!disabled" class="nd-add-wrapper">
+          <Dropdown :trigger="['click']" @open-change="(open: boolean) => open && setAddInsertIndex(index - 1)">
+            <Tooltip :title="$t('system.workflow.node.addAfter')">
+              <button type="button" class="nd-add-btn">
+                <span>+</span>
+              </button>
+            </Tooltip>
+            <template #overlay>
+              <Menu :items="addMenuItems" @click="({ key }) => handleAddMenuItem(String(key))" />
+            </template>
+          </Dropdown>
+        </div>
+        <div v-if="!disabled" class="nd-line nd-line-short" />
+
+        <Card class="nd-card" :bordered="false" :body-style="{ padding: '12px 16px' }">
+          <div
+            class="nd-card-accent"
+            :style="{ backgroundColor: getTypeConfig(node.nodeType).color }"
+          />
+          <div class="nd-card-row">
+            <div class="nd-card-left">
+              <div
+                class="nd-card-icon"
+                :style="{
+                  backgroundColor: getTypeConfig(node.nodeType).bg,
+                  color: getTypeConfig(node.nodeType).color,
+                }"
+              >
+                {{ getTypeConfig(node.nodeType).icon }}
+              </div>
+              <div class="nd-card-body">
+                <div class="nd-card-name">
+                  {{ node.nodeName || $t('system.workflow.node.namePlaceholder') }}
+                </div>
+                <div v-if="node.nodeType !== 4" class="nd-card-assignee">
+                  {{ getAssigneeDisplayText(node) }}
+                </div>
+              </div>
+            </div>
+            <div v-if="!disabled" class="nd-card-right">
+              <Tooltip :title="$t('system.workflow.node.configNode')">
+                <Button type="text" size="small" @click="openDrawer(index)">
+                  ⚙
+                </Button>
+              </Tooltip>
+              <Tooltip :title="$t('system.workflow.node.copyNode')">
+                <Button type="text" size="small" @click="copyNode(index)">📋</Button>
+              </Tooltip>
+              <Tooltip :title="$t('system.workflow.node.moveUp')">
+                <Button
+                  type="text"
+                  size="small"
+                  :disabled="index === 0"
+                  @click="moveUp(index)"
+                >
+                  ↑
+                </Button>
+              </Tooltip>
+              <Tooltip :title="$t('system.workflow.node.moveDown')">
+                <Button
+                  type="text"
+                  size="small"
+                  :disabled="index === nodes.length - 1"
+                  @click="moveDown(index)"
+                >
+                  ↓
+                </Button>
+              </Tooltip>
+              <Popconfirm
+                :title="$t('system.workflow.node.delete') + '?'"
+                placement="left"
+                @confirm="removeNode(index)"
+              >
+                <Button type="text" size="small" danger>✕</Button>
+              </Popconfirm>
+            </div>
+          </div>
+          <Tag
+            :color="getTypeConfig(node.nodeType).color"
+            :bordered="false"
+            class="nd-card-tag"
+          >
+            {{ getNodeTypeLabel(node.nodeType) }}
+          </Tag>
+        </Card>
+
+        <div class="nd-line" />
+      </template>
+
+      <div v-if="!disabled && nodes.length > 0" class="nd-add-wrapper">
+        <Dropdown :trigger="['click']" @open-change="(open: boolean) => open && setAddInsertIndex(undefined)">
+          <Tooltip :title="$t('system.workflow.node.add')">
+            <button type="button" class="nd-add-btn">
+              <span>+</span>
+            </button>
+          </Tooltip>
+          <template #overlay>
+            <Menu :items="addMenuItems" @click="({ key }) => handleAddMenuItem(String(key))" />
+          </template>
+        </Dropdown>
+      </div>
+      <div v-if="!disabled && nodes.length > 0" class="nd-line nd-line-short" />
+
+      <div class="nd-terminal">
+        <div class="nd-terminal-dot nd-terminal-end"><span>■</span></div>
+        <span class="nd-terminal-text">{{ $t('system.workflow.node.end') }}</span>
+      </div>
+    </div>
+  </div>
+
+  <Drawer
+    v-model:open="drawerVisible"
+    :title="$t('system.workflow.node.configDrawerTitle')"
+    width="400"
+    @close="closeDrawer"
+  >
+    <template v-if="editingNode && editingIndex !== null">
+      <div class="nd-drawer-form">
+        <div class="nd-field">
+          <label>{{ $t('system.workflow.node.name') }}</label>
+          <Input
+            :value="editingNode.nodeName"
+            :disabled="disabled"
+            size="small"
+            :placeholder="$t('system.workflow.node.namePlaceholder')"
+            @update:value="(v: string) => updateField(editingIndex!, 'nodeName', v)"
+          />
+        </div>
+        <div class="nd-field">
+          <label>{{ $t('system.workflow.node.type') }}</label>
+          <div class="nd-field-readonly">{{ getNodeTypeLabel(editingNode.nodeType) }}</div>
+        </div>
+        <template v-if="editingNode.nodeType === 4">
           <div class="nd-field">
-            <label>{{ $t('system.workflow.node.name') }}</label>
+            <label>{{ $t('system.workflow.node.conditionExpression') }}</label>
             <Input
-              :value="node.nodeName"
+              :value="editingNode.conditionExpression ?? ''"
               :disabled="disabled"
               size="small"
-              :placeholder="$t('system.workflow.node.namePlaceholder')"
-              @update:value="(v: string) => updateField(index, 'nodeName', v)"
+              :placeholder="$t('system.workflow.node.conditionExpressionPlaceholder')"
+              @update:value="(v: string) => updateField(editingIndex!, 'conditionExpression', v)"
             />
           </div>
-
-          <div class="nd-field-row">
-            <div class="nd-field nd-field-half">
-              <label>{{ $t('system.workflow.node.type') }}</label>
-              <Select
-                :value="node.nodeType"
-                :disabled="disabled"
-                :options="nodeTypeOptions"
-                size="small"
-                style="width: 100%"
-                @update:value="(v: any) => updateField(index, 'nodeType', v)"
-              />
-            </div>
-            <div class="nd-field nd-field-half">
-              <label>{{ $t('system.workflow.node.assigneeType') }}</label>
-              <Select
-                :value="node.assigneeType"
-                :disabled="disabled"
-                :options="assigneeTypeOptions"
-                size="small"
-                style="width: 100%"
-                @update:value="(v: any) => updateField(index, 'assigneeType', v)"
-              />
-            </div>
+          <div class="nd-field">
+            <label>{{ $t('system.workflow.node.trueNextNodeName') }}</label>
+            <Select
+              :value="editingNode.trueNextNodeName || undefined"
+              :disabled="disabled"
+              :options="nextNodeNameOptions"
+              :placeholder="$t('system.workflow.node.nextNodePlaceholder')"
+              allow-clear
+              show-search
+              size="small"
+              style="width: 100%"
+              @update:value="(v: any) => updateField(editingIndex!, 'trueNextNodeName', v ?? '')"
+            />
           </div>
-
-          <div v-if="needsAssigneeSelect(node.assigneeType)" class="nd-field">
+          <div class="nd-field">
+            <label>{{ $t('system.workflow.node.falseNextNodeName') }}</label>
+            <Select
+              :value="editingNode.falseNextNodeName || undefined"
+              :disabled="disabled"
+              :options="nextNodeNameOptions"
+              :placeholder="$t('system.workflow.node.nextNodePlaceholder')"
+              allow-clear
+              show-search
+              size="small"
+              style="width: 100%"
+              @update:value="(v: any) => updateField(editingIndex!, 'falseNextNodeName', v ?? '')"
+            />
+          </div>
+        </template>
+        <div
+          v-if="editingNode.nodeType !== 4"
+          class="nd-field-row"
+        >
+          <div class="nd-field nd-field-half">
+            <label>{{ $t('system.workflow.node.assigneeType') }}</label>
+            <Select
+              :value="editingNode.assigneeType"
+              :disabled="disabled"
+              :options="assigneeTypeOptions"
+              size="small"
+              style="width: 100%"
+              @update:value="(v: any) => updateField(editingIndex!, 'assigneeType', v)"
+            />
+          </div>
+          <div class="nd-field nd-field-half">
             <label>{{ $t('system.workflow.node.assignee') }}</label>
             <Select
-              :value="node.assigneeValue || undefined"
+              :value="editingNode.assigneeValue || undefined"
               :disabled="disabled"
-              :loading="isAssigneeLoading(node.assigneeType)"
-              :options="getAssigneeOptions(node.assigneeType)"
+              :loading="isAssigneeLoading(editingNode.assigneeType)"
+              :options="getAssigneeOptions(editingNode.assigneeType)"
               :placeholder="$t('system.workflow.node.assigneePlaceholder')"
               show-search
               size="small"
@@ -409,69 +523,53 @@ function onAssigneeDropdownOpen(assigneeType: number) {
                   option.label.toLowerCase().includes(input.toLowerCase())
               "
               style="width: 100%"
-              @update:value="(v: any) => updateField(index, 'assigneeValue', v)"
+              @update:value="(v: any) => updateField(editingIndex!, 'assigneeValue', v)"
               @dropdown-visible-change="
-                (open: boolean) => open && onAssigneeDropdownOpen(node.assigneeType)
+                (open: boolean) =>
+                  open && editingNode && onAssigneeDropdownOpen(editingNode.assigneeType)
               "
             />
           </div>
-
-          <div v-if="node.nodeType === 1" class="nd-field">
-            <label>{{ $t('system.workflow.node.approvalMode') }}</label>
-            <Select
-              :value="node.approvalMode ?? 0"
-              :disabled="disabled"
-              :options="approvalModeOptions"
-              size="small"
-              style="width: 100%"
-              @update:value="(v: any) => updateField(index, 'approvalMode', v)"
-            />
-          </div>
-
-          <div class="nd-field">
-            <label>{{ $t('system.workflow.node.description') }}</label>
-            <Input
-              :value="node.description"
-              :disabled="disabled"
-              size="small"
-              :placeholder="$t('system.workflow.node.descriptionPlaceholder')"
-              @update:value="(v: string) => updateField(index, 'description', v)"
-            />
-          </div>
         </div>
-      </Card>
-
-      <div class="nd-line" />
-    </template>
-
-    <!-- 底部添加按钮 -->
-    <div v-if="!disabled && nodes.length > 0" class="nd-add-wrapper">
-      <Tooltip :title="$t('system.workflow.node.add')">
-        <button class="nd-add-btn" @click="addNode()">
-          <span>+</span>
-        </button>
-      </Tooltip>
-    </div>
-    <div v-if="!disabled && nodes.length > 0" class="nd-line nd-line-short" />
-
-    <!-- ========== 结束节点 ========== -->
-    <div class="nd-terminal">
-      <div class="nd-terminal-dot nd-terminal-end">
-        <span>■</span>
+        <div v-if="editingNode.nodeType === 1" class="nd-field">
+          <label>{{ $t('system.workflow.node.approvalMode') }}</label>
+          <Select
+            :value="editingNode.approvalMode ?? 0"
+            :disabled="disabled"
+            :options="approvalModeOptions"
+            size="small"
+            style="width: 100%"
+            @update:value="(v: any) => updateField(editingIndex!, 'approvalMode', v)"
+          />
+        </div>
+        <div class="nd-field">
+          <label>{{ $t('system.workflow.node.description') }}</label>
+          <Input
+            :value="editingNode.description"
+            :disabled="disabled"
+            size="small"
+            :placeholder="$t('system.workflow.node.descriptionPlaceholder')"
+            @update:value="(v: string) => updateField(editingIndex!, 'description', v)"
+          />
+        </div>
       </div>
-      <span class="nd-terminal-text">{{ $t('system.workflow.node.end') }}</span>
-    </div>
-  </div>
-  </div>
+    </template>
+    <template #footer>
+      <Button @click="closeDrawer">{{ $t('common.cancel') }}</Button>
+      <Button type="primary" @click="closeDrawer">{{ $t('common.confirm') }}</Button>
+    </template>
+  </Drawer>
 </template>
 
 <style scoped>
+/* 使用继承与 currentColor，适配明暗主题 */
 .nd-wrapper {
-  max-height: 480px;
+  max-height: 560px;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 4px 8px;
   margin: 0 -8px;
+  color: inherit;
 }
 
 .nd {
@@ -480,9 +578,9 @@ function onAssigneeDropdownOpen(assigneeType: number) {
   align-items: center;
   padding: 20px 0;
   min-height: 200px;
+  color: inherit;
 }
 
-/* ===== 开始/结束节点 ===== */
 .nd-terminal {
   display: flex;
   flex-direction: column;
@@ -500,11 +598,6 @@ function onAssigneeDropdownOpen(assigneeType: number) {
   color: #fff;
   font-size: 13px;
   box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
-  transition: transform 0.2s;
-}
-
-.nd-terminal-dot:hover {
-  transform: scale(1.05);
 }
 
 .nd-terminal-start {
@@ -517,46 +610,27 @@ function onAssigneeDropdownOpen(assigneeType: number) {
 
 .nd-terminal-text {
   font-size: 12px;
-  color: #8c8c8c;
   font-weight: 500;
-  letter-spacing: 1px;
+  color: inherit;
+  opacity: 0.7;
 }
 
-/* ===== 连接线 ===== */
 .nd-line {
   width: 2px;
   height: 28px;
-  background: linear-gradient(to bottom, #d9d9d9, #bfbfbf);
-  position: relative;
+  background: currentColor;
+  opacity: 0.12;
 }
 
 .nd-line-short {
   height: 14px;
 }
 
-.nd-line::after {
-  content: '';
-  position: absolute;
-  bottom: -3px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid #bfbfbf;
-}
-
-.nd-line-short::after {
-  display: none;
-}
-
-/* ===== 添加按钮 ===== */
 .nd-add-wrapper {
   display: flex;
-  align-items: center;
   justify-content: center;
   padding: 2px 0;
+  color: inherit;
 }
 
 .nd-add-btn {
@@ -566,25 +640,22 @@ function onAssigneeDropdownOpen(assigneeType: number) {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 2px dashed #d9d9d9;
-  background: #fff;
-  color: #bfbfbf;
+  border: 2px dashed currentColor;
+  background: inherit;
+  color: inherit;
+  opacity: 0.5;
   font-size: 18px;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.25s;
-  line-height: 1;
 }
 
 .nd-add-btn:hover {
-  border-color: #1677ff;
-  color: #1677ff;
-  background: #e6f4ff;
-  transform: scale(1.15);
-  box-shadow: 0 2px 8px rgb(22 119 255 / 20%);
+  border-color: var(--ant-color-primary, #1677ff);
+  color: var(--ant-color-primary, #1677ff);
+  opacity: 1;
+  background: var(--ant-color-primary-bg, rgba(22, 119, 255, 0.08));
 }
 
-/* ===== 节点卡片 ===== */
 .nd-card {
   width: 100%;
   max-width: 440px;
@@ -592,13 +663,6 @@ function onAssigneeDropdownOpen(assigneeType: number) {
   overflow: hidden;
   position: relative;
   box-shadow: 0 2px 12px rgb(0 0 0 / 6%);
-  border: 1px solid #f0f0f0;
-  transition: box-shadow 0.25s, transform 0.2s;
-}
-
-.nd-card:hover {
-  box-shadow: 0 4px 20px rgb(0 0 0 / 10%);
-  transform: translateY(-1px);
 }
 
 .nd-card-accent {
@@ -609,83 +673,91 @@ function onAssigneeDropdownOpen(assigneeType: number) {
   height: 3px;
 }
 
-/* ===== 卡片头部 ===== */
-.nd-card-head {
+.nd-card-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
-  cursor: pointer;
-  user-select: none;
+  gap: 8px;
 }
 
-.nd-card-head-collapsed {
-  margin-bottom: 0;
-}
-
-.nd-collapse-icon {
-  font-size: 10px;
-  color: #8c8c8c;
-  margin-left: 6px;
-  flex-shrink: 0;
-}
-
-.nd-card-title {
+.nd-card-left {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 
 .nd-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 36px;
   height: 36px;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
   flex-shrink: 0;
+}
+
+.nd-card-body {
+  min-width: 0;
 }
 
 .nd-card-name {
   font-size: 14px;
   font-weight: 600;
-  color: #262626;
-  line-height: 1.4;
-  max-width: 240px;
+  color: inherit;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.nd-card-actions {
-  display: flex;
-  gap: 0;
-  opacity: 0.5;
-  transition: opacity 0.2s;
+.nd-card-assignee {
+  font-size: 12px;
+  margin-top: 2px;
+  color: inherit;
+  opacity: 0.7;
 }
 
-.nd-card:hover .nd-card-actions {
+.nd-card-tag {
+  font-size: 11px;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.nd-card-right {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.nd-card:hover .nd-card-right {
   opacity: 1;
 }
 
-/* ===== 表单字段 ===== */
-.nd-card-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.nd-empty {
+  padding: 28px 0;
 }
 
-.nd-field {
+.nd-drawer-form {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 12px;
 }
 
 .nd-field label {
+  display: block;
   font-size: 12px;
-  color: #8c8c8c;
-  font-weight: 500;
+  margin-bottom: 4px;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.nd-field-readonly {
+  font-size: 14px;
+  padding: 4px 0;
+  color: inherit;
 }
 
 .nd-field-row {
@@ -696,10 +768,5 @@ function onAssigneeDropdownOpen(assigneeType: number) {
 .nd-field-half {
   flex: 1;
   min-width: 0;
-}
-
-/* ===== 空状态 ===== */
-.nd-empty {
-  padding: 28px 0;
 }
 </style>

@@ -56,9 +56,24 @@ public class WorkflowNode : Entity<WorkflowNodeId>
     public ApprovalMode ApprovalMode { get; private set; } = ApprovalMode.OrSign;
 
     /// <summary>
+    /// 条件表达式（仅条件分支节点使用），如：amount &gt; 1000 或 status == "approved"
+    /// </summary>
+    public string ConditionExpression { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 条件为真时跳转的节点名称（仅条件分支节点使用）
+    /// </summary>
+    public string TrueNextNodeName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 条件为假时跳转的节点名称（仅条件分支节点使用）
+    /// </summary>
+    public string FalseNextNodeName { get; private set; } = string.Empty;
+
+    /// <summary>
     /// 创建流程节点
     /// </summary>
-    public WorkflowNode(string nodeName, WorkflowNodeType nodeType, AssigneeType assigneeType, string assigneeValue, int sortOrder, string description, ApprovalMode approvalMode = ApprovalMode.OrSign)
+    public WorkflowNode(string nodeName, WorkflowNodeType nodeType, AssigneeType assigneeType, string assigneeValue, int sortOrder, string description, ApprovalMode approvalMode = ApprovalMode.OrSign, string? conditionExpression = null, string? trueNextNodeName = null, string? falseNextNodeName = null)
     {
         NodeName = nodeName;
         NodeType = nodeType;
@@ -67,6 +82,9 @@ public class WorkflowNode : Entity<WorkflowNodeId>
         SortOrder = sortOrder;
         Description = description;
         ApprovalMode = approvalMode;
+        ConditionExpression = conditionExpression ?? string.Empty;
+        TrueNextNodeName = trueNextNodeName ?? string.Empty;
+        FalseNextNodeName = falseNextNodeName ?? string.Empty;
     }
 }
 

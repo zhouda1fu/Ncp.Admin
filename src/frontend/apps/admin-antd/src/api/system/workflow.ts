@@ -13,6 +13,12 @@ export namespace WorkflowApi {
     description: string;
     /** 审批方式：0=或签 1=会签 2=依次审批 */
     approvalMode?: number;
+    /** 条件表达式（仅条件分支），如 amount > 1000 */
+    conditionExpression?: string;
+    /** 条件为真时跳转的节点名称 */
+    trueNextNodeName?: string;
+    /** 条件为假时跳转的节点名称 */
+    falseNextNodeName?: string;
   }
 
   export interface WorkflowDefinition {

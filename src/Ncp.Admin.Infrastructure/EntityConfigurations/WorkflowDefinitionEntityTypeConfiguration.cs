@@ -100,6 +100,15 @@ internal class WorkflowNodeEntityTypeConfiguration : IEntityTypeConfiguration<Wo
         builder.Property(n => n.Description)
             .HasMaxLength(500);
 
+        builder.Property(n => n.ConditionExpression)
+            .HasMaxLength(1000);
+
+        builder.Property(n => n.TrueNextNodeName)
+            .HasMaxLength(200);
+
+        builder.Property(n => n.FalseNextNodeName)
+            .HasMaxLength(200);
+
         // 索引
         builder.HasIndex(n => n.WorkflowDefinitionId);
         builder.HasIndex(n => new { n.WorkflowDefinitionId, n.SortOrder });

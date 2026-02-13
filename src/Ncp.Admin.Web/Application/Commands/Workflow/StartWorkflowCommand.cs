@@ -3,6 +3,7 @@ using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflow;
 
@@ -107,8 +108,9 @@ public class StartWorkflowCommandHandler(
 
         await instanceRepository.AddAsync(instance, cancellationToken);
 
-        // 通过聚合根领域方法获取第一个审批节点，解析审批人
-        var firstNode = definition.GetFirstApprovalNode();
+        // 通过聚合根领域方法解析条件分支，得到第一个需审批的节点
+        var evaluator = WorkflowConditionEvaluator.CreateEvaluator(request.Variables);
+        var firstNode = definition.GetFirstReachableApprovalNode(evaluator);
         if (firstNode != null)
         {
             if (firstNode.ApprovalMode == ApprovalMode.CounterSign)

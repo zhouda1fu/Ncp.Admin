@@ -52,6 +52,24 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/workflow/definition/list.vue'),
       },
       {
+        path: '/workflow/definitions/new',
+        name: 'WorkflowDefinitionNew',
+        meta: {
+          hideInMenu: true,
+          title: $t('common.create', [$t('system.workflow.definition.name')]),
+        },
+        component: () => import('#/views/workflow/definition/edit.vue'),
+      },
+      {
+        path: '/workflow/definitions/:id/edit',
+        name: 'WorkflowDefinitionEdit',
+        meta: {
+          hideInMenu: true,
+          title: $t('common.edit', [$t('system.workflow.definition.name')]),
+        },
+        component: () => import('#/views/workflow/definition/edit.vue'),
+      },
+      {
         path: '/workflow/monitor',
         name: 'WorkflowMonitor',
         meta: {

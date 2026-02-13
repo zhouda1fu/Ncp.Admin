@@ -14,7 +14,10 @@ public record WorkflowNodeData(
     string AssigneeValue,
     int SortOrder,
     string Description,
-    ApprovalMode ApprovalMode = ApprovalMode.OrSign);
+    ApprovalMode ApprovalMode = ApprovalMode.OrSign,
+    string? ConditionExpression = null,
+    string? TrueNextNodeName = null,
+    string? FalseNextNodeName = null);
 
 /// <summary>
 /// 创建流程定义命令
@@ -58,7 +61,10 @@ public class CreateWorkflowDefinitionCommandHandler(IWorkflowDefinitionRepositor
             n.AssigneeValue,
             n.SortOrder,
             n.Description,
-            n.ApprovalMode));
+            n.ApprovalMode,
+            n.ConditionExpression,
+            n.TrueNextNodeName,
+            n.FalseNextNodeName));
 
         var definition = new WorkflowDefinition(
             request.Name,

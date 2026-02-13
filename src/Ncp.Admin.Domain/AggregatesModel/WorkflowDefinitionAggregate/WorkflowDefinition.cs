@@ -174,7 +174,7 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     }
 
     /// <summary>
-    /// 根据当前节点名称获取下一个审批节点
+    /// 根据当前节点名称获取下一个审批节点（仅线性审批，不考虑条件分支）
     /// </summary>
     public WorkflowNode? GetNextApprovalNode(string currentNodeName)
     {
@@ -186,7 +186,73 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
             return orderedNodes[currentIndex + 1];
         }
 
-        return null; // 没有下一个节点，流程应结束
+        return null;
+    }
+
+    /// <summary>
+    /// 按节点名称获取节点
+    /// </summary>
+    public WorkflowNode? GetNodeByName(string nodeName)
+    {
+        return Nodes.FirstOrDefault(n => n.NodeName == nodeName);
+    }
+
+    /// <summary>
+    /// 按 SortOrder 获取当前节点之后的下一个节点（可能是审批、条件等）
+    /// </summary>
+    public WorkflowNode? GetNextNodeInOrder(string currentNodeName)
+    {
+        var ordered = Nodes.OrderBy(n => n.SortOrder).ToList();
+        var idx = ordered.FindIndex(n => n.NodeName == currentNodeName);
+        if (idx < 0 || idx >= ordered.Count - 1) return null;
+        return ordered[idx + 1];
+    }
+
+    /// <summary>
+    /// 从流程开始解析，经过条件分支后得到第一个需要创建任务的审批节点（用于发起流程）
+    /// </summary>
+    public WorkflowNode? GetFirstReachableApprovalNode(Func<string, bool> conditionEvaluator)
+    {
+        var ordered = Nodes.OrderBy(n => n.SortOrder).ToList();
+        if (ordered.Count == 0) return null;
+        return ResolveToNextApproval(ordered[0], conditionEvaluator, new HashSet<string>());
+    }
+
+    /// <summary>
+    /// 从当前审批节点之后解析，经过条件分支后得到下一个需要创建任务的审批节点（用于审批通过后流转）
+    /// </summary>
+    public WorkflowNode? GetNextReachableApprovalNode(string currentNodeName, Func<string, bool> conditionEvaluator)
+    {
+        var nextInOrder = GetNextNodeInOrder(currentNodeName);
+        if (nextInOrder == null) return null;
+        return ResolveToNextApproval(nextInOrder, conditionEvaluator, new HashSet<string>());
+    }
+
+    private WorkflowNode? ResolveToNextApproval(WorkflowNode node, Func<string, bool> conditionEvaluator, HashSet<string> visited)
+    {
+        if (visited.Contains(node.NodeName)) return null;
+        visited.Add(node.NodeName);
+
+        if (node.NodeType == WorkflowNodeType.Approval)
+            return node;
+
+        if (node.NodeType == WorkflowNodeType.Condition)
+        {
+            var nextName = conditionEvaluator(node.ConditionExpression) ? node.TrueNextNodeName : node.FalseNextNodeName;
+            if (string.IsNullOrWhiteSpace(nextName)) return null;
+            var nextNode = GetNodeByName(nextName);
+            if (nextNode == null) return null;
+            return ResolveToNextApproval(nextNode, conditionEvaluator, visited);
+        }
+
+        if (node.NodeType == WorkflowNodeType.CarbonCopy || node.NodeType == WorkflowNodeType.Notification)
+        {
+            var nextInOrder = GetNextNodeInOrder(node.NodeName);
+            if (nextInOrder == null) return null;
+            return ResolveToNextApproval(nextInOrder, conditionEvaluator, visited);
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -201,7 +267,10 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
             node.AssigneeValue,
             node.SortOrder,
             node.Description,
-            node.ApprovalMode));
+            node.ApprovalMode,
+            node.ConditionExpression,
+            node.TrueNextNodeName,
+            node.FalseNextNodeName));
 
         var newDefinition = new WorkflowDefinition(Name, Description, Category, DefinitionJson, CreatedBy, clonedNodes)
         {

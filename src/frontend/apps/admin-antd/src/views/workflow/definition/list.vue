@@ -4,7 +4,9 @@ import type { Recordable } from '@vben/types';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { WorkflowApi } from '#/api/system/workflow';
 
-import { Page, useVbenModal } from '@vben/common-ui';
+import { useRouter } from 'vue-router';
+
+import { Page } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
 import { Button, message, Modal } from 'ant-design-vue';
@@ -18,12 +20,8 @@ import {
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
-import Form from './modules/form.vue';
 
-const [FormModal, formModalApi] = useVbenModal({
-  connectedComponent: Form,
-  destroyOnClose: true,
-});
+const router = useRouter();
 
 const [Grid, gridApi] = useVbenVxeGrid<WorkflowApi.WorkflowDefinition>({
   formOptions: {
@@ -86,7 +84,11 @@ function onActionClick(
 }
 
 function onEdit(row: WorkflowApi.WorkflowDefinition) {
-  formModalApi.setData(row).open();
+  if (row.status === 1) {
+    message.warning($t('system.workflow.definition.cannotEditPublished'));
+    return;
+  }
+  router.push(`/workflow/definitions/${row.id}/edit`);
 }
 
 function onDelete(row: WorkflowApi.WorkflowDefinition) {
@@ -125,12 +127,11 @@ function onRefresh() {
 }
 
 function onCreate() {
-  formModalApi.setData({}).open();
+  router.push('/workflow/definitions/new');
 }
 </script>
 <template>
   <Page auto-content-height>
-    <FormModal @success="onRefresh" />
     <Grid :table-title="$t('system.workflow.definition.list')">
       <template #toolbar-tools>
         <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">

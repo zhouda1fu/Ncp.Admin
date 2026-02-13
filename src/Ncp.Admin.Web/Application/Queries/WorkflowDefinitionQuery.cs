@@ -30,7 +30,11 @@ public record WorkflowNodeQueryDto(
     AssigneeType AssigneeType,
     string AssigneeValue,
     int SortOrder,
-    string Description);
+    string Description,
+    ApprovalMode ApprovalMode,
+    string ConditionExpression,
+    string TrueNextNodeName,
+    string FalseNextNodeName);
 
 /// <summary>
 /// 流程定义查询输入
@@ -78,7 +82,11 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                     n.AssigneeType,
                     n.AssigneeValue,
                     n.SortOrder,
-                    n.Description))))
+                    n.Description,
+                    n.ApprovalMode,
+                    n.ConditionExpression,
+                    n.TrueNextNodeName,
+                    n.FalseNextNodeName))))
             .ToPagedDataAsync(query, cancellationToken);
     }
 
@@ -112,7 +120,11 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                         n.AssigneeType,
                         n.AssigneeValue,
                         n.SortOrder,
-                        n.Description))))
+                        n.Description,
+                        n.ApprovalMode,
+                        n.ConditionExpression,
+                        n.TrueNextNodeName,
+                        n.FalseNextNodeName))))
                 .FirstOrDefaultAsync(cancellationToken);
         });
     }
@@ -146,7 +158,11 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                         n.AssigneeType,
                         n.AssigneeValue,
                         n.SortOrder,
-                        n.Description))))
+                        n.Description,
+                        n.ApprovalMode,
+                        n.ConditionExpression,
+                        n.TrueNextNodeName,
+                        n.FalseNextNodeName))))
                 .ToListAsync(cancellationToken);
         }))!;
     }

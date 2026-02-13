@@ -3,6 +3,7 @@ using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflow;
 
@@ -55,7 +56,8 @@ public class ApproveTaskCommandHandler(
         if (currentNode?.ApprovalMode == ApprovalMode.CounterSign && !instance.AreAllCounterSignTasksApproved(approvedTask.NodeName))
             return;
 
-        var nextNode = definition.GetNextApprovalNode(approvedTask.NodeName);
+        var evaluator = WorkflowConditionEvaluator.CreateEvaluator(instance.Variables);
+        var nextNode = definition.GetNextReachableApprovalNode(approvedTask.NodeName, evaluator);
 
         if (nextNode != null)
         {

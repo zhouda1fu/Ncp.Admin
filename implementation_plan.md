@@ -8,7 +8,7 @@
 
 | 层 | 技术栈 | 已有能力 |
 |---|---|---|
-| **后端框架** | .NET 8 + FastEndpoints + MediatR | API + CQRS + 领域事件 |
+| **后端框架** | .NET 10 + FastEndpoints + MediatR | API + CQRS + 领域事件 |
 | **数据库** | EF Core + MySQL | ORM + 迁移 |
 | **缓存/锁** | Redis + StackExchange.Redis | 分布式缓存/锁 |
 | **消息队列** | RabbitMQ + CAP | 集成事件 / 最终一致性 |

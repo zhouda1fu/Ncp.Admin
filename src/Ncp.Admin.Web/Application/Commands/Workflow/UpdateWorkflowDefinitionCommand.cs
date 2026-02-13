@@ -51,7 +51,10 @@ public class UpdateWorkflowDefinitionCommandHandler(
             n.AssigneeValue,
             n.SortOrder,
             n.Description,
-            n.ApprovalMode));
+            n.ApprovalMode,
+            n.ConditionExpression,
+            n.TrueNextNodeName,
+            n.FalseNextNodeName));
 
         definition.UpdateInfo(request.Name, request.Description, request.Category, request.DefinitionJson, nodes);
 
