@@ -217,6 +217,48 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       ],
     },
     {
+      value: PermissionCodes.LeaveManagement,
+      label: '请假管理',
+      icon: 'mdi:calendar-account',
+      children: [
+        {
+          value: PermissionCodes.LeaveRequestView,
+          label: '查看请假申请',
+          icon: 'mdi:eye',
+        },
+        {
+          value: PermissionCodes.LeaveRequestCreate,
+          label: '创建请假申请',
+          icon: 'mdi:plus',
+        },
+        {
+          value: PermissionCodes.LeaveRequestEdit,
+          label: '编辑请假申请',
+          icon: 'mdi:pencil',
+        },
+        {
+          value: PermissionCodes.LeaveRequestSubmit,
+          label: '提交请假申请',
+          icon: 'mdi:send',
+        },
+        {
+          value: PermissionCodes.LeaveRequestCancel,
+          label: '撤销请假申请',
+          icon: 'mdi:close',
+        },
+        {
+          value: PermissionCodes.LeaveBalanceView,
+          label: '查看请假余额',
+          icon: 'mdi:eye',
+        },
+        {
+          value: PermissionCodes.LeaveBalanceEdit,
+          label: '设置请假余额',
+          icon: 'mdi:counter',
+        },
+      ],
+    },
+    {
       value: PermissionCodes.AllApiAccess,
       label: '所有接口访问权限',
       icon: 'mdi:shield-check',

@@ -62,6 +62,16 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.NotificationView, "查看通知" },
         { PermissionCodes.NotificationSend, "发送通知" },
 
+        // 请假管理权限
+        { PermissionCodes.LeaveManagement, "请假管理" },
+        { PermissionCodes.LeaveRequestView, "查看请假申请" },
+        { PermissionCodes.LeaveRequestCreate, "创建请假申请" },
+        { PermissionCodes.LeaveRequestEdit, "编辑请假申请" },
+        { PermissionCodes.LeaveRequestSubmit, "提交请假申请" },
+        { PermissionCodes.LeaveRequestCancel, "撤销请假申请" },
+        { PermissionCodes.LeaveBalanceView, "查看请假余额" },
+        { PermissionCodes.LeaveBalanceEdit, "设置请假余额" },
+
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },
     };

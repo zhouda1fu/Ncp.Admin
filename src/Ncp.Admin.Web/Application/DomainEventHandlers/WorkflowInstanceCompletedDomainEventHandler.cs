@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.LeaveRequestAggregate;
 using Ncp.Admin.Domain.AggregatesModel.NotificationAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
@@ -7,6 +8,8 @@ using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.Application.Commands.Notification;
 using Ncp.Admin.Web.Application.Commands.Workflow;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Infrastructure;
+using Ncp.Admin.Infrastructure.Repositories;
 using Serilog;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;
@@ -15,7 +18,12 @@ namespace Ncp.Admin.Web.Application.DomainEventHandlers;
 /// 工作流实例完成领域事件处理器
 /// 根据 BusinessType 自动执行对应的业务操作
 /// </summary>
-public class WorkflowInstanceCompletedDomainEventHandler(IMediator mediator, RoleQuery roleQuery) : IDomainEventHandler<WorkflowInstanceCompletedDomainEvent>
+public class WorkflowInstanceCompletedDomainEventHandler(
+    IMediator mediator,
+    RoleQuery roleQuery,
+    ILeaveRequestRepository leaveRequestRepository,
+    ILeaveBalanceRepository leaveBalanceRepository,
+    ApplicationDbContext dbContext) : IDomainEventHandler<WorkflowInstanceCompletedDomainEvent>
 {
     public async Task Handle(WorkflowInstanceCompletedDomainEvent domainEvent, CancellationToken cancellationToken)
     {
@@ -49,11 +57,45 @@ public class WorkflowInstanceCompletedDomainEventHandler(IMediator mediator, Rol
             case "CreateUser":
                 await HandleCreateUser(instance, cancellationToken);
                 break;
-            // 后续可在此扩展其他 BusinessType 的处理
+            case "LeaveRequest":
+                await HandleLeaveRequest(instance, cancellationToken);
+                break;
             default:
                 Log.Warning("未知的工作流业务类型: {BusinessType}", instance.BusinessType);
                 break;
         }
+    }
+
+    /// <summary>
+    /// 处理「请假申请」审批通过：更新请假单状态并扣减余额
+    /// </summary>
+    private async Task HandleLeaveRequest(WorkflowInstance instance, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(instance.BusinessKey, out var leaveIdGuid))
+        {
+            Log.Error("请假申请ID无效: BusinessKey={BusinessKey}", instance.BusinessKey);
+            return;
+        }
+
+        var leave = await leaveRequestRepository.GetAsync(new LeaveRequestId(leaveIdGuid), cancellationToken);
+        if (leave == null)
+        {
+            Log.Error("未找到请假申请: LeaveRequestId={Id}", leaveIdGuid);
+            return;
+        }
+
+        leave.Approve();
+
+        var year = leave.StartDate.Year;
+        var balance = await leaveBalanceRepository.GetByUserYearTypeAsync(leave.ApplicantId, year, leave.LeaveType, cancellationToken);
+        if (balance != null)
+        {
+            balance.Deduct(leave.Days);
+            Log.Information("请假审批通过，已扣减余额: LeaveRequestId={Id}, UserId={UserId}, LeaveType={Type}, Days={Days}",
+                leave.Id, leave.ApplicantId, leave.LeaveType, leave.Days);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>

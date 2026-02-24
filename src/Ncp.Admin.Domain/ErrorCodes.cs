@@ -223,4 +223,53 @@ public sealed class ErrorCodes
     public const int NotificationAlreadyDeleted = 150002;
 
     #endregion
+
+    #region 请假相关错误 (160xxx)
+
+    /// <summary>
+    /// 未找到请假申请
+    /// </summary>
+    public const int LeaveRequestNotFound = 160001;
+
+    /// <summary>
+    /// 只有草稿状态的请假单可以提交/修改
+    /// </summary>
+    public const int LeaveRequestNotDraft = 160002;
+
+    /// <summary>
+    /// 只有待审批状态的请假单可以审批/驳回
+    /// </summary>
+    public const int LeaveRequestNotPending = 160003;
+
+    /// <summary>
+    /// 只有草稿或待审批的请假单可以撤销
+    /// </summary>
+    public const int LeaveRequestCannotCancel = 160004;
+
+    /// <summary>
+    /// 未配置请假审批流程（无已发布的「请假审批」分类流程定义）
+    /// </summary>
+    public const int LeaveWorkflowNotConfigured = 160005;
+
+    /// <summary>
+    /// 未找到请假余额
+    /// </summary>
+    public const int LeaveBalanceNotFound = 160101;
+
+    /// <summary>
+    /// 请假余额不足
+    /// </summary>
+    public const int LeaveBalanceInsufficient = 160102;
+
+    /// <summary>
+    /// 扣减天数必须大于0
+    /// </summary>
+    public const int LeaveBalanceInvalidDeduct = 160103;
+
+    /// <summary>
+    /// 总天数不能小于已使用天数
+    /// </summary>
+    public const int LeaveBalanceInvalidTotal = 160104;
+
+    #endregion
 }

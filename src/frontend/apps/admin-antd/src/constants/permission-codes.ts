@@ -52,6 +52,16 @@ export const PermissionCodes = {
   NotificationView: 'NotificationView',
   NotificationSend: 'NotificationSend',
 
+  // 请假管理权限
+  LeaveManagement: 'LeaveManagement',
+  LeaveRequestView: 'LeaveRequestView',
+  LeaveRequestCreate: 'LeaveRequestCreate',
+  LeaveRequestEdit: 'LeaveRequestEdit',
+  LeaveRequestSubmit: 'LeaveRequestSubmit',
+  LeaveRequestCancel: 'LeaveRequestCancel',
+  LeaveBalanceView: 'LeaveBalanceView',
+  LeaveBalanceEdit: 'LeaveBalanceEdit',
+
   // 所有接口访问权限
   AllApiAccess: 'AllApiAccess',
 } as const;

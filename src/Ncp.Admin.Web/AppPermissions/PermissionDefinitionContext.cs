@@ -64,6 +64,16 @@ public static class PermissionDefinitionContext
         notificationManagement.AddChild(PermissionCodes.NotificationView, "查看通知");
         notificationManagement.AddChild(PermissionCodes.NotificationSend, "发送通知");
 
+        // 请假管理权限
+        var leaveManagement = systemAccess.AddPermission(PermissionCodes.LeaveManagement, "请假管理");
+        leaveManagement.AddChild(PermissionCodes.LeaveRequestView, "查看请假申请");
+        leaveManagement.AddChild(PermissionCodes.LeaveRequestCreate, "创建请假申请");
+        leaveManagement.AddChild(PermissionCodes.LeaveRequestEdit, "编辑请假申请");
+        leaveManagement.AddChild(PermissionCodes.LeaveRequestSubmit, "提交请假申请");
+        leaveManagement.AddChild(PermissionCodes.LeaveRequestCancel, "撤销请假申请");
+        leaveManagement.AddChild(PermissionCodes.LeaveBalanceView, "查看请假余额");
+        leaveManagement.AddChild(PermissionCodes.LeaveBalanceEdit, "设置请假余额");
+
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");
     }

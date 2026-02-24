@@ -166,4 +166,39 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                 .ToListAsync(cancellationToken);
         }))!;
     }
+
+    /// <summary>
+    /// 按分类获取第一个已发布的流程定义（用于内置审批，如请假审批）
+    /// </summary>
+    public async Task<WorkflowDefinitionQueryDto?> GetFirstPublishedByCategoryAsync(
+        string category,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(category)) return null;
+        return await DefinitionSet.AsNoTracking()
+            .Where(d => d.Status == WorkflowDefinitionStatus.Published && d.Category == category)
+            .OrderBy(d => d.CreatedAt)
+            .Select(d => new WorkflowDefinitionQueryDto(
+                d.Id,
+                d.Name,
+                d.Description,
+                d.Version,
+                d.Category,
+                d.Status,
+                d.CreatedBy,
+                d.CreatedAt,
+                d.Nodes.OrderBy(n => n.SortOrder).Select(n => new WorkflowNodeQueryDto(
+                    n.Id,
+                    n.NodeName,
+                    n.NodeType,
+                    n.AssigneeType,
+                    n.AssigneeValue,
+                    n.SortOrder,
+                    n.Description,
+                    n.ApprovalMode,
+                    n.ConditionExpression,
+                    n.TrueNextNodeName,
+                    n.FalseNextNodeName))))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

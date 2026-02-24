@@ -60,6 +60,17 @@ public static class PermissionCodes
     public const string NotificationSend = nameof(NotificationSend);
     #endregion
 
+    #region 请假管理权限
+    public const string LeaveManagement = nameof(LeaveManagement);
+    public const string LeaveRequestView = nameof(LeaveRequestView);
+    public const string LeaveRequestCreate = nameof(LeaveRequestCreate);
+    public const string LeaveRequestEdit = nameof(LeaveRequestEdit);
+    public const string LeaveRequestSubmit = nameof(LeaveRequestSubmit);
+    public const string LeaveRequestCancel = nameof(LeaveRequestCancel);
+    public const string LeaveBalanceView = nameof(LeaveBalanceView);
+    public const string LeaveBalanceEdit = nameof(LeaveBalanceEdit);
+    #endregion
+
     #region 所有接口访问权限
     public const string AllApiAccess = nameof(AllApiAccess);
     #endregion

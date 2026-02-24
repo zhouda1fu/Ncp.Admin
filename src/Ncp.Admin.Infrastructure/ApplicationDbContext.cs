@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.LeaveBalanceAggregate;
+using Ncp.Admin.Domain.AggregatesModel.LeaveRequestAggregate;
 using Ncp.Admin.Domain.AggregatesModel.NotificationAggregate;
 using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
@@ -66,4 +68,6 @@ public partial class ApplicationDbContext(
     public DbSet<WorkflowTask> WorkflowTasks => Set<WorkflowTask>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+    public DbSet<LeaveBalance> LeaveBalances => Set<LeaveBalance>();
 }

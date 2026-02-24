@@ -44,7 +44,7 @@ description: Follows DDD workflow and project conventions when developing Ncp.Ad
 | 类型 | 路径 |
 |------|------|
 | 聚合根 | `src/Ncp.Admin.Domain/AggregatesModel/{AggregateName}Aggregate/` |
-| 领域事件 | `src/Ncp.Admin.Domain/DomainEvents/` |
+| 领域事件 | `src/Ncp.Admin.Domain/DomainEvents/` 或 `DomainEvents/{Feature}Events/`；**同一业务/限界上下文的多个事件可合并在一个文件中**（如 `LeaveEvents/LeaveDomainEvents.cs`、`RoleEvents.cs`），不必每个事件一个文件 |
 | 仓储 | `src/Ncp.Admin.Infrastructure/Repositories/` |
 | 实体配置 | `src/Ncp.Admin.Infrastructure/EntityConfigurations/` |
 | 命令/处理器 | `src/Ncp.Admin.Web/Application/Commands/{Module}/` |
@@ -62,8 +62,10 @@ description: Follows DDD workflow and project conventions when developing Ncp.Ad
 - **仓储**：全部使用异步方法（如 `GetAsync`、`AddAsync`）；通过构造函数注入的 `ApplicationDbContext` 访问数据。
 - **领域事件处理器**：实现 `Handle()`（不是 `HandleAsync()`）。
 - **依赖方向**：Web → Infrastructure → Domain，严格单向。
+- **权限**：新增需权限控制的端点时，必须同步：在 `AppPermissions/PermissionCodes.cs` 增加权限码；在 `PermissionDefinitionContext.cs` 中注册该权限组及子权限；在 `PermissionMapper.cs` 的 `_permissionDescriptionMap` 中增加描述。前端还需在 `utils/permission-tree.ts` 的 `buildPermissionTree()` 中增加对应节点，否则角色管理里无法勾选该权限。
 
 ## 最佳实践
 
 - 优先使用主构造函数、`await` 与 Async 方法。
 - 新建或修改某类文件前，先打开对应的 `*.instructions.md` 按其中示例与规则实现。
+- **领域事件**：同一聚合/业务下的多个领域事件可放在一个文件里（如 `LeaveDomainEvents.cs` 内含 Created、Submitted、Approved），减少文件数量；路径为 `DomainEvents/{Feature}Events/{Feature}DomainEvents.cs`。
