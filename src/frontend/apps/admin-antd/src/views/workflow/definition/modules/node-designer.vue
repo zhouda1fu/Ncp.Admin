@@ -6,13 +6,16 @@ import { computed, ref, watch } from 'vue';
 import {
   Button,
   Card,
+  Divider,
   Drawer,
   Dropdown,
   Empty,
+  Form,
   Input,
   Menu,
   Popconfirm,
   Select,
+  Space,
   Tag,
   Tooltip,
 } from 'ant-design-vue';
@@ -434,38 +437,40 @@ const nextNodeNameOptions = computed(() =>
   <Drawer
     v-model:open="drawerVisible"
     :title="$t('system.workflow.node.configDrawerTitle')"
-    width="400"
+    width="420"
+    :body-style="{ paddingBottom: '24px' }"
     @close="closeDrawer"
   >
     <template v-if="editingNode && editingIndex !== null">
-      <div class="nd-drawer-form">
-        <div class="nd-field">
-          <label>{{ $t('system.workflow.node.name') }}</label>
+      <Form
+        layout="vertical"
+        class="nd-drawer-form"
+        :label-col="{ style: { fontWeight: 500 } }"
+      >
+        <Form.Item :label="$t('system.workflow.node.name')">
           <Input
             :value="editingNode.nodeName"
             :disabled="disabled"
-            size="small"
             :placeholder="$t('system.workflow.node.namePlaceholder')"
             @update:value="(v: string) => updateField(editingIndex!, 'nodeName', v)"
           />
-        </div>
-        <div class="nd-field">
-          <label>{{ $t('system.workflow.node.type') }}</label>
-          <div class="nd-field-readonly">{{ getNodeTypeLabel(editingNode.nodeType) }}</div>
-        </div>
+        </Form.Item>
+        <Form.Item :label="$t('system.workflow.node.type')">
+          <div class="nd-drawer-readonly">{{ getNodeTypeLabel(editingNode.nodeType) }}</div>
+        </Form.Item>
         <template v-if="editingNode.nodeType === 4">
-          <div class="nd-field">
-            <label>{{ $t('system.workflow.node.conditionExpression') }}</label>
+          <Divider orientation="left" class="nd-drawer-divider">
+            {{ $t('system.workflow.node.typeCondition') }}
+            </Divider>
+          <Form.Item :label="$t('system.workflow.node.conditionExpression')">
             <Input
               :value="editingNode.conditionExpression ?? ''"
               :disabled="disabled"
-              size="small"
               :placeholder="$t('system.workflow.node.conditionExpressionPlaceholder')"
               @update:value="(v: string) => updateField(editingIndex!, 'conditionExpression', v)"
             />
-          </div>
-          <div class="nd-field">
-            <label>{{ $t('system.workflow.node.trueNextNodeName') }}</label>
+          </Form.Item>
+          <Form.Item :label="$t('system.workflow.node.trueNextNodeName')">
             <Select
               :value="editingNode.trueNextNodeName || undefined"
               :disabled="disabled"
@@ -473,13 +478,11 @@ const nextNodeNameOptions = computed(() =>
               :placeholder="$t('system.workflow.node.nextNodePlaceholder')"
               allow-clear
               show-search
-              size="small"
-              style="width: 100%"
+              class="w-full"
               @update:value="(v: any) => updateField(editingIndex!, 'trueNextNodeName', v ?? '')"
             />
-          </div>
-          <div class="nd-field">
-            <label>{{ $t('system.workflow.node.falseNextNodeName') }}</label>
+          </Form.Item>
+          <Form.Item :label="$t('system.workflow.node.falseNextNodeName')">
             <Select
               :value="editingNode.falseNextNodeName || undefined"
               :disabled="disabled"
@@ -487,29 +490,22 @@ const nextNodeNameOptions = computed(() =>
               :placeholder="$t('system.workflow.node.nextNodePlaceholder')"
               allow-clear
               show-search
-              size="small"
-              style="width: 100%"
+              class="w-full"
               @update:value="(v: any) => updateField(editingIndex!, 'falseNextNodeName', v ?? '')"
             />
-          </div>
+          </Form.Item>
         </template>
-        <div
-          v-if="editingNode.nodeType !== 4"
-          class="nd-field-row"
-        >
-          <div class="nd-field nd-field-half">
-            <label>{{ $t('system.workflow.node.assigneeType') }}</label>
+        <template v-if="editingNode.nodeType !== 4">
+          <Form.Item :label="$t('system.workflow.node.assigneeType')">
             <Select
               :value="editingNode.assigneeType"
               :disabled="disabled"
               :options="assigneeTypeOptions"
-              size="small"
-              style="width: 100%"
+              class="w-full"
               @update:value="(v: any) => updateField(editingIndex!, 'assigneeType', v)"
             />
-          </div>
-          <div class="nd-field nd-field-half">
-            <label>{{ $t('system.workflow.node.assignee') }}</label>
+          </Form.Item>
+          <Form.Item :label="$t('system.workflow.node.assignee')">
             <Select
               :value="editingNode.assigneeValue || undefined"
               :disabled="disabled"
@@ -517,46 +513,46 @@ const nextNodeNameOptions = computed(() =>
               :options="getAssigneeOptions(editingNode.assigneeType)"
               :placeholder="$t('system.workflow.node.assigneePlaceholder')"
               show-search
-              size="small"
+              class="w-full"
               :filter-option="
                 (input: string, option: any) =>
                   option.label.toLowerCase().includes(input.toLowerCase())
               "
-              style="width: 100%"
               @update:value="(v: any) => updateField(editingIndex!, 'assigneeValue', v)"
               @dropdown-visible-change="
                 (open: boolean) =>
                   open && editingNode && onAssigneeDropdownOpen(editingNode.assigneeType)
               "
             />
-          </div>
-        </div>
-        <div v-if="editingNode.nodeType === 1" class="nd-field">
-          <label>{{ $t('system.workflow.node.approvalMode') }}</label>
+          </Form.Item>
+        </template>
+        <Form.Item
+          v-if="editingNode.nodeType === 1"
+          :label="$t('system.workflow.node.approvalMode')"
+        >
           <Select
             :value="editingNode.approvalMode ?? 0"
             :disabled="disabled"
             :options="approvalModeOptions"
-            size="small"
-            style="width: 100%"
+            class="w-full"
             @update:value="(v: any) => updateField(editingIndex!, 'approvalMode', v)"
           />
-        </div>
-        <div class="nd-field">
-          <label>{{ $t('system.workflow.node.description') }}</label>
+        </Form.Item>
+        <Form.Item :label="$t('system.workflow.node.description')">
           <Input
             :value="editingNode.description"
             :disabled="disabled"
-            size="small"
             :placeholder="$t('system.workflow.node.descriptionPlaceholder')"
             @update:value="(v: string) => updateField(editingIndex!, 'description', v)"
           />
-        </div>
-      </div>
+        </Form.Item>
+      </Form>
     </template>
     <template #footer>
-      <Button @click="closeDrawer">{{ $t('common.cancel') }}</Button>
-      <Button type="primary" @click="closeDrawer">{{ $t('common.confirm') }}</Button>
+      <Space>
+        <Button @click="closeDrawer">{{ $t('system.workflow.definition.cancel') }}</Button>
+        <Button type="primary" @click="closeDrawer">{{ $t('common.confirm') }}</Button>
+      </Space>
     </template>
   </Drawer>
 </template>
@@ -740,33 +736,33 @@ const nextNodeNameOptions = computed(() =>
   padding: 28px 0;
 }
 
+/* 节点配置抽屉：使用 Ant Design Form 统一风格 */
 .nd-drawer-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  padding-top: 8px;
 }
 
-.nd-field label {
-  display: block;
-  font-size: 12px;
-  margin-bottom: 4px;
-  color: inherit;
-  opacity: 0.75;
+.nd-drawer-form :deep(.ant-form-item) {
+  margin-bottom: 18px;
 }
 
-.nd-field-readonly {
-  font-size: 14px;
+.nd-drawer-form :deep(.ant-form-item:last-child) {
+  margin-bottom: 0;
+}
+
+.nd-drawer-readonly {
   padding: 4px 0;
+  font-size: 14px;
   color: inherit;
+  opacity: 0.85;
 }
 
-.nd-field-row {
-  display: flex;
-  gap: 10px;
+.nd-drawer-divider {
+  margin: 16px 0 12px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.nd-field-half {
-  flex: 1;
-  min-width: 0;
+.nd-drawer-divider :deep(.ant-divider-inner-text) {
+  padding-right: 8px;
 }
 </style>
