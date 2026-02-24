@@ -1,5 +1,9 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate;
+using Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate;
+using Ncp.Admin.Domain.AggregatesModel.MeetingAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.LeaveBalanceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.LeaveRequestAggregate;
@@ -70,4 +74,11 @@ public partial class ApplicationDbContext(
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
     public DbSet<LeaveBalance> LeaveBalances => Set<LeaveBalance>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<AnnouncementReadRecord> AnnouncementReadRecords => Set<AnnouncementReadRecord>();
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+    public DbSet<Schedule> Schedules => Set<Schedule>();
+    public DbSet<ExpenseClaim> ExpenseClaims => Set<ExpenseClaim>();
+    public DbSet<MeetingRoom> MeetingRooms => Set<MeetingRoom>();
+    public DbSet<MeetingBooking> MeetingBookings => Set<MeetingBooking>();
 }

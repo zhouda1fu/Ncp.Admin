@@ -1,0 +1,18 @@
+{
+  "title": "公告管理",
+  "list": "公告列表",
+  "name": "公告",
+  "detail": "公告详情",
+  "titleField": "标题",
+  "content": "内容",
+  "publisher": "发布人",
+  "status": "状态",
+  "statusDraft": "草稿",
+  "statusPublished": "已发布",
+  "publishAt": "发布时间",
+  "createdAt": "创建时间",
+  "isRead": "已读",
+  "publish": "发布",
+  "publishing": "发布中...",
+  "markRead": "标记已读"
+}

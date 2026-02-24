@@ -1,0 +1,30 @@
+{
+  "title": "报销管理",
+  "claim": {
+    "title": "报销单",
+    "list": "报销单列表",
+    "name": "报销单",
+    "applicant": "申请人",
+    "totalAmount": "总金额",
+    "status": "状态",
+    "statusDraft": "草稿",
+    "statusSubmitted": "已提交",
+    "statusApproved": "已通过",
+    "statusRejected": "已驳回",
+    "createdAt": "创建时间",
+    "operation": "操作",
+    "submit": "提交审批",
+    "submitting": "提交中...",
+    "items": "报销明细",
+    "addItem": "添加明细",
+    "type": "费用类型",
+    "typeTravel": "差旅",
+    "typeMeals": "餐饮",
+    "typeAccommodation": "住宿",
+    "typeOffice": "办公",
+    "typeOther": "其他",
+    "amount": "金额",
+    "description": "说明",
+    "invoiceUrl": "发票链接"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "title": "会议管理",
+  "room": {
+    "title": "会议室",
+    "list": "会议室列表",
+    "name": "会议室",
+    "roomName": "会议室名称",
+    "location": "位置",
+    "capacity": "容纳人数",
+    "equipment": "设备",
+    "status": "状态",
+    "statusDisabled": "禁用",
+    "statusAvailable": "可用",
+    "createdAt": "创建时间",
+    "operation": "操作"
+  },
+  "booking": {
+    "title": "会议预订",
+    "list": "预订列表",
+    "name": "预订",
+    "meetingRoom": "会议室",
+    "booker": "预订人",
+    "titleField": "会议主题",
+    "startAt": "开始时间",
+    "endAt": "结束时间",
+    "status": "状态",
+    "createdAt": "创建时间",
+    "operation": "操作"
+  }
+}

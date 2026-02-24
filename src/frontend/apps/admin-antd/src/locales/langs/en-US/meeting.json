@@ -1,0 +1,30 @@
+{
+  "title": "Meeting",
+  "room": {
+    "title": "Meeting Rooms",
+    "list": "Meeting Room List",
+    "name": "Meeting Room",
+    "roomName": "Room Name",
+    "location": "Location",
+    "capacity": "Capacity",
+    "equipment": "Equipment",
+    "status": "Status",
+    "statusDisabled": "Disabled",
+    "statusAvailable": "Available",
+    "createdAt": "Created At",
+    "operation": "Operation"
+  },
+  "booking": {
+    "title": "Bookings",
+    "list": "Booking List",
+    "name": "Booking",
+    "meetingRoom": "Room",
+    "booker": "Booker",
+    "titleField": "Title",
+    "startAt": "Start",
+    "endAt": "End",
+    "status": "Status",
+    "createdAt": "Created At",
+    "operation": "Operation"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "title": "Announcement",
+  "list": "Announcement List",
+  "name": "Announcement",
+  "detail": "Announcement Detail",
+  "titleField": "Title",
+  "content": "Content",
+  "publisher": "Publisher",
+  "status": "Status",
+  "statusDraft": "Draft",
+  "statusPublished": "Published",
+  "publishAt": "Published At",
+  "createdAt": "Created At",
+  "isRead": "Read",
+  "publish": "Publish",
+  "publishing": "Publishing...",
+  "markRead": "Mark as Read"
+}

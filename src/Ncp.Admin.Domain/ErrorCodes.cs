@@ -272,4 +272,64 @@ public sealed class ErrorCodes
     public const int LeaveBalanceInvalidTotal = 160104;
 
     #endregion
+
+    #region 公告相关错误 (170xxx)
+
+    /// <summary>
+    /// 未找到公告
+    /// </summary>
+    public const int AnnouncementNotFound = 170001;
+    /// <summary>
+    /// 只有草稿可修改/发布
+    /// </summary>
+    public const int AnnouncementNotDraft = 170002;
+
+    #endregion
+
+    #region 考勤相关错误 (180xxx)
+
+    /// <summary>
+    /// 未找到考勤记录
+    /// </summary>
+    public const int AttendanceRecordNotFound = 180001;
+    /// <summary>
+    /// 今日已签到，请勿重复打卡
+    /// </summary>
+    public const int AttendanceAlreadyCheckedIn = 180002;
+    /// <summary>
+    /// 未找到排班
+    /// </summary>
+    public const int ScheduleNotFound = 180003;
+
+    #endregion
+
+    #region 报销相关错误 (190xxx)
+
+    /// <summary>
+    /// 未找到报销单
+    /// </summary>
+    public const int ExpenseClaimNotFound = 190001;
+    /// <summary>
+    /// 报销单状态不允许此操作
+    /// </summary>
+    public const int ExpenseClaimInvalidStatus = 190002;
+
+    #endregion
+
+    #region 会议/预订相关错误 (200xxx)
+
+    /// <summary>
+    /// 未找到会议室
+    /// </summary>
+    public const int MeetingRoomNotFound = 200001;
+    /// <summary>
+    /// 未找到预订
+    /// </summary>
+    public const int MeetingBookingNotFound = 200002;
+    /// <summary>
+    /// 该时段已被预订
+    /// </summary>
+    public const int MeetingRoomConflict = 200003;
+
+    #endregion
 }

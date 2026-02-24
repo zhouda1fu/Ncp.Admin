@@ -60,6 +60,37 @@ public static class PermissionCodes
     public const string NotificationSend = nameof(NotificationSend);
     #endregion
 
+    #region 公告管理权限
+    public const string AnnouncementManagement = nameof(AnnouncementManagement);
+    public const string AnnouncementView = nameof(AnnouncementView);
+    public const string AnnouncementCreate = nameof(AnnouncementCreate);
+    public const string AnnouncementEdit = nameof(AnnouncementEdit);
+    public const string AnnouncementPublish = nameof(AnnouncementPublish);
+    #endregion
+
+    #region 会议/预订管理权限
+    public const string MeetingManagement = nameof(MeetingManagement);
+    public const string MeetingRoomView = nameof(MeetingRoomView);
+    public const string MeetingRoomEdit = nameof(MeetingRoomEdit);
+    public const string MeetingBookingView = nameof(MeetingBookingView);
+    public const string MeetingBookingCreate = nameof(MeetingBookingCreate);
+    #endregion
+
+    #region 报销管理权限
+    public const string ExpenseManagement = nameof(ExpenseManagement);
+    public const string ExpenseClaimView = nameof(ExpenseClaimView);
+    public const string ExpenseClaimCreate = nameof(ExpenseClaimCreate);
+    public const string ExpenseClaimSubmit = nameof(ExpenseClaimSubmit);
+    #endregion
+
+    #region 考勤管理权限
+    public const string AttendanceManagement = nameof(AttendanceManagement);
+    public const string AttendanceRecordView = nameof(AttendanceRecordView);
+    public const string AttendanceCheckIn = nameof(AttendanceCheckIn);
+    public const string ScheduleView = nameof(ScheduleView);
+    public const string ScheduleEdit = nameof(ScheduleEdit);
+    #endregion
+
     #region 请假管理权限
     public const string LeaveManagement = nameof(LeaveManagement);
     public const string LeaveRequestView = nameof(LeaveRequestView);

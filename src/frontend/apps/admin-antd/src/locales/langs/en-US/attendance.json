@@ -1,0 +1,30 @@
+{
+  "title": "Attendance",
+  "record": {
+    "title": "Attendance Records",
+    "list": "Attendance Record List",
+    "userId": "User",
+    "checkInAt": "Check-in",
+    "checkOutAt": "Check-out",
+    "source": "Source",
+    "sourceGps": "GPS",
+    "sourceWifi": "WiFi",
+    "sourceManual": "Manual",
+    "location": "Location",
+    "createdAt": "Created At",
+    "checkIn": "Check In",
+    "checkOut": "Check Out"
+  },
+  "schedule": {
+    "title": "Schedules",
+    "list": "Schedule List",
+    "name": "Schedule",
+    "userId": "User",
+    "workDate": "Work Date",
+    "startTime": "Start",
+    "endTime": "End",
+    "shiftName": "Shift Name",
+    "createdAt": "Created At",
+    "operation": "Operation"
+  }
+}

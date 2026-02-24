@@ -217,6 +217,49 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       ],
     },
     {
+      value: PermissionCodes.ExpenseManagement,
+      label: '报销管理',
+      icon: 'mdi:receipt',
+      children: [
+        { value: PermissionCodes.ExpenseClaimView, label: '查看报销单', icon: 'mdi:eye' },
+        { value: PermissionCodes.ExpenseClaimCreate, label: '创建报销单', icon: 'mdi:plus' },
+        { value: PermissionCodes.ExpenseClaimSubmit, label: '提交报销单', icon: 'mdi:send' },
+      ],
+    },
+    {
+      value: PermissionCodes.MeetingManagement,
+      label: '会议管理',
+      icon: 'mdi:calendar-month',
+      children: [
+        { value: PermissionCodes.MeetingRoomView, label: '查看会议室', icon: 'mdi:eye' },
+        { value: PermissionCodes.MeetingRoomEdit, label: '管理会议室', icon: 'mdi:cog' },
+        { value: PermissionCodes.MeetingBookingView, label: '查看预订', icon: 'mdi:calendar' },
+        { value: PermissionCodes.MeetingBookingCreate, label: '预订会议室', icon: 'mdi:plus' },
+      ],
+    },
+    {
+      value: PermissionCodes.AttendanceManagement,
+      label: '考勤管理',
+      icon: 'mdi:clock-check',
+      children: [
+        { value: PermissionCodes.AttendanceRecordView, label: '查看考勤记录', icon: 'mdi:eye' },
+        { value: PermissionCodes.AttendanceCheckIn, label: '打卡/签退', icon: 'mdi:clock-outline' },
+        { value: PermissionCodes.ScheduleView, label: '查看排班', icon: 'mdi:calendar' },
+        { value: PermissionCodes.ScheduleEdit, label: '编辑排班', icon: 'mdi:pencil' },
+      ],
+    },
+    {
+      value: PermissionCodes.AnnouncementManagement,
+      label: '公告管理',
+      icon: 'mdi:bullhorn',
+      children: [
+        { value: PermissionCodes.AnnouncementView, label: '查看公告', icon: 'mdi:eye' },
+        { value: PermissionCodes.AnnouncementCreate, label: '创建公告', icon: 'mdi:plus' },
+        { value: PermissionCodes.AnnouncementEdit, label: '编辑公告', icon: 'mdi:pencil' },
+        { value: PermissionCodes.AnnouncementPublish, label: '发布公告', icon: 'mdi:send' },
+      ],
+    },
+    {
       value: PermissionCodes.LeaveManagement,
       label: '请假管理',
       icon: 'mdi:calendar-account',

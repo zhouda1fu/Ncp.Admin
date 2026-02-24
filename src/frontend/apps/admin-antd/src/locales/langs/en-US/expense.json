@@ -1,0 +1,30 @@
+{
+  "title": "Expense",
+  "claim": {
+    "title": "Expense Claims",
+    "list": "Expense Claim List",
+    "name": "Expense Claim",
+    "applicant": "Applicant",
+    "totalAmount": "Total Amount",
+    "status": "Status",
+    "statusDraft": "Draft",
+    "statusSubmitted": "Submitted",
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "createdAt": "Created At",
+    "operation": "Operation",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "items": "Items",
+    "addItem": "Add Row",
+    "type": "Type",
+    "typeTravel": "Travel",
+    "typeMeals": "Meals",
+    "typeAccommodation": "Accommodation",
+    "typeOffice": "Office",
+    "typeOther": "Other",
+    "amount": "Amount",
+    "description": "Description",
+    "invoiceUrl": "Invoice URL"
+  }
+}

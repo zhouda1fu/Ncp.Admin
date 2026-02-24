@@ -22,6 +22,151 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate.Announcement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTimeOffset?>("PublishAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("PublisherId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PublisherName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("PublishAt");
+
+                    b.HasIndex("PublisherId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("announcement", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate.AnnouncementReadRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("AnnouncementId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("ReadAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("AnnouncementId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("announcement_read_record", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate.AttendanceRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("CheckInAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTimeOffset?>("CheckOutAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CheckInAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "CheckInAt");
+
+                    b.ToTable("attendance_record", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate.Schedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time(6)");
+
+                    b.Property<string>("ShiftName")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time(6)");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("WorkDate");
+
+                    b.HasIndex("UserId", "WorkDate")
+                        .IsUnique();
+
+                    b.ToTable("schedule", (string)null);
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.DeptAggregate.Dept", b =>
                 {
                     b.Property<long>("Id")
@@ -64,6 +209,75 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("dept", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseClaim", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<long>("ApplicantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ApplicantName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("WorkflowInstanceId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicantId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("expense_claim", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<Guid>("ExpenseClaimId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("InvoiceUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpenseClaimId");
+
+                    b.ToTable("expense_item", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.LeaveBalanceAggregate.LeaveBalance", b =>
@@ -153,6 +367,85 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasIndex("WorkflowInstanceId");
 
                     b.ToTable("leave_request", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.MeetingAggregate.MeetingBooking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<long>("BookerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTimeOffset>("EndAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("MeetingRoomId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("StartAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookerId");
+
+                    b.HasIndex("MeetingRoomId");
+
+                    b.HasIndex("StartAt");
+
+                    b.ToTable("meeting_booking", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.MeetingAggregate.MeetingRoom", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Equipment")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("meeting_room", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.NotificationAggregate.Notification", b =>
@@ -861,6 +1154,15 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.ToTable("CAPReceivedMessage", (string)null);
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseItem", b =>
+                {
+                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseClaim", null)
+                        .WithMany("Items")
+                        .HasForeignKey("ExpenseClaimId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.RolePermission", b =>
                 {
                     b.HasOne("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", null)
@@ -913,6 +1215,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasForeignKey("WorkflowInstanceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseClaim", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", b =>

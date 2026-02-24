@@ -62,6 +62,33 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.NotificationView, "查看通知" },
         { PermissionCodes.NotificationSend, "发送通知" },
 
+        // 公告管理权限
+        { PermissionCodes.AnnouncementManagement, "公告管理" },
+        { PermissionCodes.AnnouncementView, "查看公告" },
+        { PermissionCodes.AnnouncementCreate, "创建公告" },
+        { PermissionCodes.AnnouncementEdit, "编辑公告" },
+        { PermissionCodes.AnnouncementPublish, "发布公告" },
+
+        // 会议/预订管理权限
+        { PermissionCodes.MeetingManagement, "会议管理" },
+        { PermissionCodes.MeetingRoomView, "查看会议室" },
+        { PermissionCodes.MeetingRoomEdit, "管理会议室" },
+        { PermissionCodes.MeetingBookingView, "查看预订" },
+        { PermissionCodes.MeetingBookingCreate, "预订会议室" },
+
+        // 报销管理权限
+        { PermissionCodes.ExpenseManagement, "报销管理" },
+        { PermissionCodes.ExpenseClaimView, "查看报销单" },
+        { PermissionCodes.ExpenseClaimCreate, "创建报销单" },
+        { PermissionCodes.ExpenseClaimSubmit, "提交报销单" },
+
+        // 考勤管理权限
+        { PermissionCodes.AttendanceManagement, "考勤管理" },
+        { PermissionCodes.AttendanceRecordView, "查看考勤记录" },
+        { PermissionCodes.AttendanceCheckIn, "打卡/签退" },
+        { PermissionCodes.ScheduleView, "查看排班" },
+        { PermissionCodes.ScheduleEdit, "编辑排班" },
+
         // 请假管理权限
         { PermissionCodes.LeaveManagement, "请假管理" },
         { PermissionCodes.LeaveRequestView, "查看请假申请" },

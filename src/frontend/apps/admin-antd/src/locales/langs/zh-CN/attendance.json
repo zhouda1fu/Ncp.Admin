@@ -1,0 +1,30 @@
+{
+  "title": "考勤管理",
+  "record": {
+    "title": "考勤记录",
+    "list": "考勤记录列表",
+    "userId": "用户",
+    "checkInAt": "签到时间",
+    "checkOutAt": "签退时间",
+    "source": "打卡来源",
+    "sourceGps": "GPS",
+    "sourceWifi": "WiFi",
+    "sourceManual": "手动",
+    "location": "地点",
+    "createdAt": "创建时间",
+    "checkIn": "签到",
+    "checkOut": "签退"
+  },
+  "schedule": {
+    "title": "排班管理",
+    "list": "排班列表",
+    "name": "排班",
+    "userId": "用户",
+    "workDate": "工作日期",
+    "startTime": "上班时间",
+    "endTime": "下班时间",
+    "shiftName": "班次名称",
+    "createdAt": "创建时间",
+    "operation": "操作"
+  }
+}

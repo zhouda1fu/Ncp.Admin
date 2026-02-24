@@ -64,6 +64,33 @@ public static class PermissionDefinitionContext
         notificationManagement.AddChild(PermissionCodes.NotificationView, "查看通知");
         notificationManagement.AddChild(PermissionCodes.NotificationSend, "发送通知");
 
+        // 公告管理权限
+        var announcementManagement = systemAccess.AddPermission(PermissionCodes.AnnouncementManagement, "公告管理");
+        announcementManagement.AddChild(PermissionCodes.AnnouncementView, "查看公告");
+        announcementManagement.AddChild(PermissionCodes.AnnouncementCreate, "创建公告");
+        announcementManagement.AddChild(PermissionCodes.AnnouncementEdit, "编辑公告");
+        announcementManagement.AddChild(PermissionCodes.AnnouncementPublish, "发布公告");
+
+        // 会议/预订管理权限
+        var meetingManagement = systemAccess.AddPermission(PermissionCodes.MeetingManagement, "会议管理");
+        meetingManagement.AddChild(PermissionCodes.MeetingRoomView, "查看会议室");
+        meetingManagement.AddChild(PermissionCodes.MeetingRoomEdit, "管理会议室");
+        meetingManagement.AddChild(PermissionCodes.MeetingBookingView, "查看预订");
+        meetingManagement.AddChild(PermissionCodes.MeetingBookingCreate, "预订会议室");
+
+        // 报销管理权限
+        var expenseManagement = systemAccess.AddPermission(PermissionCodes.ExpenseManagement, "报销管理");
+        expenseManagement.AddChild(PermissionCodes.ExpenseClaimView, "查看报销单");
+        expenseManagement.AddChild(PermissionCodes.ExpenseClaimCreate, "创建报销单");
+        expenseManagement.AddChild(PermissionCodes.ExpenseClaimSubmit, "提交报销单");
+
+        // 考勤管理权限
+        var attendanceManagement = systemAccess.AddPermission(PermissionCodes.AttendanceManagement, "考勤管理");
+        attendanceManagement.AddChild(PermissionCodes.AttendanceRecordView, "查看考勤记录");
+        attendanceManagement.AddChild(PermissionCodes.AttendanceCheckIn, "打卡/签退");
+        attendanceManagement.AddChild(PermissionCodes.ScheduleView, "查看排班");
+        attendanceManagement.AddChild(PermissionCodes.ScheduleEdit, "编辑排班");
+
         // 请假管理权限
         var leaveManagement = systemAccess.AddPermission(PermissionCodes.LeaveManagement, "请假管理");
         leaveManagement.AddChild(PermissionCodes.LeaveRequestView, "查看请假申请");

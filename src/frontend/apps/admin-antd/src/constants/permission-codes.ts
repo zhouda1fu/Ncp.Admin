@@ -52,6 +52,33 @@ export const PermissionCodes = {
   NotificationView: 'NotificationView',
   NotificationSend: 'NotificationSend',
 
+  // 报销管理权限
+  ExpenseManagement: 'ExpenseManagement',
+  ExpenseClaimView: 'ExpenseClaimView',
+  ExpenseClaimCreate: 'ExpenseClaimCreate',
+  ExpenseClaimSubmit: 'ExpenseClaimSubmit',
+
+  // 会议管理权限
+  MeetingManagement: 'MeetingManagement',
+  MeetingRoomView: 'MeetingRoomView',
+  MeetingRoomEdit: 'MeetingRoomEdit',
+  MeetingBookingView: 'MeetingBookingView',
+  MeetingBookingCreate: 'MeetingBookingCreate',
+
+  // 考勤管理权限
+  AttendanceManagement: 'AttendanceManagement',
+  AttendanceRecordView: 'AttendanceRecordView',
+  AttendanceCheckIn: 'AttendanceCheckIn',
+  ScheduleView: 'ScheduleView',
+  ScheduleEdit: 'ScheduleEdit',
+
+  // 公告管理权限
+  AnnouncementManagement: 'AnnouncementManagement',
+  AnnouncementView: 'AnnouncementView',
+  AnnouncementCreate: 'AnnouncementCreate',
+  AnnouncementEdit: 'AnnouncementEdit',
+  AnnouncementPublish: 'AnnouncementPublish',
+
   // 请假管理权限
   LeaveManagement: 'LeaveManagement',
   LeaveRequestView: 'LeaveRequestView',
