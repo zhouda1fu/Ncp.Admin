@@ -1,0 +1,18 @@
+{
+  "title": "即时通讯",
+  "list": "会话列表",
+  "conversation": "会话",
+  "singleChat": "单聊",
+  "groupChat": "群聊",
+  "message": "消息",
+  "send": "发送",
+  "placeholder": "输入消息...",
+  "createSingle": "发起单聊",
+  "createGroup": "创建群聊",
+  "groupName": "群名称",
+  "members": "成员",
+  "selectUser": "选择用户",
+  "selectUsers": "选择成员",
+  "noConversation": "请选择或创建会话",
+  "noMessages": "暂无消息"
+}

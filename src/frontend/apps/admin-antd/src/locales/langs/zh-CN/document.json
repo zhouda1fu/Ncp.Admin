@@ -1,0 +1,19 @@
+{
+  "title": "文档管理",
+  "list": "文档列表",
+  "name": "文档",
+  "titleField": "标题",
+  "version": "版本",
+  "versionCount": "版本数",
+  "currentVersion": "当前版本",
+  "fileName": "文件名",
+  "fileSize": "文件大小",
+  "createdAt": "创建时间",
+  "creator": "创建人",
+  "operation": "操作",
+  "upload": "上传文档",
+  "download": "下载",
+  "addVersion": "添加版本",
+  "shareLink": "共享链接",
+  "createShareLink": "创建共享链接"
+}

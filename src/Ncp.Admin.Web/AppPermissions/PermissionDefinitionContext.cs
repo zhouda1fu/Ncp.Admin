@@ -101,6 +101,36 @@ public static class PermissionDefinitionContext
         leaveManagement.AddChild(PermissionCodes.LeaveBalanceView, "查看请假余额");
         leaveManagement.AddChild(PermissionCodes.LeaveBalanceEdit, "设置请假余额");
 
+        // 任务/项目管理权限
+        var taskManagement = systemAccess.AddPermission(PermissionCodes.TaskManagement, "任务管理");
+        taskManagement.AddChild(PermissionCodes.ProjectView, "查看项目");
+        taskManagement.AddChild(PermissionCodes.ProjectCreate, "创建项目");
+        taskManagement.AddChild(PermissionCodes.ProjectEdit, "编辑项目");
+        taskManagement.AddChild(PermissionCodes.TaskView, "查看任务");
+        taskManagement.AddChild(PermissionCodes.TaskCreate, "创建任务");
+        taskManagement.AddChild(PermissionCodes.TaskEdit, "编辑任务");
+
+        // 文档管理权限
+        var documentManagement = systemAccess.AddPermission(PermissionCodes.DocumentManagement, "文档管理");
+        documentManagement.AddChild(PermissionCodes.DocumentView, "查看文档");
+        documentManagement.AddChild(PermissionCodes.DocumentCreate, "上传文档");
+        documentManagement.AddChild(PermissionCodes.DocumentEdit, "编辑文档/添加版本");
+        documentManagement.AddChild(PermissionCodes.DocumentShare, "创建共享链接");
+
+        // 即时通讯权限
+        var chatManagement = systemAccess.AddPermission(PermissionCodes.ChatManagement, "即时通讯");
+        chatManagement.AddChild(PermissionCodes.ChatView, "查看会话与消息");
+        chatManagement.AddChild(PermissionCodes.ChatCreate, "创建会话");
+
+        // 通讯录管理权限
+        var contactManagement = systemAccess.AddPermission(PermissionCodes.ContactManagement, "通讯录管理");
+        contactManagement.AddChild(PermissionCodes.ContactGroupView, "查看联系组");
+        contactManagement.AddChild(PermissionCodes.ContactGroupCreate, "创建联系组");
+        contactManagement.AddChild(PermissionCodes.ContactGroupEdit, "编辑联系组");
+        contactManagement.AddChild(PermissionCodes.ContactView, "查看联系人");
+        contactManagement.AddChild(PermissionCodes.ContactCreate, "创建联系人");
+        contactManagement.AddChild(PermissionCodes.ContactEdit, "编辑联系人");
+
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");
     }

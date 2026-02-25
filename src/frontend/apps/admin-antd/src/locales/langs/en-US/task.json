@@ -1,0 +1,36 @@
+{
+  "title": "Task Management",
+  "project": {
+    "title": "Projects",
+    "list": "Project List",
+    "name": "Project",
+    "projectName": "Project Name",
+    "description": "Description",
+    "creator": "Creator",
+    "status": "Status",
+    "statusActive": "Active",
+    "statusArchived": "Archived",
+    "createdAt": "Created At",
+    "operation": "Operation"
+  },
+  "task": {
+    "title": "Tasks",
+    "list": "Task List",
+    "name": "Task",
+    "project": "Project",
+    "titleField": "Title",
+    "description": "Description",
+    "assignee": "Assignee",
+    "dueDate": "Due Date",
+    "status": "Status",
+    "statusTodo": "Todo",
+    "statusInProgress": "In Progress",
+    "statusDone": "Done",
+    "statusCancelled": "Cancelled",
+    "sortOrder": "Sort",
+    "createdAt": "Created At",
+    "operation": "Operation",
+    "comments": "Comments",
+    "addComment": "Add Comment"
+  }
+}

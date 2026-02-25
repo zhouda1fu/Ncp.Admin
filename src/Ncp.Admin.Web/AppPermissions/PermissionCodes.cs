@@ -91,6 +91,40 @@ public static class PermissionCodes
     public const string ScheduleEdit = nameof(ScheduleEdit);
     #endregion
 
+    #region 任务/项目管理权限
+    public const string TaskManagement = nameof(TaskManagement);
+    public const string ProjectView = nameof(ProjectView);
+    public const string ProjectCreate = nameof(ProjectCreate);
+    public const string ProjectEdit = nameof(ProjectEdit);
+    public const string TaskView = nameof(TaskView);
+    public const string TaskCreate = nameof(TaskCreate);
+    public const string TaskEdit = nameof(TaskEdit);
+    #endregion
+
+    #region 文档管理权限
+    public const string DocumentManagement = nameof(DocumentManagement);
+    public const string DocumentView = nameof(DocumentView);
+    public const string DocumentCreate = nameof(DocumentCreate);
+    public const string DocumentEdit = nameof(DocumentEdit);
+    public const string DocumentShare = nameof(DocumentShare);
+    #endregion
+
+    #region 即时通讯权限
+    public const string ChatManagement = nameof(ChatManagement);
+    public const string ChatView = nameof(ChatView);
+    public const string ChatCreate = nameof(ChatCreate);
+    #endregion
+
+    #region 通讯录管理权限
+    public const string ContactManagement = nameof(ContactManagement);
+    public const string ContactGroupView = nameof(ContactGroupView);
+    public const string ContactGroupCreate = nameof(ContactGroupCreate);
+    public const string ContactGroupEdit = nameof(ContactGroupEdit);
+    public const string ContactView = nameof(ContactView);
+    public const string ContactCreate = nameof(ContactCreate);
+    public const string ContactEdit = nameof(ContactEdit);
+    #endregion
+
     #region 请假管理权限
     public const string LeaveManagement = nameof(LeaveManagement);
     public const string LeaveRequestView = nameof(LeaveRequestView);

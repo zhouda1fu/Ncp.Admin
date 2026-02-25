@@ -91,7 +91,9 @@ try
             {
                 var accessToken = ctx.Request.Query["access_token"];
                 var path = ctx.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notification"))
+                // /notification 与 /chat 等 Hub 连接均需从 query 取 token
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    (path.StartsWithSegments("/notification") || path.StartsWithSegments("/chat")))
                 {
                     ctx.Token = accessToken;
                 }

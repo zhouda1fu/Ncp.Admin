@@ -1,0 +1,26 @@
+{
+  "title": "通讯录",
+  "group": {
+    "title": "联系组",
+    "list": "联系组列表",
+    "name": "联系组",
+    "groupName": "分组名称",
+    "sortOrder": "排序",
+    "creator": "创建人",
+    "createdAt": "创建时间",
+    "operation": "操作"
+  },
+  "contact": {
+    "title": "联系人",
+    "list": "联系人列表",
+    "name": "联系人",
+    "nameField": "姓名",
+    "phone": "电话",
+    "email": "邮箱",
+    "company": "公司/部门",
+    "group": "所属分组",
+    "creator": "创建人",
+    "createdAt": "创建时间",
+    "operation": "操作"
+  }
+}

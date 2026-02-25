@@ -260,6 +260,52 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       ],
     },
     {
+      value: PermissionCodes.TaskManagement,
+      label: '任务管理',
+      icon: 'mdi:clipboard-list',
+      children: [
+        { value: PermissionCodes.ProjectView, label: '查看项目', icon: 'mdi:eye' },
+        { value: PermissionCodes.ProjectCreate, label: '创建项目', icon: 'mdi:plus' },
+        { value: PermissionCodes.ProjectEdit, label: '编辑项目', icon: 'mdi:pencil' },
+        { value: PermissionCodes.TaskView, label: '查看任务', icon: 'mdi:eye' },
+        { value: PermissionCodes.TaskCreate, label: '创建任务', icon: 'mdi:plus' },
+        { value: PermissionCodes.TaskEdit, label: '编辑任务', icon: 'mdi:pencil' },
+      ],
+    },
+    {
+      value: PermissionCodes.ChatManagement,
+      label: '即时通讯',
+      icon: 'mdi:message-text',
+      children: [
+        { value: PermissionCodes.ChatView, label: '查看会话与消息', icon: 'mdi:eye' },
+        { value: PermissionCodes.ChatCreate, label: '创建会话', icon: 'mdi:plus' },
+      ],
+    },
+    {
+      value: PermissionCodes.DocumentManagement,
+      label: '文档管理',
+      icon: 'mdi:file-document-multiple',
+      children: [
+        { value: PermissionCodes.DocumentView, label: '查看文档', icon: 'mdi:eye' },
+        { value: PermissionCodes.DocumentCreate, label: '上传文档', icon: 'mdi:upload' },
+        { value: PermissionCodes.DocumentEdit, label: '编辑文档', icon: 'mdi:pencil' },
+        { value: PermissionCodes.DocumentShare, label: '创建共享链接', icon: 'mdi:link' },
+      ],
+    },
+    {
+      value: PermissionCodes.ContactManagement,
+      label: '通讯录管理',
+      icon: 'mdi:card-account-details',
+      children: [
+        { value: PermissionCodes.ContactGroupView, label: '查看联系组', icon: 'mdi:eye' },
+        { value: PermissionCodes.ContactGroupCreate, label: '创建联系组', icon: 'mdi:plus' },
+        { value: PermissionCodes.ContactGroupEdit, label: '编辑联系组', icon: 'mdi:pencil' },
+        { value: PermissionCodes.ContactView, label: '查看联系人', icon: 'mdi:eye' },
+        { value: PermissionCodes.ContactCreate, label: '创建联系人', icon: 'mdi:plus' },
+        { value: PermissionCodes.ContactEdit, label: '编辑联系人', icon: 'mdi:pencil' },
+      ],
+    },
+    {
       value: PermissionCodes.LeaveManagement,
       label: '请假管理',
       icon: 'mdi:calendar-account',

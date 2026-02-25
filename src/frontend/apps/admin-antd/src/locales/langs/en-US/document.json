@@ -1,0 +1,19 @@
+{
+  "title": "Documents",
+  "list": "Document List",
+  "name": "Document",
+  "titleField": "Title",
+  "version": "Version",
+  "versionCount": "Versions",
+  "currentVersion": "Current Version",
+  "fileName": "File Name",
+  "fileSize": "Size",
+  "createdAt": "Created At",
+  "creator": "Creator",
+  "operation": "Operation",
+  "upload": "Upload",
+  "download": "Download",
+  "addVersion": "Add Version",
+  "shareLink": "Share Link",
+  "createShareLink": "Create Share Link"
+}

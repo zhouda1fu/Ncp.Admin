@@ -79,6 +79,36 @@ export const PermissionCodes = {
   AnnouncementEdit: 'AnnouncementEdit',
   AnnouncementPublish: 'AnnouncementPublish',
 
+  // 任务/项目管理权限
+  TaskManagement: 'TaskManagement',
+  ProjectView: 'ProjectView',
+  ProjectCreate: 'ProjectCreate',
+  ProjectEdit: 'ProjectEdit',
+  TaskView: 'TaskView',
+  TaskCreate: 'TaskCreate',
+  TaskEdit: 'TaskEdit',
+
+  // 即时通讯权限
+  ChatManagement: 'ChatManagement',
+  ChatView: 'ChatView',
+  ChatCreate: 'ChatCreate',
+
+  // 文档管理权限
+  DocumentManagement: 'DocumentManagement',
+  DocumentView: 'DocumentView',
+  DocumentCreate: 'DocumentCreate',
+  DocumentEdit: 'DocumentEdit',
+  DocumentShare: 'DocumentShare',
+
+  // 通讯录管理权限
+  ContactManagement: 'ContactManagement',
+  ContactGroupView: 'ContactGroupView',
+  ContactGroupCreate: 'ContactGroupCreate',
+  ContactGroupEdit: 'ContactGroupEdit',
+  ContactView: 'ContactView',
+  ContactCreate: 'ContactCreate',
+  ContactEdit: 'ContactEdit',
+
   // 请假管理权限
   LeaveManagement: 'LeaveManagement',
   LeaveRequestView: 'LeaveRequestView',

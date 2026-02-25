@@ -1,0 +1,36 @@
+{
+  "title": "任务管理",
+  "project": {
+    "title": "项目",
+    "list": "项目列表",
+    "name": "项目",
+    "projectName": "项目名称",
+    "description": "描述",
+    "creator": "创建人",
+    "status": "状态",
+    "statusActive": "进行中",
+    "statusArchived": "已归档",
+    "createdAt": "创建时间",
+    "operation": "操作"
+  },
+  "task": {
+    "title": "任务",
+    "list": "任务列表",
+    "name": "任务",
+    "project": "所属项目",
+    "titleField": "标题",
+    "description": "描述",
+    "assignee": "负责人",
+    "dueDate": "截止日期",
+    "status": "状态",
+    "statusTodo": "待办",
+    "statusInProgress": "进行中",
+    "statusDone": "已完成",
+    "statusCancelled": "已取消",
+    "sortOrder": "排序",
+    "createdAt": "创建时间",
+    "operation": "操作",
+    "comments": "评论",
+    "addComment": "添加评论"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "title": "Chat",
+  "list": "Conversations",
+  "conversation": "Conversation",
+  "singleChat": "Single Chat",
+  "groupChat": "Group Chat",
+  "message": "Message",
+  "send": "Send",
+  "placeholder": "Type a message...",
+  "createSingle": "New Single Chat",
+  "createGroup": "Create Group",
+  "groupName": "Group Name",
+  "members": "Members",
+  "selectUser": "Select User",
+  "selectUsers": "Select Members",
+  "noConversation": "Select or create a conversation",
+  "noMessages": "No messages yet"
+}

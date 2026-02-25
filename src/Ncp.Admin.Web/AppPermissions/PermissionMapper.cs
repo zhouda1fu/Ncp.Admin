@@ -99,6 +99,36 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.LeaveBalanceView, "查看请假余额" },
         { PermissionCodes.LeaveBalanceEdit, "设置请假余额" },
 
+        // 任务/项目管理权限
+        { PermissionCodes.TaskManagement, "任务管理" },
+        { PermissionCodes.ProjectView, "查看项目" },
+        { PermissionCodes.ProjectCreate, "创建项目" },
+        { PermissionCodes.ProjectEdit, "编辑项目" },
+        { PermissionCodes.TaskView, "查看任务" },
+        { PermissionCodes.TaskCreate, "创建任务" },
+        { PermissionCodes.TaskEdit, "编辑任务" },
+
+        // 文档管理权限
+        { PermissionCodes.DocumentManagement, "文档管理" },
+        { PermissionCodes.DocumentView, "查看文档" },
+        { PermissionCodes.DocumentCreate, "上传文档" },
+        { PermissionCodes.DocumentEdit, "编辑文档" },
+        { PermissionCodes.DocumentShare, "创建共享链接" },
+
+        // 即时通讯权限
+        { PermissionCodes.ChatManagement, "即时通讯" },
+        { PermissionCodes.ChatView, "查看会话与消息" },
+        { PermissionCodes.ChatCreate, "创建会话" },
+
+        // 通讯录管理权限
+        { PermissionCodes.ContactManagement, "通讯录管理" },
+        { PermissionCodes.ContactGroupView, "查看联系组" },
+        { PermissionCodes.ContactGroupCreate, "创建联系组" },
+        { PermissionCodes.ContactGroupEdit, "编辑联系组" },
+        { PermissionCodes.ContactView, "查看联系人" },
+        { PermissionCodes.ContactCreate, "创建联系人" },
+        { PermissionCodes.ContactEdit, "编辑联系人" },
+
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },
     };

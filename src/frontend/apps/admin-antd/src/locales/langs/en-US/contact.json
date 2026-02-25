@@ -1,0 +1,26 @@
+{
+  "title": "Contacts",
+  "group": {
+    "title": "Contact Group",
+    "list": "Contact Groups",
+    "name": "Group",
+    "groupName": "Group Name",
+    "sortOrder": "Sort Order",
+    "creator": "Creator",
+    "createdAt": "Created At",
+    "operation": "Operation"
+  },
+  "contact": {
+    "title": "Contact",
+    "list": "Contacts",
+    "name": "Contact",
+    "nameField": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "company": "Company",
+    "group": "Group",
+    "creator": "Creator",
+    "createdAt": "Created At",
+    "operation": "Operation"
+  }
+}

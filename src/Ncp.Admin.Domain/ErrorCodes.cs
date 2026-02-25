@@ -332,4 +332,70 @@ public sealed class ErrorCodes
     public const int MeetingRoomConflict = 200003;
 
     #endregion
+
+    #region 任务/项目相关错误 (210xxx)
+
+    /// <summary>
+    /// 未找到项目
+    /// </summary>
+    public const int ProjectNotFound = 210001;
+
+    /// <summary>
+    /// 未找到任务
+    /// </summary>
+    public const int TaskNotFound = 210002;
+
+    #endregion
+
+    #region 通讯录相关错误 (220xxx)
+
+    /// <summary>
+    /// 未找到联系组
+    /// </summary>
+    public const int ContactGroupNotFound = 220001;
+
+    /// <summary>
+    /// 未找到联系人
+    /// </summary>
+    public const int ContactNotFound = 220002;
+
+    #endregion
+
+    #region 文档管理相关错误 (230xxx)
+
+    /// <summary>
+    /// 未找到文档
+    /// </summary>
+    public const int DocumentNotFound = 230001;
+
+    /// <summary>
+    /// 未找到文档版本
+    /// </summary>
+    public const int DocumentVersionNotFound = 230002;
+
+    /// <summary>
+    /// 未找到共享链接或链接已过期
+    /// </summary>
+    public const int ShareLinkNotFoundOrExpired = 230003;
+
+    #endregion
+
+    #region 即时通讯相关错误 (240xxx)
+
+    /// <summary>
+    /// 未找到聊天组
+    /// </summary>
+    public const int ChatGroupNotFound = 240001;
+
+    /// <summary>
+    /// 未找到聊天消息
+    /// </summary>
+    public const int ChatMessageNotFound = 240002;
+
+    /// <summary>
+    /// 当前用户不在该聊天组
+    /// </summary>
+    public const int NotMemberOfChatGroup = 240003;
+
+    #endregion
 }

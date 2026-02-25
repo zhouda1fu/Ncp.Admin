@@ -167,6 +167,161 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.ToTable("schedule", (string)null);
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate.ChatGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("CreatorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("Type");
+
+                    b.ToTable("chat_group", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate.ChatGroupMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ChatGroupId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatGroupId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("chat_group_member", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ChatMessageAggregate.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ChatGroupId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("ReplyToMessageId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<long>("SenderId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatGroupId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("chat_message", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ContactAggregate.Contact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Company")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("CreatorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("GroupId");
+
+                    b.ToTable("contact", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ContactGroupAggregate.ContactGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("CreatorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.ToTable("contact_group", (string)null);
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.DeptAggregate.Dept", b =>
                 {
                     b.Property<long>("Id")
@@ -209,6 +364,66 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("dept", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.DocumentAggregate.Document", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("CreatorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.ToTable("document", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.DocumentAggregate.DocumentVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileStorageKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("document_version", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseClaim", b =>
@@ -573,6 +788,41 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.ToTable("position", (string)null);
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.Project", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("CreatorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("project", (string)null);
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -633,6 +883,110 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasKey("RoleId", "PermissionCode");
 
                     b.ToTable("role_permission", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ShareLinkAggregate.ShareLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("CreatorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("share_link", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<long?>("AssigneeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTimeOffset>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssigneeId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("task", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.TaskComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<long>("AuthorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("task_comment", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.User", b =>
@@ -1154,6 +1508,24 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.ToTable("CAPReceivedMessage", (string)null);
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate.ChatGroupMember", b =>
+                {
+                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate.ChatGroup", null)
+                        .WithMany("Members")
+                        .HasForeignKey("ChatGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.DocumentAggregate.DocumentVersion", b =>
+                {
+                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.DocumentAggregate.Document", null)
+                        .WithMany("Versions")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseItem", b =>
                 {
                     b.HasOne("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseClaim", null)
@@ -1168,6 +1540,15 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasOne("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", null)
                         .WithMany("Permissions")
                         .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.TaskComment", b =>
+                {
+                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task", null)
+                        .WithMany("Comments")
+                        .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -1217,6 +1598,16 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate.ChatGroup", b =>
+                {
+                    b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.DocumentAggregate.Document", b =>
+                {
+                    b.Navigation("Versions");
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate.ExpenseClaim", b =>
                 {
                     b.Navigation("Items");
@@ -1225,6 +1616,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", b =>
                 {
                     b.Navigation("Permissions");
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task", b =>
+                {
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.User", b =>
