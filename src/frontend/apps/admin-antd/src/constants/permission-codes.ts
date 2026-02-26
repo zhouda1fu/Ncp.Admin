@@ -93,6 +93,17 @@ export const PermissionCodes = {
   ContractApprove: 'ContractApprove',
   ContractArchive: 'ContractArchive',
 
+  // 客户管理权限
+  CustomerManagement: 'CustomerManagement',
+  CustomerView: 'CustomerView',
+  CustomerCreate: 'CustomerCreate',
+  CustomerEdit: 'CustomerEdit',
+  CustomerDelete: 'CustomerDelete',
+  CustomerContactEdit: 'CustomerContactEdit',
+  CustomerReleaseToSea: 'CustomerReleaseToSea',
+  CustomerClaimFromSea: 'CustomerClaimFromSea',
+  IndustryView: 'IndustryView',
+
   // 考勤管理权限
   AttendanceManagement: 'AttendanceManagement',
   AttendanceRecordView: 'AttendanceRecordView',

@@ -278,6 +278,21 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       ],
     },
     {
+      value: PermissionCodes.CustomerManagement,
+      label: '客户管理',
+      icon: 'mdi:account-group',
+      children: [
+        { value: PermissionCodes.CustomerView, label: '查看客户', icon: 'mdi:eye' },
+        { value: PermissionCodes.CustomerCreate, label: '创建客户', icon: 'mdi:plus' },
+        { value: PermissionCodes.CustomerEdit, label: '编辑客户', icon: 'mdi:pencil' },
+        { value: PermissionCodes.CustomerDelete, label: '删除客户', icon: 'mdi:delete' },
+        { value: PermissionCodes.CustomerContactEdit, label: '编辑客户联系人', icon: 'mdi:account-edit' },
+        { value: PermissionCodes.CustomerReleaseToSea, label: '释放到公海', icon: 'mdi:share' },
+        { value: PermissionCodes.CustomerClaimFromSea, label: '公海领用', icon: 'mdi:hand-extended' },
+        { value: PermissionCodes.IndustryView, label: '查看行业', icon: 'mdi:eye' },
+      ],
+    },
+    {
       value: PermissionCodes.AttendanceManagement,
       label: '考勤管理',
       icon: 'mdi:clock-check',

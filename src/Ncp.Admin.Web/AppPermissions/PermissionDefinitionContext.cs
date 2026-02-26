@@ -159,6 +159,17 @@ public static class PermissionDefinitionContext
         contractManagement.AddChild(PermissionCodes.ContractApprove, "审批合同");
         contractManagement.AddChild(PermissionCodes.ContractArchive, "归档合同");
 
+        // 客户管理权限
+        var customerManagement = systemAccess.AddPermission(PermissionCodes.CustomerManagement, "客户管理");
+        customerManagement.AddChild(PermissionCodes.CustomerView, "查看客户");
+        customerManagement.AddChild(PermissionCodes.CustomerCreate, "创建客户");
+        customerManagement.AddChild(PermissionCodes.CustomerEdit, "编辑客户");
+        customerManagement.AddChild(PermissionCodes.CustomerDelete, "删除客户");
+        customerManagement.AddChild(PermissionCodes.CustomerContactEdit, "编辑客户联系人");
+        customerManagement.AddChild(PermissionCodes.CustomerReleaseToSea, "释放到公海");
+        customerManagement.AddChild(PermissionCodes.CustomerClaimFromSea, "公海领用");
+        customerManagement.AddChild(PermissionCodes.IndustryView, "查看行业");
+
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");
     }

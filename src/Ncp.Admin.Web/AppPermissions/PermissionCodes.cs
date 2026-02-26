@@ -156,6 +156,18 @@ public static class PermissionCodes
     public const string ContractArchive = nameof(ContractArchive);
     #endregion
 
+    #region 客户管理权限
+    public const string CustomerManagement = nameof(CustomerManagement);
+    public const string CustomerView = nameof(CustomerView);
+    public const string CustomerCreate = nameof(CustomerCreate);
+    public const string CustomerEdit = nameof(CustomerEdit);
+    public const string CustomerDelete = nameof(CustomerDelete);
+    public const string CustomerContactEdit = nameof(CustomerContactEdit);
+    public const string CustomerReleaseToSea = nameof(CustomerReleaseToSea);
+    public const string CustomerClaimFromSea = nameof(CustomerClaimFromSea);
+    public const string IndustryView = nameof(IndustryView);
+    #endregion
+
     #region 请假管理权限
     public const string LeaveManagement = nameof(LeaveManagement);
     public const string LeaveRequestView = nameof(LeaveRequestView);

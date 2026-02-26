@@ -157,6 +157,17 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.ContractApprove, "审批合同" },
         { PermissionCodes.ContractArchive, "归档合同" },
 
+        // 客户管理权限
+        { PermissionCodes.CustomerManagement, "客户管理" },
+        { PermissionCodes.CustomerView, "查看客户" },
+        { PermissionCodes.CustomerCreate, "创建客户" },
+        { PermissionCodes.CustomerEdit, "编辑客户" },
+        { PermissionCodes.CustomerDelete, "删除客户" },
+        { PermissionCodes.CustomerContactEdit, "编辑客户联系人" },
+        { PermissionCodes.CustomerReleaseToSea, "释放到公海" },
+        { PermissionCodes.CustomerClaimFromSea, "公海领用" },
+        { PermissionCodes.IndustryView, "查看行业" },
+
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },
     };

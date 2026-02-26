@@ -457,4 +457,29 @@ public sealed class ErrorCodes
     public const int VehicleBookingInvalidStatus = 270004;
 
     #endregion
+
+    #region 客户相关错误 (280xxx)
+
+    /// <summary>
+    /// 未找到客户
+    /// </summary>
+    public const int CustomerNotFound = 280001;
+    /// <summary>
+    /// 未找到客户联系人
+    /// </summary>
+    public const int CustomerContactNotFound = 280002;
+    /// <summary>
+    /// 客户不在公海
+    /// </summary>
+    public const int CustomerNotInSea = 280003;
+    /// <summary>
+    /// 客户已被领用
+    /// </summary>
+    public const int CustomerAlreadyClaimed = 280004;
+    /// <summary>
+    /// 未找到行业
+    /// </summary>
+    public const int IndustryNotFound = 280005;
+
+    #endregion
 }
