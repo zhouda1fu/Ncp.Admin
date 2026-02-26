@@ -129,6 +129,34 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.ContactCreate, "创建联系人" },
         { PermissionCodes.ContactEdit, "编辑联系人" },
 
+        // 资产管理权限
+        { PermissionCodes.AssetManagement, "资产管理" },
+        { PermissionCodes.AssetView, "查看资产" },
+        { PermissionCodes.AssetCreate, "创建资产" },
+        { PermissionCodes.AssetEdit, "编辑资产" },
+        { PermissionCodes.AssetAllocate, "领用资产" },
+        { PermissionCodes.AssetReturn, "归还资产" },
+        { PermissionCodes.AssetScrap, "报废资产" },
+        { PermissionCodes.AssetAllocationView, "查看领用记录" },
+
+        // 车辆管理权限
+        { PermissionCodes.VehicleManagement, "车辆管理" },
+        { PermissionCodes.VehicleView, "查看车辆" },
+        { PermissionCodes.VehicleEdit, "管理车辆" },
+        { PermissionCodes.VehicleBookingView, "查看预订" },
+        { PermissionCodes.VehicleBookingCreate, "预订用车" },
+        { PermissionCodes.VehicleBookingCancel, "取消预订" },
+        { PermissionCodes.VehicleBookingComplete, "完成预订" },
+
+        // 合同管理权限
+        { PermissionCodes.ContractManagement, "合同管理" },
+        { PermissionCodes.ContractView, "查看合同" },
+        { PermissionCodes.ContractCreate, "创建合同" },
+        { PermissionCodes.ContractEdit, "编辑合同" },
+        { PermissionCodes.ContractSubmit, "提交审批" },
+        { PermissionCodes.ContractApprove, "审批合同" },
+        { PermissionCodes.ContractArchive, "归档合同" },
+
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },
     };

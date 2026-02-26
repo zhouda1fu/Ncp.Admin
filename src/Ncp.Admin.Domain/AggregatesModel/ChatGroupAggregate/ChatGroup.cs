@@ -12,9 +12,13 @@ public partial record ChatGroupId : IGuidStronglyTypedId;
 /// </summary>
 public enum ChatGroupType
 {
-    /// <summary>单聊（1:1）</summary>
+    /// <summary>
+    /// 单聊（1:1）
+    /// </summary>
     Single = 0,
-    /// <summary>群聊</summary>
+    /// <summary>
+    /// 群聊
+    /// </summary>
     Group = 1,
 }
 

@@ -125,6 +125,37 @@ public static class PermissionCodes
     public const string ContactEdit = nameof(ContactEdit);
     #endregion
 
+    #region 资产管理权限
+    public const string AssetManagement = nameof(AssetManagement);
+    public const string AssetView = nameof(AssetView);
+    public const string AssetCreate = nameof(AssetCreate);
+    public const string AssetEdit = nameof(AssetEdit);
+    public const string AssetAllocate = nameof(AssetAllocate);
+    public const string AssetReturn = nameof(AssetReturn);
+    public const string AssetScrap = nameof(AssetScrap);
+    public const string AssetAllocationView = nameof(AssetAllocationView);
+    #endregion
+
+    #region 车辆管理权限
+    public const string VehicleManagement = nameof(VehicleManagement);
+    public const string VehicleView = nameof(VehicleView);
+    public const string VehicleEdit = nameof(VehicleEdit);
+    public const string VehicleBookingView = nameof(VehicleBookingView);
+    public const string VehicleBookingCreate = nameof(VehicleBookingCreate);
+    public const string VehicleBookingCancel = nameof(VehicleBookingCancel);
+    public const string VehicleBookingComplete = nameof(VehicleBookingComplete);
+    #endregion
+
+    #region 合同管理权限
+    public const string ContractManagement = nameof(ContractManagement);
+    public const string ContractView = nameof(ContractView);
+    public const string ContractCreate = nameof(ContractCreate);
+    public const string ContractEdit = nameof(ContractEdit);
+    public const string ContractSubmit = nameof(ContractSubmit);
+    public const string ContractApprove = nameof(ContractApprove);
+    public const string ContractArchive = nameof(ContractArchive);
+    #endregion
+
     #region 请假管理权限
     public const string LeaveManagement = nameof(LeaveManagement);
     public const string LeaveRequestView = nameof(LeaveRequestView);

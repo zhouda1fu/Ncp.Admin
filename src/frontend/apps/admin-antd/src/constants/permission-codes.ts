@@ -65,6 +65,34 @@ export const PermissionCodes = {
   MeetingBookingView: 'MeetingBookingView',
   MeetingBookingCreate: 'MeetingBookingCreate',
 
+  // 资产管理权限
+  AssetManagement: 'AssetManagement',
+  AssetView: 'AssetView',
+  AssetCreate: 'AssetCreate',
+  AssetEdit: 'AssetEdit',
+  AssetAllocate: 'AssetAllocate',
+  AssetReturn: 'AssetReturn',
+  AssetScrap: 'AssetScrap',
+  AssetAllocationView: 'AssetAllocationView',
+
+  // 车辆管理权限
+  VehicleManagement: 'VehicleManagement',
+  VehicleView: 'VehicleView',
+  VehicleEdit: 'VehicleEdit',
+  VehicleBookingView: 'VehicleBookingView',
+  VehicleBookingCreate: 'VehicleBookingCreate',
+  VehicleBookingCancel: 'VehicleBookingCancel',
+  VehicleBookingComplete: 'VehicleBookingComplete',
+
+  // 合同管理权限
+  ContractManagement: 'ContractManagement',
+  ContractView: 'ContractView',
+  ContractCreate: 'ContractCreate',
+  ContractEdit: 'ContractEdit',
+  ContractSubmit: 'ContractSubmit',
+  ContractApprove: 'ContractApprove',
+  ContractArchive: 'ContractArchive',
+
   // 考勤管理权限
   AttendanceManagement: 'AttendanceManagement',
   AttendanceRecordView: 'AttendanceRecordView',

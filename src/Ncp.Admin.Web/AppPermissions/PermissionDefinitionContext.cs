@@ -131,6 +131,34 @@ public static class PermissionDefinitionContext
         contactManagement.AddChild(PermissionCodes.ContactCreate, "创建联系人");
         contactManagement.AddChild(PermissionCodes.ContactEdit, "编辑联系人");
 
+        // 资产管理权限
+        var assetManagement = systemAccess.AddPermission(PermissionCodes.AssetManagement, "资产管理");
+        assetManagement.AddChild(PermissionCodes.AssetView, "查看资产");
+        assetManagement.AddChild(PermissionCodes.AssetCreate, "创建资产");
+        assetManagement.AddChild(PermissionCodes.AssetEdit, "编辑资产");
+        assetManagement.AddChild(PermissionCodes.AssetAllocate, "领用资产");
+        assetManagement.AddChild(PermissionCodes.AssetReturn, "归还资产");
+        assetManagement.AddChild(PermissionCodes.AssetScrap, "报废资产");
+        assetManagement.AddChild(PermissionCodes.AssetAllocationView, "查看领用记录");
+
+        // 车辆管理权限
+        var vehicleManagement = systemAccess.AddPermission(PermissionCodes.VehicleManagement, "车辆管理");
+        vehicleManagement.AddChild(PermissionCodes.VehicleView, "查看车辆");
+        vehicleManagement.AddChild(PermissionCodes.VehicleEdit, "管理车辆");
+        vehicleManagement.AddChild(PermissionCodes.VehicleBookingView, "查看预订");
+        vehicleManagement.AddChild(PermissionCodes.VehicleBookingCreate, "预订用车");
+        vehicleManagement.AddChild(PermissionCodes.VehicleBookingCancel, "取消预订");
+        vehicleManagement.AddChild(PermissionCodes.VehicleBookingComplete, "完成预订");
+
+        // 合同管理权限
+        var contractManagement = systemAccess.AddPermission(PermissionCodes.ContractManagement, "合同管理");
+        contractManagement.AddChild(PermissionCodes.ContractView, "查看合同");
+        contractManagement.AddChild(PermissionCodes.ContractCreate, "创建合同");
+        contractManagement.AddChild(PermissionCodes.ContractEdit, "编辑合同");
+        contractManagement.AddChild(PermissionCodes.ContractSubmit, "提交审批");
+        contractManagement.AddChild(PermissionCodes.ContractApprove, "审批合同");
+        contractManagement.AddChild(PermissionCodes.ContractArchive, "归档合同");
+
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");
     }

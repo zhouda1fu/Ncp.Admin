@@ -8,13 +8,21 @@ namespace Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 /// </summary>
 public enum DataScope
 {
-    /// <summary>全部数据</summary>
+    /// <summary>
+    /// 全部数据
+    /// </summary>
     All = 0,
-    /// <summary>本部门</summary>
+    /// <summary>
+    /// 本部门
+    /// </summary>
     Dept = 1,
-    /// <summary>本部门及下级部门</summary>
+    /// <summary>
+    /// 本部门及下级部门
+    /// </summary>
     DeptAndSub = 2,
-    /// <summary>仅本人</summary>
+    /// <summary>
+    /// 仅本人
+    /// </summary>
     Self = 3,
 }
 
@@ -28,7 +36,9 @@ public class Role : Entity<RoleId>, IAggregateRoot
 
     public string Name { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
-    /// <summary>数据权限范围</summary>
+    /// <summary>
+    /// 数据权限范围
+    /// </summary>
     public DataScope DataScope { get; private set; } = DataScope.All;
     public DateTimeOffset CreatedAt { get; init; }
     public bool IsActive { get; private set; } = true;

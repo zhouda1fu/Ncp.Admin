@@ -398,4 +398,63 @@ public sealed class ErrorCodes
     public const int NotMemberOfChatGroup = 240003;
 
     #endregion
+
+    #region 合同相关错误 (250xxx)
+
+    /// <summary>
+    /// 未找到合同
+    /// </summary>
+    public const int ContractNotFound = 250001;
+    /// <summary>
+    /// 仅草稿状态可修改
+    /// </summary>
+    public const int ContractNotDraft = 250002;
+    /// <summary>
+    /// 仅审批中可通过
+    /// </summary>
+    public const int ContractNotPendingApproval = 250003;
+    /// <summary>
+    /// 仅已生效合同可归档
+    /// </summary>
+    public const int ContractNotApproved = 250004;
+
+    #endregion
+
+    #region 资产相关错误 (260xxx)
+
+    /// <summary>
+    /// 未找到资产
+    /// </summary>
+    public const int AssetNotFound = 260001;
+    /// <summary>
+    /// 资产状态不允许此操作
+    /// </summary>
+    public const int AssetInvalidStatus = 260002;
+    /// <summary>
+    /// 未找到资产领用记录
+    /// </summary>
+    public const int AssetAllocationNotFound = 260003;
+
+    #endregion
+
+    #region 车辆相关错误 (270xxx)
+
+    /// <summary>
+    /// 未找到车辆
+    /// </summary>
+    public const int VehicleNotFound = 270001;
+    /// <summary>
+    /// 未找到用车预订
+    /// </summary>
+    public const int VehicleBookingNotFound = 270002;
+    /// <summary>
+    /// 该时段车辆已被预订
+    /// </summary>
+    public const int VehicleBookingConflict = 270003;
+    /// <summary>
+    /// 预订状态不允许此操作
+    /// </summary>
+    public const int VehicleBookingInvalidStatus = 270004;
+
+    #endregion
 }

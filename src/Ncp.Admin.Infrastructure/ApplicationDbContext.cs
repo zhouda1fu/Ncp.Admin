@@ -1,9 +1,12 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Ncp.Admin.Domain.AggregatesModel.AssetAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate;
 using Ncp.Admin.Domain.AggregatesModel.MeetingAggregate;
+using Ncp.Admin.Domain.AggregatesModel.VehicleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ChatMessageAggregate;
@@ -100,4 +103,9 @@ public partial class ApplicationDbContext(
     public DbSet<ChatGroup> ChatGroups => Set<ChatGroup>();
     public DbSet<ChatGroupMember> ChatGroupMembers => Set<ChatGroupMember>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<Contract> Contracts => Set<Contract>();
+    public DbSet<Asset> Assets => Set<Asset>();
+    public DbSet<AssetAllocation> AssetAllocations => Set<AssetAllocation>();
+    public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+    public DbSet<VehicleBooking> VehicleBookings => Set<VehicleBooking>();
 }

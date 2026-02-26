@@ -1,7 +1,9 @@
+export * from './asset';
 export * from './attendance';
 export * from './chat';
 export * from './contact';
 export * from './contact-group';
+export * from './contract';
 export * from './document';
 export * from './dept';
 export * from './expense';
@@ -11,3 +13,4 @@ export * from './position';
 export * from './project';
 export * from './role';
 export * from './task';
+export * from './vehicle';
