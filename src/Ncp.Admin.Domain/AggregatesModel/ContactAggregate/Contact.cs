@@ -60,7 +60,7 @@ public class Contact : Entity<ContactId>, IAggregateRoot
     /// </summary>
     public Contact(string name, UserId creatorId, string? phone = null, string? email = null, string? company = null, ContactGroupId? groupId = null)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         CreatorId = creatorId;
         Phone = phone;
         Email = email;
@@ -74,7 +74,7 @@ public class Contact : Entity<ContactId>, IAggregateRoot
     /// </summary>
     public void Update(string name, string? phone, string? email, string? company, ContactGroupId? groupId)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         Phone = phone;
         Email = email;
         Company = company;

@@ -72,9 +72,9 @@ public class Announcement : Entity<AnnouncementId>, IAggregateRoot
     public Announcement(UserId publisherId, string publisherName, string title, string content)
     {
         PublisherId = publisherId;
-        PublisherName = publisherName ?? string.Empty;
-        Title = title ?? string.Empty;
-        Content = content ?? string.Empty;
+        PublisherName = publisherName ;
+        Title = title ;
+        Content = content ;
         Status = AnnouncementStatus.Draft;
         CreatedAt = DateTimeOffset.UtcNow;
     }
@@ -89,8 +89,8 @@ public class Announcement : Entity<AnnouncementId>, IAggregateRoot
     {
         if (Status != AnnouncementStatus.Draft)
             throw new KnownException("只有草稿可修改", ErrorCodes.AnnouncementNotDraft);
-        Title = title ?? string.Empty;
-        Content = content ?? string.Empty;
+        Title = title ;
+        Content = content ;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 

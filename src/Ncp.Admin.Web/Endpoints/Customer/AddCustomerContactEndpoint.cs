@@ -24,13 +24,13 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 public record AddCustomerContactRequest(
     CustomerId CustomerId,
     string Name,
-    string? ContactType,
-    int? Gender,
-    DateTime? Birthday,
-    string? Position,
-    string? Mobile,
-    string? Phone,
-    string? Email,
+    string ContactType,
+    int Gender,
+    DateTime Birthday,
+    string Position,
+    string Mobile,
+    string Phone,
+    string Email,
     bool IsPrimary);
 
 /// <summary>

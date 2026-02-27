@@ -43,7 +43,7 @@ public class Region : Entity<RegionId>, IAggregateRoot
     public Region(RegionId id, string name, RegionId parentId, int level, int sortOrder = 0)
     {
         Id = id;
-        Name = name ?? string.Empty;
+        Name = name ;
         ParentId = parentId;
         Level = level;
         SortOrder = sortOrder;
@@ -54,7 +54,7 @@ public class Region : Entity<RegionId>, IAggregateRoot
     /// </summary>
     public void Update(string name, RegionId parentId, int level, int sortOrder = 0)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         ParentId = parentId;
         Level = level;
         SortOrder = sortOrder;

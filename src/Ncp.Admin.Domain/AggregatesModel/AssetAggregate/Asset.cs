@@ -80,9 +80,9 @@ public class Asset : Entity<AssetId>, IAggregateRoot
     /// </summary>
     public Asset(string name, string category, string code, DateTimeOffset purchaseDate, decimal value, UserId creatorId, string? remark = null)
     {
-        Name = name ?? string.Empty;
-        Category = category ?? string.Empty;
-        Code = code ?? string.Empty;
+        Name = name ;
+        Category = category ;
+        Code = code ;
         PurchaseDate = purchaseDate;
         Value = value;
         CreatorId = creatorId;
@@ -98,9 +98,9 @@ public class Asset : Entity<AssetId>, IAggregateRoot
     {
         if (Status != AssetStatus.Available)
             throw new KnownException("仅可用状态可修改", ErrorCodes.AssetInvalidStatus);
-        Name = name ?? string.Empty;
-        Category = category ?? string.Empty;
-        Code = code ?? string.Empty;
+        Name = name ;
+        Category = category ;
+        Code = code ;
         PurchaseDate = purchaseDate;
         Value = value;
         Remark = remark;

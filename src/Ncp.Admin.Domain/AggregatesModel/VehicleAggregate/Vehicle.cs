@@ -57,8 +57,8 @@ public class Vehicle : Entity<VehicleId>, IAggregateRoot
     /// </summary>
     public Vehicle(string plateNumber, string model, string? remark = null)
     {
-        PlateNumber = plateNumber ?? string.Empty;
-        Model = model ?? string.Empty;
+        PlateNumber = plateNumber ;
+        Model = model ;
         Remark = remark;
         Status = VehicleStatus.Available;
         CreatedAt = DateTimeOffset.UtcNow;
@@ -69,8 +69,8 @@ public class Vehicle : Entity<VehicleId>, IAggregateRoot
     /// </summary>
     public void Update(string plateNumber, string model, string? remark = null)
     {
-        PlateNumber = plateNumber ?? string.Empty;
-        Model = model ?? string.Empty;
+        PlateNumber = plateNumber ;
+        Model = model ;
         Remark = remark;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }

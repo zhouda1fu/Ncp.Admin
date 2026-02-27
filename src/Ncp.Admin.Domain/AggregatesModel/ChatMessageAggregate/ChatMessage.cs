@@ -47,7 +47,7 @@ public class ChatMessage : Entity<ChatMessageId>, IAggregateRoot
     {
         ChatGroupId = chatGroupId;
         SenderId = senderId;
-        Content = content ?? string.Empty;
+        Content = content ;
         ReplyToMessageId = replyToMessageId;
         CreatedAt = DateTimeOffset.UtcNow;
     }

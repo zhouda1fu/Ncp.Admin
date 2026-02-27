@@ -63,7 +63,7 @@ public class ExpenseItem : Entity<ExpenseItemId>
     {
         Type = type;
         Amount = amount;
-        Description = description ?? string.Empty;
+        Description = description ;
         InvoiceUrl = invoiceUrl;
     }
 }

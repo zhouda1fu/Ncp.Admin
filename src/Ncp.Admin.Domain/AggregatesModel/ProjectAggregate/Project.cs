@@ -59,7 +59,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
     /// </summary>
     public Project(string name, UserId creatorId, string? description = null)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         CreatorId = creatorId;
         Description = description;
         Status = ProjectStatus.Active;
@@ -71,7 +71,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
     /// </summary>
     public void Update(string name, string? description)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         Description = description;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }

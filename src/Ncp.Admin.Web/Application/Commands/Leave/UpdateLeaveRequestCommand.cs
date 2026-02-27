@@ -34,6 +34,6 @@ public class UpdateLeaveRequestCommandHandler(ILeaveRequestRepository repository
     {
         var entity = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到请假申请", ErrorCodes.LeaveRequestNotFound);
-        entity.UpdateDraft(request.LeaveType, request.StartDate, request.EndDate, request.Days, request.Reason ?? string.Empty);
+        entity.UpdateDraft(request.LeaveType, request.StartDate, request.EndDate, request.Days, request.Reason );
     }
 }

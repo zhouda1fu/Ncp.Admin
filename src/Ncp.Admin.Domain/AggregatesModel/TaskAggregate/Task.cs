@@ -88,7 +88,7 @@ public class Task : Entity<TaskId>, IAggregateRoot
     public Task(ProjectId projectId, string title, string? description = null, UserId? assigneeId = null, DateOnly? dueDate = null, int sortOrder = 0)
     {
         ProjectId = projectId;
-        Title = title ?? string.Empty;
+        Title = title ;
         Description = description;
         AssigneeId = assigneeId;
         DueDate = dueDate;
@@ -102,7 +102,7 @@ public class Task : Entity<TaskId>, IAggregateRoot
     /// </summary>
     public void Update(string title, string? description, UserId? assigneeId, DateOnly? dueDate)
     {
-        Title = title ?? string.Empty;
+        Title = title ;
         Description = description;
         AssigneeId = assigneeId;
         DueDate = dueDate;

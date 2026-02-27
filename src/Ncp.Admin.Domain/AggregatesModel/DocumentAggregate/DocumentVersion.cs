@@ -40,8 +40,8 @@ public class DocumentVersion : Entity<DocumentVersionId>
     internal DocumentVersion(int versionNumber, string fileStorageKey, string fileName, long fileSize)
     {
         VersionNumber = versionNumber;
-        FileStorageKey = fileStorageKey ?? string.Empty;
-        FileName = fileName ?? string.Empty;
+        FileStorageKey = fileStorageKey ;
+        FileName = fileName ;
         FileSize = fileSize;
         CreatedAt = DateTimeOffset.UtcNow;
     }

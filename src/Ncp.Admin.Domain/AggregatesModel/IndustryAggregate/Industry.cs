@@ -36,7 +36,7 @@ public class Industry : Entity<IndustryId>, IAggregateRoot
     /// </summary>
     public Industry(string name, IndustryId? parentId, int sortOrder = 0, string? remark = null)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         ParentId = parentId;
         SortOrder = sortOrder;
         Remark = remark;
@@ -47,7 +47,7 @@ public class Industry : Entity<IndustryId>, IAggregateRoot
     /// </summary>
     public void Update(string name, int sortOrder, string? remark = null)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         SortOrder = sortOrder;
         Remark = remark;
     }

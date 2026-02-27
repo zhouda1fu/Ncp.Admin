@@ -74,7 +74,7 @@ public class VehicleBooking : Entity<VehicleBookingId>, IAggregateRoot
     {
         VehicleId = vehicleId;
         BookerId = bookerId;
-        Purpose = purpose ?? string.Empty;
+        Purpose = purpose ;
         StartAt = startAt;
         EndAt = endAt;
         Status = VehicleBookingStatus.Booked;

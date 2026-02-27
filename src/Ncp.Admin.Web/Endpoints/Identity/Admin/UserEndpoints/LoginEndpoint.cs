@@ -143,7 +143,7 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
             new(ClaimTypes.Email, loginInfo.Email),
             new(ClaimTypes.NameIdentifier, userIdString),
             new("data_scope", ((int)dataScope).ToString()),
-            new("dept_id", deptId?.Id.ToString() ?? string.Empty),
+            new("dept_id", deptId?.Id.ToString()?? string.Empty ),
             new("authorized_dept_ids", string.Join(",", authorizedDeptIds.Select(d => d.Id)))
         };
 

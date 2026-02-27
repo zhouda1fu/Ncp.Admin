@@ -44,7 +44,7 @@ public class ContactGroup : Entity<ContactGroupId>, IAggregateRoot
     /// </summary>
     public ContactGroup(string name, UserId creatorId, int sortOrder = 0)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         CreatorId = creatorId;
         SortOrder = sortOrder;
         CreatedAt = DateTimeOffset.UtcNow;
@@ -55,7 +55,7 @@ public class ContactGroup : Entity<ContactGroupId>, IAggregateRoot
     /// </summary>
     public void Update(string name, int sortOrder)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         SortOrder = sortOrder;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }

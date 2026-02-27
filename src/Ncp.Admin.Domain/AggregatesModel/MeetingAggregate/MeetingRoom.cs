@@ -50,7 +50,7 @@ public class MeetingRoom : Entity<MeetingRoomId>, IAggregateRoot
     /// <param name="equipment">设备说明（可选）</param>
     public MeetingRoom(string name, string? location, int capacity, string? equipment = null)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         Location = location;
         Capacity = capacity;
         Equipment = equipment;
@@ -67,7 +67,7 @@ public class MeetingRoom : Entity<MeetingRoomId>, IAggregateRoot
     /// <param name="equipment">设备说明（可选）</param>
     public void Update(string name, string? location, int capacity, string? equipment)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         Location = location;
         Capacity = capacity;
         Equipment = equipment;

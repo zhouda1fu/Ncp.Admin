@@ -51,7 +51,7 @@ public class Document : Entity<DocumentId>, IAggregateRoot
     /// </summary>
     public Document(string title, UserId creatorId, string fileStorageKey, string fileName, long fileSize)
     {
-        Title = title ?? string.Empty;
+        Title = title ;
         CreatorId = creatorId;
         CreatedAt = DateTimeOffset.UtcNow;
         _versions.Add(new DocumentVersion(1, fileStorageKey, fileName, fileSize));
@@ -62,7 +62,7 @@ public class Document : Entity<DocumentId>, IAggregateRoot
     /// </summary>
     public void UpdateTitle(string title)
     {
-        Title = title ?? string.Empty;
+        Title = title ;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 

@@ -55,8 +55,8 @@ public class WorkflowAssigneeResolverQuery(UserQuery userQuery, RoleQuery roleQu
             return null;
         var assigneeId = new UserId(userIdValue);
         var userInfo = await userQuery.GetUserByIdAsync(assigneeId, cancellationToken);
-        var name = userInfo?.RealName ?? userInfo?.Name ?? string.Empty;
-        return new WorkflowAssigneeResult(assigneeId, null, name);
+        var name = userInfo?.RealName ?? userInfo?.Name;
+        return new WorkflowAssigneeResult(assigneeId, null, name ?? string.Empty);
     }
 
     private async Task<IReadOnlyList<WorkflowAssigneeResult>> ResolveUserListAsync(string assigneeValue, CancellationToken cancellationToken)
@@ -83,7 +83,7 @@ public class WorkflowAssigneeResolverQuery(UserQuery userQuery, RoleQuery roleQu
             return null;
         var roleId = new RoleId(roleGuid);
         var roleInfo = await roleQuery.GetRoleByIdAsync(roleId, cancellationToken);
-        var name = roleInfo?.Name ?? string.Empty;
-        return new WorkflowAssigneeResult(null, roleId, name);
+        var name = roleInfo?.Name;
+        return new WorkflowAssigneeResult(null, roleId, name ?? string.Empty);
     }
 }

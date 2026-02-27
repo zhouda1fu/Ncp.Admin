@@ -49,7 +49,7 @@ public class StartWorkflowEndpoint(IMediator mediator) : Endpoint<StartWorkflowR
             throw new KnownException("无效的用户身份", ErrorCodes.InvalidUserIdentity);
         }
 
-        var userName = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
+        var userName = User.FindFirstValue(ClaimTypes.Name);
 
         var cmd = new StartWorkflowCommand(
             req.WorkflowDefinitionId,
@@ -57,7 +57,7 @@ public class StartWorkflowEndpoint(IMediator mediator) : Endpoint<StartWorkflowR
             req.BusinessType,
             req.Title,
             new UserId(userIdValue),
-            userName,
+            userName ?? string.Empty,
             req.Variables,
             req.Remark);
 

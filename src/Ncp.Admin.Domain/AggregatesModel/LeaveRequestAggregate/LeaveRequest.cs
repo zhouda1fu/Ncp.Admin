@@ -92,7 +92,7 @@ public class LeaveRequest : Entity<LeaveRequestId>, IAggregateRoot
         StartDate = startDate;
         EndDate = endDate;
         Days = days;
-        Reason = reason ?? string.Empty;
+        Reason = reason ;
         Status = LeaveRequestStatus.Draft;
         CreatedAt = DateTimeOffset.UtcNow;
         AddDomainEvent(new LeaveRequestCreatedDomainEvent(this));
@@ -171,7 +171,7 @@ public class LeaveRequest : Entity<LeaveRequestId>, IAggregateRoot
         StartDate = startDate;
         EndDate = endDate;
         Days = days;
-        Reason = reason ?? string.Empty;
+        Reason = reason ;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 }

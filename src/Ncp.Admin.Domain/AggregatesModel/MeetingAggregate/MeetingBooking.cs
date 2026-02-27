@@ -74,7 +74,7 @@ public class MeetingBooking : Entity<MeetingBookingId>, IAggregateRoot
     {
         MeetingRoomId = meetingRoomId;
         BookerId = bookerId;
-        Title = title ?? string.Empty;
+        Title = title ;
         StartAt = startAt;
         EndAt = endAt;
         Status = MeetingBookingStatus.Booked;

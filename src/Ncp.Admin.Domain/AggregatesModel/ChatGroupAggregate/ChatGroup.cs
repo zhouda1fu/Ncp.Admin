@@ -73,7 +73,7 @@ public class ChatGroup : Entity<ChatGroupId>, IAggregateRoot
     /// </summary>
     public ChatGroup(string name, UserId creatorId, IEnumerable<UserId> memberIds)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         Type = ChatGroupType.Group;
         CreatorId = creatorId;
         CreatedAt = DateTimeOffset.UtcNow;

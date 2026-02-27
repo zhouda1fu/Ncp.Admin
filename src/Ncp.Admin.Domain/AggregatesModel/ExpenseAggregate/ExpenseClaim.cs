@@ -82,7 +82,7 @@ public class ExpenseClaim : Entity<ExpenseClaimId>, IAggregateRoot
     public ExpenseClaim(UserId applicantId, string applicantName)
     {
         ApplicantId = applicantId;
-        ApplicantName = applicantName ?? string.Empty;
+        ApplicantName = applicantName ;
         Status = ExpenseClaimStatus.Draft;
         CreatedAt = DateTimeOffset.UtcNow;
     }

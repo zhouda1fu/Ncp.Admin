@@ -43,7 +43,7 @@ public class CreateLeaveRequestCommandHandler(ILeaveRequestRepository repository
             request.StartDate,
             request.EndDate,
             request.Days,
-            request.Reason ?? string.Empty);
+            request.Reason );
         await repository.AddAsync(entity, cancellationToken);
         return entity.Id;
     }

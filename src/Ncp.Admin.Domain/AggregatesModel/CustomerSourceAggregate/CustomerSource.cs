@@ -32,7 +32,7 @@ public class CustomerSource : Entity<CustomerSourceId>, IAggregateRoot
     /// </summary>
     public CustomerSource(string name, int sortOrder = 0)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         SortOrder = sortOrder;
     }
 
@@ -41,7 +41,7 @@ public class CustomerSource : Entity<CustomerSourceId>, IAggregateRoot
     /// </summary>
     public void Update(string name, int sortOrder)
     {
-        Name = name ?? string.Empty;
+        Name = name ;
         SortOrder = sortOrder;
     }
 }

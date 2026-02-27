@@ -29,7 +29,7 @@ public class TaskComment : Entity<TaskCommentId>
 
     internal TaskComment(string content, UserId authorId)
     {
-        Content = content ?? string.Empty;
+        Content = content ;
         AuthorId = authorId;
         CreatedAt = DateTimeOffset.UtcNow;
     }

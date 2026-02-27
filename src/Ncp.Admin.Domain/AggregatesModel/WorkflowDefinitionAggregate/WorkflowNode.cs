@@ -82,7 +82,7 @@ public class WorkflowNode : Entity<WorkflowNodeId>
         SortOrder = sortOrder;
         Description = description;
         ApprovalMode = approvalMode;
-        ConditionExpression = conditionExpression ?? string.Empty;
+        ConditionExpression = conditionExpression ??string.Empty;
         TrueNextNodeName = trueNextNodeName ?? string.Empty;
         FalseNextNodeName = falseNextNodeName ?? string.Empty;
     }

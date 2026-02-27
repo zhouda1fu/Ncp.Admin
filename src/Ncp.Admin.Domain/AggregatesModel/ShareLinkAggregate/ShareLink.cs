@@ -46,7 +46,7 @@ public class ShareLink : Entity<ShareLinkId>, IAggregateRoot
     public ShareLink(DocumentId documentId, string token, UserId creatorId, DateTimeOffset? expiresAt = null)
     {
         DocumentId = documentId;
-        Token = token ?? string.Empty;
+        Token = token ;
         CreatorId = creatorId;
         ExpiresAt = expiresAt;
         CreatedAt = DateTimeOffset.UtcNow;

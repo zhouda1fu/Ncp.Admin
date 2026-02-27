@@ -26,13 +26,13 @@ public record UpdateCustomerContactRequest(
     CustomerId CustomerId,
     CustomerContactId ContactId,
     string Name,
-    string? ContactType,
-    int? Gender,
-    DateTime? Birthday,
-    string? Position,
-    string? Mobile,
-    string? Phone,
-    string? Email,
+    string ContactType,
+    int Gender,
+    DateTime Birthday,
+    string Position,
+    string Mobile,
+    string Phone,
+    string Email,
     bool IsPrimary);
 
 /// <summary>

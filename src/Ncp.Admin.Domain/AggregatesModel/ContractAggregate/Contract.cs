@@ -92,10 +92,10 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     /// </summary>
     public Contract(string code, string title, string partyA, string partyB, decimal amount, DateTimeOffset startDate, DateTimeOffset endDate, UserId creatorId, string? fileStorageKey = null)
     {
-        Code = code ?? string.Empty;
-        Title = title ?? string.Empty;
-        PartyA = partyA ?? string.Empty;
-        PartyB = partyB ?? string.Empty;
+        Code = code ;
+        Title = title ;
+        PartyA = partyA ;
+        PartyB = partyB ;
         Amount = amount;
         StartDate = startDate;
         EndDate = endDate;
@@ -112,10 +112,10 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     {
         if (Status != ContractStatus.Draft)
             throw new KnownException("仅草稿状态可修改", ErrorCodes.ContractNotDraft);
-        Code = code ?? string.Empty;
-        Title = title ?? string.Empty;
-        PartyA = partyA ?? string.Empty;
-        PartyB = partyB ?? string.Empty;
+        Code = code ;
+        Title = title ;
+        PartyA = partyA ;
+        PartyB = partyB ;
         Amount = amount;
         StartDate = startDate;
         EndDate = endDate;
