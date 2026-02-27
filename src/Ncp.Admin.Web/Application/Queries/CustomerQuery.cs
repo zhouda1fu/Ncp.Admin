@@ -26,7 +26,7 @@ public record CustomerQueryDto(
     DeptId? DeptId,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
-    int StatusId,
+    bool IsVoided,
     string FullName,
     string ShortName,
     string Nature,
@@ -36,6 +36,15 @@ public record CustomerQueryDto(
     string ProvinceName,
     string CityName,
     string DistrictName,
+    string PhoneProvinceCode,
+    string PhoneCityCode,
+    string PhoneDistrictCode,
+    string PhoneProvinceName,
+    string PhoneCityName,
+    string PhoneDistrictName,
+    string ConsultationContent,
+    string ContactQq,
+    string ContactWechat,
     string CoverRegion,
     string RegisterAddress,
     string MainContactName,
@@ -58,7 +67,7 @@ public record CustomerDetailDto(
     DeptId? DeptId,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
-    int StatusId,
+    bool IsVoided,
     string FullName,
     string ShortName,
     string Nature,
@@ -68,6 +77,15 @@ public record CustomerDetailDto(
     string ProvinceName,
     string CityName,
     string DistrictName,
+    string PhoneProvinceCode,
+    string PhoneCityCode,
+    string PhoneDistrictCode,
+    string PhoneProvinceName,
+    string PhoneCityName,
+    string PhoneDistrictName,
+    string ConsultationContent,
+    string ContactQq,
+    string ContactWechat,
     string CoverRegion,
     string RegisterAddress,
     string MainContactName,
@@ -93,7 +111,7 @@ public class CustomerQueryInput : PageRequest
 {
     public string? FullName { get; set; }
     public CustomerSourceId? CustomerSourceId { get; set; }
-    public int? StatusId { get; set; }
+    public bool? IsVoided { get; set; }
     public UserId? OwnerId { get; set; }
     public DeptId? DeptId { get; set; }
     public bool? IsInSea { get; set; }
@@ -117,8 +135,10 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (c == null) return null;
         return new CustomerDetailDto(
-            c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName, c.StatusId, c.FullName, c.ShortName, c.Nature,
-            c.ProvinceCode, c.CityCode, c.DistrictCode, c.ProvinceName, c.CityName, c.DistrictName, c.CoverRegion, c.RegisterAddress,
+            c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName, c.IsVoided, c.FullName, c.ShortName, c.Nature,
+            c.ProvinceCode, c.CityCode, c.DistrictCode, c.ProvinceName, c.CityName, c.DistrictName,
+            c.PhoneProvinceCode, c.PhoneCityCode, c.PhoneDistrictCode, c.PhoneProvinceName, c.PhoneCityName, c.PhoneDistrictName,
+            c.ConsultationContent, c.ContactQq, c.ContactWechat, c.CoverRegion, c.RegisterAddress,
             c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
             c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatedAt,
             c.Contacts.Select(x => new CustomerContactDto(x.Id, x.Name, x.ContactType, x.Gender, x.Birthday, x.Position, x.Mobile, x.Phone, x.Email, x.IsPrimary)).ToList(),
@@ -132,8 +152,8 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
             query = query.Where(c => c.FullName.Contains(input.FullName));
         if (input.CustomerSourceId != null)
             query = query.Where(c => c.CustomerSourceId == input.CustomerSourceId);
-        if (input.StatusId.HasValue)
-            query = query.Where(c => c.StatusId == input.StatusId.Value);
+        if (input.IsVoided.HasValue)
+            query = query.Where(c => c.IsVoided == input.IsVoided.Value);
         if (input.OwnerId != null)
             query = query.Where(c => c.OwnerId == input.OwnerId);
         if (input.DeptId != null)
@@ -146,8 +166,10 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
             .OrderByDescending(c => c.CreatedAt)
             .Select(c => new CustomerQueryDto(
                 c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName,
-                c.StatusId, c.FullName, c.ShortName, c.Nature,
-                c.ProvinceCode, c.CityCode, c.DistrictCode, c.ProvinceName, c.CityName, c.DistrictName, c.CoverRegion, c.RegisterAddress,
+                c.IsVoided, c.FullName, c.ShortName, c.Nature,
+                c.ProvinceCode, c.CityCode, c.DistrictCode, c.ProvinceName, c.CityName, c.DistrictName,
+                c.PhoneProvinceCode, c.PhoneCityCode, c.PhoneDistrictCode, c.PhoneProvinceName, c.PhoneCityName, c.PhoneDistrictName,
+                c.ConsultationContent, c.ContactQq, c.ContactWechat, c.CoverRegion, c.RegisterAddress,
                 c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
                 c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatedAt,
                 c.Contacts.Count,

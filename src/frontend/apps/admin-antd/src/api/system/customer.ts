@@ -16,6 +16,18 @@ export namespace CustomerApi {
     provinceCode?: string;
     cityCode?: string;
     districtCode?: string;
+    provinceName?: string;
+    cityName?: string;
+    districtName?: string;
+    phoneProvinceCode?: string;
+    phoneCityCode?: string;
+    phoneDistrictCode?: string;
+    phoneProvinceName?: string;
+    phoneCityName?: string;
+    phoneDistrictName?: string;
+    consultationContent?: string;
+    contactQq?: string;
+    contactWechat?: string;
     coverRegion?: string;
     registerAddress?: string;
     mainContactName?: string;
@@ -94,6 +106,18 @@ async function claimCustomerFromSea(id: string, data?: { deptId?: number }) {
   return requestClient.post(`/customers/${id}/claim`, data ?? {});
 }
 
+async function updateSeaCustomer(id: string, data: Recordable<any>) {
+  return requestClient.put(`/customers/${id}/sea`, data);
+}
+
+async function voidCustomer(id: string) {
+  return requestClient.post(`/customers/${id}/void`);
+}
+
+async function deleteCustomer(id: string) {
+  return requestClient.delete(`/customers/${id}`);
+}
+
 async function addCustomerContact(customerId: string, data: Recordable<any>) {
   return requestClient.post<{ id: string }>(`/customers/${customerId}/contacts`, data);
 }
@@ -115,9 +139,12 @@ export {
   getCustomer,
   createCustomer,
   updateCustomer,
+  updateSeaCustomer,
   getCustomerSearch,
   releaseCustomerToSea,
   claimCustomerFromSea,
+  voidCustomer,
+  deleteCustomer,
   addCustomerContact,
   updateCustomerContact,
   removeCustomerContact,

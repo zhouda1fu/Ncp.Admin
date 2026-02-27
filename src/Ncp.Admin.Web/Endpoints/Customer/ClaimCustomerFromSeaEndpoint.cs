@@ -11,14 +11,20 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Customer;
 
-public class ClaimCustomerFromSeaRequest
-{
-    public Guid Id { get; set; }
-    public long? DeptId { get; set; }
-}
+/// <summary>
+/// 从公海领用客户请求
+/// </summary>
+/// <param name="Id">要领用的客户 ID</param>
+/// <param name="DeptId">领用后所属部门 ID（可选）</param>
+public record ClaimCustomerFromSeaRequest(CustomerId Id, DeptId? DeptId);
 
+/// <summary>
+/// 从公海领用客户（负责人为当前登录用户）
+/// </summary>
+/// <param name="mediator">MediatR 中介者</param>
 public class ClaimCustomerFromSeaEndpoint(IMediator mediator) : Endpoint<ClaimCustomerFromSeaRequest, ResponseData<bool>>
 {
+    /// <inheritdoc />
     public override void Configure()
     {
         Tags("Customer");
@@ -27,6 +33,7 @@ public class ClaimCustomerFromSeaEndpoint(IMediator mediator) : Endpoint<ClaimCu
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.CustomerClaimFromSea);
     }
 
+    /// <inheritdoc />
     public override async Task HandleAsync(ClaimCustomerFromSeaRequest req, CancellationToken ct)
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -35,8 +42,7 @@ public class ClaimCustomerFromSeaEndpoint(IMediator mediator) : Endpoint<ClaimCu
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        DeptId? deptId = req.DeptId.HasValue ? new DeptId(req.DeptId.Value) : null;
-        await mediator.Send(new ClaimCustomerFromSeaCommand(new CustomerId(req.Id), new UserId(uid), deptId), ct);
+        await mediator.Send(new ClaimCustomerFromSeaCommand(req.Id, new UserId(uid), req.DeptId), ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }

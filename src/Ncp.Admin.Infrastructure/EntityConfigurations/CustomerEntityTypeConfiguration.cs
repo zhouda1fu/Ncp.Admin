@@ -15,7 +15,7 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
         builder.Property(x => x.DeptId);
         builder.Property(x => x.CustomerSourceId).IsRequired();
         builder.Property(x => x.CustomerSourceName).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.StatusId).IsRequired();
+        builder.Property(x => x.IsVoided).IsRequired();
         builder.Property(x => x.FullName).IsRequired().HasMaxLength(200);
         builder.Property(x => x.ShortName).IsRequired(false).HasMaxLength(100);
         builder.Property(x => x.Nature).IsRequired(false).HasMaxLength(50);
@@ -25,6 +25,15 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
         builder.Property(x => x.ProvinceName).IsRequired(false).HasMaxLength(100);
         builder.Property(x => x.CityName).IsRequired(false).HasMaxLength(100);
         builder.Property(x => x.DistrictName).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.PhoneProvinceCode).IsRequired(false).HasMaxLength(20);
+        builder.Property(x => x.PhoneCityCode).IsRequired(false).HasMaxLength(20);
+        builder.Property(x => x.PhoneDistrictCode).IsRequired(false).HasMaxLength(20);
+        builder.Property(x => x.PhoneProvinceName).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.PhoneCityName).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.PhoneDistrictName).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.ConsultationContent).IsRequired(false).HasMaxLength(2000);
+        builder.Property(x => x.ContactQq).IsRequired(false).HasMaxLength(50);
+        builder.Property(x => x.ContactWechat).IsRequired(false).HasMaxLength(50);
         builder.Property(x => x.CoverRegion).IsRequired(false).HasMaxLength(200);
         builder.Property(x => x.RegisterAddress).IsRequired(false).HasMaxLength(500);
         builder.Property(x => x.MainContactName).IsRequired(false).HasMaxLength(50);

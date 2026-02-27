@@ -48,6 +48,16 @@ const routes: RouteRecordRaw[] = [
         },
         component: () => import('#/views/customer/source/list.vue'),
       },
+      {
+        path: '/customer/sea',
+        name: 'CustomerSeaList',
+        meta: {
+          icon: 'mdi:waves',
+          title: $t('customer.sea'),
+          authority: [PermissionCodes.CustomerView, PermissionCodes.CustomerClaimFromSea],
+        },
+        component: () => import('#/views/customer/sea/list.vue'),
+      },
     ],
   },
 ];

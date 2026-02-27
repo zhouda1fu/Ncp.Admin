@@ -53,9 +53,9 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public string CustomerSourceName { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 客户状态（字典）
+    /// 是否作废客户
     /// </summary>
-    public int StatusId { get; private set; }
+    public bool IsVoided { get; private set; }
 
     /// <summary>
     /// 客户全称
@@ -103,6 +103,35 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public string DistrictName { get; private set; } = string.Empty;
 
     /// <summary>
+    /// 电话区域-省区域码
+    /// </summary>
+    public string PhoneProvinceCode { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 电话区域-市区域码
+    /// </summary>
+    public string PhoneCityCode { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 电话区域-区/县区域码
+    /// </summary>
+    public string PhoneDistrictCode { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 电话区域-省/市/区名称（冗余）
+    /// </summary>
+    public string PhoneProvinceName { get; private set; } = string.Empty;
+
+    public string PhoneCityName { get; private set; } = string.Empty;
+
+    public string PhoneDistrictName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 咨询内容（公海录入）
+    /// </summary>
+    public string ConsultationContent { get; private set; } = string.Empty;
+
+    /// <summary>
     /// 客户覆盖区域
     /// </summary>
     public string CoverRegion { get; private set; } = string.Empty;
@@ -131,6 +160,16 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// 备注
     /// </summary>
     public string Remark { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 联系人QQ（公海/线索）
+    /// </summary>
+    public string ContactQq { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 联系人微信（公海/线索，与 WechatStatus 区分：此处存微信号等）
+    /// </summary>
+    public string ContactWechat { get; private set; } = string.Empty;
 
     /// <summary>
     /// 是否大客户
@@ -180,7 +219,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         DeptId? deptId,
         CustomerSourceId customerSourceId,
         string customerSourceName,
-        int statusId,
         string fullName,
         string shortName,
         string nature,
@@ -190,10 +228,19 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string provinceName,
         string cityName,
         string districtName,
+        string phoneProvinceCode,
+        string phoneCityCode,
+        string phoneDistrictCode,
+        string phoneProvinceName,
+        string phoneCityName,
+        string phoneDistrictName,
+        string consultationContent,
         string coverRegion,
         string registerAddress,
         string mainContactName,
         string mainContactPhone,
+        string contactQq,
+        string contactWechat,
         string wechatStatus,
         string remark,
         bool isKeyAccount,
@@ -203,7 +250,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         DeptId = deptId;
         CustomerSourceId = customerSourceId;
         CustomerSourceName = customerSourceName ?? string.Empty;
-        StatusId = statusId;
+        IsVoided = false;
         FullName = fullName;
         ShortName = shortName;
         Nature = nature;
@@ -213,10 +260,19 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ProvinceName = provinceName ?? string.Empty;
         CityName = cityName ?? string.Empty;
         DistrictName = districtName ?? string.Empty;
+        PhoneProvinceCode = phoneProvinceCode ?? string.Empty;
+        PhoneCityCode = phoneCityCode ?? string.Empty;
+        PhoneDistrictCode = phoneDistrictCode ?? string.Empty;
+        PhoneProvinceName = phoneProvinceName ?? string.Empty;
+        PhoneCityName = phoneCityName ?? string.Empty;
+        PhoneDistrictName = phoneDistrictName ?? string.Empty;
+        ConsultationContent = consultationContent ?? string.Empty;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
+        ContactQq = contactQq ?? string.Empty;
+        ContactWechat = contactWechat ?? string.Empty;
         WechatStatus = wechatStatus;
         Remark = remark;
         IsKeyAccount = isKeyAccount;
@@ -244,7 +300,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         DeptId? deptId,
         CustomerSourceId customerSourceId,
         string customerSourceName,
-        int statusId,
         string fullName,
         string shortName,
         string nature,
@@ -254,10 +309,19 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string provinceName,
         string cityName,
         string districtName,
+        string phoneProvinceCode,
+        string phoneCityCode,
+        string phoneDistrictCode,
+        string phoneProvinceName,
+        string phoneCityName,
+        string phoneDistrictName,
+        string consultationContent,
         string coverRegion,
         string registerAddress,
         string mainContactName,
         string mainContactPhone,
+        string contactQq,
+        string contactWechat,
         string wechatStatus,
         string remark,
         bool isKeyAccount,
@@ -270,7 +334,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         DeptId = deptId;
         CustomerSourceId = customerSourceId;
         CustomerSourceName = customerSourceName ?? string.Empty;
-        StatusId = statusId;
         FullName = fullName;
         ShortName = shortName;
         Nature = nature;
@@ -280,10 +343,19 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ProvinceName = provinceName ?? string.Empty;
         CityName = cityName ?? string.Empty;
         DistrictName = districtName ?? string.Empty;
+        PhoneProvinceCode = phoneProvinceCode ?? string.Empty;
+        PhoneCityCode = phoneCityCode ?? string.Empty;
+        PhoneDistrictCode = phoneDistrictCode ?? string.Empty;
+        PhoneProvinceName = phoneProvinceName ?? string.Empty;
+        PhoneCityName = phoneCityName ?? string.Empty;
+        PhoneDistrictName = phoneDistrictName ?? string.Empty;
+        ConsultationContent = consultationContent ?? string.Empty;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
+        ContactQq = contactQq ?? string.Empty;
+        ContactWechat = contactWechat ?? string.Empty;
         WechatStatus = wechatStatus;
         Remark = remark;
         IsKeyAccount = isKeyAccount;
@@ -296,6 +368,89 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
                 Industries.Add(CustomerIndustry.Create(Id, id));
         }
         AddDomainEvent(new CustomerUpdatedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// 公海客户档案更新（仅当 IsInSea 时可调用，不变更负责人/部门）
+    /// </summary>
+    public void UpdateWhenInSea(
+        CustomerSourceId customerSourceId,
+        string customerSourceName,
+        string fullName,
+        string shortName,
+        string nature,
+        string provinceCode,
+        string cityCode,
+        string districtCode,
+        string provinceName,
+        string cityName,
+        string districtName,
+        string phoneProvinceCode,
+        string phoneCityCode,
+        string phoneDistrictCode,
+        string phoneProvinceName,
+        string phoneCityName,
+        string phoneDistrictName,
+        string consultationContent,
+        string coverRegion,
+        string registerAddress,
+        string mainContactName,
+        string mainContactPhone,
+        string contactQq,
+        string contactWechat,
+        string wechatStatus,
+        string remark,
+        bool isKeyAccount,
+        IEnumerable<IndustryId>? industryIds = null)
+    {
+        if (!IsInSea)
+            throw new KnownException("仅公海客户可在此处修改", ErrorCodes.CustomerNotInSea);
+        CustomerSourceId = customerSourceId;
+        CustomerSourceName = customerSourceName ?? string.Empty;
+        FullName = fullName;
+        ShortName = shortName;
+        Nature = nature;
+        ProvinceCode = provinceCode;
+        CityCode = cityCode;
+        DistrictCode = districtCode;
+        ProvinceName = provinceName ?? string.Empty;
+        CityName = cityName ?? string.Empty;
+        DistrictName = districtName ?? string.Empty;
+        PhoneProvinceCode = phoneProvinceCode ?? string.Empty;
+        PhoneCityCode = phoneCityCode ?? string.Empty;
+        PhoneDistrictCode = phoneDistrictCode ?? string.Empty;
+        PhoneProvinceName = phoneProvinceName ?? string.Empty;
+        PhoneCityName = phoneCityName ?? string.Empty;
+        PhoneDistrictName = phoneDistrictName ?? string.Empty;
+        ConsultationContent = consultationContent ?? string.Empty;
+        CoverRegion = coverRegion;
+        RegisterAddress = registerAddress;
+        MainContactName = mainContactName;
+        MainContactPhone = mainContactPhone;
+        ContactQq = contactQq ?? string.Empty;
+        ContactWechat = contactWechat ?? string.Empty;
+        WechatStatus = wechatStatus;
+        Remark = remark;
+        IsKeyAccount = isKeyAccount;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        if (industryIds != null)
+        {
+            Industries.Clear();
+            foreach (var id in industryIds)
+                Industries.Add(CustomerIndustry.Create(Id, id));
+        }
+        AddDomainEvent(new CustomerUpdatedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// 作废（仅公海客户可作废）
+    /// </summary>
+    public void Void()
+    {
+        if (!IsInSea)
+            throw new KnownException("仅公海客户可作废", ErrorCodes.CustomerNotInSea);
+        IsVoided = true;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
     /// <summary>

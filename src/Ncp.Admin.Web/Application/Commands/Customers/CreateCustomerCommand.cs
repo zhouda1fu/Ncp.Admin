@@ -14,17 +14,22 @@ public record CreateCustomerCommand(
     UserId? OwnerId,
     DeptId? DeptId,
     CustomerSourceId CustomerSourceId,
-    int StatusId,
     string FullName,
     string? ShortName,
     string? Nature,
     string? ProvinceCode,
     string? CityCode,
     string? DistrictCode,
+    string? PhoneProvinceCode,
+    string? PhoneCityCode,
+    string? PhoneDistrictCode,
+    string? ConsultationContent,
     string? CoverRegion,
     string? RegisterAddress,
     string? MainContactName,
     string? MainContactPhone,
+    string? ContactQq,
+    string? ContactWechat,
     string? WechatStatus,
     string? Remark,
     bool IsKeyAccount,
@@ -51,12 +56,18 @@ public class CreateCustomerCommandHandler(
             ?? throw new KnownException("未找到客户来源", ErrorCodes.CustomerSourceNotFound);
         var (provinceName, cityName, districtName) = await ResolveRegionNamesAsync(
             request.ProvinceCode, request.CityCode, request.DistrictCode, cancellationToken);
+        var (phoneProvinceName, phoneCityName, phoneDistrictName) = await ResolveRegionNamesAsync(
+            request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode, cancellationToken);
         var customer = new Customer(
-            request.OwnerId, request.DeptId, request.CustomerSourceId, source.Name, request.StatusId, request.FullName,
+            request.OwnerId, request.DeptId, request.CustomerSourceId, source.Name, request.FullName,
             request.ShortName ?? string.Empty, request.Nature ?? string.Empty, request.ProvinceCode ?? string.Empty,
             request.CityCode ?? string.Empty, request.DistrictCode ?? string.Empty,
             provinceName, cityName, districtName,
+            request.PhoneProvinceCode ?? string.Empty, request.PhoneCityCode ?? string.Empty, request.PhoneDistrictCode ?? string.Empty,
+            phoneProvinceName, phoneCityName, phoneDistrictName,
+            request.ConsultationContent ?? string.Empty,
             request.CoverRegion ?? string.Empty, request.RegisterAddress ?? string.Empty, request.MainContactName ?? string.Empty, request.MainContactPhone ?? string.Empty,
+            request.ContactQq ?? string.Empty, request.ContactWechat ?? string.Empty,
             request.WechatStatus ?? string.Empty, request.Remark ?? string.Empty, request.IsKeyAccount, request.CreatorId);
         await repository.AddAsync(customer, cancellationToken);
         if (request.IndustryIds is { Count: > 0 })

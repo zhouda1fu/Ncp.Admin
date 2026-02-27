@@ -7,13 +7,19 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Customer;
 
-public record GetCustomerRequest
-{
-    public Guid Id { get; set; }
-}
+/// <summary>
+/// 获取客户详情请求
+/// </summary>
+/// <param name="Id">客户 ID</param>
+public record GetCustomerRequest(CustomerId Id);
 
+/// <summary>
+/// 获取客户详情
+/// </summary>
+/// <param name="query">客户查询</param>
 public class GetCustomerEndpoint(CustomerQuery query) : Endpoint<GetCustomerRequest, ResponseData<CustomerDetailDto>>
 {
+    /// <inheritdoc />
     public override void Configure()
     {
         Tags("Customer");
@@ -22,9 +28,10 @@ public class GetCustomerEndpoint(CustomerQuery query) : Endpoint<GetCustomerRequ
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.CustomerView);
     }
 
+    /// <inheritdoc />
     public override async Task HandleAsync(GetCustomerRequest req, CancellationToken ct)
     {
-        var result = await query.GetByIdAsync(new CustomerId(req.Id), ct);
+        var result = await query.GetByIdAsync(req.Id, ct);
         if (result == null)
         {
             await Send.NotFoundAsync(ct);

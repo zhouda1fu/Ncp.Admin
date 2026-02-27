@@ -9,30 +9,30 @@ using Ncp.Admin.Web.AppPermissions;
 namespace Ncp.Admin.Web.Endpoints.Customer;
 
 /// <summary>
-/// 释放客户到公海请求
+/// 删除客户请求
 /// </summary>
-/// <param name="Id">要释放的客户 ID</param>
-public record ReleaseCustomerToSeaRequest(CustomerId Id);
+/// <param name="Id">要删除的客户 ID</param>
+public record DeleteCustomerRequest(CustomerId Id);
 
 /// <summary>
-/// 释放客户到公海
+/// 删除客户
 /// </summary>
 /// <param name="mediator">MediatR 中介者</param>
-public class ReleaseCustomerToSeaEndpoint(IMediator mediator) : Endpoint<ReleaseCustomerToSeaRequest, ResponseData<bool>>
+public class DeleteCustomerEndpoint(IMediator mediator) : Endpoint<DeleteCustomerRequest, ResponseData<bool>>
 {
     /// <inheritdoc />
     public override void Configure()
     {
         Tags("Customer");
-        Post("/api/admin/customers/{id}/release-to-sea");
+        Delete("/api/admin/customers/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.CustomerReleaseToSea);
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.CustomerDelete);
     }
 
     /// <inheritdoc />
-    public override async Task HandleAsync(ReleaseCustomerToSeaRequest req, CancellationToken ct)
+    public override async Task HandleAsync(DeleteCustomerRequest req, CancellationToken ct)
     {
-        await mediator.Send(new ReleaseCustomerToSeaCommand(req.Id), ct);
+        await mediator.Send(new DeleteCustomerCommand(req.Id), ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }
