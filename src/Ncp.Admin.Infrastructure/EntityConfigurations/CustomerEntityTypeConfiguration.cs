@@ -13,7 +13,8 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
         builder.Property(x => x.OwnerId);
         builder.Property(x => x.DeptId);
-        builder.Property(x => x.CustomerSource).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.CustomerSourceId).IsRequired();
+        builder.Property(x => x.CustomerSourceName).IsRequired().HasMaxLength(100);
         builder.Property(x => x.StatusId).IsRequired();
         builder.Property(x => x.FullName).IsRequired().HasMaxLength(200);
         builder.Property(x => x.ShortName).IsRequired(false).HasMaxLength(100);

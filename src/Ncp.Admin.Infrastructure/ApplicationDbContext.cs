@@ -5,6 +5,7 @@ using Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.MeetingAggregate;
@@ -111,5 +112,6 @@ public partial class ApplicationDbContext(
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<VehicleBooking> VehicleBookings => Set<VehicleBooking>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerSource> CustomerSources => Set<CustomerSource>();
     public DbSet<Industry> Industries => Set<Industry>();
 }

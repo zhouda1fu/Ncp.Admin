@@ -91,6 +91,8 @@ description: Follows Vben Admin patterns when developing Ncp.Admin frontend (Vue
 3. **父级菜单显示**：若希望用户只要拥有任一子权限就能看到父菜单，父路由的 `authority` 应写成数组，包含父权限码和所有子权限码，例如：  
    `authority: [PermissionCodes.XxxManagement, PermissionCodes.XxxView, PermissionCodes.XxxCreate, ...]`
 
+4. **新增菜单项时（易漏）**：若新功能是**独立菜单页**（如“客户来源”在“客户管理”下），除上述 1–3 外，必须在父路由的 `children` 中增加一条路由（`path`、`name`、`meta.icon`、`meta.title`、`meta.authority`、`component`），并配套 `views/`、`api/`、`locales`；**只加权限、不加这条子路由，侧边栏不会出现该菜单**。后端需同步：PermissionCodes、PermissionDefinitionContext、PermissionMapper、端点 `Permissions()`、必要时 Seed 管理员权限（详见后端 skill 检查清单）。
+
 ## 新增功能流程
 
 1. 在 `api/system/` 或相应目录添加 API 与类型

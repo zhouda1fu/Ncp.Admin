@@ -5,7 +5,10 @@ import type { CustomerApi } from '#/api/system/customer';
 import { z } from '#/adapter/form';
 import { $t } from '#/locales';
 
-export function useSchema(industryOptions: { label: string; value: string }[]): VbenFormSchema[] {
+export function useSchema(
+  industryOptions: { label: string; value: string }[],
+  customerSourceOptions: { label: string; value: string }[],
+): VbenFormSchema[] {
   return [
     {
       component: 'Input',
@@ -21,10 +24,15 @@ export function useSchema(industryOptions: { label: string; value: string }[]): 
       label: $t('customer.shortName'),
     },
     {
-      component: 'Input',
-      componentProps: { class: 'w-full' },
-      fieldName: 'customerSource',
+      component: 'Select',
+      componentProps: {
+        class: 'w-full',
+        options: customerSourceOptions,
+        placeholder: $t('ui.formRules.required', [$t('customer.customerSource')]),
+      },
+      fieldName: 'customerSourceId',
       label: $t('customer.customerSource'),
+      rules: z.string().min(1, $t('ui.formRules.required', [$t('customer.customerSource')])),
     },
     {
       component: 'InputNumber',
@@ -87,10 +95,21 @@ export function useSchema(industryOptions: { label: string; value: string }[]): 
   ];
 }
 
-export function useGridFormSchema(): VbenFormSchema[] {
+export function useGridFormSchema(
+  customerSourceOptions: { label: string; value: string }[] = [],
+): VbenFormSchema[] {
   return [
     { component: 'Input', componentProps: { class: 'w-full' }, fieldName: 'fullName', label: $t('customer.fullName') },
-    { component: 'Input', componentProps: { class: 'w-full' }, fieldName: 'customerSource', label: $t('customer.customerSource') },
+    {
+      component: 'Select',
+      componentProps: {
+        allowClear: true,
+        class: 'w-full',
+        options: customerSourceOptions,
+      },
+      fieldName: 'customerSourceId',
+      label: $t('customer.customerSource'),
+    },
     {
       component: 'Select',
       componentProps: {
@@ -113,7 +132,7 @@ export function useColumns(
   return [
     { field: 'fullName', title: $t('customer.fullName'), minWidth: 140 },
     { field: 'shortName', title: $t('customer.shortName'), width: 120 },
-    { field: 'customerSource', title: $t('customer.customerSource'), width: 100 },
+    { field: 'customerSourceName', title: $t('customer.customerSource'), width: 100 },
     { field: 'mainContactName', title: $t('customer.mainContactName'), width: 100 },
     { field: 'mainContactPhone', title: $t('customer.mainContactPhone'), width: 120 },
     {

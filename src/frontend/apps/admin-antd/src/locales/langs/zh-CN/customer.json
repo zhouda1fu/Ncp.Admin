@@ -1,6 +1,9 @@
 {
   "title": "客户管理",
   "list": "客户列表",
+  "sourceList": "客户来源",
+  "sourceName": "来源名称",
+  "sortOrder": "排序",
   "fullName": "客户名称",
   "shortName": "简称",
   "customerSource": "客户来源",

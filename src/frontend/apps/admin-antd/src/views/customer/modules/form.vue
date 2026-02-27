@@ -9,6 +9,7 @@ import { Button } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
 import { createCustomer, updateCustomer } from '#/api/system/customer';
+import { getCustomerSourceList } from '#/api/system/customerSource';
 import { getIndustryList } from '#/api/system/industry';
 import { $t } from '#/locales';
 
@@ -16,18 +17,24 @@ import { useSchema } from '../data';
 
 const emit = defineEmits(['success']);
 const industryOptions = ref<{ label: string; value: string }[]>([]);
+const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
 const formData = ref<Partial<CustomerApi.CustomerDetail> & { id?: string }>();
 
 onMounted(() => {
-  getIndustryList().then((res) => {
-    const list = Array.isArray(res) ? res : (res as any)?.data ?? [];
-    industryOptions.value = list.map((x: { id: string; name: string }) => ({ label: x.name, value: x.id }));
-  });
+  Promise.all([
+    getIndustryList().then((res) => {
+      const list = Array.isArray(res) ? res : (res as any)?.data ?? [];
+      industryOptions.value = list.map((x: { id: string; name: string }) => ({ label: x.name, value: x.id }));
+    }),
+    getCustomerSourceList().then((list) => {
+      customerSourceOptions.value = list.map((x) => ({ label: x.name, value: x.id }));
+    }),
+  ]);
 });
 
 const [Form, formApi] = useVbenForm({
   layout: 'vertical',
-  schema: computed(() => useSchema(industryOptions.value)),
+  schema: computed(() => useSchema(industryOptions.value, customerSourceOptions.value)),
   showDefaultActions: false,
 });
 
@@ -45,7 +52,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
     const payload = {
       fullName: String(data.fullName ?? ''),
       shortName: data.shortName ? String(data.shortName) : undefined,
-      customerSource: String(data.customerSource ?? ''),
+      customerSourceId: String(data.customerSourceId ?? ''),
       statusId: Number(data.statusId) ?? 0,
       ownerId: data.ownerId != null && data.ownerId !== '' ? Number(data.ownerId) : undefined,
       deptId: data.deptId != null && data.deptId !== '' ? Number(data.deptId) : undefined,
@@ -76,7 +83,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       formApi.setValues({
         fullName: data?.fullName ?? '',
         shortName: data?.shortName ?? '',
-        customerSource: data?.customerSource ?? '',
+        customerSourceId: data?.customerSourceId ?? '',
         statusId: data?.statusId ?? 0,
         ownerId: data?.ownerId ?? '',
         deptId: data?.deptId ?? '',

@@ -169,6 +169,9 @@ public static class PermissionDefinitionContext
         customerManagement.AddChild(PermissionCodes.CustomerReleaseToSea, "释放到公海");
         customerManagement.AddChild(PermissionCodes.CustomerClaimFromSea, "公海领用");
         customerManagement.AddChild(PermissionCodes.IndustryView, "查看行业");
+        customerManagement.AddChild(PermissionCodes.CustomerSourceView, "查看客户来源");
+        customerManagement.AddChild(PermissionCodes.CustomerSourceCreate, "创建客户来源");
+        customerManagement.AddChild(PermissionCodes.CustomerSourceEdit, "编辑客户来源");
 
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");

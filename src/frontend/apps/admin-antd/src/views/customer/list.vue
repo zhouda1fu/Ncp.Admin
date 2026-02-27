@@ -3,6 +3,7 @@ import type { Recordable } from '@vben/types';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { CustomerApi } from '#/api/system/customer';
 
+import { computed, onMounted, ref } from 'vue';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
@@ -14,10 +15,19 @@ import {
   getCustomer,
   releaseCustomerToSea,
 } from '#/api/system/customer';
+import { getCustomerSourceList } from '#/api/system/customerSource';
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
 import Form from './modules/form.vue';
+
+const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
+
+onMounted(() => {
+  getCustomerSourceList().then((list) => {
+    customerSourceOptions.value = list.map((x) => ({ label: x.name, value: x.id }));
+  });
+});
 
 const [FormDrawer, formDrawerApi] = useVbenDrawer({
   connectedComponent: Form,
@@ -25,7 +35,10 @@ const [FormDrawer, formDrawerApi] = useVbenDrawer({
 });
 
 const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
-  formOptions: { schema: useGridFormSchema(), submitOnChange: true },
+  formOptions: {
+    schema: computed(() => useGridFormSchema(customerSourceOptions.value)),
+    submitOnChange: true,
+  },
   gridOptions: {
     columns: useColumns(onActionClick),
     height: 'auto',
@@ -40,7 +53,7 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
             pageIndex: page.currentPage,
             pageSize: page.pageSize,
             fullName: formValues.fullName,
-            customerSource: formValues.customerSource,
+            customerSourceId: formValues.customerSourceId,
             isInSea: formValues.isInSea,
           };
           const result = await getCustomerList(params);

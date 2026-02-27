@@ -481,5 +481,10 @@ public sealed class ErrorCodes
     /// </summary>
     public const int IndustryNotFound = 280005;
 
+    /// <summary>
+    /// 未找到客户来源
+    /// </summary>
+    public const int CustomerSourceNotFound = 280006;
+
     #endregion
 }

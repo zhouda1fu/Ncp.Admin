@@ -62,7 +62,17 @@ description: Follows DDD workflow and project conventions when developing Ncp.Ad
 - **仓储**：全部使用异步方法（如 `GetAsync`、`AddAsync`）；通过构造函数注入的 `ApplicationDbContext` 访问数据。
 - **领域事件处理器**：实现 `Handle()`（不是 `HandleAsync()`）。
 - **依赖方向**：Web → Infrastructure → Domain，严格单向。
-- **权限**：新增需权限控制的端点时，必须同步：在 `AppPermissions/PermissionCodes.cs` 增加权限码；在 `PermissionDefinitionContext.cs` 中注册该权限组及子权限；在 `PermissionMapper.cs` 的 `_permissionDescriptionMap` 中增加描述。前端还需在 `utils/permission-tree.ts` 的 `buildPermissionTree()` 中增加对应节点，否则角色管理里无法勾选该权限。
+- **权限**：新增需权限控制的端点时，必须同步以下后端 4 处 + 端点绑定 + 可选 Seed；前端需同步 `permission-codes.ts`、`permission-tree.ts`、路由 `authority`，若为新菜单页还需在父路由下增加子路由及视图与多语言。**完整检查清单见下。**
+
+## 新增“权限 + 菜单/接口”检查清单（后端，防止漏做）
+
+| 步骤 | 位置 | 说明 |
+|------|------|------|
+| 1 | `AppPermissions/PermissionCodes.cs` | 新增权限常量（与前端 `permission-codes.ts` 一致） |
+| 2 | `AppPermissions/PermissionDefinitionContext.cs` | 在对应父权限下 `AddChild(权限码, "显示名")` |
+| 3 | `AppPermissions/PermissionMapper.cs` | `_permissionDescriptionMap` 中增加 `{ 权限码, "描述" }` |
+| 4 | 各端点 `Configure()` | `Permissions(PermissionCodes.AllApiAccess, PermissionCodes.XxxView)` 等，按接口职责绑定 |
+| 5 | `Utils/SeedDatabaseExtension.cs` | 若需默认给管理员：在 `adminPermissionCodes` 中加入新权限码（仅新库或重跑种子时生效） |
 
 ## 最佳实践
 

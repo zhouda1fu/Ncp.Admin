@@ -1,6 +1,9 @@
 {
   "title": "Customer",
   "list": "Customer List",
+  "sourceList": "Customer Source",
+  "sourceName": "Source Name",
+  "sortOrder": "Sort Order",
   "fullName": "Full Name",
   "shortName": "Short Name",
   "customerSource": "Source",

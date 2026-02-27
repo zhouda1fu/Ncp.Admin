@@ -7,7 +7,8 @@ export namespace CustomerApi {
     id: string;
     ownerId?: string;
     deptId?: string;
-    customerSource: string;
+    customerSourceId: string;
+    customerSourceName: string;
     statusId: number;
     fullName: string;
     shortName?: string;

@@ -1,4 +1,5 @@
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
@@ -42,9 +43,14 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public DeptId? DeptId { get; private set; }
 
     /// <summary>
-    /// 客户来源（字典）
+    /// 客户来源 ID（主数据，必填）
     /// </summary>
-    public string CustomerSource { get; private set; } = string.Empty;
+    public CustomerSourceId CustomerSourceId { get; private set; } = default!;
+
+    /// <summary>
+    /// 客户来源名称（冗余，便于列表/展示）
+    /// </summary>
+    public string CustomerSourceName { get; private set; } = string.Empty;
 
     /// <summary>
     /// 客户状态（字典）
@@ -157,7 +163,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public Customer(
         UserId? ownerId,
         DeptId? deptId,
-        string customerSource,
+        CustomerSourceId customerSourceId,
+        string customerSourceName,
         int statusId,
         string fullName,
         string shortName,
@@ -176,7 +183,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     {
         OwnerId = ownerId;
         DeptId = deptId;
-        CustomerSource = customerSource;
+        CustomerSourceId = customerSourceId;
+        CustomerSourceName = customerSourceName ?? string.Empty;
         StatusId = statusId;
         FullName = fullName;
         ShortName = shortName;
@@ -213,7 +221,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public void Update(
         UserId? ownerId,
         DeptId? deptId,
-        string customerSource,
+        CustomerSourceId customerSourceId,
+        string customerSourceName,
         int statusId,
         string fullName,
         string shortName,
@@ -235,7 +244,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
             throw new KnownException("公海客户需先领用后再修改", ErrorCodes.CustomerNotInSea);
         OwnerId = ownerId;
         DeptId = deptId;
-        CustomerSource = customerSource;
+        CustomerSourceId = customerSourceId;
+        CustomerSourceName = customerSourceName ?? string.Empty;
         StatusId = statusId;
         FullName = fullName;
         ShortName = shortName;

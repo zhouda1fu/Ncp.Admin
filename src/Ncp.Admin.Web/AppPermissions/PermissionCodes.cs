@@ -166,6 +166,12 @@ public static class PermissionCodes
     public const string CustomerReleaseToSea = nameof(CustomerReleaseToSea);
     public const string CustomerClaimFromSea = nameof(CustomerClaimFromSea);
     public const string IndustryView = nameof(IndustryView);
+    /// <summary>查看客户来源（列表/下拉）</summary>
+    public const string CustomerSourceView = nameof(CustomerSourceView);
+    /// <summary>创建客户来源</summary>
+    public const string CustomerSourceCreate = nameof(CustomerSourceCreate);
+    /// <summary>编辑客户来源</summary>
+    public const string CustomerSourceEdit = nameof(CustomerSourceEdit);
     #endregion
 
     #region 请假管理权限

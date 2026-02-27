@@ -85,6 +85,19 @@ public static class SeedDatabaseExtension
                 PermissionCodes.WorkflowInstanceView,
                 PermissionCodes.WorkflowMonitor,
 
+                // 客户管理权限
+                PermissionCodes.CustomerManagement,
+                PermissionCodes.CustomerView,
+                PermissionCodes.CustomerCreate,
+                PermissionCodes.CustomerEdit,
+                PermissionCodes.CustomerDelete,
+                PermissionCodes.CustomerContactEdit,
+                PermissionCodes.CustomerReleaseToSea,
+                PermissionCodes.CustomerClaimFromSea,
+                PermissionCodes.CustomerSourceView,
+                PermissionCodes.CustomerSourceCreate,
+                PermissionCodes.CustomerSourceEdit,
+
                 // 所有接口访问权限
                 PermissionCodes.AllApiAccess,
             };

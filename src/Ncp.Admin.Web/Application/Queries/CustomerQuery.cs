@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
@@ -10,33 +11,34 @@ namespace Ncp.Admin.Web.Application.Queries;
 public record CustomerContactDto(
     CustomerContactId Id,
     string Name,
-    string? ContactType,
+    string ContactType,
     int? Gender,
     DateTime? Birthday,
-    string? Position,
-    string? Mobile,
-    string? Phone,
-    string? Email,
+    string Position,
+    string Mobile,
+    string Phone,
+    string Email,
     bool IsPrimary);
 
 public record CustomerQueryDto(
     CustomerId Id,
     UserId? OwnerId,
     DeptId? DeptId,
-    string CustomerSource,
+    CustomerSourceId CustomerSourceId,
+    string CustomerSourceName,
     int StatusId,
     string FullName,
-    string? ShortName,
-    string? Nature,
-    string? ProvinceCode,
-    string? CityCode,
-    string? DistrictCode,
-    string? CoverRegion,
-    string? RegisterAddress,
-    string? MainContactName,
-    string? MainContactPhone,
-    string? WechatStatus,
-    string? Remark,
+    string ShortName,
+    string Nature,
+    string ProvinceCode,
+    string CityCode,
+    string DistrictCode,
+    string CoverRegion,
+    string RegisterAddress,
+    string MainContactName,
+    string MainContactPhone,
+    string WechatStatus,
+    string Remark,
     bool IsKeyAccount,
     bool IsHidden,
     bool CombineFlag,
@@ -51,20 +53,21 @@ public record CustomerDetailDto(
     CustomerId Id,
     UserId? OwnerId,
     DeptId? DeptId,
-    string CustomerSource,
+    CustomerSourceId CustomerSourceId,
+    string CustomerSourceName,
     int StatusId,
     string FullName,
-    string? ShortName,
-    string? Nature,
-    string? ProvinceCode,
-    string? CityCode,
-    string? DistrictCode,
-    string? CoverRegion,
-    string? RegisterAddress,
-    string? MainContactName,
-    string? MainContactPhone,
-    string? WechatStatus,
-    string? Remark,
+    string ShortName,
+    string Nature,
+    string ProvinceCode,
+    string CityCode,
+    string DistrictCode,
+    string CoverRegion,
+    string RegisterAddress,
+    string MainContactName,
+    string MainContactPhone,
+    string WechatStatus,
+    string Remark,
     bool IsKeyAccount,
     bool IsHidden,
     bool CombineFlag,
@@ -83,7 +86,7 @@ public record CustomerSearchDto(CustomerId Id, string FullName, string? ShortNam
 public class CustomerQueryInput : PageRequest
 {
     public string? FullName { get; set; }
-    public string? CustomerSource { get; set; }
+    public CustomerSourceId? CustomerSourceId { get; set; }
     public int? StatusId { get; set; }
     public UserId? OwnerId { get; set; }
     public DeptId? DeptId { get; set; }
@@ -108,7 +111,7 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (c == null) return null;
         return new CustomerDetailDto(
-            c.Id, c.OwnerId, c.DeptId, c.CustomerSource, c.StatusId, c.FullName, c.ShortName, c.Nature,
+            c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName, c.StatusId, c.FullName, c.ShortName, c.Nature,
             c.ProvinceCode, c.CityCode, c.DistrictCode, c.CoverRegion, c.RegisterAddress,
             c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
             c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatedAt,
@@ -121,8 +124,8 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
         var query = dbContext.Customers.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(input.FullName))
             query = query.Where(c => c.FullName.Contains(input.FullName));
-        if (!string.IsNullOrWhiteSpace(input.CustomerSource))
-            query = query.Where(c => c.CustomerSource == input.CustomerSource);
+        if (input.CustomerSourceId != null)
+            query = query.Where(c => c.CustomerSourceId == input.CustomerSourceId);
         if (input.StatusId.HasValue)
             query = query.Where(c => c.StatusId == input.StatusId.Value);
         if (input.OwnerId != null)
@@ -136,7 +139,8 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
         return await query
             .OrderByDescending(c => c.CreatedAt)
             .Select(c => new CustomerQueryDto(
-                c.Id, c.OwnerId, c.DeptId, c.CustomerSource, c.StatusId, c.FullName, c.ShortName, c.Nature,
+                c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName,
+                c.StatusId, c.FullName, c.ShortName, c.Nature,
                 c.ProvinceCode, c.CityCode, c.DistrictCode, c.CoverRegion, c.RegisterAddress,
                 c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
                 c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatedAt,

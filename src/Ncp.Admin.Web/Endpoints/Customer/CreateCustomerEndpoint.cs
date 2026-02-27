@@ -4,6 +4,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
@@ -16,7 +17,7 @@ public class CreateCustomerRequest
 {
     public long? OwnerId { get; set; }
     public long? DeptId { get; set; }
-    public string CustomerSource { get; set; } = "";
+    public Guid CustomerSourceId { get; set; }
     public int StatusId { get; set; }
     public string FullName { get; set; } = "";
     public string? ShortName { get; set; }
@@ -60,7 +61,7 @@ public class CreateCustomerEndpoint(IMediator mediator) : Endpoint<CreateCustome
         if (req.IndustryIds is { Count: > 0 })
             industryIds = req.IndustryIds.Select(x => new IndustryId(Guid.Parse(x))).ToList();
         var cmd = new CreateCustomerCommand(
-            ownerId, deptId, req.CustomerSource, req.StatusId, req.FullName, req.ShortName,
+            ownerId, deptId, new CustomerSourceId(req.CustomerSourceId), req.StatusId, req.FullName, req.ShortName,
             req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.CoverRegion, req.RegisterAddress,
             req.MainContactName, req.MainContactPhone, req.WechatStatus, req.Remark, req.IsKeyAccount, new UserId(uid), industryIds);
         var id = await mediator.Send(cmd, ct);

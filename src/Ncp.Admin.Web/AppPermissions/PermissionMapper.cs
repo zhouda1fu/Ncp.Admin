@@ -167,6 +167,9 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.CustomerReleaseToSea, "释放到公海" },
         { PermissionCodes.CustomerClaimFromSea, "公海领用" },
         { PermissionCodes.IndustryView, "查看行业" },
+        { PermissionCodes.CustomerSourceView, "查看客户来源（列表/下拉）" },
+        { PermissionCodes.CustomerSourceCreate, "创建客户来源" },
+        { PermissionCodes.CustomerSourceEdit, "编辑客户来源" },
 
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },

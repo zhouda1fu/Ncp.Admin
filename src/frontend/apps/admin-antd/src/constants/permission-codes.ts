@@ -103,6 +103,9 @@ export const PermissionCodes = {
   CustomerReleaseToSea: 'CustomerReleaseToSea',
   CustomerClaimFromSea: 'CustomerClaimFromSea',
   IndustryView: 'IndustryView',
+  CustomerSourceView: 'CustomerSourceView',
+  CustomerSourceCreate: 'CustomerSourceCreate',
+  CustomerSourceEdit: 'CustomerSourceEdit',
 
   // 考勤管理权限
   AttendanceManagement: 'AttendanceManagement',
