@@ -34,7 +34,6 @@ defineExpose({
 <template>
   <Drawer :title="$t('customer.view')">
     <Descriptions v-if="detail" :column="1" bordered size="small" class="mx-4">
-      <DescriptionsItem :label="$t('customer.fullName')">{{ detail.fullName }}</DescriptionsItem>
       <DescriptionsItem :label="$t('customer.customerSource')">{{ detail.customerSourceName }}</DescriptionsItem>
       <DescriptionsItem :label="$t('customer.mainContactName')">{{ detail.mainContactName ?? '-' }}</DescriptionsItem>
       <DescriptionsItem :label="$t('customer.mainContactPhone')">{{ detail.mainContactPhone ?? '-' }}</DescriptionsItem>
@@ -45,6 +44,9 @@ defineExpose({
       <DescriptionsItem :label="$t('customer.consultationContent')">
         <span class="whitespace-pre-wrap">{{ detail.consultationContent ?? '-' }}</span>
       </DescriptionsItem>
+      <DescriptionsItem :label="$t('customer.creatorName')">{{ detail.creatorName ?? '-' }}</DescriptionsItem>
+      <DescriptionsItem :label="$t('customer.claimUserName')">{{ detail.ownerName ?? '-' }}</DescriptionsItem>
+      <DescriptionsItem :label="$t('customer.claimTime')">{{ detail.claimedAt ?? '-' }}</DescriptionsItem>
       <DescriptionsItem :label="$t('customer.remark')">{{ detail.remark ?? '-' }}</DescriptionsItem>
       <DescriptionsItem :label="$t('customer.createdAt')">{{ detail.createdAt }}</DescriptionsItem>
     </Descriptions>

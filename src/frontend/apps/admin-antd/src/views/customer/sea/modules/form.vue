@@ -14,7 +14,7 @@ function filterOption(input: string, option: unknown) {
 }
 
 import type { CustomerApi } from '#/api/system/customer';
-import { createCustomer, updateSeaCustomer } from '#/api/system/customer';
+import { createSeaCustomer, updateSeaCustomer } from '#/api/system/customer';
 import { getCustomerSourceList } from '#/api/system/customerSource';
 import { getRegionList } from '#/api/system/region';
 import { $t } from '#/locales';
@@ -24,11 +24,12 @@ const emit = defineEmits(['success']);
 const regionList = ref<RegionApi.RegionItem[]>([]);
 const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
 const editId = ref<string | null>(null);
+/** 编辑回填时暂不触发级联清空（省改时清空市/区），避免市/区被误清 */
+const skipCascadeClear = ref(false);
 
 const formState = ref({
   customerSourceId: '',
   fullName: '',
-  statusId: 0,
   mainContactName: '',
   mainContactPhone: '',
   contactQq: '',
@@ -106,6 +107,7 @@ function hasDistrictOptions(cityCode: string | undefined) {
 watch(
   () => formState.value.phoneProvinceCode,
   () => {
+    if (skipCascadeClear.value) return;
     formState.value.phoneCityCode = undefined;
     formState.value.phoneDistrictCode = undefined;
     nextTick(() => {
@@ -116,6 +118,7 @@ watch(
 watch(
   () => formState.value.phoneCityCode,
   () => {
+    if (skipCascadeClear.value) return;
     formState.value.phoneDistrictCode = undefined;
     nextTick(() => {
       formRef.value?.clearValidate?.(['phoneDistrictCode']);
@@ -125,6 +128,7 @@ watch(
 watch(
   () => formState.value.provinceCode,
   () => {
+    if (skipCascadeClear.value) return;
     formState.value.cityCode = undefined;
     formState.value.districtCode = undefined;
     nextTick(() => {
@@ -135,10 +139,40 @@ watch(
 watch(
   () => formState.value.cityCode,
   () => {
+    if (skipCascadeClear.value) return;
     formState.value.districtCode = undefined;
     nextTick(() => {
       formRef.value?.clearValidate?.(['districtCode']);
     });
+  },
+);
+
+/** 区域列表是否已加载（用于 key，让级联 Select 在选项就绪后重新挂载以正确回显） */
+const regionOptionsReady = computed(() => regionList.value.length > 0);
+
+/** 区域列表加载完成后，若处于编辑状态则重新应用省市区 code，确保级联市/区选项能正确回显 */
+watch(
+  () => regionList.value.length,
+  (len) => {
+    if (len > 0 && editId.value) {
+      const data = drawerApi.getData<CustomerApi.CustomerDetail & { id?: string }>();
+      if (!data?.id) return;
+      const toCode = (v: unknown) =>
+        v != null && String(v).trim() !== '' ? String(v) : undefined;
+      const codes = {
+        phoneProvinceCode: toCode(data.phoneProvinceCode),
+        phoneCityCode: toCode(data.phoneCityCode),
+        phoneDistrictCode: toCode(data.phoneDistrictCode),
+        provinceCode: toCode(data.provinceCode),
+        cityCode: toCode(data.cityCode),
+        districtCode: toCode(data.districtCode),
+      };
+      skipCascadeClear.value = true;
+      formState.value = { ...formState.value, ...codes };
+      nextTick(() => {
+        skipCascadeClear.value = false;
+      });
+    }
   },
 );
 
@@ -152,7 +186,6 @@ const formRules = computed(() => {
   const requiredProjectRegion = $t('ui.formRules.required', [$t('customer.projectRegion')]) as string;
   return {
     customerSourceId: [{ required: true, message: $t('ui.formRules.required', [$t('customer.customerSource')]) }],
-    fullName: [{ required: true, message: $t('ui.formRules.required', [$t('customer.fullName')]) }],
     phoneProvinceCode: [{ required: true, message: requiredPhoneRegion }],
     phoneCityCode: hasCityOptions(phoneProvince)
       ? [{ required: true, message: requiredPhoneRegion }]
@@ -200,14 +233,12 @@ const [Drawer, drawerApi] = useVbenDrawer({
     const customerSourceName =
       customerSourceOptions.value.find((o) => o.value === v.customerSourceId)?.label ?? '';
     const payload = {
-      fullName: v.fullName,
       customerSourceId: v.customerSourceId,
       customerSourceName,
-      statusId: v.statusId ?? 0,
-      mainContactName: v.mainContactName || undefined,
-      mainContactPhone: v.mainContactPhone || undefined,
-      contactQq: v.contactQq || undefined,
-      contactWechat: v.contactWechat || undefined,
+      mainContactName: v.mainContactName ?? '',
+      mainContactPhone: v.mainContactPhone ?? '',
+      contactQq: v.contactQq ?? '',
+      contactWechat: v.contactWechat ?? '',
       phoneProvinceCode: v.phoneProvinceCode ?? '',
       phoneCityCode: v.phoneCityCode ?? '',
       phoneDistrictCode: v.phoneDistrictCode ?? '',
@@ -227,7 +258,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       if (editId.value) {
         await updateSeaCustomer(editId.value, payload);
       } else {
-        await createCustomer(payload);
+        await createSeaCustomer(payload);
       }
       drawerApi.close();
       editId.value = null;
@@ -239,30 +270,35 @@ const [Drawer, drawerApi] = useVbenDrawer({
   onOpenChange(isOpen) {
     if (isOpen) {
       const data = drawerApi.getData<CustomerApi.CustomerDetail & { id?: string }>();
+      const toCode = (v: unknown) =>
+        v != null && String(v).trim() !== '' ? String(v) : undefined;
       if (data?.id) {
         editId.value = data.id;
-        formState.value = {
+        const payload = {
           customerSourceId: data.customerSourceId ?? '',
           fullName: data.fullName ?? '',
-          statusId: data.statusId ?? 0,
           mainContactName: data.mainContactName ?? '',
           mainContactPhone: data.mainContactPhone ?? '',
           contactQq: data.contactQq ?? '',
           contactWechat: data.contactWechat ?? '',
-          phoneProvinceCode: data.phoneProvinceCode ?? undefined,
-          phoneCityCode: data.phoneCityCode ?? undefined,
-          phoneDistrictCode: data.phoneDistrictCode ?? undefined,
-          provinceCode: data.provinceCode ?? undefined,
-          cityCode: data.cityCode ?? undefined,
-          districtCode: data.districtCode ?? undefined,
+          phoneProvinceCode: toCode(data.phoneProvinceCode),
+          phoneCityCode: toCode(data.phoneCityCode),
+          phoneDistrictCode: toCode(data.phoneDistrictCode),
+          provinceCode: toCode(data.provinceCode),
+          cityCode: toCode(data.cityCode),
+          districtCode: toCode(data.districtCode),
           consultationContent: data.consultationContent ?? '',
         };
+        skipCascadeClear.value = true;
+        formState.value = payload;
+        nextTick(() => {
+          skipCascadeClear.value = false;
+        });
       } else {
         editId.value = null;
         formState.value = {
           customerSourceId: '',
           fullName: '',
-          statusId: 0,
           mainContactName: '',
           mainContactPhone: '',
           contactQq: '',
@@ -305,9 +341,6 @@ defineExpose({
           :filter-option="filterOption"
         />
       </FormItem>
-      <FormItem :label="$t('customer.fullName')" name="fullName" required>
-        <Input v-model:value="formState.fullName" :placeholder="$t('ui.formRules.required', [$t('customer.fullName')])" />
-      </FormItem>
       <FormItem :label="$t('customer.mainContactName')" name="mainContactName">
         <Input v-model:value="formState.mainContactName" />
       </FormItem>
@@ -322,6 +355,7 @@ defineExpose({
       </FormItem>
       <FormItem :label="$t('customer.phoneRegion')" name="phoneProvinceCode" required>
         <Select
+          :key="'phone-province-' + regionOptionsReady"
           v-model:value="formState.phoneProvinceCode"
           :options="phoneProvinceOptions"
           :placeholder="$t('customer.province')"
@@ -339,6 +373,7 @@ defineExpose({
         :wrapper-col="{ span: 24 }"
       >
         <Select
+          :key="'phone-city-' + regionOptionsReady + '-' + (formState.phoneProvinceCode ?? '')"
           v-model:value="formState.phoneCityCode"
           :options="phoneCityOptions"
           :placeholder="$t('customer.city')"
@@ -357,6 +392,7 @@ defineExpose({
         :wrapper-col="{ span: 24 }"
       >
         <Select
+          :key="'phone-district-' + regionOptionsReady + '-' + (formState.phoneCityCode ?? '')"
           v-model:value="formState.phoneDistrictCode"
           :options="phoneDistrictOptions"
           :placeholder="$t('customer.district')"
@@ -369,6 +405,7 @@ defineExpose({
       </FormItem>
       <FormItem :label="$t('customer.projectRegion')" name="provinceCode" required>
         <Select
+          :key="'project-province-' + regionOptionsReady"
           v-model:value="formState.provinceCode"
           :options="projectProvinceOptions"
           :placeholder="$t('customer.province')"
@@ -386,6 +423,7 @@ defineExpose({
         :wrapper-col="{ span: 24 }"
       >
         <Select
+          :key="'project-city-' + regionOptionsReady + '-' + (formState.provinceCode ?? '')"
           v-model:value="formState.cityCode"
           :options="projectCityOptions"
           :placeholder="$t('customer.city')"
@@ -404,6 +442,7 @@ defineExpose({
         :wrapper-col="{ span: 24 }"
       >
         <Select
+          :key="'project-district-' + regionOptionsReady + '-' + (formState.cityCode ?? '')"
           v-model:value="formState.districtCode"
           :options="projectDistrictOptions"
           :placeholder="$t('customer.district')"

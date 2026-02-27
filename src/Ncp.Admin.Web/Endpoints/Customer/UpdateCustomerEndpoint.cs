@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Web.Application.Commands.Customers;
 using Ncp.Admin.Web.AppPermissions;
@@ -17,7 +16,6 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// </summary>
 /// <param name="Id">客户 ID</param>
 /// <param name="OwnerId">负责人用户 ID，null 表示公海</param>
-/// <param name="DeptId">所属部门 ID</param>
 /// <param name="CustomerSourceId">客户来源 ID</param>
 /// <param name="FullName">客户全称</param>
 /// <param name="ShortName">客户简称</param>
@@ -43,7 +41,6 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 public record UpdateCustomerRequest(
     CustomerId Id,
     UserId OwnerId,
-    DeptId DeptId,
     CustomerSourceId CustomerSourceId,
     string FullName,
     string ShortName,
@@ -86,7 +83,7 @@ public class UpdateCustomerEndpoint(IMediator mediator) : Endpoint<UpdateCustome
     public override async Task HandleAsync(UpdateCustomerRequest req, CancellationToken ct)
     {
         var cmd = new UpdateCustomerCommand(
-            req.Id, req.OwnerId, req.DeptId, req.CustomerSourceId, req.FullName, req.ShortName,
+            req.Id, req.OwnerId, req.CustomerSourceId, req.FullName, req.ShortName,
             req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode,
             req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.MainContactName, req.MainContactPhone,
             req.ContactQq, req.ContactWechat, req.WechatStatus, req.Remark, req.IsKeyAccount, req.IsHidden, req.IndustryIds);

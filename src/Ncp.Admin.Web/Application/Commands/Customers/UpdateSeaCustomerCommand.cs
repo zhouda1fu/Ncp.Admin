@@ -14,7 +14,6 @@ public record UpdateSeaCustomerCommand(
     CustomerId Id,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
-    string FullName,
     string ShortName,
     string Nature,
     string ProvinceCode,
@@ -46,7 +45,6 @@ public class UpdateSeaCustomerCommandValidator : AbstractValidator<UpdateSeaCust
     public UpdateSeaCustomerCommandValidator()
     {
         RuleFor(c => c.Id).NotEmpty();
-        RuleFor(c => c.FullName).NotEmpty().MaximumLength(200);
         RuleFor(c => c.ShortName).MaximumLength(100);
     }
 }
@@ -59,7 +57,7 @@ public class UpdateSeaCustomerCommandHandler(ICustomerRepository repository)
         var customer = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
         customer.UpdateWhenInSea(
-            request.CustomerSourceId, request.CustomerSourceName , request.FullName,
+            request.CustomerSourceId, request.CustomerSourceName , 
             request.ShortName , request.Nature , request.ProvinceCode ,
             request.CityCode , request.DistrictCode ,
             request.ProvinceName , request.CityName , request.DistrictName ,

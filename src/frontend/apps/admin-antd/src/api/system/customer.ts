@@ -6,10 +6,8 @@ export namespace CustomerApi {
   export interface CustomerItem {
     id: string;
     ownerId?: string;
-    deptId?: string;
     customerSourceId: string;
     customerSourceName: string;
-    statusId: number;
     fullName: string;
     shortName?: string;
     nature?: string;
@@ -40,6 +38,9 @@ export namespace CustomerApi {
     isInSea: boolean;
     releasedToSeaAt?: string;
     creatorId: string;
+    creatorName?: string;
+    ownerName?: string;
+    claimedAt?: string;
     createdAt: string;
     contactCount: number;
     industryIds: string[];
@@ -86,6 +87,11 @@ async function createCustomer(data: Recordable<any>) {
   return requestClient.post<{ id: string }>('/customers', data);
 }
 
+/** 公海录入专用：创建公海客户（无需客户名称、无负责人） */
+async function createSeaCustomer(data: Recordable<any>) {
+  return requestClient.post<{ id: string }>('/customers/sea', data);
+}
+
 async function updateCustomer(id: string, data: Recordable<any>) {
   return requestClient.put(`/customers/${id}`, data);
 }
@@ -102,8 +108,8 @@ async function releaseCustomerToSea(id: string) {
   return requestClient.post(`/customers/${id}/release-to-sea`);
 }
 
-async function claimCustomerFromSea(id: string, data?: { deptId?: number }) {
-  return requestClient.post(`/customers/${id}/claim`, data ?? {});
+async function claimCustomerFromSea(id: string) {
+  return requestClient.post(`/customers/${id}/claim`);
 }
 
 async function updateSeaCustomer(id: string, data: Recordable<any>) {
@@ -138,6 +144,7 @@ export {
   getCustomerList,
   getCustomer,
   createCustomer,
+  createSeaCustomer,
   updateCustomer,
   updateSeaCustomer,
   getCustomerSearch,

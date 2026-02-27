@@ -5,7 +5,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Web.Application.Commands.Customers;
 using Ncp.Admin.Web.AppPermissions;
 
@@ -15,8 +14,7 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// 从公海领用客户请求
 /// </summary>
 /// <param name="Id">要领用的客户 ID</param>
-/// <param name="DeptId">领用后所属部门 ID（可选）</param>
-public record ClaimCustomerFromSeaRequest(CustomerId Id, DeptId? DeptId);
+public record ClaimCustomerFromSeaRequest(CustomerId Id);
 
 /// <summary>
 /// 从公海领用客户（负责人为当前登录用户）
@@ -42,7 +40,8 @@ public class ClaimCustomerFromSeaEndpoint(IMediator mediator) : Endpoint<ClaimCu
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        await mediator.Send(new ClaimCustomerFromSeaCommand(req.Id, new UserId(uid), req.DeptId), ct);
+        var ownerName = User.FindFirstValue(ClaimTypes.Name);
+        await mediator.Send(new ClaimCustomerFromSeaCommand(req.Id, new UserId(uid), ownerName), ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }

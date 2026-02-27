@@ -3,7 +3,6 @@ using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Infrastructure;
 
 namespace Ncp.Admin.Web.Application.Queries;
@@ -23,7 +22,6 @@ public record CustomerContactDto(
 public record CustomerQueryDto(
     CustomerId Id,
     UserId? OwnerId,
-    DeptId? DeptId,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
     bool IsVoided,
@@ -57,6 +55,9 @@ public record CustomerQueryDto(
     bool IsInSea,
     DateTimeOffset? ReleasedToSeaAt,
     UserId CreatorId,
+    string CreatorName,
+    string OwnerName,
+    DateTimeOffset? ClaimedAt,
     DateTimeOffset CreatedAt,
     int ContactCount,
     IReadOnlyList<IndustryId> IndustryIds);
@@ -64,7 +65,6 @@ public record CustomerQueryDto(
 public record CustomerDetailDto(
     CustomerId Id,
     UserId? OwnerId,
-    DeptId? DeptId,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
     bool IsVoided,
@@ -98,6 +98,9 @@ public record CustomerDetailDto(
     bool IsInSea,
     DateTimeOffset? ReleasedToSeaAt,
     UserId CreatorId,
+    string CreatorName,
+    string OwnerName,
+    DateTimeOffset? ClaimedAt,
     DateTimeOffset CreatedAt,
     IReadOnlyList<CustomerContactDto> Contacts,
     IReadOnlyList<IndustryId> IndustryIds);
@@ -113,7 +116,6 @@ public class CustomerQueryInput : PageRequest
     public CustomerSourceId? CustomerSourceId { get; set; }
     public bool? IsVoided { get; set; }
     public UserId? OwnerId { get; set; }
-    public DeptId? DeptId { get; set; }
     public bool? IsInSea { get; set; }
     public bool? IsKeyAccount { get; set; }
 }
@@ -135,12 +137,12 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (c == null) return null;
         return new CustomerDetailDto(
-            c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName, c.IsVoided, c.FullName, c.ShortName, c.Nature,
+            c.Id, c.OwnerId, c.CustomerSourceId, c.CustomerSourceName, c.IsVoided, c.FullName, c.ShortName, c.Nature,
             c.ProvinceCode, c.CityCode, c.DistrictCode, c.ProvinceName, c.CityName, c.DistrictName,
             c.PhoneProvinceCode, c.PhoneCityCode, c.PhoneDistrictCode, c.PhoneProvinceName, c.PhoneCityName, c.PhoneDistrictName,
             c.ConsultationContent, c.ContactQq, c.ContactWechat, c.CoverRegion, c.RegisterAddress,
             c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
-            c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatedAt,
+            c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatorName, c.OwnerName, c.ClaimedAt, c.CreatedAt,
             c.Contacts.Select(x => new CustomerContactDto(x.Id, x.Name, x.ContactType, x.Gender, x.Birthday, x.Position, x.Mobile, x.Phone, x.Email, x.IsPrimary)).ToList(),
             c.Industries.Select(x => x.IndustryId).ToList());
     }
@@ -156,8 +158,6 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
             query = query.Where(c => c.IsVoided == input.IsVoided.Value);
         if (input.OwnerId != null)
             query = query.Where(c => c.OwnerId == input.OwnerId);
-        if (input.DeptId != null)
-            query = query.Where(c => c.DeptId == input.DeptId);
         if (input.IsInSea.HasValue)
             query = query.Where(c => c.IsInSea == input.IsInSea.Value);
         if (input.IsKeyAccount.HasValue)
@@ -165,13 +165,13 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
         return await query
             .OrderByDescending(c => c.CreatedAt)
             .Select(c => new CustomerQueryDto(
-                c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName,
+                c.Id, c.OwnerId, c.CustomerSourceId, c.CustomerSourceName,
                 c.IsVoided, c.FullName, c.ShortName, c.Nature,
                 c.ProvinceCode, c.CityCode, c.DistrictCode, c.ProvinceName, c.CityName, c.DistrictName,
                 c.PhoneProvinceCode, c.PhoneCityCode, c.PhoneDistrictCode, c.PhoneProvinceName, c.PhoneCityName, c.PhoneDistrictName,
                 c.ConsultationContent, c.ContactQq, c.ContactWechat, c.CoverRegion, c.RegisterAddress,
                 c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
-                c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatedAt,
+                c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatorName, c.OwnerName, c.ClaimedAt, c.CreatedAt,
                 c.Contacts.Count,
                 c.Industries.Select(i => i.IndustryId).ToList()))
             .ToPagedDataAsync(input, cancellationToken);

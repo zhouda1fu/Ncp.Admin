@@ -6,7 +6,7 @@ import type { CustomerApi } from '#/api/system/customer';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
-import { Button, message, Modal } from 'ant-design-vue';
+import { Button, message, Modal, Tag } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -34,7 +34,6 @@ const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
 const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
   gridOptions: {
     columns: [
-      { field: 'fullName', title: $t('customer.fullName'), minWidth: 120 },
       { field: 'customerSourceName', title: $t('customer.customerSource'), width: 100 },
       { field: 'mainContactName', title: $t('customer.mainContactName'), width: 100 },
       { field: 'mainContactPhone', title: $t('customer.mainContactPhone'), width: 120 },
@@ -62,6 +61,20 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
         minWidth: 140,
         showOverflow: 'tooltip',
       },
+      { field: 'creatorName', title: $t('customer.creatorName'), width: 100 },
+      { field: 'ownerName', title: $t('customer.claimUserName'), width: 100 },
+      {
+        field: 'claimedAt',
+        title: $t('customer.claimTime'),
+        width: 170,
+        formatter: 'formatDateTime',
+      },
+      {
+        field: 'claimStatus',
+        title: $t('customer.claimStatus'),
+        width: 100,
+        slots: { default: 'claimStatus' },
+      },
       {
         formatter: 'formatDateTime',
         field: 'createdAt',
@@ -71,7 +84,7 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
       {
         align: 'right',
         cellRender: {
-          attrs: { nameField: 'fullName', nameTitle: $t('customer.fullName'), onClick: onActionClick },
+          attrs: { nameField: 'mainContactName', nameTitle: $t('customer.mainContactName'), onClick: onActionClick },
           name: 'CellOperation',
           options: [
             { code: 'view', text: $t('customer.view') },
@@ -154,7 +167,7 @@ async function onClaim(row: CustomerApi.CustomerItem) {
 function onVoid(row: CustomerApi.CustomerItem) {
   Modal.confirm({
     title: $t('customer.void'),
-    content: `确定要作废客户「${row.fullName}」吗？`,
+    content: `确定要作废客户「${row.mainContactName ?? '该客户'}」吗？`,
     okText: $t('common.confirm'),
     cancelText: $t('common.cancel'),
     onOk: async () => {
@@ -171,25 +184,16 @@ function onVoid(row: CustomerApi.CustomerItem) {
   });
 }
 
-function onDelete(row: CustomerApi.CustomerItem) {
-  Modal.confirm({
-    title: $t('customer.delete'),
-    content: `确定要删除客户「${row.fullName}」吗？删除后不可恢复。`,
-    okText: $t('common.confirm'),
-    okType: 'danger',
-    cancelText: $t('common.cancel'),
-    onOk: async () => {
-      const key = 'customer_delete';
-      const hide = message.loading({ content: $t('common.loading'), duration: 0, key });
-      try {
-        await deleteCustomer(row.id);
-        message.success({ content: $t('common.success'), key });
-        onRefresh();
-      } finally {
-        hide();
-      }
-    },
-  });
+async function onDelete(row: CustomerApi.CustomerItem) {
+  const key = 'customer_delete';
+  const hide = message.loading({ content: $t('common.loading'), duration: 0, key });
+  try {
+    await deleteCustomer(row.id);
+    message.success({ content: $t('common.success'), key });
+    onRefresh();
+  } finally {
+    hide();
+  }
 }
 </script>
 
@@ -198,6 +202,11 @@ function onDelete(row: CustomerApi.CustomerItem) {
     <FormDrawer @success="onRefresh" />
     <DetailDrawer />
     <Grid :table-title="$t('customer.sea')">
+      <template #claimStatus="{ row }">
+        <Tag :color="row.isInSea ? 'warning' : 'success'">
+          {{ row.isInSea ? $t('customer.claimStatusUnclaimed') : $t('customer.claimStatusClaimed') }}
+        </Tag>
+      </template>
       <template #toolbar-tools>
         <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">
           <Plus class="size-5 shrink-0" />

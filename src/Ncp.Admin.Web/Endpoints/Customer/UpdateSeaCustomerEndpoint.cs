@@ -16,7 +16,6 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="Id">客户 ID</param>
 /// <param name="CustomerSourceId">客户来源 ID</param>
 /// <param name="CustomerSourceName">客户来源名称（由前端传入）</param>
-/// <param name="FullName">客户全称</param>
 /// <param name="ShortName">客户简称</param>
 /// <param name="Nature">公司性质</param>
 /// <param name="ProvinceCode">省区域码</param>
@@ -46,7 +45,6 @@ public record UpdateSeaCustomerRequest(
     CustomerId Id,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
-    string FullName,
     string ShortName,
     string Nature,
     string ProvinceCode,
@@ -92,7 +90,7 @@ public class UpdateSeaCustomerEndpoint(IMediator mediator) : Endpoint<UpdateSeaC
     public override async Task HandleAsync(UpdateSeaCustomerRequest req, CancellationToken ct)
     {
         var cmd = new UpdateSeaCustomerCommand(
-            req.Id, req.CustomerSourceId, req.CustomerSourceName , req.FullName, req.ShortName,
+            req.Id, req.CustomerSourceId, req.CustomerSourceName , req.ShortName,
             req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode,
             req.ProvinceName, req.CityName, req.DistrictName,
             req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode,

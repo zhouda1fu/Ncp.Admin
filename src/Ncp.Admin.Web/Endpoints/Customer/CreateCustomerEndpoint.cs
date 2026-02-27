@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Web.Application.Commands.Customers;
 using Ncp.Admin.Web.AppPermissions;
@@ -17,17 +16,23 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// 创建客户请求
 /// </summary>
 /// <param name="OwnerId">负责人用户 ID，null 表示公海客户</param>
-/// <param name="DeptId">所属部门 ID</param>
 /// <param name="CustomerSourceId">客户来源 ID</param>
+/// <param name="CustomerSourceName">客户来源名称（前端传入）</param>
 /// <param name="FullName">客户全称</param>
 /// <param name="ShortName">客户简称</param>
 /// <param name="Nature">公司性质</param>
 /// <param name="ProvinceCode">省区域码</param>
 /// <param name="CityCode">市区域码</param>
 /// <param name="DistrictCode">区/县区域码</param>
+/// <param name="ProvinceName">省名称（前端传入）</param>
+/// <param name="CityName">市名称（前端传入）</param>
+/// <param name="DistrictName">区/县名称（前端传入）</param>
 /// <param name="PhoneProvinceCode">电话省区域码</param>
 /// <param name="PhoneCityCode">电话市区域码</param>
 /// <param name="PhoneDistrictCode">电话区/县区域码</param>
+/// <param name="PhoneProvinceName">电话省名称（前端传入）</param>
+/// <param name="PhoneCityName">电话市名称（前端传入）</param>
+/// <param name="PhoneDistrictName">电话区/县名称（前端传入）</param>
 /// <param name="ConsultationContent">咨询内容</param>
 /// <param name="CoverRegion">覆盖区域</param>
 /// <param name="RegisterAddress">注册地址</param>
@@ -41,17 +46,23 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="IndustryIds">所属行业 ID 列表</param>
 public record CreateCustomerRequest(
     UserId OwnerId,
-    DeptId DeptId,
     CustomerSourceId CustomerSourceId,
+    string CustomerSourceName,
     string FullName,
     string ShortName,
     string Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
+    string ProvinceName,
+    string CityName,
+    string DistrictName,
     string PhoneProvinceCode,
     string PhoneCityCode,
     string PhoneDistrictCode,
+    string PhoneProvinceName,
+    string PhoneCityName,
+    string PhoneDistrictName,
     string ConsultationContent,
     string CoverRegion,
     string RegisterAddress,
@@ -94,11 +105,13 @@ public class CreateCustomerEndpoint(IMediator mediator) : Endpoint<CreateCustome
             await Send.UnauthorizedAsync(ct);
             return;
         }
+        var creatorName = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
         var cmd = new CreateCustomerCommand(
-            req.OwnerId, req.DeptId, req.CustomerSourceId, req.FullName, req.ShortName,
-            req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode,
+            req.OwnerId, req.CustomerSourceId, req.CustomerSourceName, req.FullName, req.ShortName,
+            req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.ProvinceName, req.CityName, req.DistrictName,
+            req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode, req.PhoneProvinceName, req.PhoneCityName, req.PhoneDistrictName,
             req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.MainContactName, req.MainContactPhone,
-            req.ContactQq, req.ContactWechat, req.WechatStatus, req.Remark, req.IsKeyAccount, new UserId(uid), req.IndustryIds);
+            req.ContactQq, req.ContactWechat, req.WechatStatus, req.Remark, req.IsKeyAccount, new UserId(uid), creatorName, req.IndustryIds);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateCustomerResponse(id).AsResponseData(), cancellation: ct);
     }

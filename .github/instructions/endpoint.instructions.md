@@ -21,8 +21,14 @@ applyTo: "src/Ncp.Admin.Web/Endpoints/**/*.cs"
     - 使用构造函数注入 `IMediator` 发送命令或查询。
     - 使用 `Send.OkAsync()`、`Send.CreatedAsync()`、`Send.NoContentAsync()` 发送响应。
     - 使用 `.AsResponseData()` 扩展方法创建响应数据。
+- **Request/Response 与文档注释**（与 `.cursor/skills/ncp-admin-ddd/SKILL.md` 中「API 端点 Request/Response 格式规范」一致）：
+    - Request/Response **必须使用 record**，优先使用位置参数形式。
+    - 所有 ID 使用强类型：`CustomerId`、`UserId`、`DeptId`、`CustomerSourceId`、`IndustryId`、`CustomerContactId` 等，禁止裸 `Guid`/`long`/`string`。
+    - 每个 record 上方有 `<summary>`，每个参数有 `<param name="参数名">描述</param>`。
+    - 端点类有 `<summary>`，主构造函数依赖有 `<param name="...">`。
+    - 参考：`Endpoints/Identity/Admin/UserEndpoints/UpdateUserEndpoint.cs`、`Endpoints/Customer/*.cs`。
 - **强类型ID处理**：
-    - 在 DTO 中直接使用强类型 ID 类型，如 `UserId`、`OrderId`。
+    - 在 DTO 中直接使用强类型 ID 类型，如 `UserId`、`CustomerId`、`DeptId`。
     - 依赖框架的隐式转换处理类型转换。
 - **引用**：
     - 引用 `FastEndpoints` 和 `Microsoft.AspNetCore.Authorization`。
@@ -40,31 +46,48 @@ applyTo: "src/Ncp.Admin.Web/Endpoints/**/*.cs"
 
 ## 代码示例
 
-**文件**: `src/Ncp.Admin.Web/Endpoints/User/CreateUserEndpoint.cs`
+**参考实现**：`Endpoints/Identity/Admin/UserEndpoints/UpdateUserEndpoint.cs`、`Endpoints/Customer/UpdateCustomerEndpoint.cs`。
+
+Request/Response 使用 record + 强类型 ID + 完整文档注释示例：
 
 ```csharp
-using FastEndpoints;
-using Ncp.Admin.Web.Application.Commands;
-using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Microsoft.AspNetCore.Authorization;
+/// <summary>
+/// 更新客户请求
+/// </summary>
+/// <param name="Id">客户 ID</param>
+/// <param name="OwnerId">负责人用户 ID，null 表示公海</param>
+/// <param name="DeptId">所属部门 ID</param>
+/// <param name="CustomerSourceId">客户来源 ID</param>
+/// <param name="FullName">客户全称</param>
+public record UpdateCustomerRequest(
+    CustomerId Id,
+    UserId? OwnerId,
+    DeptId? DeptId,
+    CustomerSourceId CustomerSourceId,
+    string FullName
+    /* 其余参数... */);
 
-namespace Ncp.Admin.Web.Endpoints.User;
-
-public record CreateUserRequestDto(string Name, string Email);
-
-public record CreateUserResponseDto(UserId UserId);
-
-[Tags("Users")]
-[HttpPost("/api/users")]
-[AllowAnonymous]
-public class CreateUserEndpoint(IMediator mediator) : Endpoint<CreateUserRequestDto, ResponseData<CreateUserResponseDto>>
+/// <summary>
+/// 更新客户
+/// </summary>
+/// <param name="mediator">MediatR 中介者</param>
+public class UpdateCustomerEndpoint(IMediator mediator) : Endpoint<UpdateCustomerRequest, ResponseData<bool>>
 {
-    public override async Task HandleAsync(CreateUserRequestDto req, CancellationToken ct)
+    /// <inheritdoc />
+    public override void Configure()
     {
-        var command = new CreateUserCommand(req.Name, req.Email);
-        var userId = await mediator.Send(command, ct);
+        Tags("Customer");
+        Put("/api/admin/customers/{id}");
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.CustomerEdit);
+    }
 
-        await Send.OkAsync(new CreateUserResponseDto(userId).AsResponseData(), cancellation: ct);
+    /// <inheritdoc />
+    public override async Task HandleAsync(UpdateCustomerRequest req, CancellationToken ct)
+    {
+        var cmd = new UpdateCustomerCommand(req.Id, req.OwnerId, req.DeptId, req.CustomerSourceId, req.FullName, ...);
+        await mediator.Send(cmd, ct);
+        await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }
 ```

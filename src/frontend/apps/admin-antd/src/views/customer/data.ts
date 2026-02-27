@@ -37,20 +37,8 @@ export function useSchema(
     {
       component: 'InputNumber',
       componentProps: { min: 0, class: 'w-full' },
-      fieldName: 'statusId',
-      label: $t('customer.statusId'),
-    },
-    {
-      component: 'InputNumber',
-      componentProps: { class: 'w-full' },
       fieldName: 'ownerId',
       label: $t('customer.ownerId'),
-    },
-    {
-      component: 'InputNumber',
-      componentProps: { class: 'w-full' },
-      fieldName: 'deptId',
-      label: $t('customer.deptId'),
     },
     {
       component: 'Input',

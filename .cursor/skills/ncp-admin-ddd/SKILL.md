@@ -79,3 +79,82 @@ description: Follows DDD workflow and project conventions when developing Ncp.Ad
 - 优先使用主构造函数、`await` 与 Async 方法。
 - 新建或修改某类文件前，先打开对应的 `*.instructions.md` 按其中示例与规则实现。
 - **领域事件**：同一聚合/业务下的多个领域事件可放在一个文件里（如 `LeaveDomainEvents.cs` 内含 Created、Submitted、Approved），减少文件数量；路径为 `DomainEvents/{Feature}Events/{Feature}DomainEvents.cs`。
+
+---
+
+## API 端点 Request/Response 格式规范（必须遵守）
+
+新增或修改 `src/Ncp.Admin.Web/Endpoints/**/*.cs` 时，Request/Response 与端点类需按以下格式书写，参考：`Endpoints/Identity/Admin/UserEndpoints/UpdateUserEndpoint.cs`、`Endpoints/Customer/*.cs`。
+
+### 1. Request / Response 使用 record
+
+- **一律使用 record**，不用 class。
+- **优先使用位置参数形式**（便于与文档注释一一对应），例如：
+  - `public record UpdateXxxRequest(CustomerId Id, UserId? OwnerId, DeptId? DeptId, ...);`
+  - `public record CreateXxxResponse(CustomerId Id);`
+
+### 2. 强类型 ID
+
+- 请求/响应中的 ID 必须使用领域强类型，禁止使用裸 `Guid`、`long`、`string`：
+  - 客户：`CustomerId`、`CustomerContactId`
+  - 用户/部门：`UserId`、`DeptId`
+  - 客户来源/行业：`CustomerSourceId`、`IndustryId`
+  - 其他聚合：对应聚合的 `XxxId`（如 `ContractId`、`RoleId` 等）
+- 列表类字段使用 `IReadOnlyList<IndustryId>?`、`IReadOnlyList<XxxId>?` 等，避免 `IList<string>` 再在 Handler 里解析。
+
+### 3. 文档注释（必须）
+
+- **每个 Request/Response record**：
+  - 上方写 `<summary>` 描述用途。
+  - 每个参数一行 `<param name="参数名">描述</param>`，与位置参数顺序一致。
+- **端点类**：
+  - 类上方 `<summary>` 描述端点职责。
+  - 主构造函数参数用 `<param name="参数名">描述</param>`（如 `<param name="mediator">MediatR 中介者</param>`）。
+- **Override 方法**：`Configure()`、`HandleAsync()` 可只写 `/// <inheritdoc />`。
+
+示例（节选）：
+
+```csharp
+/// <summary>
+/// 更新客户请求
+/// </summary>
+/// <param name="Id">客户 ID</param>
+/// <param name="OwnerId">负责人用户 ID，null 表示公海</param>
+/// <param name="DeptId">所属部门 ID</param>
+/// <param name="CustomerSourceId">客户来源 ID</param>
+/// <param name="FullName">客户全称</param>
+/// …（其余参数略）
+public record UpdateCustomerRequest(
+    CustomerId Id,
+    UserId? OwnerId,
+    DeptId? DeptId,
+    CustomerSourceId CustomerSourceId,
+    string FullName,
+    …);
+
+/// <summary>
+/// 更新客户
+/// </summary>
+/// <param name="mediator">MediatR 中介者</param>
+public class UpdateCustomerEndpoint(IMediator mediator) : Endpoint<UpdateCustomerRequest, ResponseData<bool>>
+{
+    /// <inheritdoc />
+    public override void Configure() { … }
+
+    /// <inheritdoc />
+    public override async Task HandleAsync(UpdateCustomerRequest req, CancellationToken ct) { … }
+}
+```
+
+### 4. 继承查询入参的 Request
+
+- 若请求体等价于现有查询入参（如分页列表、搜索），可继承对应 Input 类型并保留 record/class 其一，但**端点类仍需加 summary 与构造函数 param 注释**，例如：
+  - `public class GetCustomerListRequest : CustomerQueryInput { }`
+  - 端点类：`/// <summary>获取客户分页列表</summary>`、`/// <param name="query">客户查询</param>`
+
+### 5. 检查清单（新增/修改端点时）
+
+- [ ] Request/Response 为 record，且使用强类型 ID（无裸 Guid/long/string）
+- [ ] Request/Response 有 `<summary>` 与每个参数的 `<param>`
+- [ ] 端点类有 `<summary>`，主构造函数每个依赖有 `<param>`
+- [ ] 响应使用 `ResponseData<T>` 包装；发送时使用 `.AsResponseData()`

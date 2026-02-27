@@ -12,7 +12,6 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
         builder.Property(x => x.OwnerId);
-        builder.Property(x => x.DeptId);
         builder.Property(x => x.CustomerSourceId).IsRequired();
         builder.Property(x => x.CustomerSourceName).IsRequired().HasMaxLength(100);
         builder.Property(x => x.IsVoided).IsRequired();
@@ -46,6 +45,9 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
         builder.Property(x => x.IsInSea).IsRequired();
         builder.Property(x => x.ReleasedToSeaAt);
         builder.Property(x => x.CreatorId).IsRequired();
+        builder.Property(x => x.CreatorName).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.OwnerName).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.ClaimedAt);
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdateTime);
         builder.HasIndex(x => x.FullName);

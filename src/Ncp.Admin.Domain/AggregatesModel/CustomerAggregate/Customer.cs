@@ -1,6 +1,5 @@
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.DomainEvents.CustomerEvents;
@@ -36,11 +35,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// 负责人用户 ID
     /// </summary>
     public UserId? OwnerId { get; private set; }
-
-    /// <summary>
-    /// 所属部门 ID
-    /// </summary>
-    public DeptId? DeptId { get; private set; }
 
     /// <summary>
     /// 客户来源 ID（主数据，必填）
@@ -202,6 +196,21 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public UserId CreatorId { get; private set; } = default!;
 
     /// <summary>
+    /// 创建人姓名（冗余，便于列表/展示）
+    /// </summary>
+    public string CreatorName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 领用人/负责人姓名（冗余，OwnerId 对应姓名，便于列表/展示）
+    /// </summary>
+    public string OwnerName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 领用时间（从公海领用时写入，释放回公海时清空）
+    /// </summary>
+    public DateTimeOffset? ClaimedAt { get; private set; }
+
+    /// <summary>
     /// 创建时间
     /// </summary>
     public DateTimeOffset CreatedAt { get; init; }
@@ -216,7 +225,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// </summary>
     public Customer(
         UserId? ownerId,
-        DeptId? deptId,
         CustomerSourceId customerSourceId,
         string customerSourceName,
         string fullName,
@@ -244,12 +252,12 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string wechatStatus,
         string remark,
         bool isKeyAccount,
-        UserId creatorId)
+        UserId creatorId,
+        string creatorName)
     {
         OwnerId = ownerId;
-        DeptId = deptId;
         CustomerSourceId = customerSourceId;
-        CustomerSourceName = customerSourceName ;
+        CustomerSourceName = customerSourceName;
         IsVoided = false;
         FullName = fullName;
         ShortName = shortName;
@@ -257,27 +265,94 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ProvinceCode = provinceCode;
         CityCode = cityCode;
         DistrictCode = districtCode;
-        ProvinceName = provinceName ;
-        CityName = cityName ;
-        DistrictName = districtName ;
-        PhoneProvinceCode = phoneProvinceCode ;
-        PhoneCityCode = phoneCityCode ;
-        PhoneDistrictCode = phoneDistrictCode ;
-        PhoneProvinceName = phoneProvinceName ;
-        PhoneCityName = phoneCityName ;
-        PhoneDistrictName = phoneDistrictName ;
-        ConsultationContent = consultationContent ;
+        ProvinceName = provinceName;
+        CityName = cityName;
+        DistrictName = districtName;
+        PhoneProvinceCode = phoneProvinceCode;
+        PhoneCityCode = phoneCityCode;
+        PhoneDistrictCode = phoneDistrictCode;
+        PhoneProvinceName = phoneProvinceName;
+        PhoneCityName = phoneCityName;
+        PhoneDistrictName = phoneDistrictName;
+        ConsultationContent = consultationContent;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
-        ContactQq = contactQq ;
-        ContactWechat = contactWechat ;
+        ContactQq = contactQq;
+        ContactWechat = contactWechat;
         WechatStatus = wechatStatus;
         Remark = remark;
         IsKeyAccount = isKeyAccount;
         CreatorId = creatorId;
+        CreatorName = creatorName;
+        OwnerName = string.Empty;
+        ClaimedAt = null;
         IsInSea = ownerId == null;
+        CreatedAt = DateTimeOffset.UtcNow;
+        AddDomainEvent(new CustomerCreatedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// 公海录入创建客户；仅包含公海录入表单字段，无客户名称/负责人/部门，其余属性为默认值。
+    /// </summary>
+    public Customer(
+        CustomerSourceId customerSourceId,
+        string customerSourceName,
+        string mainContactName,
+        string mainContactPhone,
+        string contactQq,
+        string contactWechat,
+        string phoneProvinceCode,
+        string phoneCityCode,
+        string phoneDistrictCode,
+        string phoneProvinceName,
+        string phoneCityName,
+        string phoneDistrictName,
+        string provinceCode,
+        string cityCode,
+        string districtCode,
+        string provinceName,
+        string cityName,
+        string districtName,
+        string consultationContent,
+        UserId creatorId,
+        string creatorName)
+    {
+        OwnerId = null;
+        CustomerSourceId = customerSourceId;
+        CustomerSourceName = customerSourceName;
+        IsVoided = false;
+        FullName = string.Empty;
+        ShortName = string.Empty;
+        Nature = string.Empty;
+        ProvinceCode = provinceCode;
+        CityCode = cityCode;
+        DistrictCode = districtCode;
+        ProvinceName = provinceName;
+        CityName = cityName;
+        DistrictName = districtName;
+        PhoneProvinceCode = phoneProvinceCode;
+        PhoneCityCode = phoneCityCode;
+        PhoneDistrictCode = phoneDistrictCode;
+        PhoneProvinceName = phoneProvinceName;
+        PhoneCityName = phoneCityName;
+        PhoneDistrictName = phoneDistrictName;
+        ConsultationContent = consultationContent;
+        CoverRegion = string.Empty;
+        RegisterAddress = string.Empty;
+        MainContactName = mainContactName;
+        MainContactPhone = mainContactPhone;
+        ContactQq = contactQq;
+        ContactWechat = contactWechat;
+        WechatStatus = string.Empty;
+        Remark = string.Empty;
+        IsKeyAccount = false;
+        CreatorId = creatorId;
+        CreatorName = creatorName;
+        OwnerName = string.Empty;
+        ClaimedAt = null;
+        IsInSea = true;
         CreatedAt = DateTimeOffset.UtcNow;
         AddDomainEvent(new CustomerCreatedDomainEvent(this));
     }
@@ -297,7 +372,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// </summary>
     public void Update(
         UserId? ownerId,
-        DeptId? deptId,
         CustomerSourceId customerSourceId,
         string customerSourceName,
         string fullName,
@@ -331,31 +405,30 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         if (IsInSea)
             throw new KnownException("公海客户需先领用后再修改", ErrorCodes.CustomerNotInSea);
         OwnerId = ownerId;
-        DeptId = deptId;
         CustomerSourceId = customerSourceId;
-        CustomerSourceName = customerSourceName ;
+        CustomerSourceName = customerSourceName;
         FullName = fullName;
         ShortName = shortName;
         Nature = nature;
         ProvinceCode = provinceCode;
         CityCode = cityCode;
         DistrictCode = districtCode;
-        ProvinceName = provinceName ;
-        CityName = cityName ;
-        DistrictName = districtName ;
-        PhoneProvinceCode = phoneProvinceCode ;
-        PhoneCityCode = phoneCityCode ;
-        PhoneDistrictCode = phoneDistrictCode ;
-        PhoneProvinceName = phoneProvinceName ;
-        PhoneCityName = phoneCityName ;
-        PhoneDistrictName = phoneDistrictName ;
-        ConsultationContent = consultationContent ;
+        ProvinceName = provinceName;
+        CityName = cityName;
+        DistrictName = districtName;
+        PhoneProvinceCode = phoneProvinceCode;
+        PhoneCityCode = phoneCityCode;
+        PhoneDistrictCode = phoneDistrictCode;
+        PhoneProvinceName = phoneProvinceName;
+        PhoneCityName = phoneCityName;
+        PhoneDistrictName = phoneDistrictName;
+        ConsultationContent = consultationContent;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
-        ContactQq = contactQq ;
-        ContactWechat = contactWechat ;
+        ContactQq = contactQq;
+        ContactWechat = contactWechat;
         WechatStatus = wechatStatus;
         Remark = remark;
         IsKeyAccount = isKeyAccount;
@@ -376,7 +449,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public void UpdateWhenInSea(
         CustomerSourceId customerSourceId,
         string customerSourceName,
-        string fullName,
         string shortName,
         string nature,
         string provinceCode,
@@ -406,29 +478,28 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         if (!IsInSea)
             throw new KnownException("仅公海客户可在此处修改", ErrorCodes.CustomerNotInSea);
         CustomerSourceId = customerSourceId;
-        CustomerSourceName = customerSourceName ;
-        FullName = fullName;
+        CustomerSourceName = customerSourceName;
         ShortName = shortName;
         Nature = nature;
         ProvinceCode = provinceCode;
         CityCode = cityCode;
         DistrictCode = districtCode;
-        ProvinceName = provinceName ;
-        CityName = cityName ;
-        DistrictName = districtName ;
-        PhoneProvinceCode = phoneProvinceCode ;
-        PhoneCityCode = phoneCityCode ;
-        PhoneDistrictCode = phoneDistrictCode ;
-        PhoneProvinceName = phoneProvinceName ;
-        PhoneCityName = phoneCityName ;
-        PhoneDistrictName = phoneDistrictName ;
-        ConsultationContent = consultationContent ;
+        ProvinceName = provinceName;
+        CityName = cityName;
+        DistrictName = districtName;
+        PhoneProvinceCode = phoneProvinceCode;
+        PhoneCityCode = phoneCityCode;
+        PhoneDistrictCode = phoneDistrictCode;
+        PhoneProvinceName = phoneProvinceName;
+        PhoneCityName = phoneCityName;
+        PhoneDistrictName = phoneDistrictName;
+        ConsultationContent = consultationContent;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
-        ContactQq = contactQq ;
-        ContactWechat = contactWechat ;
+        ContactQq = contactQq;
+        ContactWechat = contactWechat;
         WechatStatus = wechatStatus;
         Remark = remark;
         IsKeyAccount = isKeyAccount;
@@ -461,7 +532,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         if (IsInSea)
             return;
         OwnerId = null;
-        DeptId = null;
+        OwnerName = string.Empty;
+        ClaimedAt = null;
         IsInSea = true;
         ReleasedToSeaAt = DateTimeOffset.UtcNow;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
@@ -471,12 +543,13 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// <summary>
     /// 从公海领用（仅公海客户可领用）
     /// </summary>
-    public void ClaimFromSea(UserId ownerId, DeptId? deptId)
+    public void ClaimFromSea(UserId ownerId, string? ownerName)
     {
         if (!IsInSea)
             throw new KnownException("仅公海客户可领用", ErrorCodes.CustomerNotInSea);
         OwnerId = ownerId;
-        DeptId = deptId;
+        OwnerName = ownerName ?? string.Empty;
+        ClaimedAt = DateTimeOffset.UtcNow;
         IsInSea = false;
         ReleasedToSeaAt = null;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);

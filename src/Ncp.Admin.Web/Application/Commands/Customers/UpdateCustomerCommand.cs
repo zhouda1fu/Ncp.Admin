@@ -3,7 +3,6 @@ using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain;
 using Ncp.Admin.Infrastructure.Repositories;
@@ -13,7 +12,6 @@ namespace Ncp.Admin.Web.Application.Commands.Customers;
 public record UpdateCustomerCommand(
     CustomerId Id,
     UserId OwnerId,
-    DeptId DeptId,
     CustomerSourceId CustomerSourceId,
     string FullName,
     string ShortName,
@@ -63,7 +61,7 @@ public class UpdateCustomerCommandHandler(
         var (phoneProvinceName, phoneCityName, phoneDistrictName) = await ResolveRegionNamesAsync(
             request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode, cancellationToken);
         customer.Update(
-            request.OwnerId, request.DeptId, request.CustomerSourceId, source.Name, request.FullName,
+            request.OwnerId, request.CustomerSourceId, source.Name, request.FullName,
             request.ShortName , request.Nature , request.ProvinceCode ,
             request.CityCode , request.DistrictCode ,
             provinceName, cityName, districtName,
