@@ -12,9 +12,8 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Json.Microsoft" />
-        <PackageReference Include="NetCorePal.Extensions.DistributedTransactions.CAP.MySql" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="NetCorePal.Extensions.DistributedTransactions.CAP.PostgreSQL" />
         <PackageReference Include="NetCorePal.Extensions.Repository.EntityFrameworkCore" />
         <PackageReference Include="NetCorePal.Extensions.Repository.EntityFrameworkCore.Snowflake" />
         <PackageReference Include="NetCorePal.Context.Shared" />

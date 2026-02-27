@@ -24,10 +24,10 @@ public class WebAppFixture : AppFixture<Program>
         var redis = builder.AddRedis("Redis");
 
         var databasePassword = builder.AddParameter("database-password", value: "123456@Abc", secret: true);
-        // Add MySQL database infrastructure
-        var mysql = builder.AddMySql("Database", password: databasePassword);
+        // Add PostgreSQL database infrastructure
+        var postgres = builder.AddPostgres("Database", password: databasePassword);
 
-        var database =mysql.AddDatabase("MySql", "test");
+        var database = postgres.AddDatabase("PostgreSQL", "test");
 
         // Add RabbitMQ message queue infrastructure
         var rabbitmqPassword = builder.AddParameter("rabbitmq-password", value: "guest", secret: true);
@@ -55,7 +55,7 @@ public class WebAppFixture : AppFixture<Program>
         // Get connection strings from Aspire resources
         SetConnectionString(a, "Redis", "ConnectionStrings:Redis");
 
-        SetConnectionString(a, "MySql", "ConnectionStrings:MySql");
+        SetConnectionString(a, "PostgreSQL", "ConnectionStrings:PostgreSQL");
 
         SetConnectionString(a, "rabbitmq", "ConnectionStrings:rabbitmq");
 

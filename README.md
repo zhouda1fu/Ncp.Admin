@@ -46,7 +46,7 @@ dotnet run
 ```
 
 Aspire 会自动为您：
-- 启动和管理数据库容器（MySQL、SQL Server、PostgreSQL、MongoDB 等）
+- 启动和管理数据库容器（本模板使用 **PostgreSQL**）
 - 启动和管理消息队列容器（RabbitMQ、Kafka、NATS 等）
 - 启动和管理 Redis 容器
 - 提供统一的 Aspire Dashboard 界面查看所有服务状态
@@ -63,14 +63,14 @@ Aspire 会自动为您：
 # 进入脚本目录
 cd scripts
 
-# 启动默认基础设施 (MySQL + Redis + RabbitMQ)
+# 启动默认基础设施 (PostgreSQL + Redis + RabbitMQ，本模板推荐)
+docker-compose --profile postgres up -d
+
+# 仅 Redis + RabbitMQ，使用 MySQL 作为数据库（需自行改回连接串等配置）
 docker-compose up -d
 
-# 使用 SQL Server 替代 MySQL
+# 使用 SQL Server 替代 PostgreSQL
 docker-compose --profile sqlserver up -d
-
-# 使用 PostgreSQL 替代 MySQL  
-docker-compose --profile postgres up -d
 
 # 使用 Kafka 替代 RabbitMQ
 docker-compose --profile kafka up -d
@@ -105,8 +105,8 @@ cd scripts
 # Redis
 docker run --restart unless-stopped --name netcorepal-redis -p 6379:6379 -v netcorepal_redis_data:/data -d redis:7.2-alpine redis-server --appendonly yes --databases 1024
 
-# MySQL
-docker run --restart unless-stopped --name netcorepal-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 -e MYSQL_CHARACTER_SET_SERVER=utf8mb4 -e MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci -e TZ=Asia/Shanghai -v netcorepal_mysql_data:/var/lib/mysql -d mysql:8.0
+# PostgreSQL（本模板默认数据库）
+docker run --restart unless-stopped --name netcorepal-postgres -p 5432:5432 -e POSTGRES_PASSWORD=123456 -e TZ=Asia/Shanghai -v netcorepal_postgres_data:/var/lib/postgresql/data -d postgres:16-alpine
 
 # RabbitMQ
 docker run --restart unless-stopped --name netcorepal-rabbitmq -p 5672:5672 -p 15672:15672 -e RABBITMQ_DEFAULT_USER=guest -e RABBITMQ_DEFAULT_PASS=guest -v netcorepal_rabbitmq_data:/var/lib/rabbitmq -d rabbitmq:3.12-management-alpine
@@ -119,11 +119,11 @@ docker run --restart unless-stopped --name netcorepal-rabbitmq -p 5672:5672 -p 1
 - **前端应用**: http://localhost:5666/
 - **API 文档 (Scalar)**: http://localhost:5511/scalar（后端启动后访问）
 - **Redis**: `localhost:6379`
-- **MySQL**: `localhost:3306` (root/123456)  
+- **PostgreSQL**: `localhost:5432` (postgres/123456)（本模板默认数据库）
 - **RabbitMQ AMQP**: `localhost:5672` (guest/guest)
 - **RabbitMQ 管理界面**: http://localhost:15672 (guest/guest)
-- **SQL Server**: `localhost:1433` (sa/Test123456!)
-- **PostgreSQL**: `localhost:5432` (postgres/123456)
+- **SQL Server**: `localhost:1433` (sa/Test123456!)（可选 profile）
+- **MySQL**: `localhost:3306` (root/123456)（可选 profile）
 - **Kafka**: `localhost:9092`
 - **Kafka UI**: http://localhost:8080
 
@@ -259,15 +259,17 @@ Rider 用户可以直接使用 `Ncp.Admin.sln.DotSettings` 文件中的 Live Tem
 
 ## 数据库迁移
 
+本模板使用 **PostgreSQL**。请确保 `appsettings.json` 或环境中的 `ConnectionStrings:PostgreSQL` 已配置为有效的连接串（使用 Aspire 时由 AppHost 自动注入）。
+
 ```shell
 # 安装工具  SEE： https://learn.microsoft.com/zh-cn/ef/core/cli/dotnet#installing-the-tools
 dotnet tool install --global dotnet-ef --version 9.0.0
 
-# 强制更新数据库
-dotnet ef database update -p src/Ncp.Admin.Infrastructure 
+# 更新数据库（需指定启动项目以加载连接串）
+dotnet ef database update -p src/Ncp.Admin.Infrastructure -s src/Ncp.Admin.Web
 
 # 创建迁移 SEE：https://learn.microsoft.com/zh-cn/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli
-dotnet ef migrations add InitialCreate -p src/Ncp.Admin.Infrastructure 
+dotnet ef migrations add YourMigrationName -p src/Ncp.Admin.Infrastructure -s src/Ncp.Admin.Web
 ```
 
 ## 代码分析可视化

@@ -14,15 +14,15 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("Redis").WithRedisInsight();
 
 var databasePassword = builder.AddParameter("database-password", value: "1234@Dev", secret: true);
-// Add MySQL database infrastructure
-var mysql = builder.AddMySql("Database", password: databasePassword)
+// Add PostgreSQL database infrastructure
+var postgres = builder.AddPostgres("Database", password: databasePassword)
     // Configure the container to store data in a volume so that it persists across instances.
     //.WithDataVolume(isReadOnly: false)
     // Keep the container running between app host sessions.
     //.WithLifetime(ContainerLifetime.Persistent)
-    .WithPhpMyAdmin();
+    .WithPgAdmin();
 
-var mysqlDb = mysql.AddDatabase("MySql", "dev");
+var postgresDb = postgres.AddDatabase("PostgreSQL", "dev");
 
 // Add RabbitMQ message queue infrastructure
 var rabbitmqPassword = builder.AddParameter("rabbitmq-password", value: "guest", secret: true);
@@ -35,8 +35,8 @@ var web = builder.AddProject<Projects.Ncp_Admin_Web>("web")
     .WithHttpHealthCheck("/health")
     .WithReference(redis)
     .WaitFor(redis)
-    .WithReference(mysqlDb)
-    .WaitFor(mysqlDb)
+    .WithReference(postgresDb)
+    .WaitFor(postgresDb)
     .WithReference(rabbitmq)
     .WaitFor(rabbitmq);
 

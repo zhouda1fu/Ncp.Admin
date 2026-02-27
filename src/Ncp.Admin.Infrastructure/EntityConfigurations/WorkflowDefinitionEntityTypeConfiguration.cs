@@ -33,7 +33,7 @@ internal class WorkflowDefinitionEntityTypeConfiguration : IEntityTypeConfigurat
             .IsRequired();
 
         builder.Property(d => d.DefinitionJson)
-            .HasColumnType("longtext");
+            .HasColumnType("text");
 
         builder.Property(d => d.CreatedBy)
             .IsRequired();

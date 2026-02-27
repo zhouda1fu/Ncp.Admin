@@ -53,7 +53,7 @@ internal class WorkflowInstanceEntityTypeConfiguration : IEntityTypeConfiguratio
         builder.Property(i => i.CompletedAt);
 
         builder.Property(i => i.Variables)
-            .HasColumnType("longtext");
+            .HasColumnType("text");
 
         builder.Property(i => i.Remark)
             .HasMaxLength(1000);

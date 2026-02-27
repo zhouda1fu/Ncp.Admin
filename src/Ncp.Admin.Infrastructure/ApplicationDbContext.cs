@@ -37,7 +37,7 @@ public partial class ApplicationDbContext(
     IMediator mediator,
     IContextAccessor? contextAccessor = null)
     : AppDbContextBase(options, mediator)
-    , IMySqlCapDataStorage
+    , IPostgreSqlCapDataStorage
 {
     /// <summary>
     /// 上下文访问器（NetCorePal）；为 null 时不应用数据权限过滤。

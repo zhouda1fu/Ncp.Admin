@@ -75,8 +75,8 @@ public static class Extensions
                     //.AddGrpcClientInstrumentation()
                     .AddHttpClientInstrumentation();
                 
-                // Add tracing from the underlying MySqlConnector ADO.NET library
-                tracing.AddSource("MySqlConnector");
+                // Add PostgreSQL tracing instrumentation
+                tracing.AddSource("Npgsql");
             });
 
         builder.AddOpenTelemetryExporters();
