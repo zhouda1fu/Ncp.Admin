@@ -23,6 +23,7 @@ using Ncp.Admin.Domain.AggregatesModel.LeaveBalanceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.LeaveRequestAggregate;
 using Ncp.Admin.Domain.AggregatesModel.NotificationAggregate;
 using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
+using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
@@ -114,4 +115,5 @@ public partial class ApplicationDbContext(
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<CustomerSource> CustomerSources => Set<CustomerSource>();
     public DbSet<Industry> Industries => Set<Industry>();
+    public DbSet<Region> Regions => Set<Region>();
 }

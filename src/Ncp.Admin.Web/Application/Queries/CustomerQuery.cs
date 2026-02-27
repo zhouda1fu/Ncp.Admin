@@ -33,6 +33,9 @@ public record CustomerQueryDto(
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
+    string ProvinceName,
+    string CityName,
+    string DistrictName,
     string CoverRegion,
     string RegisterAddress,
     string MainContactName,
@@ -62,6 +65,9 @@ public record CustomerDetailDto(
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
+    string ProvinceName,
+    string CityName,
+    string DistrictName,
     string CoverRegion,
     string RegisterAddress,
     string MainContactName,
@@ -112,7 +118,7 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
         if (c == null) return null;
         return new CustomerDetailDto(
             c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName, c.StatusId, c.FullName, c.ShortName, c.Nature,
-            c.ProvinceCode, c.CityCode, c.DistrictCode, c.CoverRegion, c.RegisterAddress,
+            c.ProvinceCode, c.CityCode, c.DistrictCode, c.ProvinceName, c.CityName, c.DistrictName, c.CoverRegion, c.RegisterAddress,
             c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
             c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatedAt,
             c.Contacts.Select(x => new CustomerContactDto(x.Id, x.Name, x.ContactType, x.Gender, x.Birthday, x.Position, x.Mobile, x.Phone, x.Email, x.IsPrimary)).ToList(),
@@ -141,7 +147,7 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
             .Select(c => new CustomerQueryDto(
                 c.Id, c.OwnerId, c.DeptId, c.CustomerSourceId, c.CustomerSourceName,
                 c.StatusId, c.FullName, c.ShortName, c.Nature,
-                c.ProvinceCode, c.CityCode, c.DistrictCode, c.CoverRegion, c.RegisterAddress,
+                c.ProvinceCode, c.CityCode, c.DistrictCode, c.ProvinceName, c.CityName, c.DistrictName, c.CoverRegion, c.RegisterAddress,
                 c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
                 c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatedAt,
                 c.Contacts.Count,

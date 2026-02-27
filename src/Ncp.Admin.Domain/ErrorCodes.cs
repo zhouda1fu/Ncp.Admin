@@ -486,5 +486,10 @@ public sealed class ErrorCodes
     /// </summary>
     public const int CustomerSourceNotFound = 280006;
 
+    /// <summary>
+    /// 未找到区域
+    /// </summary>
+    public const int RegionNotFound = 280007;
+
     #endregion
 }

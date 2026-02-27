@@ -88,6 +88,21 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public string DistrictCode { get; private set; } = string.Empty;
 
     /// <summary>
+    /// 省名称（冗余，便于列表/展示）
+    /// </summary>
+    public string ProvinceName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 市名称（冗余，便于列表/展示）
+    /// </summary>
+    public string CityName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 区/县名称（冗余，便于列表/展示）
+    /// </summary>
+    public string DistrictName { get; private set; } = string.Empty;
+
+    /// <summary>
     /// 客户覆盖区域
     /// </summary>
     public string CoverRegion { get; private set; } = string.Empty;
@@ -172,6 +187,9 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string provinceCode,
         string cityCode,
         string districtCode,
+        string provinceName,
+        string cityName,
+        string districtName,
         string coverRegion,
         string registerAddress,
         string mainContactName,
@@ -192,6 +210,9 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ProvinceCode = provinceCode;
         CityCode = cityCode;
         DistrictCode = districtCode;
+        ProvinceName = provinceName ?? string.Empty;
+        CityName = cityName ?? string.Empty;
+        DistrictName = districtName ?? string.Empty;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
         MainContactName = mainContactName;
@@ -230,6 +251,9 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string provinceCode,
         string cityCode,
         string districtCode,
+        string provinceName,
+        string cityName,
+        string districtName,
         string coverRegion,
         string registerAddress,
         string mainContactName,
@@ -253,6 +277,9 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ProvinceCode = provinceCode;
         CityCode = cityCode;
         DistrictCode = districtCode;
+        ProvinceName = provinceName ?? string.Empty;
+        CityName = cityName ?? string.Empty;
+        DistrictName = districtName ?? string.Empty;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
         MainContactName = mainContactName;

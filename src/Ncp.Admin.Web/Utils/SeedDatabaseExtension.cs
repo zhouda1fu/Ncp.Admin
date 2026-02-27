@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Hosting;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure;
@@ -28,6 +30,7 @@ public static class SeedDatabaseExtension
             using var serviceScope = app.ApplicationServices.CreateScope();
             var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var passwordHasher = serviceScope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+            var env = serviceScope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
             // 初始化角色和权限
             if (!dbContext.Roles.Any())
@@ -97,6 +100,9 @@ public static class SeedDatabaseExtension
                 PermissionCodes.CustomerSourceView,
                 PermissionCodes.CustomerSourceCreate,
                 PermissionCodes.CustomerSourceEdit,
+                PermissionCodes.RegionView,
+                PermissionCodes.RegionCreate,
+                PermissionCodes.RegionEdit,
 
                 // 所有接口访问权限
                 PermissionCodes.AllApiAccess,
@@ -158,6 +164,24 @@ public static class SeedDatabaseExtension
                 }
                 var childIndividual = new Dept("C#", "第一个子节点的子节点", childGroupId, 1);
                 dbContext.Depts.Add(childIndividual);
+                dbContext.SaveChanges();
+            }
+
+            // 初始化区域主数据（从 Utils/SeedDatas/RegionSeed.txt 读取：Code, Name, Parent_Code, Level）
+            if (!dbContext.Regions.Any())
+            {
+                var seedPath = Path.Combine(env.ContentRootPath, "Utils", "SeedDatas", "RegionSeed.txt");
+                var regionLines = GetRegionSeedLinesFromFile(seedPath);
+                foreach (var (code, name, parentCode, level) in regionLines)
+                {
+                    var region = new Region(
+                        new RegionId(code),
+                        name,
+                        new RegionId(parentCode),
+                        level,
+                        sortOrder: 0);
+                    dbContext.Regions.Add(region);
+                }
                 dbContext.SaveChanges();
             }
 
@@ -235,6 +259,32 @@ public static class SeedDatabaseExtension
         {
             Log.Error(ex, "数据库种子数据初始化失败");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// 从 RegionSeed.txt 读取区域种子数据（格式：Code\tName\tParent_Code\tLevel，首行为表头）
+    /// </summary>
+    private static IEnumerable<(long Code, string Name, long ParentCode, int Level)> GetRegionSeedLinesFromFile(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            Log.Warning("区域种子文件不存在，跳过区域初始化: {Path}", filePath);
+            yield break;
+        }
+        var lines = File.ReadAllLines(filePath);
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i].Trim();
+            if (string.IsNullOrEmpty(line)) continue;
+            // 跳过表头
+            if (i == 0 && (line.StartsWith("Code", StringComparison.OrdinalIgnoreCase) || line.StartsWith("code")))
+                continue;
+            var parts = line.Split('\t');
+            if (parts.Length != 4) continue;
+            if (!long.TryParse(parts[0], out var code) || !long.TryParse(parts[2], out var parentCode) || !int.TryParse(parts[3], out var level))
+                continue;
+            yield return (code, parts[1], parentCode, level);
         }
     }
 }

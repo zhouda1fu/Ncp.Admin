@@ -172,6 +172,9 @@ public static class PermissionDefinitionContext
         customerManagement.AddChild(PermissionCodes.CustomerSourceView, "查看客户来源");
         customerManagement.AddChild(PermissionCodes.CustomerSourceCreate, "创建客户来源");
         customerManagement.AddChild(PermissionCodes.CustomerSourceEdit, "编辑客户来源");
+        customerManagement.AddChild(PermissionCodes.RegionView, "查看区域");
+        customerManagement.AddChild(PermissionCodes.RegionCreate, "创建区域");
+        customerManagement.AddChild(PermissionCodes.RegionEdit, "编辑区域");
 
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");

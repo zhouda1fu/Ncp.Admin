@@ -172,6 +172,12 @@ public static class PermissionCodes
     public const string CustomerSourceCreate = nameof(CustomerSourceCreate);
     /// <summary>编辑客户来源</summary>
     public const string CustomerSourceEdit = nameof(CustomerSourceEdit);
+    /// <summary>查看区域（列表/下拉）</summary>
+    public const string RegionView = nameof(RegionView);
+    /// <summary>创建区域</summary>
+    public const string RegionCreate = nameof(RegionCreate);
+    /// <summary>编辑区域</summary>
+    public const string RegionEdit = nameof(RegionEdit);
     #endregion
 
     #region 请假管理权限

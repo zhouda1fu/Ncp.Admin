@@ -22,6 +22,9 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
         builder.Property(x => x.ProvinceCode).IsRequired(false).HasMaxLength(20);
         builder.Property(x => x.CityCode).IsRequired(false).HasMaxLength(20);
         builder.Property(x => x.DistrictCode).IsRequired(false).HasMaxLength(20);
+        builder.Property(x => x.ProvinceName).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.CityName).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.DistrictName).IsRequired(false).HasMaxLength(100);
         builder.Property(x => x.CoverRegion).IsRequired(false).HasMaxLength(200);
         builder.Property(x => x.RegisterAddress).IsRequired(false).HasMaxLength(500);
         builder.Property(x => x.MainContactName).IsRequired(false).HasMaxLength(50);

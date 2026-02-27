@@ -170,6 +170,9 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.CustomerSourceView, "查看客户来源（列表/下拉）" },
         { PermissionCodes.CustomerSourceCreate, "创建客户来源" },
         { PermissionCodes.CustomerSourceEdit, "编辑客户来源" },
+        { PermissionCodes.RegionView, "查看区域（列表/下拉）" },
+        { PermissionCodes.RegionCreate, "创建区域" },
+        { PermissionCodes.RegionEdit, "编辑区域" },
 
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },
