@@ -27,6 +27,11 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public virtual ICollection<CustomerContact> Contacts { get; } = [];
 
     /// <summary>
+    /// 联系记录列表
+    /// </summary>
+    public virtual ICollection<CustomerContactRecord> ContactRecords { get; } = [];
+
+    /// <summary>
     /// 所属行业关联列表
     /// </summary>
     public virtual ICollection<CustomerIndustry> Industries { get; } = [];
@@ -652,6 +657,33 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
             ?? throw new KnownException("未找到客户联系人", ErrorCodes.CustomerContactNotFound);
         AddDomainEvent(new CustomerContactRemovedDomainEvent(this, contact.Id));
         Contacts.Remove(contact);
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 添加联系记录
+    /// </summary>
+    public CustomerContactRecordId AddContactRecord(
+        DateTimeOffset recordAt,
+        string recordType,
+        string content,
+        UserId? recorderId,
+        string recorderName)
+    {
+        var record = CustomerContactRecord.Create(Id, recordAt, recordType, content, recorderId, recorderName);
+        ContactRecords.Add(record);
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        return record.Id;
+    }
+
+    /// <summary>
+    /// 移除指定联系记录
+    /// </summary>
+    public void RemoveContactRecord(CustomerContactRecordId recordId)
+    {
+        var record = ContactRecords.FirstOrDefault(r => r.Id == recordId)
+            ?? throw new KnownException("未找到客户联系记录", ErrorCodes.CustomerContactRecordNotFound);
+        ContactRecords.Remove(record);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 }

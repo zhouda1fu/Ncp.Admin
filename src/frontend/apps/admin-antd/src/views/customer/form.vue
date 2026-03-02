@@ -10,7 +10,13 @@ import { ArrowLeft } from '@vben/icons';
 import { Button, message, Modal, Space, Table, Tag } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
-import { createCustomer, getCustomer, removeCustomerContact, updateCustomer } from '#/api/system/customer';
+import {
+  createCustomer,
+  getCustomer,
+  removeCustomerContact,
+  removeCustomerContactRecord,
+  updateCustomer,
+} from '#/api/system/customer';
 import type { CustomerApi } from '#/api/system/customer';
 import { getCustomerSourceList } from '#/api/system/customerSource';
 import { fetchFileBlob } from '#/api/system/file';
@@ -20,6 +26,7 @@ import type { RegionApi } from '#/api/system/region';
 import { $t } from '#/locales';
 
 import ContactDrawer from './modules/contact-drawer.vue';
+import ContactRecordDrawer from './modules/contact-record-drawer.vue';
 import { useSchema } from './data';
 
 const route = useRoute();
@@ -33,11 +40,13 @@ const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
 const regionList = ref<RegionApi.RegionItem[]>([]);
 const customerDetail = ref<CustomerApi.CustomerDetail | null>(null);
 const contactDrawerRef = ref<InstanceType<typeof ContactDrawer> | null>(null);
+const contactRecordDrawerRef = ref<InstanceType<typeof ContactRecordDrawer> | null>(null);
 const licenseBlobUrl = ref<string | null>(null);
 const submitting = ref(false);
 /** 新建客户幂等键：同一表单提交（含重复点击）使用同一 key，后端返回缓存响应防重复创建 */
 const createIdempotencyKey = ref<string | null>(null);
 const contactList = computed(() => customerDetail.value?.contacts ?? []);
+const contactRecordList = computed(() => customerDetail.value?.contactRecords ?? []);
 
 const contactColumns = [
   { title: () => $t('customer.contactName'), dataIndex: 'name', key: 'name', width: 120 },
@@ -47,6 +56,14 @@ const contactColumns = [
   { title: () => $t('customer.contactPosition'), dataIndex: 'position', key: 'position', width: 100 },
   { title: () => $t('customer.isPrimary'), key: 'isPrimary', width: 90 },
   { title: () => $t('customer.operation'), key: 'action', width: 160 },
+];
+
+const contactRecordColumns = [
+  { title: () => $t('customer.recordAt'), dataIndex: 'recordAt', key: 'recordAt', width: 170 },
+  { title: () => $t('customer.recordType'), dataIndex: 'recordType', key: 'recordType', width: 100 },
+  { title: () => $t('customer.recordContent'), dataIndex: 'content', key: 'content', ellipsis: true },
+  { title: () => $t('customer.recorderName'), dataIndex: 'recorderName', key: 'recorderName', width: 100 },
+  { title: () => $t('customer.operation'), key: 'action', width: 100 },
 ];
 
 /** 省级：与公海项目区域一致 */
@@ -220,6 +237,45 @@ async function handleDeleteContact(contact: CustomerApi.CustomerContactItem | Re
   });
 }
 
+function openContactRecordDrawer() {
+  contactRecordDrawerRef.value?.open();
+}
+
+function onContactRecordSuccess() {
+  loadCustomer();
+}
+
+async function handleDeleteContactRecord(record: CustomerApi.CustomerContactRecordItem) {
+  if (!id.value) return;
+  Modal.confirm({
+    title: $t('customer.confirmDeleteRecord'),
+    okText: $t('common.confirm'),
+    okType: 'danger',
+    cancelText: $t('common.cancel'),
+    async onOk() {
+      await removeCustomerContactRecord(id.value!, record.id);
+      message.success($t('ui.actionMessage.deleteSuccess'));
+      loadCustomer();
+    },
+  });
+}
+
+function formatRecordAt(recordAt: string) {
+  if (!recordAt) return '';
+  try {
+    const d = new Date(recordAt);
+    return d.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return recordAt;
+  }
+}
+
 async function onSubmit() {
   if (submitting.value) return;
   const { valid } = await formApi.validate();
@@ -345,10 +401,46 @@ async function onSubmit() {
       <div class="mt-6 border-t border-gray-200 pt-6">
         <div class="mb-3 flex items-center justify-between">
           <span class="text-base font-medium">{{ $t('customer.contactRecords') }}</span>
-          <Button type="primary" class="inline-flex items-center gap-1" disabled>
-            + {{ $t('customer.addContact') }}
+          <Button
+            v-if="id"
+            type="primary"
+            class="inline-flex items-center gap-1"
+            @click="openContactRecordDrawer"
+          >
+            + {{ $t('customer.addContactRecord') }}
           </Button>
         </div>
+        <Table
+          v-if="id"
+          :columns="contactRecordColumns"
+          :data-source="contactRecordList"
+          :pagination="false"
+          row-key="id"
+          size="small"
+          class="mt-2"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'recordAt'">
+              {{ formatRecordAt(record.recordAt) }}
+            </template>
+            <template v-else-if="column.key === 'action'">
+              <Button
+                type="link"
+                size="small"
+                danger
+                @click="handleDeleteContactRecord(record as CustomerApi.CustomerContactRecordItem)"
+              >
+                {{ $t('customer.deleteRecord') }}
+              </Button>
+            </template>
+          </template>
+        </Table>
+        <ContactRecordDrawer
+          v-if="id"
+          ref="contactRecordDrawerRef"
+          :customer-id="id"
+          @success="onContactRecordSuccess"
+        />
       </div>
       <div class="mt-6 flex gap-2">
         <Button type="primary" :loading="submitting" :disabled="submitting" @click="onSubmit">{{ $t('common.confirm') }}</Button>

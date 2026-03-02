@@ -107,5 +107,18 @@
   "editContactTitle": "Edit Customer Contact",
   "genderMale": "Male",
   "genderFemale": "Female",
-  "genderUnknown": "Unknown"
+  "genderUnknown": "Unknown",
+  "addContactRecord": "Add Record",
+  "recordAt": "Record Time",
+  "recordType": "Contact Type",
+  "recordTypePhone": "Phone",
+  "recordTypeVisit": "Visit",
+  "recordTypeWechat": "WeChat",
+  "recordTypeOther": "Other",
+  "recordContent": "Content",
+  "recordContentPlaceholder": "Enter contact record content",
+  "recorderName": "Recorder",
+  "addRecordTitle": "Add Contact Record",
+  "deleteRecord": "Delete",
+  "confirmDeleteRecord": "Are you sure you want to delete this contact record?"
 }

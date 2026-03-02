@@ -64,6 +64,12 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(c => c.Contacts).AutoInclude();
 
+        builder.HasMany(c => c.ContactRecords)
+            .WithOne()
+            .HasForeignKey(r => r.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(c => c.ContactRecords).AutoInclude();
+
         builder.HasMany(c => c.Industries)
             .WithOne()
             .HasForeignKey(i => i.CustomerId)
@@ -89,6 +95,24 @@ internal class CustomerContactEntityTypeConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.Phone).IsRequired(false).HasMaxLength(30);
         builder.Property(x => x.Email).IsRequired(false).HasMaxLength(100);
         builder.Property(x => x.IsPrimary).IsRequired();
+    }
+}
+
+internal class CustomerContactRecordEntityTypeConfiguration : IEntityTypeConfiguration<CustomerContactRecord>
+{
+    public void Configure(EntityTypeBuilder<CustomerContactRecord> builder)
+    {
+        builder.ToTable("customer_contact_record");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
+        builder.Property(x => x.CustomerId).IsRequired();
+        builder.Property(x => x.RecordAt).IsRequired();
+        builder.Property(x => x.RecordType).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.Content).IsRequired(false).HasMaxLength(2000);
+        builder.Property(x => x.RecorderId).IsRequired(false);
+        builder.Property(x => x.RecorderName).IsRequired(false).HasMaxLength(100);
+        builder.HasIndex(x => x.CustomerId);
+        builder.HasIndex(x => x.RecordAt);
     }
 }
 

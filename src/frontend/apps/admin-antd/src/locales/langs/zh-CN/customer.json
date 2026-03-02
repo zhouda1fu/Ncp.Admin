@@ -75,5 +75,18 @@
     "editContactTitle":"编辑客户联系人",
     "genderMale":"男",
     "genderFemale":"女",
-    "genderUnknown":"未知"
+    "genderUnknown":"未知",
+    "addContactRecord":"新增记录",
+    "recordAt":"记录时间",
+    "recordType":"联系类型",
+    "recordTypePhone":"电话",
+    "recordTypeVisit":"上门拜访",
+    "recordTypeWechat":"微信",
+    "recordTypeOther":"其他",
+    "recordContent":"记录内容",
+    "recordContentPlaceholder":"请填写联系记录内容",
+    "recorderName":"记录人",
+    "addRecordTitle":"新增联系记录",
+    "deleteRecord":"删除",
+    "confirmDeleteRecord":"确定要删除该联系记录吗？"
 }

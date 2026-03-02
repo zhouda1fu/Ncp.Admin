@@ -477,6 +477,10 @@ public sealed class ErrorCodes
     /// </summary>
     public const int CustomerAlreadyClaimed = 280004;
     /// <summary>
+    /// 未找到客户联系记录
+    /// </summary>
+    public const int CustomerContactRecordNotFound = 280005;
+    /// <summary>
     /// 未找到行业
     /// </summary>
     public const int IndustryNotFound = 280005;

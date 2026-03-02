@@ -68,8 +68,17 @@ export namespace CustomerApi {
     isPrimary: boolean;
   }
 
+  export interface CustomerContactRecordItem {
+    id: string;
+    recordAt: string;
+    recordType: string;
+    content: string;
+    recorderName: string;
+  }
+
   export interface CustomerDetail extends CustomerItem {
     contacts: CustomerContactItem[];
+    contactRecords: CustomerContactRecordItem[];
   }
 
   export interface CustomerSearchItem {
@@ -157,6 +166,14 @@ async function removeCustomerContact(customerId: string, contactId: string) {
   return requestClient.delete(`/customers/${customerId}/contacts/${contactId}`);
 }
 
+async function addCustomerContactRecord(customerId: string, data: Recordable<any>) {
+  return requestClient.post<{ id: string }>(`/customers/${customerId}/contact-records`, data);
+}
+
+async function removeCustomerContactRecord(customerId: string, recordId: string) {
+  return requestClient.delete(`/customers/${customerId}/contact-records/${recordId}`);
+}
+
 export {
   getCustomerList,
   getCustomer,
@@ -172,4 +189,6 @@ export {
   addCustomerContact,
   updateCustomerContact,
   removeCustomerContact,
+  addCustomerContactRecord,
+  removeCustomerContactRecord,
 };

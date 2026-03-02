@@ -19,6 +19,13 @@ public record CustomerContactDto(
     string Email,
     bool IsPrimary);
 
+public record CustomerContactRecordDto(
+    CustomerContactRecordId Id,
+    DateTimeOffset RecordAt,
+    string RecordType,
+    string Content,
+    string RecorderName);
+
 public record CustomerQueryDto(
     CustomerId Id,
     UserId? OwnerId,
@@ -109,6 +116,7 @@ public record CustomerDetailDto(
     DateTimeOffset? ClaimedAt,
     DateTimeOffset CreatedAt,
     IReadOnlyList<CustomerContactDto> Contacts,
+    IReadOnlyList<CustomerContactRecordDto> ContactRecords,
     IReadOnlyList<IndustryId> IndustryIds);
 
 /// <summary>
@@ -139,6 +147,7 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
         var c = await dbContext.Customers
             .AsNoTracking()
             .Include(x => x.Contacts)
+            .Include(x => x.ContactRecords)
             .Include(x => x.Industries)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (c == null) return null;
@@ -150,6 +159,7 @@ public class CustomerQuery(ApplicationDbContext dbContext) : IQuery
             c.MainContactName, c.MainContactPhone, c.WechatStatus, c.Remark, c.IsKeyAccount, c.IsHidden, c.CombineFlag,
             c.IsInSea, c.ReleasedToSeaAt, c.CreatorId, c.CreatorName, c.OwnerName, c.ClaimedAt, c.CreatedAt,
             c.Contacts.Select(x => new CustomerContactDto(x.Id, x.Name, x.ContactType, x.Gender, x.Birthday, x.Position, x.Mobile, x.Phone, x.Email, x.IsPrimary)).ToList(),
+            c.ContactRecords.OrderByDescending(r => r.RecordAt).Select(r => new CustomerContactRecordDto(r.Id, r.RecordAt, r.RecordType, r.Content, r.RecorderName)).ToList(),
             c.Industries.Select(x => x.IndustryId).ToList());
     }
 

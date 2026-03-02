@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Ncp.Admin.Domain.AggregatesModel.AssetAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate;
@@ -55,6 +56,28 @@ public partial class ApplicationDbContext(
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
+
+        // 全局：所有 DateTimeOffset 写入 PostgreSQL 时转为 UTC（Npgsql 仅接受 Offset=0）
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTimeOffset))
+                {
+                    property.SetValueConverter(
+                        new ValueConverter<DateTimeOffset, DateTimeOffset>(
+                            v => v.ToUniversalTime(),
+                            v => v));
+                }
+                else if (property.ClrType == typeof(DateTimeOffset?))
+                {
+                    property.SetValueConverter(
+                        new ValueConverter<DateTimeOffset?, DateTimeOffset?>(
+                            v => v.HasValue ? v.Value.ToUniversalTime() : null,
+                            v => v));
+                }
+            }
+        }
 
         if (_contextAccessor != null)
         {
