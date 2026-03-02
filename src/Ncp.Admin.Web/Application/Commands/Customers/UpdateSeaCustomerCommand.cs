@@ -8,14 +8,14 @@ using Ncp.Admin.Infrastructure.Repositories;
 namespace Ncp.Admin.Web.Application.Commands.Customers;
 
 /// <summary>
-/// 公海客户更新命令，区域名称、客户来源名称均由前端传入，应用层不再依赖区域/客户来源仓储解析。
+/// 公海客户更新命令。简称、主联系人、微信状态、是否重点客户不从请求接收，由 Handler 使用当前客户实体值，防止篡改。
 /// </summary>
 public record UpdateSeaCustomerCommand(
     CustomerId Id,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
-    string ShortName,
-    string Nature,
+    CustomerStatus? Status,
+    CompanyNature? Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
@@ -31,13 +31,11 @@ public record UpdateSeaCustomerCommand(
     string ConsultationContent,
     string CoverRegion,
     string RegisterAddress,
-    string MainContactName,
-    string MainContactPhone,
+    int EmployeeCount,
+    string BusinessLicense,
     string ContactQq,
     string ContactWechat,
-    string WechatStatus,
     string Remark,
-    bool IsKeyAccount,
     IReadOnlyList<IndustryId> IndustryIds) : ICommand<bool>;
 
 public class UpdateSeaCustomerCommandValidator : AbstractValidator<UpdateSeaCustomerCommand>
@@ -45,7 +43,6 @@ public class UpdateSeaCustomerCommandValidator : AbstractValidator<UpdateSeaCust
     public UpdateSeaCustomerCommandValidator()
     {
         RuleFor(c => c.Id).NotEmpty();
-        RuleFor(c => c.ShortName).MaximumLength(100);
     }
 }
 
@@ -57,16 +54,17 @@ public class UpdateSeaCustomerCommandHandler(ICustomerRepository repository)
         var customer = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
         customer.UpdateWhenInSea(
-            request.CustomerSourceId, request.CustomerSourceName , 
-            request.ShortName , request.Nature , request.ProvinceCode ,
-            request.CityCode , request.DistrictCode ,
-            request.ProvinceName , request.CityName , request.DistrictName ,
-            request.PhoneProvinceCode , request.PhoneCityCode , request.PhoneDistrictCode ,
-            request.PhoneProvinceName , request.PhoneCityName , request.PhoneDistrictName ,
-            request.ConsultationContent ,
-            request.CoverRegion , request.RegisterAddress , request.MainContactName , request.MainContactPhone ,
-            request.ContactQq , request.ContactWechat ,
-            request.WechatStatus , request.Remark , request.IsKeyAccount,
+            request.CustomerSourceId, request.CustomerSourceName,
+            customer.ShortName, request.Status, request.Nature, request.ProvinceCode,
+            request.CityCode, request.DistrictCode,
+            request.ProvinceName, request.CityName, request.DistrictName,
+            request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode,
+            request.PhoneProvinceName, request.PhoneCityName, request.PhoneDistrictName,
+            request.ConsultationContent,
+            request.CoverRegion, request.RegisterAddress, request.EmployeeCount, request.BusinessLicense ?? string.Empty,
+            customer.MainContactName, customer.MainContactPhone,
+            request.ContactQq, request.ContactWechat,
+            customer.WechatStatus, request.Remark, customer.IsKeyAccount,
             request.IndustryIds);
         return true;
     }

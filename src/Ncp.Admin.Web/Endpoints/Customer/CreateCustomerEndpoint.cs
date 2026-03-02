@@ -19,8 +19,7 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="CustomerSourceId">客户来源 ID</param>
 /// <param name="CustomerSourceName">客户来源名称（前端传入）</param>
 /// <param name="FullName">客户全称</param>
-/// <param name="ShortName">客户简称</param>
-/// <param name="Nature">公司性质</param>
+/// <param name="Nature">公司性质（枚举值）</param>
 /// <param name="ProvinceCode">省区域码</param>
 /// <param name="CityCode">市区域码</param>
 /// <param name="DistrictCode">区/县区域码</param>
@@ -36,21 +35,19 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="ConsultationContent">咨询内容</param>
 /// <param name="CoverRegion">覆盖区域</param>
 /// <param name="RegisterAddress">注册地址</param>
-/// <param name="MainContactName">主联系人姓名</param>
-/// <param name="MainContactPhone">主联系人电话</param>
+/// <param name="EmployeeCount">员工数量</param>
+/// <param name="BusinessLicense">营业执照（路径或 URL）</param>
 /// <param name="ContactQq">QQ</param>
 /// <param name="ContactWechat">微信</param>
-/// <param name="WechatStatus">微信状态</param>
 /// <param name="Remark">备注</param>
-/// <param name="IsKeyAccount">是否重点客户</param>
 /// <param name="IndustryIds">所属行业 ID 列表</param>
+/// <remarks>简称、主联系人、微信状态、是否重点客户不在本接口接收，由后端默认值写入，防止篡改。OwnerId 为 null 表示公海客户。</remarks>
 public record CreateCustomerRequest(
-    UserId OwnerId,
+    UserId? OwnerId,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
     string FullName,
-    string ShortName,
-    string Nature,
+    CompanyNature? Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
@@ -66,13 +63,11 @@ public record CreateCustomerRequest(
     string ConsultationContent,
     string CoverRegion,
     string RegisterAddress,
-    string MainContactName,
-    string MainContactPhone,
+    int EmployeeCount,
+    string? BusinessLicense,
     string ContactQq,
     string ContactWechat,
-    string WechatStatus,
     string Remark,
-    bool IsKeyAccount,
     IReadOnlyList<IndustryId> IndustryIds);
 
 /// <summary>
@@ -107,11 +102,11 @@ public class CreateCustomerEndpoint(IMediator mediator) : Endpoint<CreateCustome
         }
         var creatorName = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
         var cmd = new CreateCustomerCommand(
-            req.OwnerId, req.CustomerSourceId, req.CustomerSourceName, req.FullName, req.ShortName,
-            req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.ProvinceName, req.CityName, req.DistrictName,
+            req.OwnerId, req.CustomerSourceId, req.CustomerSourceName, req.FullName,
+            string.Empty, req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.ProvinceName, req.CityName, req.DistrictName,
             req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode, req.PhoneProvinceName, req.PhoneCityName, req.PhoneDistrictName,
-            req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.MainContactName, req.MainContactPhone,
-            req.ContactQq, req.ContactWechat, req.WechatStatus, req.Remark, req.IsKeyAccount, new UserId(uid), creatorName, req.IndustryIds);
+            req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.EmployeeCount, req.BusinessLicense ?? string.Empty,
+            string.Empty, string.Empty, req.ContactQq, req.ContactWechat, string.Empty, req.Remark, false, new UserId(uid), creatorName, req.IndustryIds);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateCustomerResponse(id).AsResponseData(), cancellation: ct);
     }

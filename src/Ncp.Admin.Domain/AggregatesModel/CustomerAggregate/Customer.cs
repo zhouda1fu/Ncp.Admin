@@ -62,9 +62,14 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public string ShortName { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 公司性质
+    /// 客户状态（跟进中-暂不明了 / 跟进中-有意向 / 合作中客户 / 曾合作客户）
     /// </summary>
-    public string Nature { get; private set; } = string.Empty;
+    public CustomerStatus? Status { get; private set; }
+
+    /// <summary>
+    /// 公司性质（个体 / 民营 / 国企或央企 / 外企 / 其他 / 终端客户 / 运营商）
+    /// </summary>
+    public CompanyNature? Nature { get; private set; }
 
     /// <summary>
     /// 省区域码
@@ -134,6 +139,16 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// 公司注册地址
     /// </summary>
     public string RegisterAddress { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 员工数量
+    /// </summary>
+    public int EmployeeCount { get; private set; }
+
+    /// <summary>
+    /// 营业执照（存储路径或 URL）
+    /// </summary>
+    public string BusinessLicense { get; private set; } = string.Empty;
 
     /// <summary>
     /// 主联系人姓名
@@ -229,7 +244,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string customerSourceName,
         string fullName,
         string shortName,
-        string nature,
+        CompanyNature? nature,
         string provinceCode,
         string cityCode,
         string districtCode,
@@ -245,6 +260,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string consultationContent,
         string coverRegion,
         string registerAddress,
+        int employeeCount,
+        string businessLicense,
         string mainContactName,
         string mainContactPhone,
         string contactQq,
@@ -261,6 +278,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         IsVoided = false;
         FullName = fullName;
         ShortName = shortName;
+        Status = null;
         Nature = nature;
         ProvinceCode = provinceCode;
         CityCode = cityCode;
@@ -277,6 +295,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ConsultationContent = consultationContent;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
+        EmployeeCount = employeeCount;
+        BusinessLicense = businessLicense ?? string.Empty;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
         ContactQq = contactQq;
@@ -325,7 +345,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         IsVoided = false;
         FullName = string.Empty;
         ShortName = string.Empty;
-        Nature = string.Empty;
+        Status = null;
+        Nature = null;
         ProvinceCode = provinceCode;
         CityCode = cityCode;
         DistrictCode = districtCode;
@@ -341,6 +362,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ConsultationContent = consultationContent;
         CoverRegion = string.Empty;
         RegisterAddress = string.Empty;
+        EmployeeCount = 0;
+        BusinessLicense = string.Empty;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
         ContactQq = contactQq;
@@ -376,7 +399,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string customerSourceName,
         string fullName,
         string shortName,
-        string nature,
+        CustomerStatus? status,
+        CompanyNature? nature,
         string provinceCode,
         string cityCode,
         string districtCode,
@@ -392,6 +416,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string consultationContent,
         string coverRegion,
         string registerAddress,
+        int employeeCount,
+        string businessLicense,
         string mainContactName,
         string mainContactPhone,
         string contactQq,
@@ -409,6 +435,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         CustomerSourceName = customerSourceName;
         FullName = fullName;
         ShortName = shortName;
+        Status = status;
         Nature = nature;
         ProvinceCode = provinceCode;
         CityCode = cityCode;
@@ -425,6 +452,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ConsultationContent = consultationContent;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
+        EmployeeCount = employeeCount;
+        BusinessLicense = businessLicense ?? string.Empty;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
         ContactQq = contactQq;
@@ -450,7 +479,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         CustomerSourceId customerSourceId,
         string customerSourceName,
         string shortName,
-        string nature,
+        CustomerStatus? status,
+        CompanyNature? nature,
         string provinceCode,
         string cityCode,
         string districtCode,
@@ -466,6 +496,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string consultationContent,
         string coverRegion,
         string registerAddress,
+        int employeeCount,
+        string businessLicense,
         string mainContactName,
         string mainContactPhone,
         string contactQq,
@@ -480,6 +512,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         CustomerSourceId = customerSourceId;
         CustomerSourceName = customerSourceName;
         ShortName = shortName;
+        Status = status;
         Nature = nature;
         ProvinceCode = provinceCode;
         CityCode = cityCode;
@@ -496,6 +529,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ConsultationContent = consultationContent;
         CoverRegion = coverRegion;
         RegisterAddress = registerAddress;
+        EmployeeCount = employeeCount;
+        BusinessLicense = businessLicense ?? string.Empty;
         MainContactName = mainContactName;
         MainContactPhone = mainContactPhone;
         ContactQq = contactQq;
@@ -619,4 +654,40 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         Contacts.Remove(contact);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
+}
+
+/// <summary>
+/// 客户状态
+/// </summary>
+public enum CustomerStatus
+{
+    /// <summary>跟进中-暂不明了</summary>
+    FollowUpUnclear = 0,
+    /// <summary>跟进中-有意向</summary>
+    FollowUpInterested = 1,
+    /// <summary>合作中客户</summary>
+    Cooperating = 2,
+    /// <summary>曾合作客户</summary>
+    FormerCooperating = 3,
+}
+
+/// <summary>
+/// 公司性质
+/// </summary>
+public enum CompanyNature
+{
+    /// <summary>个体</summary>
+    Individual = 0,
+    /// <summary>民营</summary>
+    Private = 1,
+    /// <summary>国企或央企</summary>
+    StateOwned = 2,
+    /// <summary>外企</summary>
+    Foreign = 3,
+    /// <summary>其他</summary>
+    Other = 4,
+    /// <summary>终端客户</summary>
+    EndCustomer = 5,
+    /// <summary>运营商</summary>
+    Operator = 6,
 }

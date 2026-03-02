@@ -9,13 +9,15 @@ using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.Commands.Customers;
 
+/// <summary>
+/// 更新客户命令。简称、负责人、主联系人、微信状态、是否重点客户不从请求接收，由 Handler 使用当前客户实体值，防止篡改。
+/// </summary>
 public record UpdateCustomerCommand(
     CustomerId Id,
-    UserId OwnerId,
     CustomerSourceId CustomerSourceId,
     string FullName,
-    string ShortName,
-    string Nature,
+    CustomerStatus? Status,
+    CompanyNature? Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
@@ -25,15 +27,13 @@ public record UpdateCustomerCommand(
     string ConsultationContent,
     string CoverRegion,
     string RegisterAddress,
-    string MainContactName,
-    string MainContactPhone,
+    int EmployeeCount,
+    string BusinessLicense,
     string ContactQq,
     string ContactWechat,
-    string WechatStatus,
     string Remark,
-    bool IsKeyAccount,
     bool IsHidden,
-    IReadOnlyList<IndustryId> IndustryIds ) : ICommand<bool>;
+    IReadOnlyList<IndustryId> IndustryIds) : ICommand<bool>;
 
 public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCommand>
 {
@@ -41,7 +41,6 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
     {
         RuleFor(c => c.Id).NotEmpty();
         RuleFor(c => c.FullName).NotEmpty().MaximumLength(200);
-        RuleFor(c => c.ShortName).MaximumLength(100);
     }
 }
 
@@ -61,16 +60,17 @@ public class UpdateCustomerCommandHandler(
         var (phoneProvinceName, phoneCityName, phoneDistrictName) = await ResolveRegionNamesAsync(
             request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode, cancellationToken);
         customer.Update(
-            request.OwnerId, request.CustomerSourceId, source.Name, request.FullName,
-            request.ShortName , request.Nature , request.ProvinceCode ,
-            request.CityCode , request.DistrictCode ,
+            customer.OwnerId, request.CustomerSourceId, source.Name, request.FullName,
+            customer.ShortName, request.Status, request.Nature, request.ProvinceCode,
+            request.CityCode, request.DistrictCode,
             provinceName, cityName, districtName,
-            request.PhoneProvinceCode , request.PhoneCityCode , request.PhoneDistrictCode ,
+            request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode,
             phoneProvinceName, phoneCityName, phoneDistrictName,
-            request.ConsultationContent ,
-            request.CoverRegion , request.RegisterAddress , request.MainContactName , request.MainContactPhone ,
-            request.ContactQq , request.ContactWechat ,
-            request.WechatStatus , request.Remark , request.IsKeyAccount, request.IsHidden,
+            request.ConsultationContent,
+            request.CoverRegion, request.RegisterAddress, request.EmployeeCount, request.BusinessLicense ?? string.Empty,
+            customer.MainContactName, customer.MainContactPhone,
+            request.ContactQq, request.ContactWechat,
+            customer.WechatStatus, request.Remark, customer.IsKeyAccount, request.IsHidden,
             request.IndustryIds);
         return true;
     }

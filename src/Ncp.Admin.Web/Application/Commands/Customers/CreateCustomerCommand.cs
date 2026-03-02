@@ -9,12 +9,12 @@ using Ncp.Admin.Infrastructure.Repositories;
 namespace Ncp.Admin.Web.Application.Commands.Customers;
 
 public record CreateCustomerCommand(
-    UserId OwnerId,
+    UserId? OwnerId,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
     string FullName,
     string ShortName,
-    string Nature,
+    CompanyNature? Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
@@ -30,6 +30,8 @@ public record CreateCustomerCommand(
     string ConsultationContent,
     string CoverRegion,
     string RegisterAddress,
+    int EmployeeCount,
+    string BusinessLicense,
     string MainContactName,
     string MainContactPhone,
     string ContactQq,
@@ -61,7 +63,7 @@ public class CreateCustomerCommandHandler(ICustomerRepository repository) : ICom
             request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode,
             request.PhoneProvinceName, request.PhoneCityName, request.PhoneDistrictName,
             request.ConsultationContent,
-            request.CoverRegion, request.RegisterAddress, request.MainContactName, request.MainContactPhone,
+            request.CoverRegion, request.RegisterAddress, request.EmployeeCount, request.BusinessLicense ?? string.Empty, request.MainContactName, request.MainContactPhone,
             request.ContactQq, request.ContactWechat,
             request.WechatStatus, request.Remark, request.IsKeyAccount, request.CreatorId, request.CreatorName);
         await repository.AddAsync(customer, cancellationToken);

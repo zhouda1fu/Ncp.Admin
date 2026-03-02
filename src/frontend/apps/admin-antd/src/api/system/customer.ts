@@ -10,7 +10,10 @@ export namespace CustomerApi {
     customerSourceName: string;
     fullName: string;
     shortName?: string;
-    nature?: string;
+    /** 客户状态枚举值：0 跟进中-暂不明了 1 跟进中-有意向 2 合作中客户 3 曾合作客户 */
+    status?: number;
+    /** 公司性质枚举值：0 个体 1 民营 2 国企或央企 3 外企 4 其他 5 终端客户 6 运营商 */
+    nature?: number;
     provinceCode?: string;
     cityCode?: string;
     districtCode?: string;
@@ -28,6 +31,10 @@ export namespace CustomerApi {
     contactWechat?: string;
     coverRegion?: string;
     registerAddress?: string;
+    /** 员工数量 */
+    employeeCount?: number;
+    /** 营业执照（路径或 URL） */
+    businessLicense?: string;
     mainContactName?: string;
     mainContactPhone?: string;
     wechatStatus?: string;

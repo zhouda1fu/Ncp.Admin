@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ncp.Admin.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InitDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -246,33 +246,64 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OwnerId = table.Column<long>(type: "bigint", nullable: true),
-                    DeptId = table.Column<long>(type: "bigint", nullable: true),
-                    CustomerSource = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    StatusId = table.Column<int>(type: "integer", nullable: false),
+                    CustomerSourceId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CustomerSourceName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    IsVoided = table.Column<bool>(type: "boolean", nullable: false),
                     FullName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     ShortName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    Nature = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Status = table.Column<int>(type: "integer", nullable: true),
+                    Nature = table.Column<int>(type: "integer", nullable: true),
                     ProvinceCode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     CityCode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     DistrictCode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    ProvinceName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    CityName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    DistrictName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    PhoneProvinceCode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    PhoneCityCode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    PhoneDistrictCode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    PhoneProvinceName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    PhoneCityName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    PhoneDistrictName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    ConsultationContent = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     CoverRegion = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     RegisterAddress = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    EmployeeCount = table.Column<int>(type: "integer", nullable: false),
+                    BusinessLicense = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     MainContactName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     MainContactPhone = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     WechatStatus = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     Remark = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    ContactQq = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    ContactWechat = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     IsKeyAccount = table.Column<bool>(type: "boolean", nullable: false),
                     IsHidden = table.Column<bool>(type: "boolean", nullable: false),
                     CombineFlag = table.Column<bool>(type: "boolean", nullable: false),
                     IsInSea = table.Column<bool>(type: "boolean", nullable: false),
                     ReleasedToSeaAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     CreatorId = table.Column<long>(type: "bigint", nullable: false),
+                    CreatorName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    OwnerName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    ClaimedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_customer", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "customer_source",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_customer_source", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -480,6 +511,21 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_project", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "region",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    ParentId = table.Column<long>(type: "bigint", nullable: false),
+                    Level = table.Column<int>(type: "integer", nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_region", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -1117,6 +1163,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_customer_source_SortOrder",
+                table: "customer_source",
+                column: "SortOrder");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_dept_IsDeleted",
                 table: "dept",
                 column: "IsDeleted");
@@ -1267,6 +1318,16 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "IX_project_Status",
                 table: "project",
                 column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_region_Level",
+                table: "region",
+                column: "Level");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_region_ParentId",
+                table: "region",
+                column: "ParentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_role_Name",
@@ -1506,6 +1567,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "customer_industry");
 
             migrationBuilder.DropTable(
+                name: "customer_source");
+
+            migrationBuilder.DropTable(
                 name: "dept");
 
             migrationBuilder.DropTable(
@@ -1537,6 +1601,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "project");
+
+            migrationBuilder.DropTable(
+                name: "region");
 
             migrationBuilder.DropTable(
                 name: "role_permission");

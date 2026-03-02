@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ncp.Admin.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260227090200_RemoveCustomerDeptIdAndRequireCreatorName")]
-    partial class RemoveCustomerDeptIdAndRequireCreatorName
+    [Migration("20260302041416_InitDb")]
+    partial class InitDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -474,6 +474,10 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BusinessLicense")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("CityCode")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
@@ -531,6 +535,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("EmployeeCount")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -556,9 +563,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("Nature")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int?>("Nature")
+                        .HasColumnType("integer");
 
                     b.Property<long?>("OwnerId")
                         .HasColumnType("bigint");
@@ -613,6 +619,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<string>("ShortName")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("UpdateTime")
                         .HasColumnType("timestamp with time zone");

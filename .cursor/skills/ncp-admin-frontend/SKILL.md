@@ -62,6 +62,36 @@ description: Follows Vben Admin patterns when developing Ncp.Admin frontend (Vue
 - 懒加载：`component: () => import('#/views/...')`
 - `meta` 含 `icon`、`title`、`order`
 
+### 左侧菜单选中效果（子页面保持父菜单高亮）
+
+左侧菜单的“当前选中项”由 **`route.meta?.activePath || route.path`** 决定（见 `extra-menu.vue`、`use-mixed-menu.ts`）。若新增的是**不在菜单中展示的子路由**（如新建页、编辑页，`hideInMenu: true`），且希望进入该页后**左侧仍高亮对应的父级菜单项**（例如“客户列表”下的新建/编辑页仍高亮“客户列表”），则在该子路由的 `meta` 中设置 **`activePath`** 为要高亮的菜单路径（通常为列表页 path）：
+
+```ts
+{
+  path: '/customer/create',
+  name: 'CustomerCreate',
+  meta: {
+    activePath: '/customer/list',  // 进入此页时左侧仍高亮「客户列表」
+    hideInMenu: true,
+    title: $t('customer.create'),
+  },
+  component: () => import('#/views/customer/form.vue'),
+},
+{
+  path: '/customer/:id/edit',
+  name: 'CustomerEdit',
+  meta: {
+    activePath: '/customer/list',
+    hideInMenu: true,
+    title: $t('customer.edit'),
+  },
+  component: () => import('#/views/customer/form.vue'),
+},
+```
+
+- **何时使用**：列表的“新建/编辑”改为独立页面、详情页、或其他不单独出现在侧栏的子页时，若需保持父级菜单项选中，则给该路由 `meta.activePath` 设为父级菜单的 `path`（如列表页 path）。
+- **不设置时**：子页 path 与菜单项 path 不一致，侧栏会按当前 `route.path` 匹配，可能没有高亮或高亮错误。
+
 ## 多语言规范
 
 - 文案统一放 `locales/langs/zh-CN/*.json` 与 `en-US/*.json`

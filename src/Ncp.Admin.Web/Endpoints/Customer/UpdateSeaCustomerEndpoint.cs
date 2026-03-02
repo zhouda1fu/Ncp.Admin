@@ -16,8 +16,8 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="Id">客户 ID</param>
 /// <param name="CustomerSourceId">客户来源 ID</param>
 /// <param name="CustomerSourceName">客户来源名称（由前端传入）</param>
-/// <param name="ShortName">客户简称</param>
-/// <param name="Nature">公司性质</param>
+/// <param name="Status">客户状态（枚举值）</param>
+/// <param name="Nature">公司性质（枚举值）</param>
 /// <param name="ProvinceCode">省区域码</param>
 /// <param name="CityCode">市区域码</param>
 /// <param name="DistrictCode">区/县区域码</param>
@@ -33,20 +33,19 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="ConsultationContent">咨询内容</param>
 /// <param name="CoverRegion">覆盖区域</param>
 /// <param name="RegisterAddress">注册地址</param>
-/// <param name="MainContactName">主联系人姓名</param>
-/// <param name="MainContactPhone">主联系人电话</param>
+/// <param name="EmployeeCount">员工数量</param>
+/// <param name="BusinessLicense">营业执照（路径或 URL）</param>
 /// <param name="ContactQq">QQ</param>
 /// <param name="ContactWechat">微信</param>
-/// <param name="WechatStatus">微信状态</param>
 /// <param name="Remark">备注</param>
-/// <param name="IsKeyAccount">是否重点客户</param>
 /// <param name="IndustryIds">所属行业 ID 列表</param>
+/// <remarks>简称、主联系人、微信状态、是否重点客户不接受请求入参，由后端沿用当前客户数据，防止篡改。</remarks>
 public record UpdateSeaCustomerRequest(
     CustomerId Id,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
-    string ShortName,
-    string Nature,
+    CustomerStatus? Status,
+    CompanyNature? Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
@@ -62,13 +61,11 @@ public record UpdateSeaCustomerRequest(
     string ConsultationContent,
     string CoverRegion,
     string RegisterAddress,
-    string MainContactName,
-    string MainContactPhone,
+    int EmployeeCount,
+    string? BusinessLicense,
     string ContactQq,
     string ContactWechat,
-    string WechatStatus,
     string Remark,
-    bool IsKeyAccount,
     IReadOnlyList<IndustryId> IndustryIds);
 
 /// <summary>
@@ -90,13 +87,13 @@ public class UpdateSeaCustomerEndpoint(IMediator mediator) : Endpoint<UpdateSeaC
     public override async Task HandleAsync(UpdateSeaCustomerRequest req, CancellationToken ct)
     {
         var cmd = new UpdateSeaCustomerCommand(
-            req.Id, req.CustomerSourceId, req.CustomerSourceName , req.ShortName,
-            req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode,
+            req.Id, req.CustomerSourceId, req.CustomerSourceName,
+            req.Status, req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode,
             req.ProvinceName, req.CityName, req.DistrictName,
             req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode,
             req.PhoneProvinceName, req.PhoneCityName, req.PhoneDistrictName,
-            req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.MainContactName, req.MainContactPhone,
-            req.ContactQq, req.ContactWechat, req.WechatStatus, req.Remark, req.IsKeyAccount, req.IndustryIds);
+            req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.EmployeeCount, req.BusinessLicense ?? string.Empty,
+            req.ContactQq, req.ContactWechat, req.Remark, req.IndustryIds);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

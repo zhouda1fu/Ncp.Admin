@@ -1,26 +1,25 @@
 <script lang="ts" setup>
 import type { Recordable } from '@vben/types';
+import type { VbenFormSchema } from '#/adapter/form';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { CustomerApi } from '#/api/system/customer';
 
 import { computed, onMounted, ref } from 'vue';
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { useRouter } from 'vue-router';
+
+import { Page } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
 import { Button, message } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import {
-  getCustomerList,
-  getCustomer,
-  releaseCustomerToSea,
-} from '#/api/system/customer';
+import { getCustomerList, releaseCustomerToSea } from '#/api/system/customer';
 import { getCustomerSourceList } from '#/api/system/customerSource';
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
-import Form from './modules/form.vue';
 
+const router = useRouter();
 const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
 
 onMounted(() => {
@@ -29,14 +28,9 @@ onMounted(() => {
   });
 });
 
-const [FormDrawer, formDrawerApi] = useVbenDrawer({
-  connectedComponent: Form,
-  destroyOnClose: true,
-});
-
 const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
   formOptions: {
-    schema: computed(() => useGridFormSchema(customerSourceOptions.value)),
+    schema: computed(() => useGridFormSchema(customerSourceOptions.value)) as unknown as VbenFormSchema[],
     submitOnChange: true,
   },
   gridOptions: {
@@ -76,12 +70,11 @@ function onRefresh() {
 }
 
 function onCreate() {
-  formDrawerApi.setData({}).open();
+  router.push('/customer/create');
 }
 
-async function onEdit(row: CustomerApi.CustomerItem) {
-  const detail = await getCustomer(row.id);
-  formDrawerApi.setData(detail).open();
+function onEdit(row: CustomerApi.CustomerItem) {
+  router.push(`/customer/${row.id}/edit`);
 }
 
 async function onReleaseToSea(row: CustomerApi.CustomerItem) {
@@ -99,7 +92,6 @@ async function onReleaseToSea(row: CustomerApi.CustomerItem) {
 
 <template>
   <Page auto-content-height>
-    <FormDrawer @success="onRefresh" />
     <Grid :table-title="$t('customer.list')">
       <template #toolbar-tools>
         <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">

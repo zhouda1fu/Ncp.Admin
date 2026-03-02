@@ -41,6 +41,26 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/customer/list.vue'),
       },
       {
+        path: '/customer/create',
+        name: 'CustomerCreate',
+        meta: {
+          activePath: '/customer/list',
+          hideInMenu: true,
+          title: $t('customer.create'),
+        },
+        component: () => import('#/views/customer/form.vue'),
+      },
+      {
+        path: '/customer/:id/edit',
+        name: 'CustomerEdit',
+        meta: {
+          activePath: '/customer/list',
+          hideInMenu: true,
+          title: $t('customer.edit'),
+        },
+        component: () => import('#/views/customer/form.vue'),
+      },
+      {
         path: '/customer/industry',
         name: 'CustomerIndustryList',
         meta: {

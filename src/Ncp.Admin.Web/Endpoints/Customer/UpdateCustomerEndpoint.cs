@@ -15,11 +15,10 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// 更新客户请求
 /// </summary>
 /// <param name="Id">客户 ID</param>
-/// <param name="OwnerId">负责人用户 ID，null 表示公海</param>
 /// <param name="CustomerSourceId">客户来源 ID</param>
 /// <param name="FullName">客户全称</param>
-/// <param name="ShortName">客户简称</param>
-/// <param name="Nature">公司性质</param>
+/// <param name="Status">客户状态（枚举值）</param>
+/// <param name="Nature">公司性质（枚举值）</param>
 /// <param name="ProvinceCode">省区域码</param>
 /// <param name="CityCode">市区域码</param>
 /// <param name="DistrictCode">区/县区域码</param>
@@ -29,22 +28,20 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="ConsultationContent">咨询内容</param>
 /// <param name="CoverRegion">覆盖区域</param>
 /// <param name="RegisterAddress">注册地址</param>
-/// <param name="MainContactName">主联系人姓名</param>
-/// <param name="MainContactPhone">主联系人电话</param>
+/// <param name="EmployeeCount">员工数量</param>
+/// <param name="BusinessLicense">营业执照（路径或 URL）</param>
 /// <param name="ContactQq">QQ</param>
 /// <param name="ContactWechat">微信</param>
-/// <param name="WechatStatus">微信状态</param>
 /// <param name="Remark">备注</param>
-/// <param name="IsKeyAccount">是否重点客户</param>
 /// <param name="IsHidden">是否隐藏</param>
 /// <param name="IndustryIds">所属行业 ID 列表</param>
+/// <remarks>简称、负责人、主联系人、微信状态、是否重点客户不接受请求入参，由后端沿用当前客户数据，防止篡改。</remarks>
 public record UpdateCustomerRequest(
     CustomerId Id,
-    UserId OwnerId,
     CustomerSourceId CustomerSourceId,
     string FullName,
-    string ShortName,
-    string Nature,
+    CustomerStatus? Status,
+    CompanyNature? Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
@@ -54,13 +51,11 @@ public record UpdateCustomerRequest(
     string ConsultationContent,
     string CoverRegion,
     string RegisterAddress,
-    string MainContactName,
-    string MainContactPhone,
+    int EmployeeCount,
+    string? BusinessLicense,
     string ContactQq,
     string ContactWechat,
-    string WechatStatus,
     string Remark,
-    bool IsKeyAccount,
     bool IsHidden,
     IReadOnlyList<IndustryId> IndustryIds);
 
@@ -83,10 +78,10 @@ public class UpdateCustomerEndpoint(IMediator mediator) : Endpoint<UpdateCustome
     public override async Task HandleAsync(UpdateCustomerRequest req, CancellationToken ct)
     {
         var cmd = new UpdateCustomerCommand(
-            req.Id, req.OwnerId, req.CustomerSourceId, req.FullName, req.ShortName,
-            req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode,
-            req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.MainContactName, req.MainContactPhone,
-            req.ContactQq, req.ContactWechat, req.WechatStatus, req.Remark, req.IsKeyAccount, req.IsHidden, req.IndustryIds);
+            req.Id, req.CustomerSourceId, req.FullName,
+            req.Status, req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode,
+            req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.EmployeeCount, req.BusinessLicense ?? string.Empty,
+            req.ContactQq, req.ContactWechat, req.Remark, req.IsHidden, req.IndustryIds);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
