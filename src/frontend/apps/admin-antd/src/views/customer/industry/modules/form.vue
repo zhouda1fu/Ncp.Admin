@@ -48,6 +48,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       if (formData.value?.id) {
         await updateIndustry(formData.value.id, {
           name: String(data.name ?? ''),
+          parentId: data.parentId != null && data.parentId !== '' ? String(data.parentId) : null,
           sortOrder: Number(data.sortOrder) ?? 0,
           remark: data.remark ? String(data.remark) : undefined,
         });
@@ -67,6 +68,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
   },
   onOpenChange(isOpen) {
     if (isOpen) {
+      getIndustryList().then((list) => {
+        industryList.value = list;
+      });
       const data = drawerApi.getData<
         Partial<IndustryApi.IndustryItem> & { id?: string }
       >();
@@ -79,10 +83,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
       });
     }
   },
-});
-
-getIndustryList().then((list) => {
-  industryList.value = list;
 });
 </script>
 

@@ -171,6 +171,7 @@ public static class PermissionDefinitionContext
         customerManagement.AddChild(PermissionCodes.IndustryView, "查看行业");
         customerManagement.AddChild(PermissionCodes.IndustryCreate, "创建行业");
         customerManagement.AddChild(PermissionCodes.IndustryEdit, "编辑行业");
+        customerManagement.AddChild(PermissionCodes.IndustryDelete, "删除行业");
         customerManagement.AddChild(PermissionCodes.CustomerSourceView, "查看客户来源");
         customerManagement.AddChild(PermissionCodes.CustomerSourceCreate, "创建客户来源");
         customerManagement.AddChild(PermissionCodes.CustomerSourceEdit, "编辑客户来源");

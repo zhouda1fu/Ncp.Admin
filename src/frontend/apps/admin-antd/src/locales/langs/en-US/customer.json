@@ -51,6 +51,7 @@
   "claim": "Claim",
   "void": "Void",
   "delete": "Delete",
+  "confirmDeleteIndustry": "Are you sure you want to delete this industry?",
   "contacts": "Contacts",
   "province": "Province",
   "city": "City",

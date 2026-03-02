@@ -118,7 +118,10 @@ export function useColumns(
           onClick: onActionClick,
         },
         name: 'CellOperation',
-        options: [{ code: 'edit', text: $t('customer.edit') }],
+        options: [
+          { code: 'edit', text: $t('customer.edit') },
+          { code: 'delete', text: $t('customer.delete') },
+        ],
       },
       field: 'operation',
       fixed: 'right',

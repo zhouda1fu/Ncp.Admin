@@ -32,9 +32,23 @@ async function createIndustry(data: {
 
 async function updateIndustry(
   id: string,
-  data: { name: string; sortOrder: number; remark?: string },
+  data: {
+    name: string;
+    parentId?: string | null;
+    sortOrder: number;
+    remark?: string;
+  },
 ) {
-  return requestClient.put(`/industries/${id}`, data);
+  return requestClient.put(`/industries/${id}`, {
+    name: data.name,
+    parentId: data.parentId ?? null,
+    sortOrder: data.sortOrder,
+    remark: data.remark ?? null,
+  });
 }
 
-export { getIndustryList, createIndustry, updateIndustry };
+async function deleteIndustry(id: string) {
+  return requestClient.delete(`/industries/${id}`);
+}
+
+export { getIndustryList, createIndustry, updateIndustry, deleteIndustry };

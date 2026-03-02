@@ -5,7 +5,7 @@ using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.Commands.Industry;
 
-public record UpdateIndustryCommand(IndustryId Id, string Name, int SortOrder, string? Remark = null) : ICommand<bool>;
+public record UpdateIndustryCommand(IndustryId Id, string Name, IndustryId? ParentId, int SortOrder, string? Remark = null) : ICommand<bool>;
 
 public class UpdateIndustryCommandValidator : AbstractValidator<UpdateIndustryCommand>
 {
@@ -23,7 +23,7 @@ public class UpdateIndustryCommandHandler(IIndustryRepository repository)
     {
         var entity = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到行业", ErrorCodes.IndustryNotFound);
-        entity.Update(request.Name, request.SortOrder, request.Remark);
+        entity.Update(request.Name, request.ParentId, request.SortOrder, request.Remark);
         return true;
     }
 }

@@ -7,10 +7,10 @@ import { ref } from 'vue';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
-import { Button } from 'ant-design-vue';
+import { Button, message } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { getIndustryList } from '#/api/system/industry';
+import { deleteIndustry, getIndustryList } from '#/api/system/industry';
 import { $t } from '#/locales';
 
 import { flatToTree, useColumns, useGridFormSchema } from './data';
@@ -19,9 +19,13 @@ import Form from './modules/form.vue';
 
 const industryList = ref<IndustryApi.IndustryItem[]>([]);
 
-function onActionClick(e: OnActionClickParams<IndustryApi.IndustryItem>) {
+async function onActionClick(e: OnActionClickParams<IndustryApi.IndustryItem>) {
   if (e.code === 'edit') {
     formDrawerApi.setData(e.row).open();
+  } else if (e.code === 'delete') {
+    await deleteIndustry(e.row.id);
+    message.success($t('ui.actionMessage.operationSuccess'));
+    await onRefresh();
   }
 }
 

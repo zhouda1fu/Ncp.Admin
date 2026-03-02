@@ -45,9 +45,10 @@ public class Industry : Entity<IndustryId>, IAggregateRoot
     /// <summary>
     /// 更新行业信息
     /// </summary>
-    public void Update(string name, int sortOrder, string? remark = null)
+    public void Update(string name, IndustryId? parentId, int sortOrder, string? remark = null)
     {
-        Name = name ;
+        Name = name;
+        ParentId = parentId;
         SortOrder = sortOrder;
         Remark = remark;
     }

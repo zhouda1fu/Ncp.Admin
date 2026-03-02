@@ -32,7 +32,7 @@
     "claimTime":"领用时间","claimStatus":"领用状态","claimStatusUnclaimed":"未领用",
     "claimStatusClaimed":"已领用","select":"选择","operation":"操作","create":"新建客户",
     "edit":"编辑","view":"查看","releaseToSea":"释放到公海","claim":"领用","void":"作废",
-    "delete":"删除","contacts":"联系人","province":"省","city":"市","district":"区县",
+    "delete":"删除","confirmDeleteIndustry":"确定要删除该行业吗？","contacts":"联系人","province":"省","city":"市","district":"区县",
     "status":"状态","statusPlaceholder":"请选择状态","statusFollowUpUnclear":"跟进中-暂不明了",
     "statusFollowUpInterested":"跟进中-有意向","statusCooperating":"合作中客户",
     "statusFormerCooperating":"曾合作客户","nature":"公司性质","naturePlaceholder":"请选择公司性质",
