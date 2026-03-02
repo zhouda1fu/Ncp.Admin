@@ -166,6 +166,10 @@ public static class PermissionCodes
     public const string CustomerReleaseToSea = nameof(CustomerReleaseToSea);
     public const string CustomerClaimFromSea = nameof(CustomerClaimFromSea);
     public const string IndustryView = nameof(IndustryView);
+    /// <summary>创建行业</summary>
+    public const string IndustryCreate = nameof(IndustryCreate);
+    /// <summary>编辑行业</summary>
+    public const string IndustryEdit = nameof(IndustryEdit);
     /// <summary>查看客户来源（列表/下拉）</summary>
     public const string CustomerSourceView = nameof(CustomerSourceView);
     /// <summary>创建客户来源</summary>

@@ -11,7 +11,30 @@ export namespace IndustryApi {
 }
 
 async function getIndustryList() {
-  return requestClient.get<IndustryApi.IndustryItem[]>('/industries');
+  const res = await requestClient.get<IndustryApi.IndustryItem[]>('/industries');
+  const list = Array.isArray(res) ? res : (res as { data?: IndustryApi.IndustryItem[] })?.data ?? [];
+  return list;
 }
 
-export { getIndustryList };
+async function createIndustry(data: {
+  name: string;
+  parentId?: string;
+  sortOrder?: number;
+  remark?: string;
+}) {
+  return requestClient.post<{ id: string }>('/industries', {
+    name: data.name,
+    parentId: data.parentId ?? null,
+    sortOrder: data.sortOrder ?? 0,
+    remark: data.remark ?? null,
+  });
+}
+
+async function updateIndustry(
+  id: string,
+  data: { name: string; sortOrder: number; remark?: string },
+) {
+  return requestClient.put(`/industries/${id}`, data);
+}
+
+export { getIndustryList, createIndustry, updateIndustry };

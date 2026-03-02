@@ -19,6 +19,8 @@ const routes: RouteRecordRaw[] = [
         PermissionCodes.CustomerReleaseToSea,
         PermissionCodes.CustomerClaimFromSea,
         PermissionCodes.IndustryView,
+        PermissionCodes.IndustryCreate,
+        PermissionCodes.IndustryEdit,
         PermissionCodes.CustomerSourceView,
         PermissionCodes.CustomerSourceCreate,
         PermissionCodes.CustomerSourceEdit,
@@ -37,6 +39,20 @@ const routes: RouteRecordRaw[] = [
           authority: [PermissionCodes.CustomerView],
         },
         component: () => import('#/views/customer/list.vue'),
+      },
+      {
+        path: '/customer/industry',
+        name: 'CustomerIndustryList',
+        meta: {
+          icon: 'mdi:briefcase-outline',
+          title: $t('customer.industryList'),
+          authority: [
+            PermissionCodes.IndustryView,
+            PermissionCodes.IndustryCreate,
+            PermissionCodes.IndustryEdit,
+          ],
+        },
+        component: () => import('#/views/customer/industry/list.vue'),
       },
       {
         path: '/customer/source',

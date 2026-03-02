@@ -290,6 +290,8 @@ export function buildPermissionTree(): PermissionTreeNode[] {
         { value: PermissionCodes.CustomerReleaseToSea, label: '释放到公海', icon: 'mdi:share' },
         { value: PermissionCodes.CustomerClaimFromSea, label: '公海领用', icon: 'mdi:hand-extended' },
         { value: PermissionCodes.IndustryView, label: '查看行业', icon: 'mdi:eye' },
+        { value: PermissionCodes.IndustryCreate, label: '创建行业', icon: 'mdi:plus' },
+        { value: PermissionCodes.IndustryEdit, label: '编辑行业', icon: 'mdi:pencil' },
         { value: PermissionCodes.CustomerSourceView, label: '查看客户来源', icon: 'mdi:eye' },
         { value: PermissionCodes.CustomerSourceCreate, label: '创建客户来源', icon: 'mdi:plus' },
         { value: PermissionCodes.CustomerSourceEdit, label: '编辑客户来源', icon: 'mdi:pencil' },

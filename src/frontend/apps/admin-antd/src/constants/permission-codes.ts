@@ -103,6 +103,8 @@ export const PermissionCodes = {
   CustomerReleaseToSea: 'CustomerReleaseToSea',
   CustomerClaimFromSea: 'CustomerClaimFromSea',
   IndustryView: 'IndustryView',
+  IndustryCreate: 'IndustryCreate',
+  IndustryEdit: 'IndustryEdit',
   CustomerSourceView: 'CustomerSourceView',
   CustomerSourceCreate: 'CustomerSourceCreate',
   CustomerSourceEdit: 'CustomerSourceEdit',
