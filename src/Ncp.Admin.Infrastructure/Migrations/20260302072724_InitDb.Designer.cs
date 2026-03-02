@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ncp.Admin.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260302041416_InitDb")]
+    [Migration("20260302072724_InitDb")]
     partial class InitDb
     {
         /// <inheritdoc />
@@ -648,7 +648,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("Birthday")
+                    b.Property<DateTimeOffset>("Birthday")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ContactType")
@@ -662,7 +662,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int?>("Gender")
+                    b.Property<int>("Gender")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsPrimary")

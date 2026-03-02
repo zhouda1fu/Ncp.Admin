@@ -9,7 +9,7 @@ using Ncp.Admin.Infrastructure.Repositories;
 namespace Ncp.Admin.Web.Application.Commands.Customers;
 
 public record CreateCustomerCommand(
-    UserId? OwnerId,
+    UserId OwnerId,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
     string FullName,

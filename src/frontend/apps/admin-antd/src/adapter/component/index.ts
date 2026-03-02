@@ -137,6 +137,12 @@ const withPreviewUpload = () => {
       'svg',
       'webp',
     ]);
+    // blob URL 无 pathname 扩展名，用 name/type 判断，避免编辑回显的 blob 被当成非图片而用 window.open 新页预览
+    if (file.url?.startsWith('blob:')) {
+      if (file.type?.startsWith('image/')) return true;
+      const ext = file.name?.split('.').pop()?.toLowerCase();
+      return ext ? imageExtensions.has(ext) : false;
+    }
     if (file.url) {
       try {
         const pathname = new URL(file.url, 'http://localhost').pathname;

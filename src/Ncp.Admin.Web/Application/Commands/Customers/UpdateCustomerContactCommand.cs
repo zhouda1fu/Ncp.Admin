@@ -11,7 +11,7 @@ public record UpdateCustomerContactCommand(
     string Name,
     string ContactType,
     int Gender,
-    DateTime Birthday,
+    DateTimeOffset Birthday,
     string Position,
     string Mobile,
     string Phone,

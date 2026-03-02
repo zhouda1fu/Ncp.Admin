@@ -35,12 +35,12 @@ public class CustomerContact : Entity<CustomerContactId>
     /// <summary>
     /// 性别（字典）
     /// </summary>
-    public int? Gender { get; private set; }
+    public int Gender { get; private set; }
 
     /// <summary>
     /// 生日
     /// </summary>
-    public DateTime? Birthday { get; private set; }
+    public DateTimeOffset Birthday { get; private set; }
 
     /// <summary>
     /// 职位
@@ -74,8 +74,8 @@ public class CustomerContact : Entity<CustomerContactId>
         CustomerId customerId,
         string name,
         string contactType,
-        int? gender,
-        DateTime? birthday,
+        int gender,
+        DateTimeOffset birthday,
         string position,
         string mobile,
         string phone,
@@ -103,8 +103,8 @@ public class CustomerContact : Entity<CustomerContactId>
     internal void Update(
         string name,
         string contactType,
-        int? gender,
-        DateTime? birthday,
+        int gender,
+        DateTimeOffset birthday,
         string position,
         string mobile,
         string phone,

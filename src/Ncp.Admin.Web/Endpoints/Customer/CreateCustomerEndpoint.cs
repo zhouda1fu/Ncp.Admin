@@ -43,7 +43,6 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="IndustryIds">所属行业 ID 列表</param>
 /// <remarks>简称、主联系人、微信状态、是否重点客户不在本接口接收，由后端默认值写入，防止篡改。OwnerId 为 null 表示公海客户。</remarks>
 public record CreateCustomerRequest(
-    UserId? OwnerId,
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
     string FullName,
@@ -89,6 +88,7 @@ public class CreateCustomerEndpoint(IMediator mediator) : Endpoint<CreateCustome
         Post("/api/admin/customers");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.CustomerCreate);
+        Idempotency(); // 防重复提交：客户端需传 Idempotency-Key 请求头，相同 key 在有效期内返回缓存响应
     }
 
     /// <inheritdoc />
@@ -101,8 +101,9 @@ public class CreateCustomerEndpoint(IMediator mediator) : Endpoint<CreateCustome
             return;
         }
         var creatorName = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
+        var ownerId = new UserId(uid);
         var cmd = new CreateCustomerCommand(
-            req.OwnerId, req.CustomerSourceId, req.CustomerSourceName, req.FullName,
+            ownerId, req.CustomerSourceId, req.CustomerSourceName, req.FullName,
             string.Empty, req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.ProvinceName, req.CityName, req.DistrictName,
             req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode, req.PhoneProvinceName, req.PhoneCityName, req.PhoneDistrictName,
             req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.EmployeeCount, req.BusinessLicense ?? string.Empty,

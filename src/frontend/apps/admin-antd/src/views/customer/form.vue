@@ -1,36 +1,53 @@
 <script lang="ts" setup>
 import type { RegionCascaderOption } from './data';
 
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 import { ArrowLeft } from '@vben/icons';
 
-import { Button, message } from 'ant-design-vue';
+import { Button, message, Modal, Space, Table, Tag } from 'ant-design-vue';
 
-import { useAppConfig } from '@vben/hooks';
 import { useVbenForm } from '#/adapter/form';
-import { createCustomer, getCustomer, updateCustomer } from '#/api/system/customer';
+import { createCustomer, getCustomer, removeCustomerContact, updateCustomer } from '#/api/system/customer';
+import type { CustomerApi } from '#/api/system/customer';
 import { getCustomerSourceList } from '#/api/system/customerSource';
-import { getFileDownloadPath } from '#/api/system/file';
+import { fetchFileBlob } from '#/api/system/file';
 import { getIndustryList } from '#/api/system/industry';
 import { getRegionList } from '#/api/system/region';
 import type { RegionApi } from '#/api/system/region';
 import { $t } from '#/locales';
 
+import ContactDrawer from './modules/contact-drawer.vue';
 import { useSchema } from './data';
 
 const route = useRoute();
 const router = useRouter();
 
-const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 const id = computed(() => route.params.id as string | undefined);
 const isNew = computed(() => !id.value);
 
 const industryOptions = ref<{ label: string; value: string }[]>([]);
 const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
 const regionList = ref<RegionApi.RegionItem[]>([]);
+const customerDetail = ref<CustomerApi.CustomerDetail | null>(null);
+const contactDrawerRef = ref<InstanceType<typeof ContactDrawer> | null>(null);
+const licenseBlobUrl = ref<string | null>(null);
+const submitting = ref(false);
+/** 新建客户幂等键：同一表单提交（含重复点击）使用同一 key，后端返回缓存响应防重复创建 */
+const createIdempotencyKey = ref<string | null>(null);
+const contactList = computed(() => customerDetail.value?.contacts ?? []);
+
+const contactColumns = [
+  { title: () => $t('customer.contactName'), dataIndex: 'name', key: 'name', width: 120 },
+  { title: () => $t('customer.contactType'), dataIndex: 'contactType', key: 'contactType', width: 100 },
+  { title: () => $t('customer.contactMobile'), dataIndex: 'mobile', key: 'mobile', width: 120 },
+  { title: () => $t('customer.contactPhone'), dataIndex: 'phone', key: 'phone', width: 120 },
+  { title: () => $t('customer.contactPosition'), dataIndex: 'position', key: 'position', width: 100 },
+  { title: () => $t('customer.isPrimary'), key: 'isPrimary', width: 90 },
+  { title: () => $t('customer.operation'), key: 'action', width: 160 },
+];
 
 /** 省级：与公海项目区域一致 */
 const provinceFilter = (r: RegionApi.RegionItem) =>
@@ -94,6 +111,7 @@ async function loadCustomer() {
   if (!id.value) return;
   try {
     const detail = await getCustomer(id.value);
+    customerDetail.value = detail ?? null;
     const toStr = (v: unknown) =>
       v != null && String(v).trim() !== '' ? String(v) : undefined;
     const p = toStr(detail?.provinceCode);
@@ -102,8 +120,11 @@ async function loadCustomer() {
     const regionCodes = [p, c, d].filter(Boolean) as string[];
     const licensePath = detail?.businessLicense ?? '';
     const licenseFileName = licensePath ? licensePath.split('/').pop() || $t('customer.businessLicense') : '';
-    const licenseDownloadUrl = licensePath ? `${apiURL}${getFileDownloadPath(licensePath)}` : '';
     const isImageExt = (name: string) => /\.(bmp|gif|jpe?g|png|svg|webp)$/i.test(name);
+    if (licenseBlobUrl.value) {
+      URL.revokeObjectURL(licenseBlobUrl.value);
+      licenseBlobUrl.value = null;
+    }
     formApi.setValues({
       fullName: detail?.fullName ?? '',
       customerSourceId: detail?.customerSourceId ?? '',
@@ -114,25 +135,48 @@ async function loadCustomer() {
       registerAddress: detail?.registerAddress ?? '',
       employeeCount: detail?.employeeCount,
       businessLicense: licensePath,
-      businessLicenseFileList:
-        licensePath && licenseDownloadUrl
-          ? [
-              {
-                uid: 'business-license',
-                url: licenseDownloadUrl,
-                name: licenseFileName || $t('customer.businessLicense'),
-                thumbUrl: isImageExt(licenseFileName) ? licenseDownloadUrl : undefined,
-              },
-            ]
-          : [],
+      businessLicenseFileList: licensePath
+        ? [
+            {
+              uid: 'business-license',
+              name: licenseFileName || $t('customer.businessLicense'),
+              url: undefined as string | undefined,
+              thumbUrl: undefined as string | undefined,
+            },
+          ]
+        : [],
       remark: detail?.remark ?? '',
       isHidden: detail?.isHidden ?? false,
       industryIds: detail?.industryIds ?? [],
     });
+    if (licensePath) {
+      try {
+        const blob = await fetchFileBlob(licensePath);
+        const blobUrl = URL.createObjectURL(blob);
+        licenseBlobUrl.value = blobUrl;
+        formApi.setFieldValue('businessLicenseFileList', [
+          {
+            uid: 'business-license',
+            name: licenseFileName || $t('customer.businessLicense'),
+            url: blobUrl,
+            thumbUrl: isImageExt(licenseFileName) ? blobUrl : undefined,
+          },
+        ]);
+      } catch {
+        // 预览加载失败时保留文件名，仅无缩略图/预览
+      }
+    }
   } catch {
     message.error($t('ui.actionMessage.loadFailed'));
   }
 }
+
+onUnmounted(() => {
+  if (licenseBlobUrl.value) {
+    URL.revokeObjectURL(licenseBlobUrl.value);
+    licenseBlobUrl.value = null;
+  }
+});
 
 watch(
   id,
@@ -152,9 +196,35 @@ function resetForm() {
   if (id.value) loadCustomer();
 }
 
+function openContactDrawer(contact?: CustomerApi.CustomerContactItem | Record<string, unknown>) {
+  contactDrawerRef.value?.open(contact as CustomerApi.CustomerContactItem | undefined);
+}
+
+function onContactSuccess() {
+  loadCustomer();
+}
+
+async function handleDeleteContact(contact: CustomerApi.CustomerContactItem | Record<string, unknown>) {
+  const c = contact as CustomerApi.CustomerContactItem;
+  if (!id.value) return;
+  Modal.confirm({
+    title: $t('customer.confirmDeleteContact'),
+    okText: $t('common.confirm'),
+    okType: 'danger',
+    cancelText: $t('common.cancel'),
+    async onOk() {
+      await removeCustomerContact(id.value!, c.id);
+      message.success($t('ui.actionMessage.deleteSuccess'));
+      loadCustomer();
+    },
+  });
+}
+
 async function onSubmit() {
+  if (submitting.value) return;
   const { valid } = await formApi.validate();
   if (!valid) return;
+  submitting.value = true;
   const data = await formApi.getValues();
   const selectedSource = customerSourceOptions.value.find((o) => o.value === data.customerSourceId);
   const codes = (data.regionCodes as string[] | undefined) ?? [];
@@ -204,12 +274,15 @@ async function onSubmit() {
       await updateCustomer(id.value, payload);
       message.success($t('ui.actionMessage.updateSuccess'));
     } else {
-      await createCustomer(payload);
+      createIdempotencyKey.value = createIdempotencyKey.value ?? crypto.randomUUID();
+      await createCustomer(payload, { idempotencyKey: createIdempotencyKey.value });
       message.success($t('ui.actionMessage.createSuccess'));
     }
     goBack();
   } catch {
     // error handled by request
+  } finally {
+    submitting.value = false;
   }
 }
 </script>
@@ -227,26 +300,58 @@ async function onSubmit() {
 
     <div class="w-full flex-1 min-w-0">
       <Form />
-      <!-- 客户联系人 -->
-      <div class="mt-8 border-t border-gray-200 pt-6">
-        <div class="mb-3 flex items-center justify-between">
-          <span class="text-base font-medium">{{ $t('customer.customerContacts') }}</span>
-          <Button type="primary" class="inline-flex items-center gap-1">
-            + {{ $t('customer.addContact') }}
-          </Button>
+      <!-- 客户联系人（仅编辑页展示） -->
+      <template v-if="id">
+        <div class="mt-8 border-t border-gray-200 pt-6">
+          <div class="mb-3 flex items-center justify-between">
+            <span class="text-base font-medium">{{ $t('customer.customerContacts') }}</span>
+            <Button type="primary" class="inline-flex items-center gap-1" @click="openContactDrawer()">
+              + {{ $t('customer.addContact') }}
+            </Button>
+          </div>
+          <Table
+            :columns="contactColumns"
+            :data-source="contactList"
+            :pagination="false"
+            row-key="id"
+            size="small"
+            class="mt-2"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'isPrimary'">
+                <Tag v-if="record.isPrimary" color="blue">{{ $t('customer.isPrimary') }}</Tag>
+              </template>
+              <template v-else-if="column.key === 'action'">
+                <Space>
+                  <Button type="link" size="small" @click="openContactDrawer(record)">
+                    {{ $t('customer.editContact') }}
+                  </Button>
+                  <Button type="link" size="small" danger @click="handleDeleteContact(record)">
+                    {{ $t('customer.deleteContact') }}
+                  </Button>
+                </Space>
+              </template>
+            </template>
+          </Table>
         </div>
-      </div>
+        <ContactDrawer
+          v-if="id"
+          ref="contactDrawerRef"
+          :customer-id="id"
+          @success="onContactSuccess"
+        />
+      </template>
       <!-- 客户联系记录 -->
       <div class="mt-6 border-t border-gray-200 pt-6">
         <div class="mb-3 flex items-center justify-between">
           <span class="text-base font-medium">{{ $t('customer.contactRecords') }}</span>
-          <Button type="primary" class="inline-flex items-center gap-1">
+          <Button type="primary" class="inline-flex items-center gap-1" disabled>
             + {{ $t('customer.addContact') }}
           </Button>
         </div>
       </div>
       <div class="mt-6 flex gap-2">
-        <Button type="primary" @click="onSubmit">{{ $t('common.confirm') }}</Button>
+        <Button type="primary" :loading="submitting" :disabled="submitting" @click="onSubmit">{{ $t('common.confirm') }}</Button>
         <Button type="primary" danger @click="resetForm">{{ $t('common.reset') }}</Button>
         <Button @click="goBack">{{ $t('common.cancel') }}</Button>
       </div>

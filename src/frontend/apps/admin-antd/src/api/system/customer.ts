@@ -57,8 +57,10 @@ export namespace CustomerApi {
     id: string;
     name: string;
     contactType?: string;
-    gender?: number;
-    birthday?: string;
+    /** 性别（必填） */
+    gender: number;
+    /** 生日 ISO 字符串（必填） */
+    birthday: string;
     position?: string;
     mobile?: string;
     phone?: string;
@@ -90,8 +92,16 @@ async function getCustomer(id: string) {
   return requestClient.get<CustomerApi.CustomerDetail>(`/customers/${id}`);
 }
 
-async function createCustomer(data: Recordable<any>) {
-  return requestClient.post<{ id: string }>('/customers', data);
+async function createCustomer(
+  data: Recordable<any>,
+  options?: { idempotencyKey?: string },
+) {
+  const headers: Record<string, string> = {};
+  if (options?.idempotencyKey)
+    headers['Idempotency-Key'] = options.idempotencyKey;
+  return requestClient.post<{ id: string }>('/customers', data, {
+    ...(Object.keys(headers).length ? { headers } : {}),
+  });
 }
 
 /** 公海录入专用：创建公海客户（无需客户名称、无负责人） */

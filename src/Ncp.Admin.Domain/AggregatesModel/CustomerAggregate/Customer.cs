@@ -239,7 +239,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// 创建客户；未传负责人则视为公海客户
     /// </summary>
     public Customer(
-        UserId? ownerId,
+        UserId ownerId,
         CustomerSourceId customerSourceId,
         string customerSourceName,
         string fullName,
@@ -308,7 +308,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         CreatorName = creatorName;
         OwnerName = string.Empty;
         ClaimedAt = null;
-        IsInSea = ownerId == null;
+        IsInSea = false;
         CreatedAt = DateTimeOffset.UtcNow;
         AddDomainEvent(new CustomerCreatedDomainEvent(this));
     }
@@ -597,8 +597,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public CustomerContactId AddContact(
         string name,
         string contactType,
-        int? gender,
-        DateTime? birthday,
+        int gender,
+        DateTimeOffset birthday,
         string position,
         string mobile,
         string phone,
@@ -623,8 +623,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         CustomerContactId contactId,
         string name,
         string contactType,
-        int? gender,
-        DateTime? birthday,
+        int gender,
+        DateTimeOffset birthday,
         string position,
         string mobile,
         string phone,

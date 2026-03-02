@@ -26,7 +26,7 @@ public record AddCustomerContactRequest(
     string Name,
     string ContactType,
     int Gender,
-    DateTime Birthday,
+    DateTimeOffset Birthday,
     string Position,
     string Mobile,
     string Phone,
@@ -57,9 +57,10 @@ public class AddCustomerContactEndpoint(IMediator mediator) : Endpoint<AddCustom
     /// <inheritdoc />
     public override async Task HandleAsync(AddCustomerContactRequest req, CancellationToken ct)
     {
+        var birthdayUtc = req.Birthday.ToUniversalTime();
         var cmd = new AddCustomerContactCommand(
-            req.CustomerId, req.Name, req.ContactType, req.Gender, req.Birthday,
-            req.Position, req.Mobile, req.Phone, req.Email, req.IsPrimary);
+            req.CustomerId, req.Name, req.ContactType ?? string.Empty, req.Gender, birthdayUtc,
+            req.Position ?? string.Empty, req.Mobile ?? string.Empty, req.Phone ?? string.Empty, req.Email ?? string.Empty, req.IsPrimary);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new AddCustomerContactResponse(id).AsResponseData(), cancellation: ct);
     }

@@ -134,7 +134,9 @@ try
 
     #region FastEndpoints
 
-    builder.Services.AddFastEndpoints(o => o.IncludeAbstractValidators = true);
+    builder.Services
+        .AddFastEndpoints(o => o.IncludeAbstractValidators = true)
+        .AddIdempotency();
 
     builder.Services.SwaggerDocument(settings =>
     {
@@ -319,6 +321,7 @@ try
 
     #region Scalar
 
+    app.UseOutputCache();
     app.UseFastEndpoints();
     app.UseOpenApi(c => c.Path = "/openapi/{documentName}.json");
     app.MapScalarApiReference("scalar", options =>
