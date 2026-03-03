@@ -394,3 +394,4 @@ FodyWeavers.xsd
 src/frontend/internal/**/dist/
 src/frontend/packages/**/dist/
 src/frontend/scripts/**/dist/
+/docs/project.txt
