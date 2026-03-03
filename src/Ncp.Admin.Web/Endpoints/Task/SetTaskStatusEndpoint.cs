@@ -35,7 +35,7 @@ public class SetTaskStatusEndpoint(IMediator mediator) : Endpoint<SetTaskStatusR
 
     public override async System.Threading.Tasks.Task HandleAsync(SetTaskStatusRequest req, CancellationToken ct)
     {
-        var cmd = new SetTaskStatusCommand(new TaskId(req.Id), (Ncp.Admin.Domain.AggregatesModel.TaskAggregate.TaskStatus)req.Status);
+        var cmd = new SetTaskStatusCommand(new ProjectTaskId(req.Id), (ProjectTaskStatus)req.Status);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

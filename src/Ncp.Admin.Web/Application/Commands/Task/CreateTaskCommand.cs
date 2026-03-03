@@ -15,7 +15,7 @@ public record CreateTaskCommand(
     string? Description,
     UserId? AssigneeId,
     DateOnly? DueDate,
-    int SortOrder) : ICommand<TaskId>;
+    int SortOrder) : ICommand<ProjectTaskId>;
 
 /// <summary>
 /// 创建任务命令验证器
@@ -33,21 +33,21 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
 /// <summary>
 /// 创建任务命令处理器
 /// </summary>
-public class CreateTaskCommandHandler(ITaskRepository taskRepository, IProjectRepository projectRepository) : ICommandHandler<CreateTaskCommand, TaskId>
+public class CreateTaskCommandHandler(IProjectTaskRepository projectTaskRepository, IProjectRepository projectRepository) : ICommandHandler<CreateTaskCommand, ProjectTaskId>
 {
     /// <inheritdoc />
-    public async System.Threading.Tasks.Task<TaskId> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
+    public async System.Threading.Tasks.Task<ProjectTaskId> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
     {
         var project = await projectRepository.GetAsync(request.ProjectId, cancellationToken)
             ?? throw new KnownException("未找到项目", ErrorCodes.ProjectNotFound);
-        var task = new Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task(
+        var projectTask = new Ncp.Admin.Domain.AggregatesModel.TaskAggregate.ProjectTask(
             request.ProjectId,
             request.Title,
             request.Description,
             request.AssigneeId,
             request.DueDate,
             request.SortOrder);
-        await taskRepository.AddAsync(task, cancellationToken);
-        return task.Id;
+        await projectTaskRepository.AddAsync(projectTask, cancellationToken);
+        return projectTask.Id;
     }
 }

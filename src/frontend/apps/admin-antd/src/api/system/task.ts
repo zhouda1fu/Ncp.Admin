@@ -39,6 +39,20 @@ async function getTaskList(params: Recordable<any>) {
 }
 
 /**
+ * 获取任务详情（含评论）
+ */
+async function getTask(id: string) {
+  return requestClient.get<TaskApi.TaskItem>(`/tasks/${id}`);
+}
+
+/**
+ * 删除任务
+ */
+async function deleteTask(id: string) {
+  return requestClient.delete(`/tasks/${id}`);
+}
+
+/**
  * 创建任务
  */
 async function createTask(data: {
@@ -84,6 +98,8 @@ async function addTaskComment(taskId: string, content: string) {
 export {
   addTaskComment,
   createTask,
+  deleteTask,
+  getTask,
   getTaskList,
   setTaskStatus,
   updateTask,

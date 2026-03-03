@@ -8,7 +8,7 @@ namespace Ncp.Admin.Web.Application.Commands.ProjectTask;
 /// <summary>
 /// 设置任务状态命令
 /// </summary>
-public record SetTaskStatusCommand(TaskId Id, Ncp.Admin.Domain.AggregatesModel.TaskAggregate.TaskStatus Status) : ICommand<bool>;
+public record SetTaskStatusCommand(ProjectTaskId Id, ProjectTaskStatus Status) : ICommand<bool>;
 
 /// <summary>
 /// 设置任务状态命令验证器
@@ -25,7 +25,7 @@ public class SetTaskStatusCommandValidator : AbstractValidator<SetTaskStatusComm
 /// <summary>
 /// 设置任务状态命令处理器
 /// </summary>
-public class SetTaskStatusCommandHandler(ITaskRepository repository) : ICommandHandler<SetTaskStatusCommand, bool>
+public class SetTaskStatusCommandHandler(IProjectTaskRepository repository) : ICommandHandler<SetTaskStatusCommand, bool>
 {
     /// <inheritdoc />
     public async System.Threading.Tasks.Task<bool> Handle(SetTaskStatusCommand request, CancellationToken cancellationToken)

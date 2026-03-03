@@ -1,5 +1,22 @@
 {
   "title": "任务管理",
+  "sortOrder": "排序",
+  "projectType": {
+    "title": "项目类型",
+    "list": "项目类型",
+    "name": "类型名称"
+  },
+  "projectStatus": {
+    "title": "项目状态",
+    "list": "项目状态",
+    "name": "状态名称",
+    "code": "状态编码"
+  },
+  "projectIndustry": {
+    "title": "项目行业",
+    "list": "项目行业",
+    "name": "行业名称"
+  },
   "project": {
     "title": "项目",
     "list": "项目列表",
@@ -11,7 +28,45 @@
     "statusActive": "进行中",
     "statusArchived": "已归档",
     "createdAt": "创建时间",
-    "operation": "操作"
+    "operation": "操作",
+    "projectNumber": "项目编号",
+    "customer": "客户",
+    "region": "项目所在地",
+    "regionPlaceholder": "请选择省/市/区",
+    "startDate": "开始日期",
+    "projectEstimate": "项目预估",
+    "purchaseAmount": "采购金额",
+    "projectContent": "项目内容",
+    "archive": "归档",
+    "activate": "激活",
+    "delete": "删除",
+    "deleteConfirm": "确定删除项目「{0}」吗？",
+    "contacts": "项目联系人",
+    "addContact": "添加联系人",
+    "editContact": "编辑",
+    "deleteContact": "删除",
+    "confirmDeleteContact": "确定删除该联系人吗？",
+    "customerContact": "客户联系人",
+    "customerContactPlaceholder": "请选择客户联系人",
+    "contactName": "姓名",
+    "contactPosition": "职位",
+    "contactMobile": "手机号",
+    "contactOfficePhone": "办公电话",
+    "contactQq": "QQ",
+    "contactWechat": "微信",
+    "contactEmail": "邮箱",
+    "isPrimary": "主要联系人",
+    "contactRemark": "备注",
+    "followUpRecords": "项目跟进记录",
+    "addFollowUpRecord": "添加跟进记录",
+    "editFollowUpRecord": "编辑",
+    "deleteFollowUpRecord": "删除",
+    "confirmDeleteFollowUpRecord": "确定删除该跟进记录吗？",
+    "followUpTitle": "标题",
+    "followUpVisitDate": "拜访日期",
+    "followUpReminderFrequency": "提醒频率",
+    "followUpReminderDays": "每 {0} 天提醒",
+    "followUpContent": "内容"
   },
   "task": {
     "title": "任务",
@@ -31,6 +86,8 @@
     "createdAt": "创建时间",
     "operation": "操作",
     "comments": "评论",
-    "addComment": "添加评论"
+    "addComment": "添加评论",
+    "delete": "删除",
+    "deleteConfirm": "确定删除任务「{0}」吗？"
   }
 }

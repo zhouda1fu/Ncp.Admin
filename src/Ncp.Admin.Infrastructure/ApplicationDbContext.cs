@@ -18,6 +18,9 @@ using Ncp.Admin.Domain.AggregatesModel.ContactAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ContactGroupAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DocumentAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectIndustryAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectTypeAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ShareLinkAggregate;
 using Ncp.Admin.Domain.AggregatesModel.TaskAggregate;
 using Ncp.Admin.Domain.AggregatesModel.LeaveBalanceAggregate;
@@ -120,8 +123,8 @@ public partial class ApplicationDbContext(
     public DbSet<MeetingRoom> MeetingRooms => Set<MeetingRoom>();
     public DbSet<MeetingBooking> MeetingBookings => Set<MeetingBooking>();
     public DbSet<Project> Projects => Set<Project>();
-    public DbSet<Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task> Tasks => Set<Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task>();
-    public DbSet<TaskComment> TaskComments => Set<TaskComment>();
+    public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
+    public DbSet<ProjectTaskComment> ProjectTaskComments => Set<ProjectTaskComment>();
     public DbSet<ContactGroup> ContactGroups => Set<ContactGroup>();
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<Document> Documents => Set<Document>();
@@ -139,4 +142,7 @@ public partial class ApplicationDbContext(
     public DbSet<CustomerSource> CustomerSources => Set<CustomerSource>();
     public DbSet<Industry> Industries => Set<Industry>();
     public DbSet<Region> Regions => Set<Region>();
+    public DbSet<ProjectType> ProjectTypes => Set<ProjectType>();
+    public DbSet<ProjectStatusOption> ProjectStatusOptions => Set<ProjectStatusOption>();
+    public DbSet<ProjectIndustry> ProjectIndustries => Set<ProjectIndustry>();
 }

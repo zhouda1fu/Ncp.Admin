@@ -6,10 +6,10 @@ import type { TaskApi } from '#/api/system/task';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
-import { Button } from 'ant-design-vue';
+import { Button, message, Modal } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { getTaskList } from '#/api/system/task';
+import { deleteTask, getTaskList } from '#/api/system/task';
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
@@ -60,9 +60,22 @@ const [Grid, gridApi] = useVbenVxeGrid<TaskApi.TaskItem>({
   },
 });
 
-function onActionClick(e: OnActionClickParams<TaskApi.TaskItem>) {
+async function onActionClick(e: OnActionClickParams<TaskApi.TaskItem>) {
   if (e.code === 'edit') {
     formDrawerApi.setData(e.row).open();
+  } else if (e.code === 'delete') {
+    Modal.confirm({
+      title: $t('ui.deleteConfirm.title'),
+      content: $t('task.task.deleteConfirm', [e.row.title]),
+      okText: $t('common.confirm'),
+      okType: 'danger',
+      cancelText: $t('common.cancel'),
+      async onOk() {
+        await deleteTask(e.row.id);
+        message.success($t('ui.actionMessage.operationSuccess'));
+        gridApi.query();
+      },
+    });
   }
 }
 

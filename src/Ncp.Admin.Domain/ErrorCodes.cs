@@ -341,6 +341,16 @@ public sealed class ErrorCodes
     public const int ProjectNotFound = 210001;
 
     /// <summary>
+    /// 未找到项目联系人
+    /// </summary>
+    public const int ProjectContactNotFound = 210003;
+
+    /// <summary>
+    /// 未找到项目跟进记录
+    /// </summary>
+    public const int ProjectFollowUpRecordNotFound = 210004;
+
+    /// <summary>
     /// 未找到任务
     /// </summary>
     public const int TaskNotFound = 210002;
@@ -494,6 +504,21 @@ public sealed class ErrorCodes
     /// 未找到区域
     /// </summary>
     public const int RegionNotFound = 280007;
+
+    /// <summary>
+    /// 未找到项目类型
+    /// </summary>
+    public const int ProjectTypeNotFound = 280008;
+
+    /// <summary>
+    /// 未找到项目状态选项
+    /// </summary>
+    public const int ProjectStatusOptionNotFound = 280009;
+
+    /// <summary>
+    /// 未找到项目行业
+    /// </summary>
+    public const int ProjectIndustryNotFound = 280010;
 
     #endregion
 }

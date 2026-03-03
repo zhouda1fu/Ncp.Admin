@@ -137,14 +137,14 @@ export function useColumns(
           onClick: onActionClick,
         },
         name: 'CellOperation',
-        options: ['edit'],
+        options: ['edit', 'delete'],
       },
       field: 'operation',
       fixed: 'right',
       headerAlign: 'center',
       showOverflow: false,
       title: $t('task.task.operation'),
-      width: 120,
+      width: 160,
     },
   ];
 }

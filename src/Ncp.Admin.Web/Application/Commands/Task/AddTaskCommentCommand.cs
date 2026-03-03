@@ -9,7 +9,7 @@ namespace Ncp.Admin.Web.Application.Commands.ProjectTask;
 /// <summary>
 /// 添加任务评论命令
 /// </summary>
-public record AddTaskCommentCommand(TaskId TaskId, string Content, UserId AuthorId) : ICommand<bool>;
+public record AddTaskCommentCommand(ProjectTaskId TaskId, string Content, UserId AuthorId) : ICommand<bool>;
 
 /// <summary>
 /// 添加任务评论命令验证器
@@ -28,7 +28,7 @@ public class AddTaskCommentCommandValidator : AbstractValidator<AddTaskCommentCo
 /// <summary>
 /// 添加任务评论命令处理器
 /// </summary>
-public class AddTaskCommentCommandHandler(ITaskRepository repository) : ICommandHandler<AddTaskCommentCommand, bool>
+public class AddTaskCommentCommandHandler(IProjectTaskRepository repository) : ICommandHandler<AddTaskCommentCommand, bool>
 {
     /// <inheritdoc />
     public async System.Threading.Tasks.Task<bool> Handle(AddTaskCommentCommand request, CancellationToken cancellationToken)

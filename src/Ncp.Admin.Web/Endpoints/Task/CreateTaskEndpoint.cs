@@ -53,4 +53,4 @@ public class CreateTaskEndpoint(IMediator mediator) : Endpoint<CreateTaskRequest
     }
 }
 
-public record CreateTaskResponse(TaskId Id);
+public record CreateTaskResponse(ProjectTaskId Id);

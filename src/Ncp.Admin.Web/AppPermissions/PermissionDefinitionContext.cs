@@ -109,6 +109,15 @@ public static class PermissionDefinitionContext
         taskManagement.AddChild(PermissionCodes.TaskView, "查看任务");
         taskManagement.AddChild(PermissionCodes.TaskCreate, "创建任务");
         taskManagement.AddChild(PermissionCodes.TaskEdit, "编辑任务");
+        taskManagement.AddChild(PermissionCodes.ProjectTypeView, "查看项目类型");
+        taskManagement.AddChild(PermissionCodes.ProjectTypeCreate, "创建项目类型");
+        taskManagement.AddChild(PermissionCodes.ProjectTypeEdit, "编辑项目类型");
+        taskManagement.AddChild(PermissionCodes.ProjectStatusOptionView, "查看项目状态");
+        taskManagement.AddChild(PermissionCodes.ProjectStatusOptionCreate, "创建项目状态");
+        taskManagement.AddChild(PermissionCodes.ProjectStatusOptionEdit, "编辑项目状态");
+        taskManagement.AddChild(PermissionCodes.ProjectIndustryView, "查看项目行业");
+        taskManagement.AddChild(PermissionCodes.ProjectIndustryCreate, "创建项目行业");
+        taskManagement.AddChild(PermissionCodes.ProjectIndustryEdit, "编辑项目行业");
 
         // 文档管理权限
         var documentManagement = systemAccess.AddPermission(PermissionCodes.DocumentManagement, "文档管理");

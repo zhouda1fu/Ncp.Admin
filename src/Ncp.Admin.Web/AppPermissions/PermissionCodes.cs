@@ -99,6 +99,15 @@ public static class PermissionCodes
     public const string TaskView = nameof(TaskView);
     public const string TaskCreate = nameof(TaskCreate);
     public const string TaskEdit = nameof(TaskEdit);
+    public const string ProjectTypeView = nameof(ProjectTypeView);
+    public const string ProjectTypeCreate = nameof(ProjectTypeCreate);
+    public const string ProjectTypeEdit = nameof(ProjectTypeEdit);
+    public const string ProjectStatusOptionView = nameof(ProjectStatusOptionView);
+    public const string ProjectStatusOptionCreate = nameof(ProjectStatusOptionCreate);
+    public const string ProjectStatusOptionEdit = nameof(ProjectStatusOptionEdit);
+    public const string ProjectIndustryView = nameof(ProjectIndustryView);
+    public const string ProjectIndustryCreate = nameof(ProjectIndustryCreate);
+    public const string ProjectIndustryEdit = nameof(ProjectIndustryEdit);
     #endregion
 
     #region 文档管理权限

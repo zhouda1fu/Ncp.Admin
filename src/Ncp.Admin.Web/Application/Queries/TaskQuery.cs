@@ -9,13 +9,13 @@ namespace Ncp.Admin.Web.Application.Queries;
 /// <summary>
 /// 任务评论查询 DTO
 /// </summary>
-public record TaskCommentQueryDto(TaskCommentId Id, string Content, UserId AuthorId, DateTimeOffset CreatedAt);
+public record TaskCommentQueryDto(ProjectTaskCommentId Id, string Content, UserId AuthorId, DateTimeOffset CreatedAt);
 
 /// <summary>
 /// 任务查询 DTO（含评论列表）
 /// </summary>
 public record TaskQueryDto(
-    TaskId Id,
+    ProjectTaskId Id,
     ProjectId ProjectId,
     string Title,
     string? Description,
@@ -38,7 +38,7 @@ public class TaskQueryInput : PageRequest
     /// <summary>
     /// 状态筛选
     /// </summary>
-    public Ncp.Admin.Domain.AggregatesModel.TaskAggregate.TaskStatus? Status { get; set; }
+    public ProjectTaskStatus? Status { get; set; }
 }
 
 /// <summary>
@@ -49,9 +49,9 @@ public class TaskQuery(ApplicationDbContext dbContext) : IQuery
     /// <summary>
     /// 按 ID 查询任务（含评论）
     /// </summary>
-    public async Task<TaskQueryDto?> GetByIdAsync(TaskId id, CancellationToken cancellationToken = default)
+    public async Task<TaskQueryDto?> GetByIdAsync(ProjectTaskId id, CancellationToken cancellationToken = default)
     {
-        var task = await dbContext.Tasks
+        var task = await dbContext.ProjectTasks
             .AsNoTracking()
             .Include(t => t.Comments)
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
@@ -74,7 +74,7 @@ public class TaskQuery(ApplicationDbContext dbContext) : IQuery
     /// </summary>
     public async Task<PagedData<TaskQueryDto>> GetPagedAsync(TaskQueryInput input, CancellationToken cancellationToken = default)
     {
-        IQueryable<Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task> query = dbContext.Tasks.AsNoTracking().Include(t => t.Comments);
+        IQueryable<ProjectTask> query = dbContext.ProjectTasks.AsNoTracking().Include(t => t.Comments);
         if (input.ProjectId != null)
             query = query.Where(t => t.ProjectId == input.ProjectId);
         if (input.Status.HasValue)

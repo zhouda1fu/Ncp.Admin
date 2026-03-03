@@ -1,19 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Ncp.Admin.Domain.AggregatesModel.TaskAggregate;
-using TaskEntity = Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task;
 
 namespace Ncp.Admin.Infrastructure.EntityConfigurations;
 
 /// <summary>
-/// 任务实体 EF Core 映射配置，表名 task，含与 task_comment 的一对多关系
+/// 项目任务实体 EF Core 映射配置，表名 project_task，含与 project_task_comment 的一对多关系
 /// </summary>
-internal class TaskEntityTypeConfiguration : IEntityTypeConfiguration<TaskEntity>
+internal class ProjectTaskEntityTypeConfiguration : IEntityTypeConfiguration<ProjectTask>
 {
     /// <inheritdoc />
-    public void Configure(EntityTypeBuilder<TaskEntity> builder)
+    public void Configure(EntityTypeBuilder<ProjectTask> builder)
     {
-        builder.ToTable("task");
+        builder.ToTable("project_task");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
         builder.Property(x => x.ProjectId).IsRequired();
@@ -31,27 +30,27 @@ internal class TaskEntityTypeConfiguration : IEntityTypeConfiguration<TaskEntity
 
         builder.HasMany(x => x.Comments)
             .WithOne()
-            .HasForeignKey("TaskId")
+            .HasForeignKey("ProjectTaskId")
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(x => x.Comments).AutoInclude();
     }
 }
 
 /// <summary>
-/// 任务评论实体 EF Core 映射配置，表名 task_comment
+/// 项目任务评论实体 EF Core 映射配置，表名 project_task_comment
 /// </summary>
-internal class TaskCommentEntityTypeConfiguration : IEntityTypeConfiguration<TaskComment>
+internal class ProjectTaskCommentEntityTypeConfiguration : IEntityTypeConfiguration<ProjectTaskComment>
 {
     /// <inheritdoc />
-    public void Configure(EntityTypeBuilder<TaskComment> builder)
+    public void Configure(EntityTypeBuilder<ProjectTaskComment> builder)
     {
-        builder.ToTable("task_comment");
+        builder.ToTable("project_task_comment");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property<TaskId>("TaskId").IsRequired();
+        builder.Property<ProjectTaskId>("ProjectTaskId").IsRequired();
         builder.Property(x => x.Content).IsRequired().HasMaxLength(2000);
         builder.Property(x => x.AuthorId).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();
-        builder.HasIndex("TaskId");
+        builder.HasIndex("ProjectTaskId");
     }
 }

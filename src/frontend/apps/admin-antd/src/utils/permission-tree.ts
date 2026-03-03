@@ -1,7 +1,6 @@
 import type { DataNode } from 'ant-design-vue/es/tree';
 
 import { PermissionCodes } from '#/constants/permission-codes';
-import { $t } from '#/locales';
 
 /**
  * 权限树节点接口
@@ -13,12 +12,28 @@ export interface PermissionTreeNode extends DataNode {
   children?: PermissionTreeNode[];
 }
 
+/** 构建时的节点类型（不含 key，由 ensureTreeKeys 补充） */
+type PermissionTreeNodeInput = Omit<PermissionTreeNode, 'key' | 'children'> & {
+  children?: PermissionTreeNodeInput[];
+};
+
+/**
+ * 为树节点补充 key（Ant Design Vue Tree 依赖 key 识别节点，否则可能无法正确勾选）
+ */
+function ensureTreeKeys(nodes: PermissionTreeNodeInput[]): PermissionTreeNode[] {
+  return nodes.map((node) => ({
+    ...node,
+    key: node.value,
+    children: node.children ? ensureTreeKeys(node.children) : undefined,
+  } as PermissionTreeNode));
+}
+
 /**
  * 构建权限树结构
  * 基于 PermissionDefinitionContext 的层级结构
  */
 export function buildPermissionTree(): PermissionTreeNode[] {
-  return [
+  const tree: PermissionTreeNodeInput[] = [
     {
       value: PermissionCodes.UserManagement,
       label: '用户管理',
@@ -330,6 +345,15 @@ export function buildPermissionTree(): PermissionTreeNode[] {
         { value: PermissionCodes.TaskView, label: '查看任务', icon: 'mdi:eye' },
         { value: PermissionCodes.TaskCreate, label: '创建任务', icon: 'mdi:plus' },
         { value: PermissionCodes.TaskEdit, label: '编辑任务', icon: 'mdi:pencil' },
+        { value: PermissionCodes.ProjectTypeView, label: '查看项目类型', icon: 'mdi:eye' },
+        { value: PermissionCodes.ProjectTypeCreate, label: '创建项目类型', icon: 'mdi:plus' },
+        { value: PermissionCodes.ProjectTypeEdit, label: '编辑项目类型', icon: 'mdi:pencil' },
+        { value: PermissionCodes.ProjectStatusOptionView, label: '查看项目状态', icon: 'mdi:eye' },
+        { value: PermissionCodes.ProjectStatusOptionCreate, label: '创建项目状态', icon: 'mdi:plus' },
+        { value: PermissionCodes.ProjectStatusOptionEdit, label: '编辑项目状态', icon: 'mdi:pencil' },
+        { value: PermissionCodes.ProjectIndustryView, label: '查看项目行业', icon: 'mdi:eye' },
+        { value: PermissionCodes.ProjectIndustryCreate, label: '创建项目行业', icon: 'mdi:plus' },
+        { value: PermissionCodes.ProjectIndustryEdit, label: '编辑项目行业', icon: 'mdi:pencil' },
       ],
     },
     {
@@ -413,6 +437,7 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       icon: 'mdi:shield-check',
     },
   ];
+  return ensureTreeKeys(tree);
 }
 
 /**

@@ -1262,20 +1262,96 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CityName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<long>("CityRegionId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("CreatorId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("CreatorName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("DistrictName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<long>("DistrictRegionId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ProjectContent")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("ProjectEstimate")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("ProjectIndustryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProjectIndustryName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ProjectNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("ProjectStatusOptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProjectStatusOptionName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("ProjectTypeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProjectTypeName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ProvinceName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<long>("ProvinceRegionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("PurchaseAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1287,9 +1363,170 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
                     b.HasIndex("CreatorId");
 
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ProjectIndustryId");
+
                     b.HasIndex("Status");
 
                     b.ToTable("project", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.ProjectContact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CustomerContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Mobile")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("OfficePhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Position")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("QQ")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Remark")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Wechat")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("project_contact", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.ProjectFollowUpRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("CreatorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ReminderIntervalDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly?>("VisitDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("VisitDate");
+
+                    b.ToTable("project_follow_up_record", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectIndustryAggregate.ProjectIndustry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("project_industry", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate.ProjectStatusOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("project_status_option", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectTypeAggregate.ProjectType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("project_type", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RegionAggregate.Region", b =>
@@ -1414,7 +1651,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.ToTable("share_link", (string)null);
                 });
 
-            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task", b =>
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.ProjectTask", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -1457,10 +1694,10 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("task", (string)null);
+                    b.ToTable("project_task", (string)null);
                 });
 
-            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.TaskComment", b =>
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.ProjectTaskComment", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -1476,14 +1713,14 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("TaskId")
+                    b.Property<Guid>("ProjectTaskId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("ProjectTaskId");
 
-                    b.ToTable("task_comment", (string)null);
+                    b.ToTable("project_task_comment", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.User", b =>
@@ -2138,6 +2375,24 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.ProjectContact", b =>
+                {
+                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.Project", null)
+                        .WithMany("Contacts")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.ProjectFollowUpRecord", b =>
+                {
+                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.Project", null)
+                        .WithMany("FollowUpRecords")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.RolePermission", b =>
                 {
                     b.HasOne("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", null)
@@ -2147,11 +2402,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.TaskComment", b =>
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.ProjectTaskComment", b =>
                 {
-                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task", null)
+                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.ProjectTask", null)
                         .WithMany("Comments")
-                        .HasForeignKey("TaskId")
+                        .HasForeignKey("ProjectTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2225,12 +2480,19 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.Project", b =>
+                {
+                    b.Navigation("Contacts");
+
+                    b.Navigation("FollowUpRecords");
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RoleAggregate.Role", b =>
                 {
                     b.Navigation("Permissions");
                 });
 
-            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.Task", b =>
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.ProjectTask", b =>
                 {
                     b.Navigation("Comments");
                 });

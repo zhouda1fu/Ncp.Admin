@@ -4,14 +4,14 @@ using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 namespace Ncp.Admin.Domain.AggregatesModel.TaskAggregate;
 
 /// <summary>
-/// 任务ID（强类型ID）
+/// 项目任务ID（强类型ID）
 /// </summary>
-public partial record TaskId : IGuidStronglyTypedId;
+public partial record ProjectTaskId : IGuidStronglyTypedId;
 
 /// <summary>
-/// 任务状态
+/// 项目任务状态
 /// </summary>
-public enum TaskStatus
+public enum ProjectTaskStatus
 {
     /// <summary>
     /// 待办
@@ -32,13 +32,13 @@ public enum TaskStatus
 }
 
 /// <summary>
-/// 任务聚合根，含评论列表，属于某项目
+/// 项目任务聚合根，含评论列表，属于某项目
 /// </summary>
-public class Task : Entity<TaskId>, IAggregateRoot
+public class ProjectTask : Entity<ProjectTaskId>, IAggregateRoot
 {
-    private readonly List<TaskComment> _comments = [];
+    private readonly List<ProjectTaskComment> _comments = [];
 
-    protected Task() { }
+    protected ProjectTask() { }
 
     /// <summary>
     /// 所属项目ID
@@ -63,7 +63,7 @@ public class Task : Entity<TaskId>, IAggregateRoot
     /// <summary>
     /// 任务状态
     /// </summary>
-    public TaskStatus Status { get; private set; }
+    public ProjectTaskStatus Status { get; private set; }
     /// <summary>
     /// 排序号（看板内排序）
     /// </summary>
@@ -80,20 +80,20 @@ public class Task : Entity<TaskId>, IAggregateRoot
     /// <summary>
     /// 评论列表（只读）
     /// </summary>
-    public IReadOnlyList<TaskComment> Comments => _comments.AsReadOnly();
+    public IReadOnlyList<ProjectTaskComment> Comments => _comments.AsReadOnly();
 
     /// <summary>
-    /// 创建任务
+    /// 创建项目任务
     /// </summary>
-    public Task(ProjectId projectId, string title, string? description = null, UserId? assigneeId = null, DateOnly? dueDate = null, int sortOrder = 0)
+    public ProjectTask(ProjectId projectId, string title, string? description = null, UserId? assigneeId = null, DateOnly? dueDate = null, int sortOrder = 0)
     {
         ProjectId = projectId;
-        Title = title ;
+        Title = title;
         Description = description;
         AssigneeId = assigneeId;
         DueDate = dueDate;
         SortOrder = sortOrder;
-        Status = TaskStatus.Todo;
+        Status = ProjectTaskStatus.Todo;
         CreatedAt = DateTimeOffset.UtcNow;
     }
 
@@ -102,7 +102,7 @@ public class Task : Entity<TaskId>, IAggregateRoot
     /// </summary>
     public void Update(string title, string? description, UserId? assigneeId, DateOnly? dueDate)
     {
-        Title = title ;
+        Title = title;
         Description = description;
         AssigneeId = assigneeId;
         DueDate = dueDate;
@@ -121,7 +121,7 @@ public class Task : Entity<TaskId>, IAggregateRoot
     /// <summary>
     /// 设置任务状态
     /// </summary>
-    public void SetStatus(TaskStatus status)
+    public void SetStatus(ProjectTaskStatus status)
     {
         Status = status;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
@@ -132,7 +132,7 @@ public class Task : Entity<TaskId>, IAggregateRoot
     /// </summary>
     public void AddComment(string content, UserId authorId)
     {
-        _comments.Add(new TaskComment(content, authorId));
+        _comments.Add(new ProjectTaskComment(content, authorId));
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 }

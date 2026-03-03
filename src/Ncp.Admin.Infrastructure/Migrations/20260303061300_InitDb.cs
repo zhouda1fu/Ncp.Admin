@@ -502,15 +502,87 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
                     CreatorId = table.Column<long>(type: "bigint", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectTypeId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ProjectStatusOptionId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ProjectNumber = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    ProjectIndustryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProvinceRegionId = table.Column<long>(type: "bigint", nullable: true),
+                    CityRegionId = table.Column<long>(type: "bigint", nullable: true),
+                    DistrictRegionId = table.Column<long>(type: "bigint", nullable: true),
+                    StartDate = table.Column<DateOnly>(type: "date", nullable: true),
+                    ProjectEstimate = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    PurchaseAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    ProjectContent = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_project", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "project_industry",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_project_industry", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "project_status_option",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_project_status_option", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "project_task",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    AssigneeId = table.Column<long>(type: "bigint", nullable: true),
+                    DueDate = table.Column<DateOnly>(type: "date", nullable: true),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_project", x => x.Id);
+                    table.PrimaryKey("PK_project_task", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "project_type",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_project_type", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -578,26 +650,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_share_link", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "task",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    AssigneeId = table.Column<long>(type: "bigint", nullable: true),
-                    DueDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_task", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -758,6 +810,29 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "customer_contact_record",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RecordAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    RecordType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Content = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    RecorderId = table.Column<long>(type: "bigint", nullable: true),
+                    RecorderName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_customer_contact_record", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_customer_contact_record_customer_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "customer",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "customer_industry",
                 columns: table => new
                 {
@@ -822,6 +897,27 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "project_task_comment",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Content = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    AuthorId = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ProjectTaskId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_project_task_comment", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_project_task_comment_project_task_ProjectTaskId",
+                        column: x => x.ProjectTaskId,
+                        principalTable: "project_task",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "role_permission",
                 columns: table => new
                 {
@@ -837,27 +933,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         name: "FK_role_permission_role_RoleId",
                         column: x => x.RoleId,
                         principalTable: "role",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "task_comment",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Content = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
-                    AuthorId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    TaskId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_task_comment", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_task_comment_task_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "task",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1157,6 +1232,16 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_customer_contact_record_CustomerId",
+                table: "customer_contact_record",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_customer_contact_record_RecordAt",
+                table: "customer_contact_record",
+                column: "RecordAt");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_customer_industry_CustomerId_IndustryId",
                 table: "customer_industry",
                 columns: new[] { "CustomerId", "IndustryId" },
@@ -1315,9 +1400,54 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 column: "CreatorId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_project_CustomerId",
+                table: "project",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_ProjectIndustryId",
+                table: "project",
+                column: "ProjectIndustryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_project_Status",
                 table: "project",
                 column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_industry_SortOrder",
+                table: "project_industry",
+                column: "SortOrder");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_status_option_SortOrder",
+                table: "project_status_option",
+                column: "SortOrder");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_task_AssigneeId",
+                table: "project_task",
+                column: "AssigneeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_task_ProjectId",
+                table: "project_task",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_task_Status",
+                table: "project_task",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_task_comment_ProjectTaskId",
+                table: "project_task_comment",
+                column: "ProjectTaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_type_SortOrder",
+                table: "project_type",
+                column: "SortOrder");
 
             migrationBuilder.CreateIndex(
                 name: "IX_region_Level",
@@ -1361,26 +1491,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 table: "share_link",
                 column: "Token",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_task_AssigneeId",
-                table: "task",
-                column: "AssigneeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_task_ProjectId",
-                table: "task",
-                column: "ProjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_task_Status",
-                table: "task",
-                column: "Status");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_task_comment_TaskId",
-                table: "task_comment",
-                column: "TaskId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_user_Email",
@@ -1564,6 +1674,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "customer_contact");
 
             migrationBuilder.DropTable(
+                name: "customer_contact_record");
+
+            migrationBuilder.DropTable(
                 name: "customer_industry");
 
             migrationBuilder.DropTable(
@@ -1603,6 +1716,18 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "project");
 
             migrationBuilder.DropTable(
+                name: "project_industry");
+
+            migrationBuilder.DropTable(
+                name: "project_status_option");
+
+            migrationBuilder.DropTable(
+                name: "project_task_comment");
+
+            migrationBuilder.DropTable(
+                name: "project_type");
+
+            migrationBuilder.DropTable(
                 name: "region");
 
             migrationBuilder.DropTable(
@@ -1613,9 +1738,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "share_link");
-
-            migrationBuilder.DropTable(
-                name: "task_comment");
 
             migrationBuilder.DropTable(
                 name: "user_dept");
@@ -1651,10 +1773,10 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "expense_claim");
 
             migrationBuilder.DropTable(
-                name: "role");
+                name: "project_task");
 
             migrationBuilder.DropTable(
-                name: "task");
+                name: "role");
 
             migrationBuilder.DropTable(
                 name: "user");

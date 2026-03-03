@@ -1,5 +1,22 @@
 {
   "title": "Task Management",
+  "sortOrder": "Sort Order",
+  "projectType": {
+    "title": "Project Type",
+    "list": "Project Types",
+    "name": "Type Name"
+  },
+  "projectStatus": {
+    "title": "Project Status",
+    "list": "Project Statuses",
+    "name": "Status Name",
+    "code": "Status Code"
+  },
+  "projectIndustry": {
+    "title": "Project Industry",
+    "list": "Project Industries",
+    "name": "Industry Name"
+  },
   "project": {
     "title": "Projects",
     "list": "Project List",
@@ -11,7 +28,45 @@
     "statusActive": "Active",
     "statusArchived": "Archived",
     "createdAt": "Created At",
-    "operation": "Operation"
+    "operation": "Operation",
+    "projectNumber": "Project Number",
+    "customer": "Customer",
+    "region": "Location",
+    "regionPlaceholder": "Select Province/City/District",
+    "startDate": "Start Date",
+    "projectEstimate": "Project Estimate",
+    "purchaseAmount": "Purchase Amount",
+    "projectContent": "Project Content",
+    "archive": "Archive",
+    "activate": "Activate",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure to delete project \"{0}\"?",
+    "contacts": "Project Contacts",
+    "addContact": "Add Contact",
+    "editContact": "Edit",
+    "deleteContact": "Delete",
+    "confirmDeleteContact": "Are you sure to delete this contact?",
+    "customerContact": "Customer Contact",
+    "customerContactPlaceholder": "Select customer contact",
+    "contactName": "Name",
+    "contactPosition": "Position",
+    "contactMobile": "Mobile",
+    "contactOfficePhone": "Office Phone",
+    "contactQq": "QQ",
+    "contactWechat": "WeChat",
+    "contactEmail": "Email",
+    "isPrimary": "Primary Contact",
+    "contactRemark": "Remark",
+    "followUpRecords": "Follow-up Records",
+    "addFollowUpRecord": "Add Follow-up",
+    "editFollowUpRecord": "Edit",
+    "deleteFollowUpRecord": "Delete",
+    "confirmDeleteFollowUpRecord": "Are you sure to delete this follow-up record?",
+    "followUpTitle": "Title",
+    "followUpVisitDate": "Visit Date",
+    "followUpReminderFrequency": "Reminder",
+    "followUpReminderDays": "Every {0} days",
+    "followUpContent": "Content"
   },
   "task": {
     "title": "Tasks",
@@ -31,6 +86,8 @@
     "createdAt": "Created At",
     "operation": "Operation",
     "comments": "Comments",
-    "addComment": "Add Comment"
+    "addComment": "Add Comment",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure to delete task \"{0}\"?"
   }
 }

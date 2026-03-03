@@ -40,7 +40,7 @@ public class AddTaskCommentEndpoint(IMediator mediator) : Endpoint<AddTaskCommen
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        var cmd = new AddTaskCommentCommand(new TaskId(req.TaskId), req.Content, new UserId(uid));
+        var cmd = new AddTaskCommentCommand(new ProjectTaskId(req.TaskId), req.Content, new UserId(uid));
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

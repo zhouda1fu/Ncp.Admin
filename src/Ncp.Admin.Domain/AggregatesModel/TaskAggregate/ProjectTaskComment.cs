@@ -3,16 +3,16 @@ using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 namespace Ncp.Admin.Domain.AggregatesModel.TaskAggregate;
 
 /// <summary>
-/// 任务评论ID（强类型ID）
+/// 项目任务评论ID（强类型ID）
 /// </summary>
-public partial record TaskCommentId : IGuidStronglyTypedId;
+public partial record ProjectTaskCommentId : IGuidStronglyTypedId;
 
 /// <summary>
-/// 任务评论（聚合内实体）
+/// 项目任务评论（聚合内实体）
 /// </summary>
-public class TaskComment : Entity<TaskCommentId>
+public class ProjectTaskComment : Entity<ProjectTaskCommentId>
 {
-    protected TaskComment() { }
+    protected ProjectTaskComment() { }
 
     /// <summary>
     /// 评论内容
@@ -27,9 +27,9 @@ public class TaskComment : Entity<TaskCommentId>
     /// </summary>
     public DateTimeOffset CreatedAt { get; init; }
 
-    internal TaskComment(string content, UserId authorId)
+    internal ProjectTaskComment(string content, UserId authorId)
     {
-        Content = content ;
+        Content = content;
         AuthorId = authorId;
         CreatedAt = DateTimeOffset.UtcNow;
     }

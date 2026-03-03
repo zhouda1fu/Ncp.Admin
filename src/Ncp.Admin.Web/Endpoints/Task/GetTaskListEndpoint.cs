@@ -40,7 +40,7 @@ public class GetTaskListEndpoint(TaskQuery query)
             PageIndex = req.PageIndex,
             PageSize = req.PageSize,
             ProjectId = req.ProjectId.HasValue ? new ProjectId(req.ProjectId.Value) : null,
-            Status = req.Status.HasValue ? (Ncp.Admin.Domain.AggregatesModel.TaskAggregate.TaskStatus?)req.Status.Value : null,
+            Status = req.Status.HasValue ? (ProjectTaskStatus?)req.Status.Value : null,
         };
         var result = await query.GetPagedAsync(input, ct);
         await Send.OkAsync(result.AsResponseData(), cancellation: ct);

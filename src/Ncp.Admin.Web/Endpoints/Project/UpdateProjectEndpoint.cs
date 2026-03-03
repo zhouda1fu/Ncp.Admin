@@ -3,20 +3,39 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectIndustryAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectTypeAggregate;
+using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Web.Application.Commands.Project;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Project;
 
 /// <summary>
-/// 更新项目请求
+/// 更新项目请求（冗余名称由前端传入）
 /// </summary>
-public class UpdateProjectRequest
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-}
+public record UpdateProjectRequest(
+    ProjectId Id,
+    string Name,
+    string? Description,
+    ProjectTypeId ProjectTypeId,
+    string ProjectTypeName,
+    ProjectStatusOptionId ProjectStatusOptionId,
+    string ProjectStatusOptionName,
+    string? ProjectNumber,
+    ProjectIndustryId ProjectIndustryId,
+    string ProjectIndustryName,
+    RegionId ProvinceRegionId,
+    string ProvinceName,
+    RegionId CityRegionId,
+    string CityName,
+    RegionId DistrictRegionId,
+    string DistrictName,
+    DateOnly? StartDate,
+    string? ProjectEstimate,
+    decimal? PurchaseAmount,
+    string? ProjectContent);
 
 /// <summary>
 /// 更新项目
@@ -33,8 +52,27 @@ public class UpdateProjectEndpoint(IMediator mediator) : Endpoint<UpdateProjectR
 
     public override async Task HandleAsync(UpdateProjectRequest req, CancellationToken ct)
     {
-        var id = new ProjectId(req.Id);
-        var cmd = new UpdateProjectCommand(id, req.Name, req.Description);
+        var cmd = new UpdateProjectCommand(
+            req.Id,
+            req.Name,
+            req.Description ?? string.Empty,
+            req.ProjectTypeId,
+            req.ProjectTypeName ?? "",
+            req.ProjectStatusOptionId,
+            req.ProjectStatusOptionName ?? "",
+            req.ProjectNumber ?? string.Empty,
+            req.ProjectIndustryId,
+            req.ProjectIndustryName ?? "",
+            req.ProvinceRegionId,
+            req.ProvinceName ?? "",
+            req.CityRegionId,
+            req.CityName ?? "",
+            req.DistrictRegionId,
+            req.DistrictName ?? "",
+            req.StartDate,
+            req.ProjectEstimate ?? string.Empty,
+            req.PurchaseAmount ?? 0,
+            req.ProjectContent ?? string.Empty);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

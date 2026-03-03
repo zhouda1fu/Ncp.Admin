@@ -131,6 +131,15 @@ export const PermissionCodes = {
   TaskView: 'TaskView',
   TaskCreate: 'TaskCreate',
   TaskEdit: 'TaskEdit',
+  ProjectTypeView: 'ProjectTypeView',
+  ProjectTypeCreate: 'ProjectTypeCreate',
+  ProjectTypeEdit: 'ProjectTypeEdit',
+  ProjectStatusOptionView: 'ProjectStatusOptionView',
+  ProjectStatusOptionCreate: 'ProjectStatusOptionCreate',
+  ProjectStatusOptionEdit: 'ProjectStatusOptionEdit',
+  ProjectIndustryView: 'ProjectIndustryView',
+  ProjectIndustryCreate: 'ProjectIndustryCreate',
+  ProjectIndustryEdit: 'ProjectIndustryEdit',
 
   // 即时通讯权限
   ChatManagement: 'ChatManagement',

@@ -9,7 +9,7 @@ namespace Ncp.Admin.Web.Application.Commands.ProjectTask;
 /// <summary>
 /// 更新任务命令
 /// </summary>
-public record UpdateTaskCommand(TaskId Id, string Title, string? Description, UserId? AssigneeId, DateOnly? DueDate) : ICommand<bool>;
+public record UpdateTaskCommand(ProjectTaskId Id, string Title, string? Description, UserId? AssigneeId, DateOnly? DueDate) : ICommand<bool>;
 
 /// <summary>
 /// 更新任务命令验证器
@@ -27,7 +27,7 @@ public class UpdateTaskCommandValidator : AbstractValidator<UpdateTaskCommand>
 /// <summary>
 /// 更新任务命令处理器
 /// </summary>
-public class UpdateTaskCommandHandler(ITaskRepository repository) : ICommandHandler<UpdateTaskCommand, bool>
+public class UpdateTaskCommandHandler(IProjectTaskRepository repository) : ICommandHandler<UpdateTaskCommand, bool>
 {
     /// <inheritdoc />
     public async System.Threading.Tasks.Task<bool> Handle(UpdateTaskCommand request, CancellationToken cancellationToken)

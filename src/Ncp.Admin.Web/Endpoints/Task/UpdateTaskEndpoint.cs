@@ -40,7 +40,7 @@ public class UpdateTaskEndpoint(IMediator mediator) : Endpoint<UpdateTaskRequest
         if (!string.IsNullOrWhiteSpace(req.DueDate) && DateOnly.TryParse(req.DueDate, out var d))
             dueDate = d;
         var cmd = new UpdateTaskCommand(
-            new TaskId(req.Id),
+            new ProjectTaskId(req.Id),
             req.Title,
             req.Description,
             req.AssigneeId.HasValue ? new UserId(req.AssigneeId.Value) : null,

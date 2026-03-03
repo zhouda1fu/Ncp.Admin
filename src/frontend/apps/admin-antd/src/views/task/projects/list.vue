@@ -3,22 +3,25 @@ import type { Recordable } from '@vben/types';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { ProjectApi } from '#/api/system/project';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { useRouter } from 'vue-router';
+
+import { Page } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
-import { Button } from 'ant-design-vue';
+import { Button, message, Modal } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { getProjectList } from '#/api/system/project';
+import {
+  activateProject,
+  archiveProject,
+  deleteProject,
+  getProjectList,
+} from '#/api/system/project';
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
-import Form from './modules/form.vue';
 
-const [FormDrawer, formDrawerApi] = useVbenDrawer({
-  connectedComponent: Form,
-  destroyOnClose: true,
-});
+const router = useRouter();
 
 const [Grid, gridApi] = useVbenVxeGrid<ProjectApi.ProjectItem>({
   formOptions: {
@@ -40,6 +43,10 @@ const [Grid, gridApi] = useVbenVxeGrid<ProjectApi.ProjectItem>({
             pageSize: page.pageSize,
             name: formValues.name,
             status: formValues.status,
+            customerId: formValues.customerId,
+            projectTypeId: formValues.projectTypeId,
+            projectStatusOptionId: formValues.projectStatusOptionId,
+            projectIndustryId: formValues.projectIndustryId,
           };
           const result = await getProjectList(params);
           return {
@@ -60,24 +67,50 @@ const [Grid, gridApi] = useVbenVxeGrid<ProjectApi.ProjectItem>({
   },
 });
 
-function onActionClick(e: OnActionClickParams<ProjectApi.ProjectItem>) {
+async function onActionClick(e: OnActionClickParams<ProjectApi.ProjectItem>) {
   if (e.code === 'edit') {
-    formDrawerApi.setData(e.row).open();
+    router.push(`/task/projects/${e.row.id}/edit`);
+    return;
+  }
+  if (e.code === 'archive') {
+    try {
+      await archiveProject(e.row.id);
+      message.success($t('ui.actionMessage.operationSuccess'));
+      gridApi.query();
+    } catch (err) {
+      message.error((err as Error)?.message ?? $t('ui.actionMessage.operationFailed'));
+    }
+  } else if (e.code === 'activate') {
+    try {
+      await activateProject(e.row.id);
+      message.success($t('ui.actionMessage.operationSuccess'));
+      gridApi.query();
+    } catch (err) {
+      message.error((err as Error)?.message ?? $t('ui.actionMessage.operationFailed'));
+    }
+  } else if (e.code === 'delete') {
+    Modal.confirm({
+      title: $t('ui.deleteConfirm.title'),
+      content: $t('task.project.deleteConfirm', [e.row.name]),
+      okText: $t('common.confirm'),
+      okType: 'danger',
+      cancelText: $t('common.cancel'),
+      async onOk() {
+        await deleteProject(e.row.id);
+        message.success($t('ui.actionMessage.operationSuccess'));
+        gridApi.query();
+      },
+    });
   }
 }
 
-function onRefresh() {
-  gridApi.query();
-}
-
 function onCreate() {
-  formDrawerApi.setData({}).open();
+  router.push('/task/projects/create');
 }
 </script>
 
 <template>
   <Page auto-content-height>
-    <FormDrawer @success="onRefresh" />
     <Grid :table-title="$t('task.project.list')">
       <template #toolbar-tools>
         <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">

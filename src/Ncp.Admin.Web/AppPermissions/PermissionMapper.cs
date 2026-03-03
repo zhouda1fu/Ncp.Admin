@@ -107,6 +107,15 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.TaskView, "查看任务" },
         { PermissionCodes.TaskCreate, "创建任务" },
         { PermissionCodes.TaskEdit, "编辑任务" },
+        { PermissionCodes.ProjectTypeView, "查看项目类型" },
+        { PermissionCodes.ProjectTypeCreate, "创建项目类型" },
+        { PermissionCodes.ProjectTypeEdit, "编辑项目类型" },
+        { PermissionCodes.ProjectStatusOptionView, "查看项目状态" },
+        { PermissionCodes.ProjectStatusOptionCreate, "创建项目状态" },
+        { PermissionCodes.ProjectStatusOptionEdit, "编辑项目状态" },
+        { PermissionCodes.ProjectIndustryView, "查看项目行业" },
+        { PermissionCodes.ProjectIndustryCreate, "创建项目行业" },
+        { PermissionCodes.ProjectIndustryEdit, "编辑项目行业" },
 
         // 文档管理权限
         { PermissionCodes.DocumentManagement, "文档管理" },
