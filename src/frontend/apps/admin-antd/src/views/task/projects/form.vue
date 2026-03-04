@@ -59,7 +59,7 @@ const contactColumns: TableColumnType<ProjectApi.ProjectContactItem>[] = [
   { title: () => $t('task.project.contactOfficePhone'), dataIndex: 'officePhone', key: 'officePhone', width: 110 },
   { title: () => $t('task.project.contactEmail'), dataIndex: 'email', key: 'email', width: 140 },
   { title: () => $t('task.project.isPrimary'), dataIndex: 'isPrimary', key: 'isPrimary', width: 90 },
-  { title: () => $t('common.operation'), key: 'action', width: 160 },
+  { title: () => $t('task.project.operation'), key: 'action', width: 160 },
 ];
 
 const followUpRecordColumns: TableColumnType<ProjectApi.ProjectFollowUpRecordItem>[] = [
@@ -67,7 +67,7 @@ const followUpRecordColumns: TableColumnType<ProjectApi.ProjectFollowUpRecordIte
   { title: () => $t('task.project.followUpVisitDate'), dataIndex: 'visitDate', key: 'visitDate', width: 120 },
   { title: () => $t('task.project.followUpReminderFrequency'), dataIndex: 'reminderIntervalDays', key: 'reminderIntervalDays', width: 100 },
   { title: () => $t('task.project.followUpContent'), dataIndex: 'content', key: 'content', ellipsis: true },
-  { title: () => $t('common.operation'), key: 'action', width: 160 },
+  { title: () => $t('task.project.operation'), key: 'action', width: 160 },
 ];
 
 const provinceFilter = (r: RegionApi.RegionItem) =>

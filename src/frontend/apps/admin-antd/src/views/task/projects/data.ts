@@ -251,7 +251,12 @@ export function useColumns(
     { field: 'name', title: $t('task.project.projectName'), width: 160 },
     { field: 'projectNumber', title: $t('task.project.projectNumber'), width: 120 },
     { field: 'description', title: $t('task.project.description'), minWidth: 120 },
-    { field: 'customerId', title: $t('task.project.customer'), width: 120 },
+    {
+      field: 'customerName',
+      title: $t('task.project.customer'),
+      width: 120,
+      formatter: ({ row }) => row.customerName ?? row.customerId ?? '-',
+    },
     {
       formatter: ({ cellValue }) => statusLabel(cellValue as number),
       field: 'status',
