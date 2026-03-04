@@ -195,6 +195,14 @@ public static class PermissionCodes
     public const string RegionEdit = nameof(RegionEdit);
     #endregion
 
+    #region 订单管理权限
+    public const string OrderManagement = nameof(OrderManagement);
+    public const string OrderView = nameof(OrderView);
+    public const string OrderCreate = nameof(OrderCreate);
+    public const string OrderEdit = nameof(OrderEdit);
+    public const string OrderDelete = nameof(OrderDelete);
+    #endregion
+
     #region 请假管理权限
     public const string LeaveManagement = nameof(LeaveManagement);
     public const string LeaveRequestView = nameof(LeaveRequestView);

@@ -107,6 +107,13 @@ public static class SeedDatabaseExtension
                 PermissionCodes.RegionCreate,
                 PermissionCodes.RegionEdit,
 
+                // 订单管理权限
+                PermissionCodes.OrderManagement,
+                PermissionCodes.OrderView,
+                PermissionCodes.OrderCreate,
+                PermissionCodes.OrderEdit,
+                PermissionCodes.OrderDelete,
+
                 // 所有接口访问权限
                 PermissionCodes.AllApiAccess,
             };

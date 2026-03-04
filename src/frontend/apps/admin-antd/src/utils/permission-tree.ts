@@ -313,6 +313,17 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       ],
     },
     {
+      value: PermissionCodes.OrderManagement,
+      label: '订单管理',
+      icon: 'mdi:clipboard-list-outline',
+      children: [
+        { value: PermissionCodes.OrderView, label: '查看订单', icon: 'mdi:eye' },
+        { value: PermissionCodes.OrderCreate, label: '创建订单', icon: 'mdi:plus' },
+        { value: PermissionCodes.OrderEdit, label: '编辑订单', icon: 'mdi:pencil' },
+        { value: PermissionCodes.OrderDelete, label: '删除订单', icon: 'mdi:delete' },
+      ],
+    },
+    {
       value: PermissionCodes.AttendanceManagement,
       label: '考勤管理',
       icon: 'mdi:clock-check',

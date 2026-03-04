@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Ncp.Admin.Infrastructure;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ncp.Admin.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260304025242_AddOrderAndOrderItem")]
+    partial class AddOrderAndOrderItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1211,9 +1214,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
-                    b.Property<Guid>("ContractId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1224,14 +1224,13 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("CustomerName")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<DateTimeOffset>("DeletedAt")
+                    b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset>("DeliveryDate")
+                    b.Property<DateTimeOffset?>("DeliveryDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
@@ -1246,33 +1245,28 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("OwnerName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<DateTimeOffset>("PayDate")
+                    b.Property<DateTimeOffset?>("PayDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("ProjectId")
+                    b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("ReceiverAddress")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("ReceiverName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("ReceiverPhone")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("Remark")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -1282,12 +1276,10 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ContractId");
 
                     b.HasIndex("CreatedAt");
 
@@ -1298,8 +1290,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasIndex("OrderNumber");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("ProjectId");
 
                     b.ToTable("order", (string)null);
                 });
@@ -1314,12 +1304,10 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("numeric(18,4)");
 
                     b.Property<string>("Model")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Number")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
@@ -1330,9 +1318,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1342,20 +1327,16 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Remark")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("Unit")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
-
-                    b.HasIndex("ProductId");
 
                     b.ToTable("order_item", (string)null);
                 });
@@ -1413,38 +1394,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("position", (string)null);
-                });
-
-            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProductAggregate.Product", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code");
-
-                    b.ToTable("product", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.Project", b =>

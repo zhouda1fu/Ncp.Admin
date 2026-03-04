@@ -185,6 +185,11 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.RegionView, "查看区域（列表/下拉）" },
         { PermissionCodes.RegionCreate, "创建区域" },
         { PermissionCodes.RegionEdit, "编辑区域" },
+        { PermissionCodes.OrderManagement, "订单管理" },
+        { PermissionCodes.OrderView, "查看订单" },
+        { PermissionCodes.OrderCreate, "创建订单" },
+        { PermissionCodes.OrderEdit, "编辑订单" },
+        { PermissionCodes.OrderDelete, "删除订单" },
 
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },

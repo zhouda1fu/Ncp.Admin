@@ -521,4 +521,13 @@ public sealed class ErrorCodes
     public const int ProjectIndustryNotFound = 280010;
 
     #endregion
+
+    #region 订单相关错误 (290xxx)
+
+    /// <summary>
+    /// 未找到订单
+    /// </summary>
+    public const int OrderNotFound = 290001;
+
+    #endregion
 }

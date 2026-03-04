@@ -17,6 +17,8 @@ using Ncp.Admin.Domain.AggregatesModel.ChatMessageAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ContactAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ContactGroupAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DocumentAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProductAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectIndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate;
@@ -139,6 +141,8 @@ public partial class ApplicationDbContext(
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<VehicleBooking> VehicleBookings => Set<VehicleBooking>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<Product> Products => Set<Product>();
     public DbSet<CustomerSource> CustomerSources => Set<CustomerSource>();
     public DbSet<Industry> Industries => Set<Industry>();
     public DbSet<Region> Regions => Set<Region>();

@@ -188,6 +188,13 @@ public static class PermissionDefinitionContext
         customerManagement.AddChild(PermissionCodes.RegionCreate, "创建区域");
         customerManagement.AddChild(PermissionCodes.RegionEdit, "编辑区域");
 
+        // 订单管理权限
+        var orderManagement = systemAccess.AddPermission(PermissionCodes.OrderManagement, "订单管理");
+        orderManagement.AddChild(PermissionCodes.OrderView, "查看订单");
+        orderManagement.AddChild(PermissionCodes.OrderCreate, "创建订单");
+        orderManagement.AddChild(PermissionCodes.OrderEdit, "编辑订单");
+        orderManagement.AddChild(PermissionCodes.OrderDelete, "删除订单");
+
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");
     }

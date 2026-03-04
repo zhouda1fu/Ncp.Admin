@@ -162,6 +162,13 @@ export const PermissionCodes = {
   ContactCreate: 'ContactCreate',
   ContactEdit: 'ContactEdit',
 
+  // 订单管理权限
+  OrderManagement: 'OrderManagement',
+  OrderView: 'OrderView',
+  OrderCreate: 'OrderCreate',
+  OrderEdit: 'OrderEdit',
+  OrderDelete: 'OrderDelete',
+
   // 请假管理权限
   LeaveManagement: 'LeaveManagement',
   LeaveRequestView: 'LeaveRequestView',
