@@ -5,11 +5,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { Page } from '@vben/common-ui';
 import { ArrowLeft } from '@vben/icons';
 
-import { Button, DatePicker, Input, InputNumber, message, Select, Table } from 'ant-design-vue';
+import { Button, Card, DatePicker, Input, InputNumber, message, Select, Table, Tooltip } from 'ant-design-vue';
 
+import type { OrderApi } from '#/api/system/order';
 import { createOrder, getOrder, updateOrder } from '#/api/system/order';
 import { getContractList } from '#/api/system/contract';
 import { getCustomerSearch } from '#/api/system/customer';
+import { getDeptList } from '#/api/system/dept';
+import { fetchFileBlob, uploadFile } from '#/api/system/file';
 import { getProductList } from '#/api/system/product';
 import { getProjectList } from '#/api/system/project';
 import { getUserList } from '#/api/system/user';
@@ -29,6 +32,14 @@ const userOptions = ref<{ label: string; value: string }[]>([]);
 const contractOptions = ref<{ label: string; value: string }[]>([]);
 const projectOptions = ref<{ label: string; value: string }[]>([]);
 const productOptions = ref<{ label: string; value: string; name: string; model: string; unit: string }[]>([]);
+const deptOptions = ref<{ label: string; value: string }[]>([]);
+
+const paymentStatusOptions = [
+  { label: '已到款', value: '已到款' },
+  { label: '未到款', value: '未到款' },
+  { label: '部分到款', value: '部分到款' },
+  { label: '待确认', value: '待确认' },
+];
 
 const form = ref({
   customerId: '',
@@ -42,6 +53,23 @@ const form = ref({
   remark: '',
   ownerId: '',
   ownerName: '',
+  deptId: '' as string,
+  deptName: '' as string,
+  projectContactName: '',
+  projectContactPhone: '',
+  warranty: '' as string,
+  contractSigningCompany: '' as string,
+  contractTrustee: '' as string,
+  needInvoice: false,
+  installationFee: 0,
+  estimatedFreight: 0,
+  contractFiles: [] as OrderApi.OrderContractFileItem[],
+  selectedContractFileId: '' as string,
+  isShipped: false,
+  paymentStatus: '' as string,
+  contractNotCompanyTemplate: false,
+  contractDiscount: 0,
+  contractAmount: 0,
   receiverName: '',
   receiverPhone: '',
   receiverAddress: '',
@@ -140,6 +168,29 @@ async function loadDetail() {
       remark: data.remark ?? '',
       ownerId: data.ownerId,
       ownerName: data.ownerName ?? '',
+      deptId: data.deptId ?? '',
+      deptName: data.deptName ?? '',
+      projectContactName: data.projectContactName ?? '',
+      projectContactPhone: data.projectContactPhone ?? '',
+      warranty: data.warranty ?? '',
+      contractSigningCompany: data.contractSigningCompany ?? '',
+      contractTrustee: data.contractTrustee ?? '',
+      needInvoice: data.needInvoice ?? false,
+      installationFee: Number(data.installationFee ?? 0),
+      estimatedFreight: Number(data.estimatedFreight ?? 0),
+      contractFiles: (data.contractFiles ?? []).map((f: OrderApi.OrderContractFileItem) => ({
+        path: f.path,
+        fileName: f.fileName,
+        size: f.size,
+        format: f.format,
+        updatedAt: f.updatedAt,
+      })),
+      selectedContractFileId: data.selectedContractFileId ?? '',
+      isShipped: data.isShipped ?? false,
+      paymentStatus: data.paymentStatus ?? '',
+      contractNotCompanyTemplate: data.contractNotCompanyTemplate ?? false,
+      contractDiscount: Number(data.contractDiscount ?? 0),
+      contractAmount: Number(data.contractAmount ?? 0),
       receiverName: data.receiverName ?? '',
       receiverPhone: data.receiverPhone ?? '',
       receiverAddress: data.receiverAddress ?? '',
@@ -190,6 +241,14 @@ onMounted(() => {
       unit: x.unit,
     }));
   });
+  getDeptList().then((res) => {
+    const list = Array.isArray(res) ? res : (res as any)?.data ?? [];
+    const flatten = (arr: any[]): any[] => {
+      return arr.flatMap((x) => [x, ...(x.children ? flatten(x.children) : [])]);
+    };
+    const flat = flatten(list);
+    deptOptions.value = flat.map((x) => ({ label: x.name ?? x.id, value: String(x.id) }));
+  });
   if (!isNew.value) loadDetail();
 });
 
@@ -210,6 +269,10 @@ async function onSubmit() {
   }
   if (!form.value.contractId) {
     message.warning($t('ui.formRules.required', [$t('order.contract')]));
+    return;
+  }
+  if (!form.value.deptId) {
+    message.warning($t('ui.formRules.required', [$t('order.dept')]));
     return;
   }
   if (!form.value.payDate || !form.value.deliveryDate) {
@@ -234,6 +297,23 @@ async function onSubmit() {
       remark: form.value.remark ?? '',
       ownerId: form.value.ownerId,
       ownerName: form.value.ownerName ?? '',
+      deptId: form.value.deptId,
+      deptName: form.value.deptName ?? '',
+      projectContactName: form.value.projectContactName ?? '',
+      projectContactPhone: form.value.projectContactPhone ?? '',
+      warranty: form.value.warranty ?? '',
+      contractSigningCompany: form.value.contractSigningCompany ?? '',
+      contractTrustee: form.value.contractTrustee ?? '',
+      needInvoice: form.value.needInvoice,
+      installationFee: form.value.installationFee,
+      estimatedFreight: form.value.estimatedFreight,
+      contractFiles: form.value.contractFiles,
+      selectedContractFileId: form.value.selectedContractFileId ?? '',
+      isShipped: form.value.isShipped,
+      paymentStatus: form.value.paymentStatus ?? '',
+      contractNotCompanyTemplate: form.value.contractNotCompanyTemplate,
+      contractDiscount: form.value.contractDiscount,
+      contractAmount: form.value.contractAmount,
       receiverName: form.value.receiverName ?? '',
       receiverPhone: form.value.receiverPhone ?? '',
       receiverAddress: form.value.receiverAddress ?? '',
@@ -270,146 +350,456 @@ async function onSubmit() {
 function goBack() {
   router.push('/order/list');
 }
+
+function goToDetail() {
+  if (id.value) router.push(`/order/${id.value}`);
+}
+
+const contractFileInputRef = ref<HTMLInputElement | null>(null);
+const contractFileSearchKeyword = ref('');
+
+function triggerContractUpload() {
+  contractFileInputRef.value?.click();
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function getFileIcon(format: string): string {
+  const f = (format || '').toLowerCase();
+  if (f === 'doc' || f === 'docx') return 'W';
+  if (f === 'pdf') return 'PDF';
+  return '?';
+}
+
+async function onContractFileSelected(e: Event) {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  target.value = '';
+  if (!file) return;
+  try {
+    const res = await uploadFile(file);
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    form.value.contractFiles.push({
+      path: res.path,
+      fileName: file.name,
+      size: file.size,
+      format: ext,
+      updatedAt: new Date().toISOString(),
+    });
+    message.success($t('common.success'));
+  } catch (err) {
+    message.error(String(err));
+  }
+}
+
+function refreshContractList() {
+  contractFileSearchKeyword.value = '';
+}
+
+const filteredContractFiles = computed(() => {
+  const kw = contractFileSearchKeyword.value.trim().toLowerCase();
+  if (!kw) return form.value.contractFiles;
+  return form.value.contractFiles.filter(
+    (f) => f.fileName.toLowerCase().includes(kw) || (f.format && f.format.toLowerCase().includes(kw)),
+  );
+});
+
+async function previewContractFile(item: OrderApi.OrderContractFileItem) {
+  try {
+    const blob = await fetchFileBlob(item.path);
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  } catch (err) {
+    message.error(String(err));
+  }
+}
+
+async function downloadContractFile(item: OrderApi.OrderContractFileItem) {
+  try {
+    const blob = await fetchFileBlob(item.path);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = item.fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    message.error(String(err));
+  }
+}
+
+async function printContractFile(item: OrderApi.OrderContractFileItem) {
+  try {
+    const blob = await fetchFileBlob(item.path);
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if (w) w.addEventListener('load', () => { w.print(); });
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (err) {
+    message.error(String(err));
+  }
+}
+
+function removeContractFile(item: OrderApi.OrderContractFileItem) {
+  form.value.contractFiles = form.value.contractFiles.filter((f) => f.path !== item.path);
+}
+
+const contractFileColumns = [
+  { title: () => $t('order.contractFileType'), dataIndex: 'format', key: 'type', width: 70 },
+  { title: () => $t('order.contractFileTitle'), dataIndex: 'fileName', key: 'fileName', ellipsis: true },
+  { title: () => $t('order.contractFileFormat'), dataIndex: 'format', key: 'format', width: 80 },
+  { title: () => $t('order.contractFileSize'), dataIndex: 'size', key: 'size', width: 90 },
+  { title: () => $t('order.contractFileUpdated'), dataIndex: 'updatedAt', key: 'updatedAt', width: 165 },
+  { title: () => $t('order.contractFileStatus'), key: 'status', width: 80 },
+  { title: () => $t('order.operation'), key: 'action', width: 180, fixed: 'right' as const },
+];
 </script>
 
 <template>
   <Page auto-content-height :loading="loading">
     <div class="p-4">
-      <div class="mb-4 flex items-center gap-2">
+      <!-- 顶部操作栏 -->
+      <div class="mb-4 flex flex-wrap items-center gap-2">
         <Button @click="goBack">
           <ArrowLeft class="size-4" />
         </Button>
         <span class="text-lg font-medium text-foreground">{{ isNew ? $t('order.create') : $t('order.edit') }}</span>
+        <template v-if="!isNew && id">
+          <Button type="link" class="p-0" @click="goToDetail">
+            {{ $t('order.changeRecord') }}
+          </Button>
+        </template>
+        <Tooltip :title="$t('order.helpTip')">
+          <span class="cursor-help text-muted-foreground" style="font-size: 1rem">?</span>
+        </Tooltip>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.customer') }} *</label>
-          <Select
-            v-model:value="form.customerId"
-            allow-clear
-            :filter-option="() => true"
-            placeholder="输入关键词搜索客户"
-            show-search
-            class="w-full"
-            :options="customerOptions"
-            :field-names="{ label: 'label', value: 'value' }"
-            @search="onCustomerSearch"
-            @select="(_: unknown, opt: unknown) => { form.customerName = (opt as { name?: string })?.name ?? ''; }"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.project') }} *</label>
-          <Select
-            v-model:value="form.projectId"
-            allow-clear
-            class="w-full"
-            :options="projectOptions"
-            :field-names="{ label: 'label', value: 'value' }"
-            placeholder="请选择项目"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contract') }} *</label>
-          <Select
-            v-model:value="form.contractId"
-            allow-clear
-            class="w-full"
-            :options="contractOptions"
-            :field-names="{ label: 'label', value: 'value' }"
-            placeholder="请选择合同"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.orderNumber') }} *</label>
-          <Input v-model:value="form.orderNumber" placeholder="" />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.type') }}</label>
-          <Select
-            v-model:value="form.type"
-            class="w-full"
-            :options="[
-              { label: $t('order.typeSales'), value: 0 },
-              { label: $t('order.typeAfterSales'), value: 1 },
-              { label: $t('order.typeSample'), value: 2 },
-              { label: $t('order.typeGeneralTest'), value: 3 },
-            ]"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.status') }}</label>
-          <Select
-            v-model:value="form.status"
-            class="w-full"
-            :options="[
-              { label: $t('order.statusPendingAudit'), value: 1 },
-              { label: $t('order.statusOrdered'), value: 2 },
-              { label: $t('order.statusCompleted'), value: 3 },
-              { label: $t('order.statusRejected'), value: 4 },
-              { label: $t('order.statusUnpaid'), value: 5 },
-            ]"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.owner') }} *</label>
-          <Select
-            v-model:value="form.ownerId"
-            allow-clear
-            class="w-full"
-            :options="userOptions"
-            :field-names="{ label: 'label', value: 'value' }"
-            @select="(_: unknown, opt: unknown) => { form.ownerName = (opt as { label?: string })?.label ?? ''; }"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.amount') }}</label>
-          <InputNumber v-model:value="form.amount" class="w-full" :min="0" :precision="2" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.remark') }}</label>
-          <Input.TextArea v-model:value="form.remark" :rows="2" placeholder="" />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.receiverName') }}</label>
-          <Input v-model:value="form.receiverName" />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.receiverPhone') }}</label>
-          <Input v-model:value="form.receiverPhone" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.receiverAddress') }}</label>
-          <Input v-model:value="form.receiverAddress" />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.payDate') }} *</label>
-          <DatePicker
-            v-model:value="form.payDate"
-            value-format="YYYY-MM-DD"
-            class="w-full"
-            style="width: 100%"
-            placeholder="选择付款日期"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.deliveryDate') }} *</label>
-          <DatePicker
-            v-model:value="form.deliveryDate"
-            value-format="YYYY-MM-DD"
-            class="w-full"
-            style="width: 100%"
-            placeholder="选择发货日期"
-          />
+      <!-- 营销中心 -->
+      <div class="border-border pt-2 first:pt-0">
+        <h4 class="order-section-title">{{ $t('order.sectionMarketing') }}</h4>
+        <div class="grid gap-4 md:grid-cols-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.type') }} *</label>
+            <Select
+              v-model:value="form.type"
+              class="w-full"
+              :options="[
+                { label: $t('order.typeSales'), value: 0 },
+                { label: $t('order.typeAfterSales'), value: 1 },
+                { label: $t('order.typeSample'), value: 2 },
+                { label: $t('order.typeGeneralTest'), value: 3 },
+              ]"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.status') }} *</label>
+            <Select
+              v-model:value="form.status"
+              class="w-full"
+              :options="[
+                { label: $t('order.statusPendingAudit'), value: 1 },
+                { label: $t('order.statusOrdered'), value: 2 },
+                { label: $t('order.statusCompleted'), value: 3 },
+                { label: $t('order.statusRejected'), value: 4 },
+                { label: $t('order.statusUnpaid'), value: 5 },
+              ]"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.orderNumber') }} *</label>
+            <Input v-model:value="form.orderNumber" placeholder="" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.projectContactName') }}</label>
+            <Input v-model:value="form.projectContactName" placeholder="" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.projectContactPhone') }}</label>
+            <Input v-model:value="form.projectContactPhone" placeholder="" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.warranty') }}</label>
+            <Select
+              v-model:value="form.warranty"
+              allow-clear
+              class="w-full"
+              :options="[
+                { label: '1年', value: '1年' },
+                { label: '2年', value: '2年' },
+                { label: '3年', value: '3年' },
+                { label: '5年', value: '5年' },
+                { label: '其他', value: '其他' },
+              ]"
+              placeholder="--请选择--"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.dept') }} *</label>
+            <Select
+              v-model:value="form.deptId"
+              allow-clear
+              class="w-full"
+              :options="deptOptions"
+              :field-names="{ label: 'label', value: 'value' }"
+              placeholder="--请选择--"
+              @select="(_: unknown, opt: unknown) => { form.deptName = (opt as { label?: string })?.label ?? ''; }"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.owner') }} *</label>
+            <Select
+              v-model:value="form.ownerId"
+              allow-clear
+              class="w-full"
+              :options="userOptions"
+              :field-names="{ label: 'label', value: 'value' }"
+              @select="(_: unknown, opt: unknown) => { form.ownerName = (opt as { label?: string })?.label ?? ''; }"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.customer') }} *</label>
+            <Select
+              v-model:value="form.customerId"
+              allow-clear
+              :filter-option="() => true"
+              placeholder="输入关键词搜索客户"
+              show-search
+              class="w-full"
+              :options="customerOptions"
+              :field-names="{ label: 'label', value: 'value' }"
+              @search="onCustomerSearch"
+              @select="(_: unknown, opt: unknown) => { form.customerName = (opt as { name?: string })?.name ?? ''; }"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.project') }} *</label>
+            <Select
+              v-model:value="form.projectId"
+              allow-clear
+              class="w-full"
+              :options="projectOptions"
+              :field-names="{ label: 'label', value: 'value' }"
+              placeholder="请选择项目"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contractSigningCompany') }} *</label>
+            <Input v-model:value="form.contractSigningCompany" placeholder="---请选择---" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contractTrustee') }}</label>
+            <Input v-model:value="form.contractTrustee" placeholder="" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.needInvoice') }}</label>
+            <Select
+              :value="form.needInvoice ? 1 : 0"
+              class="w-full"
+              :options="[
+                { label: $t('order.yes'), value: 1 },
+                { label: $t('order.no'), value: 0 },
+              ]"
+              @update:value="(v) => { form.needInvoice = v === 1; }"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.installationFee') }} *</label>
+            <InputNumber v-model:value="form.installationFee" class="w-full" :min="0" :precision="2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.estimatedFreight') }} *</label>
+            <InputNumber v-model:value="form.estimatedFreight" class="w-full" :min="0" :precision="2" />
+          </div>
+          <!-- 合同上传与列表 -->
+          <div class="md:col-span-4">
+            <div class="mb-2 flex flex-wrap items-center gap-2">
+              <Button type="primary" danger size="small" @click="triggerContractUpload">
+                + {{ $t('order.contractUpload') }}
+              </Button>
+              <input
+                ref="contractFileInputRef"
+                type="file"
+                class="hidden"
+                accept=".doc,.docx,.pdf,.xls,.xlsx"
+                @change="onContractFileSelected"
+              />
+              <Button size="small" @click="refreshContractList">{{ $t('order.refresh') }}</Button>
+              <Input
+                v-model:value="contractFileSearchKeyword"
+                size="small"
+                class="ml-auto w-40"
+                :placeholder="$t('order.searchPlaceholder')"
+                allow-clear
+              />
+            </div>
+            <Table
+              :columns="contractFileColumns"
+              :data-source="filteredContractFiles"
+              :pagination="false"
+              size="small"
+              bordered
+              row-key="path"
+            >
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'type'">
+                  <span class="inline-flex h-6 w-6 items-center justify-center rounded bg-blue-100 text-xs font-bold text-blue-700">
+                    {{ getFileIcon((record as OrderApi.OrderContractFileItem).format) }}
+                  </span>
+                </template>
+                <template v-else-if="column.key === 'size'">
+                  {{ formatFileSize((record as OrderApi.OrderContractFileItem).size) }}
+                </template>
+                <template v-else-if="column.key === 'updatedAt'">
+                  {{ (record as OrderApi.OrderContractFileItem).updatedAt ? new Date((record as OrderApi.OrderContractFileItem).updatedAt).toLocaleString() : '' }}
+                </template>
+                <template v-else-if="column.key === 'status'">
+                  <span class="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">{{ $t('order.statusGeneral') }}</span>
+                </template>
+                <template v-else-if="column.key === 'action'">
+                  <div class="flex gap-1">
+                    <Button type="link" size="small" @click="previewContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.preview') }}</Button>
+                    <Button type="link" size="small" @click="downloadContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.download') }}</Button>
+                    <Button type="link" size="small" @click="printContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.print') }}</Button>
+                    <Button type="link" size="small" danger @click="removeContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.delete') }}</Button>
+                  </div>
+                </template>
+              </template>
+            </Table>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.amount') }}</label>
+            <InputNumber v-model:value="form.amount" class="w-full" :min="0" :precision="2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contract') }} *</label>
+            <Select
+              v-model:value="form.contractId"
+              allow-clear
+              class="w-full"
+              :options="contractOptions"
+              :field-names="{ label: 'label', value: 'value' }"
+              placeholder="请选择关联合同"
+            />
+          </div>
+          <div class="md:col-span-4">
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.remark') }}</label>
+            <Input.TextArea v-model:value="form.remark" :rows="2" placeholder="" />
+          </div>
         </div>
       </div>
 
-      <div class="mt-4">
-        <div class="mb-2 flex items-center justify-between">
-          <span class="text-sm font-medium text-foreground">{{ $t('order.items') }}</span>
-          <Button type="primary" size="small" @click="addItem">{{ $t('order.addItem') }}</Button>
+      <!-- 财务部 -->
+      <div class="border-border mt-4 border-t pt-4">
+        <h4 class="order-section-title">{{ $t('order.sectionFinance') }}</h4>
+        <div class="grid gap-4 md:grid-cols-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.selectContract') }}</label>
+            <Select
+              v-model:value="form.selectedContractFileId"
+              allow-clear
+              class="w-full"
+              :options="[
+                { label: $t('order.noneOption'), value: '' },
+              ]"
+              placeholder="--请选择--"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.isShipped') }}</label>
+            <Select
+              :value="form.isShipped ? 1 : 0"
+              class="w-full"
+              :options="[
+                { label: $t('order.yes'), value: 1 },
+                { label: $t('order.no'), value: 0 },
+              ]"
+              @update:value="(v) => { form.isShipped = v === 1; }"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.paymentStatus') }}</label>
+            <Select
+              v-model:value="form.paymentStatus"
+              allow-clear
+              class="w-full"
+              :options="paymentStatusOptions"
+              placeholder="--请选择--"
+            />
+          </div>
+          <div class="flex items-center">
+            <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
+              <input
+                v-model="form.contractNotCompanyTemplate"
+                type="checkbox"
+                class="h-4 w-4 rounded border-input"
+              />
+              {{ $t('order.contractNotCompanyTemplate') }}
+            </label>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contractDiscount') }}</label>
+            <InputNumber v-model:value="form.contractDiscount" class="w-full" :min="0" :precision="2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contractAmount') }}</label>
+            <InputNumber v-model:value="form.contractAmount" class="w-full" :min="0" :precision="2" />
+          </div>
         </div>
-        <Table
+      </div>
+
+      <!-- 物流与收货 -->
+      <div class="border-border mt-4 border-t pt-4">
+        <h4 class="order-section-title">{{ $t('order.sectionLogistics') }}</h4>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.receiverName') }}</label>
+            <Input v-model:value="form.receiverName" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.receiverPhone') }}</label>
+            <Input v-model:value="form.receiverPhone" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.receiverAddress') }}</label>
+            <Input v-model:value="form.receiverAddress" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.payDate') }} *</label>
+            <DatePicker
+              v-model:value="form.payDate"
+              value-format="YYYY-MM-DD"
+              class="w-full"
+              style="width: 100%"
+              placeholder="选择付款日期"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.deliveryDate') }} *</label>
+            <DatePicker
+              v-model:value="form.deliveryDate"
+              value-format="YYYY-MM-DD"
+              class="w-full"
+              style="width: 100%"
+              placeholder="选择发货日期"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 产品明细（卡片） -->
+      <div class="border-border mt-4 border-t pt-4">
+        <Card :bordered="true" class="border-border bg-card">
+          <template #title>
+            <div class="flex w-full items-center justify-between">
+              <span class="order-section-title mb-0">{{ $t('order.sectionProductList') }}</span>
+              <Button type="primary" size="small" @click="addItem">{{ $t('order.addItem') }}</Button>
+            </div>
+          </template>
+          <Table
           :columns="itemColumns"
           :data-source="form.items"
           :pagination="false"
@@ -472,6 +862,7 @@ function goBack() {
             </template>
           </template>
         </Table>
+        </Card>
       </div>
 
       <div class="mt-4 flex gap-2">
@@ -481,3 +872,12 @@ function goBack() {
     </div>
   </Page>
 </template>
+
+<style scoped>
+.order-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1677ff;
+  margin-bottom: 0.75rem;
+}
+</style>

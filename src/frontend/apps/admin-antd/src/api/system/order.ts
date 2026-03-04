@@ -46,10 +46,35 @@ export namespace OrderApi {
     remark: string;
     ownerId: string;
     ownerName: string;
+    deptId: string;
+    deptName: string;
+    projectContactName: string;
+    projectContactPhone: string;
+    warranty: string;
+    contractSigningCompany: string;
+    contractTrustee: string;
+    needInvoice: boolean;
+    installationFee: number;
+    estimatedFreight: number;
+    selectedContractFileId: string;
+    isShipped: boolean;
+    paymentStatus: string;
+    contractNotCompanyTemplate: boolean;
+    contractDiscount: number;
+    contractAmount: number;
     createdAt: string;
   }
 
+  export interface OrderContractFileItem {
+    path: string;
+    fileName: string;
+    size: number;
+    format: string;
+    updatedAt: string;
+  }
+
   export interface OrderDetail extends OrderItem {
+    contractFiles: OrderContractFileItem[];
     receiverName: string;
     receiverPhone: string;
     receiverAddress: string;

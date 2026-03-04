@@ -83,6 +83,21 @@ function onEdit() {
         <Descriptions.Item :label="$t('order.status')">{{ $t(statusMap[detail.status] ?? '') }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.amount')">{{ detail.amount }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.ownerName')">{{ detail.ownerName }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.dept')">{{ detail.deptName }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.projectContactName')">{{ detail.projectContactName }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.projectContactPhone')">{{ detail.projectContactPhone }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.warranty')">{{ detail.warranty }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.contractSigningCompany')">{{ detail.contractSigningCompany }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.contractTrustee')">{{ detail.contractTrustee }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.needInvoice')">{{ detail.needInvoice ? $t('order.yes') : $t('order.no') }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.installationFee')">{{ detail.installationFee }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.estimatedFreight')">{{ detail.estimatedFreight }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.selectContract')">{{ detail.selectedContractFileId || $t('order.noneOption') }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.isShipped')">{{ detail.isShipped ? $t('order.yes') : $t('order.no') }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.paymentStatus')">{{ detail.paymentStatus }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.contractNotCompanyTemplate')">{{ detail.contractNotCompanyTemplate ? $t('order.yes') : $t('order.no') }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.contractDiscount')">{{ detail.contractDiscount }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.contractAmount')">{{ detail.contractAmount }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.receiverName')">{{ detail.receiverName }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.receiverPhone')">{{ detail.receiverPhone }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.receiverAddress')" :span="2">{{ detail.receiverAddress }}</Descriptions.Item>

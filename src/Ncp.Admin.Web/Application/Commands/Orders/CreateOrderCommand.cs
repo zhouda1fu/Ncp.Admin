@@ -5,6 +5,7 @@ using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProductAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 
@@ -36,6 +37,23 @@ public record CreateOrderCommand(
     string Remark,
     UserId OwnerId,
     string OwnerName,
+    DeptId DeptId,
+    string DeptName,
+    string ProjectContactName,
+    string ProjectContactPhone,
+    string Warranty,
+    string ContractSigningCompany,
+    string ContractTrustee,
+    bool NeedInvoice,
+    decimal InstallationFee,
+    decimal EstimatedFreight,
+    string ContractFilesJson,
+    string SelectedContractFileId,
+    bool IsShipped,
+    string PaymentStatus,
+    bool ContractNotCompanyTemplate,
+    decimal ContractDiscount,
+    decimal ContractAmount,
     string ReceiverName,
     string ReceiverPhone,
     string ReceiverAddress,
@@ -54,6 +72,7 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
         RuleFor(c => c.ContractId).NotEmpty();
         RuleFor(c => c.OrderNumber).NotEmpty().MaximumLength(100);
         RuleFor(c => c.OwnerId).NotEmpty();
+        RuleFor(c => c.DeptId).NotEmpty();
         RuleFor(c => c.CreatorId).NotEmpty();
         RuleFor(c => c.Items).NotEmpty();
         RuleForEach(c => c.Items).ChildRules(item =>
@@ -96,6 +115,23 @@ public class CreateOrderCommandHandler(IOrderRepository repository) : ICommandHa
             request.Remark ?? string.Empty,
             request.OwnerId,
             request.OwnerName ?? string.Empty,
+            request.DeptId,
+            request.DeptName ?? string.Empty,
+            request.ProjectContactName ?? string.Empty,
+            request.ProjectContactPhone ?? string.Empty,
+            request.Warranty ?? string.Empty,
+            request.ContractSigningCompany ?? string.Empty,
+            request.ContractTrustee ?? string.Empty,
+            request.NeedInvoice,
+            request.InstallationFee,
+            request.EstimatedFreight,
+            request.ContractFilesJson ?? "[]",
+            request.SelectedContractFileId ?? string.Empty,
+            request.IsShipped,
+            request.PaymentStatus ?? string.Empty,
+            request.ContractNotCompanyTemplate,
+            request.ContractDiscount,
+            request.ContractAmount,
             request.ReceiverName ?? string.Empty,
             request.ReceiverPhone ?? string.Empty,
             request.ReceiverAddress ?? string.Empty,

@@ -1,6 +1,8 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProductAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
@@ -8,6 +10,11 @@ using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure;
 
 namespace Ncp.Admin.Web.Application.Queries;
+
+/// <summary>
+/// 订单合同文件项（上传的合同文件）
+/// </summary>
+public record OrderContractFileItem(string Path, string FileName, long Size, string Format, string UpdatedAt);
 
 /// <summary>
 /// 订单明细行 DTO
@@ -40,6 +47,22 @@ public record OrderQueryDto(
     string Remark,
     UserId OwnerId,
     string OwnerName,
+    DeptId DeptId,
+    string DeptName,
+    string ProjectContactName,
+    string ProjectContactPhone,
+    string Warranty,
+    string ContractSigningCompany,
+    string ContractTrustee,
+    bool NeedInvoice,
+    decimal InstallationFee,
+    decimal EstimatedFreight,
+    string SelectedContractFileId,
+    bool IsShipped,
+    string PaymentStatus,
+    bool ContractNotCompanyTemplate,
+    decimal ContractDiscount,
+    decimal ContractAmount,
     DateTimeOffset CreatedAt);
 
 /// <summary>
@@ -58,6 +81,22 @@ public record OrderDetailDto(
     string Remark,
     UserId OwnerId,
     string OwnerName,
+    DeptId DeptId,
+    string DeptName,
+    string ProjectContactName,
+    string ProjectContactPhone,
+    string Warranty,
+    string ContractSigningCompany,
+    string ContractTrustee,
+    bool NeedInvoice,
+    decimal InstallationFee,
+    decimal EstimatedFreight,
+    string SelectedContractFileId,
+    bool IsShipped,
+    string PaymentStatus,
+    bool ContractNotCompanyTemplate,
+    decimal ContractDiscount,
+    decimal ContractAmount,
     string ReceiverName,
     string ReceiverPhone,
     string ReceiverAddress,
@@ -66,6 +105,7 @@ public record OrderDetailDto(
     UserId CreatorId,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
+    IReadOnlyList<OrderContractFileItem> ContractFiles,
     IReadOnlyList<OrderItemDto> Items);
 
 public class OrderQueryInput : PageRequest
@@ -87,6 +127,8 @@ public class OrderQuery(ApplicationDbContext dbContext) : IQuery
             .Include(x => x.Items)
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
         if (o == null) return null;
+        var contractFiles = JsonSerializer.Deserialize<List<OrderContractFileItem>>(o.ContractFilesJson ?? "[]",
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
         return new OrderDetailDto(
             o.Id,
             o.CustomerId,
@@ -100,6 +142,22 @@ public class OrderQuery(ApplicationDbContext dbContext) : IQuery
             o.Remark,
             o.OwnerId,
             o.OwnerName,
+            o.DeptId,
+            o.DeptName,
+            o.ProjectContactName,
+            o.ProjectContactPhone,
+            o.Warranty,
+            o.ContractSigningCompany,
+            o.ContractTrustee,
+            o.NeedInvoice,
+            o.InstallationFee,
+            o.EstimatedFreight,
+            o.SelectedContractFileId,
+            o.IsShipped,
+            o.PaymentStatus,
+            o.ContractNotCompanyTemplate,
+            o.ContractDiscount,
+            o.ContractAmount,
             o.ReceiverName,
             o.ReceiverPhone,
             o.ReceiverAddress,
@@ -108,6 +166,7 @@ public class OrderQuery(ApplicationDbContext dbContext) : IQuery
             o.CreatorId,
             o.CreatedAt,
             o.UpdatedAt,
+            contractFiles,
             o.Items.Select(i => new OrderItemDto(i.Id, i.ProductId, i.ProductName, i.Model, i.Number, i.Qty, i.Unit, i.Price, i.Amount, i.Remark)).ToList());
     }
 
@@ -141,6 +200,22 @@ public class OrderQuery(ApplicationDbContext dbContext) : IQuery
                 o.Remark,
                 o.OwnerId,
                 o.OwnerName,
+                o.DeptId,
+                o.DeptName,
+                o.ProjectContactName,
+                o.ProjectContactPhone,
+                o.Warranty,
+                o.ContractSigningCompany,
+                o.ContractTrustee,
+                o.NeedInvoice,
+                o.InstallationFee,
+                o.EstimatedFreight,
+                o.SelectedContractFileId,
+                o.IsShipped,
+                o.PaymentStatus,
+                o.ContractNotCompanyTemplate,
+                o.ContractDiscount,
+                o.ContractAmount,
                 o.CreatedAt))
             .ToPagedDataAsync(input, cancellationToken);
     }

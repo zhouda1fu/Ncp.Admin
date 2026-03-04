@@ -1,6 +1,7 @@
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProductAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
@@ -83,11 +84,62 @@ public class Order : Entity<OrderId>, IAggregateRoot
     /// <summary>订单备注</summary>
     public string Remark { get; private set; } = string.Empty;
 
-    /// <summary>负责人用户 ID</summary>
+    /// <summary>负责人用户 ID（业务经理）</summary>
     public UserId OwnerId { get; private set; } = default!;
 
     /// <summary>负责人姓名（冗余）</summary>
     public string OwnerName { get; private set; } = string.Empty;
+
+    /// <summary>部门 ID（必填）</summary>
+    public DeptId DeptId { get; private set; } = default!;
+
+    /// <summary>部门名称（冗余）</summary>
+    public string DeptName { get; private set; } = string.Empty;
+
+    /// <summary>项目联系人</summary>
+    public string ProjectContactName { get; private set; } = string.Empty;
+
+    /// <summary>项目联系方式</summary>
+    public string ProjectContactPhone { get; private set; } = string.Empty;
+
+    /// <summary>质保期</summary>
+    public string Warranty { get; private set; } = string.Empty;
+
+    /// <summary>合同签订公司</summary>
+    public string ContractSigningCompany { get; private set; } = string.Empty;
+
+    /// <summary>合同受托方</summary>
+    public string ContractTrustee { get; private set; } = string.Empty;
+
+    /// <summary>是否需要发票</summary>
+    public bool NeedInvoice { get; private set; }
+
+    /// <summary>安装费</summary>
+    public decimal InstallationFee { get; private set; }
+
+    /// <summary>预计运费</summary>
+    public decimal EstimatedFreight { get; private set; }
+
+    /// <summary>合同文件列表 JSON，格式：[{ path, fileName, size, format, updatedAt }]</summary>
+    public string ContractFilesJson { get; private set; } = "[]";
+
+    /// <summary>选择合同（上传的合同文件 ID，无则为空）</summary>
+    public string SelectedContractFileId { get; private set; } = string.Empty;
+
+    /// <summary>是否发货</summary>
+    public bool IsShipped { get; private set; }
+
+    /// <summary>到款情况</summary>
+    public string PaymentStatus { get; private set; } = string.Empty;
+
+    /// <summary>合同非公司模板</summary>
+    public bool ContractNotCompanyTemplate { get; private set; }
+
+    /// <summary>合同优惠</summary>
+    public decimal ContractDiscount { get; private set; }
+
+    /// <summary>合同金额</summary>
+    public decimal ContractAmount { get; private set; }
 
     /// <summary>收货联系人</summary>
     public string ReceiverName { get; private set; } = string.Empty;
@@ -134,6 +186,23 @@ public class Order : Entity<OrderId>, IAggregateRoot
         string remark,
         UserId ownerId,
         string ownerName,
+        DeptId deptId,
+        string deptName,
+        string projectContactName,
+        string projectContactPhone,
+        string warranty,
+        string contractSigningCompany,
+        string contractTrustee,
+        bool needInvoice,
+        decimal installationFee,
+        decimal estimatedFreight,
+        string contractFilesJson,
+        string selectedContractFileId,
+        bool isShipped,
+        string paymentStatus,
+        bool contractNotCompanyTemplate,
+        decimal contractDiscount,
+        decimal contractAmount,
         string receiverName,
         string receiverPhone,
         string receiverAddress,
@@ -155,6 +224,23 @@ public class Order : Entity<OrderId>, IAggregateRoot
             Remark = remark ?? string.Empty,
             OwnerId = ownerId,
             OwnerName = ownerName ?? string.Empty,
+            DeptId = deptId,
+            DeptName = deptName ?? string.Empty,
+            ProjectContactName = projectContactName ?? string.Empty,
+            ProjectContactPhone = projectContactPhone ?? string.Empty,
+            Warranty = warranty ?? string.Empty,
+            ContractSigningCompany = contractSigningCompany ?? string.Empty,
+            ContractTrustee = contractTrustee ?? string.Empty,
+            NeedInvoice = needInvoice,
+            InstallationFee = installationFee,
+            EstimatedFreight = estimatedFreight,
+            ContractFilesJson = contractFilesJson ?? "[]",
+            SelectedContractFileId = selectedContractFileId ?? string.Empty,
+            IsShipped = isShipped,
+            PaymentStatus = paymentStatus ?? string.Empty,
+            ContractNotCompanyTemplate = contractNotCompanyTemplate,
+            ContractDiscount = contractDiscount,
+            ContractAmount = contractAmount,
             ReceiverName = receiverName ?? string.Empty,
             ReceiverPhone = receiverPhone ?? string.Empty,
             ReceiverAddress = receiverAddress ?? string.Empty,
@@ -186,6 +272,23 @@ public class Order : Entity<OrderId>, IAggregateRoot
         string remark,
         UserId ownerId,
         string ownerName,
+        DeptId deptId,
+        string deptName,
+        string projectContactName,
+        string projectContactPhone,
+        string warranty,
+        string contractSigningCompany,
+        string contractTrustee,
+        bool needInvoice,
+        decimal installationFee,
+        decimal estimatedFreight,
+        string contractFilesJson,
+        string selectedContractFileId,
+        bool isShipped,
+        string paymentStatus,
+        bool contractNotCompanyTemplate,
+        decimal contractDiscount,
+        decimal contractAmount,
         string receiverName,
         string receiverPhone,
         string receiverAddress,
@@ -203,6 +306,23 @@ public class Order : Entity<OrderId>, IAggregateRoot
         Remark = remark ?? string.Empty;
         OwnerId = ownerId;
         OwnerName = ownerName ?? string.Empty;
+        DeptId = deptId;
+        DeptName = deptName ?? string.Empty;
+        ProjectContactName = projectContactName ?? string.Empty;
+        ProjectContactPhone = projectContactPhone ?? string.Empty;
+        Warranty = warranty ?? string.Empty;
+        ContractSigningCompany = contractSigningCompany ?? string.Empty;
+        ContractTrustee = contractTrustee ?? string.Empty;
+        NeedInvoice = needInvoice;
+        InstallationFee = installationFee;
+        EstimatedFreight = estimatedFreight;
+        ContractFilesJson = contractFilesJson ?? "[]";
+        SelectedContractFileId = selectedContractFileId ?? string.Empty;
+        IsShipped = isShipped;
+        PaymentStatus = paymentStatus ?? string.Empty;
+        ContractNotCompanyTemplate = contractNotCompanyTemplate;
+        ContractDiscount = contractDiscount;
+        ContractAmount = contractAmount;
         ReceiverName = receiverName ?? string.Empty;
         ReceiverPhone = receiverPhone ?? string.Empty;
         ReceiverAddress = receiverAddress ?? string.Empty;

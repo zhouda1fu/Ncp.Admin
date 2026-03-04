@@ -22,6 +22,23 @@ internal class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.Remark).IsRequired().HasMaxLength(500);
         builder.Property(x => x.OwnerId).IsRequired();
         builder.Property(x => x.OwnerName).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.DeptId).IsRequired();
+        builder.Property(x => x.DeptName).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.ProjectContactName).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.ProjectContactPhone).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.Warranty).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.ContractSigningCompany).IsRequired().HasMaxLength(200);
+        builder.Property(x => x.ContractTrustee).IsRequired().HasMaxLength(200);
+        builder.Property(x => x.NeedInvoice).IsRequired();
+        builder.Property(x => x.InstallationFee).IsRequired().HasPrecision(18, 4);
+        builder.Property(x => x.EstimatedFreight).IsRequired().HasPrecision(18, 4);
+        builder.Property(x => x.ContractFilesJson).IsRequired().HasMaxLength(8000);
+        builder.Property(x => x.SelectedContractFileId).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.IsShipped).IsRequired();
+        builder.Property(x => x.PaymentStatus).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.ContractNotCompanyTemplate).IsRequired();
+        builder.Property(x => x.ContractDiscount).IsRequired().HasPrecision(18, 4);
+        builder.Property(x => x.ContractAmount).IsRequired().HasPrecision(18, 4);
         builder.Property(x => x.ReceiverName).IsRequired().HasMaxLength(100);
         builder.Property(x => x.ReceiverPhone).IsRequired().HasMaxLength(50);
         builder.Property(x => x.ReceiverAddress).IsRequired().HasMaxLength(500);
@@ -37,6 +54,7 @@ internal class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         builder.HasIndex(x => x.ContractId);
         builder.HasIndex(x => x.ProjectId);
         builder.HasIndex(x => x.OwnerId);
+        builder.HasIndex(x => x.DeptId);
         builder.HasIndex(x => x.CreatedAt);
         builder.HasIndex(x => x.IsDeleted);
 
