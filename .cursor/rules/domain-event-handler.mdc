@@ -1,5 +1,7 @@
 ---
-applyTo: "src/Ncp.Admin.Web/Application/DomainEventHandlers/*.cs"
+description: 领域事件处理器开发指南
+globs: src/Ncp.Admin.Web/Application/DomainEventHandlers/**/*.cs
+alwaysApply: false
 ---
 
 # 领域事件处理器开发指南
@@ -38,15 +40,16 @@ applyTo: "src/Ncp.Admin.Web/Application/DomainEventHandlers/*.cs"
 - 类命名：`{DomainEvent}DomainEventHandlerFor{Action}`。
 
 ## 代码示例
+
 ```csharp
 using Ncp.Admin.Web.Application.Commands;
 using Ncp.Admin.Web.Domain.DomainEvents;
+
 public class OrderCreatedDomainEventHandlerForSetPaymentInfo(IMediator mediator) : 
    IDomainEventHandler<OrderCreatedDomainEvent>
 {
     public async Task Handle(OrderCreatedDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        // 通过发送命令操作聚合，而不是直接操作服务
         var command = new SetPaymentInfoCommand(domainEvent.OrderId, domainEvent.PaymentInfo);
         await mediator.Send(command, cancellationToken);
     }

@@ -1,5 +1,7 @@
 ---
-applyTo: "src/Ncp.Admin.Web/Application/IntegrationEventHandlers/*.cs"
+description: 集成事件处理器开发指南
+globs: src/Ncp.Admin.Web/Application/IntegrationEventHandlers/**/*.cs
+alwaysApply: false
 ---
 
 # 集成事件处理器开发指南
@@ -48,7 +50,6 @@ public class UserCreatedIntegrationEventHandlerForSendNotifyEmail(
     {
         logger.LogInformation("发送用户创建通知邮件：{UserId}", integrationEvent.UserId);
         
-        // 通过Command发送通知邮件
         var command = new SendWelcomeEmailCommand(
             integrationEvent.UserId,
             integrationEvent.Email, 

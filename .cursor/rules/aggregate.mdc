@@ -1,5 +1,7 @@
 ---
-applyTo: "src/Ncp.Admin.Domain/AggregatesModel/**/*.cs"
+description: 聚合根与强类型 ID 开发指南
+globs: src/Ncp.Admin.Domain/AggregatesModel/**/*.cs
+alwaysApply: false
 ---
 
 # 聚合与强类型ID开发指南
@@ -48,21 +50,18 @@ applyTo: "src/Ncp.Admin.Domain/AggregatesModel/**/*.cs"
 文件: `src/Ncp.Admin.Domain/AggregatesModel/UserAggregate/User.cs`
 
 ```csharp
-using Ncp.Admin.Domain.DomainEvents; // 必需：引用领域事件
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
-// 强类型ID定义 - 与聚合根在同一文件中
 public partial record UserId : IGuidStronglyTypedId;
 
-// 聚合根定义
 public class User : Entity<UserId>, IAggregateRoot
 {
     protected User() { }
     
     public User(string name, string email)
     {
-        // 不手动设置ID，由EF Core值生成器自动生成
         Name = name;
         Email = email;
         this.AddDomainEvent(new UserCreatedDomainEvent(this));
@@ -72,14 +71,13 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public string Name { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
-    public Deleted Deleted { get; private set; } = new(); // 默认false
+    public Deleted Deleted { get; private set; } = new();
     public RowVersion RowVersion { get; private set; } = new RowVersion(0);
 
     #endregion
 
     #region Methods
 
-    // ...existing code...
     public void ChangeEmail(string email)
     {
         Email = email;

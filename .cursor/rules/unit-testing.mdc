@@ -1,5 +1,7 @@
 ---
-applyTo: "test/**/*.cs"
+description: 单元测试开发指南
+globs: test/**/*.cs
+alwaysApply: false
 ---
 
 # 单元测试开发指南
@@ -61,7 +63,6 @@ public class UserTests
         Assert.False(user.IsDeleted);
         Assert.True(user.CreateTime <= DateTimeOffset.UtcNow);
         
-        // 验证领域事件
         var domainEvents = user.GetDomainEvents();
         Assert.Single(domainEvents);
         Assert.IsType<UserCreatedDomainEvent>(domainEvents.First());
@@ -82,79 +83,6 @@ public class UserTests
 }
 ```
 
-**时间相关测试**
-
-```csharp
-[Fact]
-public void UpdateEmail_ShouldUpdateTimestamp()
-{
-    // Arrange
-    var user = new User("张三", "old@example.com");
-    var originalUpdateTime = user.UpdateTime;
-    
-    // 确保时间差异
-    Thread.Sleep(1);
-
-    // Act
-    user.UpdateEmail("new@example.com");
-
-    // Assert
-    Assert.Equal("new@example.com", user.Email);
-    Assert.True(user.UpdateTime >= originalUpdateTime);
-    
-    // 验证领域事件
-    var domainEvents = user.GetDomainEvents();
-    Assert.Equal(2, domainEvents.Count); // 创建事件 + 更新事件
-    Assert.IsType<UserEmailUpdatedDomainEvent>(domainEvents.Last());
-}
-```
-
-**强类型ID测试**
-
-```csharp
-[Fact]
-public void UserId_ShouldWorkCorrectly()
-{
-    // Arrange & Act
-    var userId1 = new UserId(123);
-    var userId2 = new UserId(123);
-    var userId3 = new UserId(456);
-
-    // Assert
-    Assert.Equal(userId1, userId2);
-    Assert.NotEqual(userId1, userId3);
-    Assert.Equal("123", userId1.ToString());
-}
-```
-
-**业务规则测试**
-
-```csharp
-[Fact]
-public void ChangeEmail_OnDeletedUser_ShouldThrowException()
-{
-    // Arrange
-    var user = new User("张三", "test@example.com");
-    user.Delete();
-
-    // Act & Assert
-    var exception = Assert.Throws<KnownException>(() => 
-        user.UpdateEmail("new@example.com"));
-    Assert.Equal("无法修改已删除用户的邮箱", exception.Message);
-}
-
-[Fact]
-public void Delete_AlreadyDeletedUser_ShouldThrowException()
-{
-    // Arrange
-    var user = new User("张三", "test@example.com");
-    user.Delete();
-
-    // Act & Assert
-    Assert.Throws<KnownException>(() => user.Delete());
-}
-```
-
 **领域事件详细测试**
 
 ```csharp
@@ -163,7 +91,7 @@ public void User_BusinessOperations_ShouldPublishCorrectEvents()
 {
     // Arrange
     var user = new User("张三", "old@example.com");
-    user.ClearDomainEvents(); // 清除构造函数事件
+    user.ClearDomainEvents();
     
     // Act
     user.UpdateEmail("new@example.com");
@@ -183,8 +111,6 @@ public void User_BusinessOperations_ShouldPublishCorrectEvents()
 
 ### 测试数据工厂示例
 
-使用Builder模式或Factory方法创建测试数据：
-
 ```csharp
 public static class TestDataFactory
 {
@@ -198,8 +124,4 @@ public static class TestDataFactory
         return new UserId(value);
     }
 }
-
-// 在测试中使用
-var user = TestDataFactory.CreateValidUser();
-var userId = TestDataFactory.CreateUserId(456);
 ```

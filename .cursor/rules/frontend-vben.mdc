@@ -1,0 +1,41 @@
+---
+description: 前端 Vben Admin 开发规范与文件位置，详细规范见 ncp-admin-frontend skill
+globs: src/frontend/**/*.vue, src/frontend/**/*.ts
+alwaysApply: false
+---
+
+# 前端 Vben Admin 开发
+
+前端技术栈：Vue 3、Vite、TypeScript、Ant Design Vue、Vben Admin。  
+更完整规范请阅读：`.cursor/skills/ncp-admin-frontend/SKILL.md`。
+
+## 路径与结构
+
+- 应用根目录：`src/frontend/apps/admin-antd/`
+- API：`src/api/system/{feature}.ts`，与后端接口对应
+- 列表页：`src/views/{module}/{feature}/list.vue`
+- 表单弹窗：`src/views/{module}/{feature}/modules/form.vue`
+- 表格/表单 Schema：`src/views/{module}/{feature}/data.ts`
+- 路由：`src/router/routes/modules/{module}.ts`
+- 多语言：`src/locales/langs/{zh-CN,en-US}/{module}.json`
+
+## 常用约定
+
+- API 用 `namespace` 定义类型，用 `requestClient` 发请求
+- 列表页用 `Page`、`useVbenVxeGrid`、`useVbenModal`，弹窗用 `modules/form.vue`
+- 表单用 `useVbenForm`、`formModalApi.getData/setData`，提交后 `emit('success')`
+- 文案使用 `$t()` 做国际化
+
+## 新增带权限的功能时（前端必做）
+
+1. `src/constants/permission-codes.ts` 新增权限码，与后端 PermissionCodes.cs 一致
+2. `src/utils/permission-tree.ts` 的 `buildPermissionTree()` 中增加对应树节点（否则角色管理无法勾选）
+3. 父路由 `authority` 用数组，包含父权限码和所有子权限码
+4. 新菜单项：在父路由 `children` 中增加子路由并配套 views/api/locales，否则侧边栏不显示
+
+## 易错点
+
+- **data.ts**：`useGridFormSchema()` 每项 `componentProps` 必须含 `class: 'w-full'`；`useColumns` 必须有一列不设 `width` 作弹性列，否则操作列右侧空白（参考 `views/system/dept/data.ts`）
+- **子页高亮父菜单**：不在菜单中的子路由（如新建/编辑页）在 `meta` 中设 `activePath: '/父列表path'`
+
+更完整清单与示例见 `.cursor/skills/ncp-admin-frontend/SKILL.md`。

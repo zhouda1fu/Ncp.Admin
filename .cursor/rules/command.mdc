@@ -1,5 +1,7 @@
 ---
-applyTo: "src/Ncp.Admin.Web/Application/Commands/**/*.cs"
+description: 命令与命令处理器开发指南
+globs: src/Ncp.Admin.Web/Application/Commands/**/*.cs
+alwaysApply: false
 ---
 
 # 命令与命令处理器开发指南

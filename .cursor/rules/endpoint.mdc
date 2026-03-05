@@ -1,5 +1,7 @@
 ---
-applyTo: "src/Ncp.Admin.Web/Endpoints/**/*.cs"
+description: API 端点（FastEndpoints）开发指南
+globs: src/Ncp.Admin.Web/Endpoints/**/*.cs
+alwaysApply: false
 ---
 
 # Endpoint 开发指南
@@ -21,9 +23,9 @@ applyTo: "src/Ncp.Admin.Web/Endpoints/**/*.cs"
     - 使用构造函数注入 `IMediator` 发送命令或查询。
     - 使用 `Send.OkAsync()`、`Send.CreatedAsync()`、`Send.NoContentAsync()` 发送响应。
     - 使用 `.AsResponseData()` 扩展方法创建响应数据。
-- **Request/Response 与文档注释**（与 `.cursor/skills/ncp-admin-ddd/SKILL.md` 中「API 端点 Request/Response 格式规范」一致）：
+- **Request/Response 与文档注释**（详见 `.cursor/skills/ncp-admin-ddd/SKILL.md`）：
     - Request/Response **必须使用 record**，优先使用位置参数形式。
-    - 所有 ID 使用强类型：`CustomerId`、`UserId`、`DeptId`、`CustomerSourceId`、`IndustryId`、`CustomerContactId` 等，禁止裸 `Guid`/`long`/`string`。
+    - 所有 ID 使用强类型：`CustomerId`、`UserId`、`DeptId` 等，禁止裸 `Guid`/`long`/`string`。
     - 每个 record 上方有 `<summary>`，每个参数有 `<param name="参数名">描述</param>`。
     - 端点类有 `<summary>`，主构造函数依赖有 `<param name="...">`。
     - 参考：`Endpoints/Identity/Admin/UserEndpoints/UpdateUserEndpoint.cs`、`Endpoints/Customer/*.cs`。
@@ -94,44 +96,25 @@ public class UpdateCustomerEndpoint(IMediator mediator) : Endpoint<UpdateCustome
 
 ### 更多端点响应示例
 
-#### 创建资源的端点
+#### 创建资源
 ```csharp
-public override async Task HandleAsync(CreateUserRequestDto req, CancellationToken ct)
-{
-    var command = new CreateUserCommand(req.Name, req.Email);
-    var userId = await mediator.Send(command, ct);
-    
-    // ...existing code...
-    var response = new CreateUserResponseDto(userId);
-    await Send.CreatedAsync(response.AsResponseData(), ct);
-}
+var response = new CreateUserResponseDto(userId);
+await Send.CreatedAsync(response.AsResponseData(), ct);
 ```
 
-#### 查询资源的端点  
+#### 查询资源
 ```csharp
-public override async Task HandleAsync(GetUserRequestDto req, CancellationToken ct)
-{
-    var query = new GetUserQuery(req.UserId);
-    var user = await mediator.Send(query, ct);
-    
-    await Send.OkAsync(user.AsResponseData(), ct);
-}
+await Send.OkAsync(user.AsResponseData(), ct);
 ```
 
-#### 更新资源的端点
+#### 更新资源
 ```csharp
-public override async Task HandleAsync(UpdateUserRequestDto req, CancellationToken ct)
-{
-    var command = new UpdateUserCommand(req.UserId, req.Name, req.Email);
-    await mediator.Send(command, ct);
-    
-    await Send.NoContentAsync(ct);
-}
+await Send.NoContentAsync(ct);
 ```
 
 ## 配置方式
 
-端点使用属性模式配置，不使用 `Configure()` 方法：
+端点使用属性模式配置：
 
 ```csharp
 [Tags("ModuleName")]

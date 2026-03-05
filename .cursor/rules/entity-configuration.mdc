@@ -1,5 +1,7 @@
 ---
-applyTo: "src/Ncp.Admin.Infrastructure/EntityConfigurations/*.cs"
+description: EF Core 实体配置开发指南
+globs: src/Ncp.Admin.Infrastructure/EntityConfigurations/**/*.cs
+alwaysApply: false
 ---
 
 # 实体配置开发指南

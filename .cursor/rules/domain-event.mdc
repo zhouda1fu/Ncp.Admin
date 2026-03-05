@@ -1,5 +1,7 @@
 ---
-applyTo: "src/Ncp.Admin.Domain/DomainEvents/*.cs"
+description: 领域事件定义开发指南
+globs: src/Ncp.Admin.Domain/DomainEvents/**/*.cs
+alwaysApply: false
 ---
 
 # 领域事件开发指南

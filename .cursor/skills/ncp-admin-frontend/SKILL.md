@@ -3,130 +3,72 @@ name: ncp-admin-frontend
 description: Follows Vben Admin patterns when developing Ncp.Admin frontend (Vue 3 + Vite + TypeScript + Ant Design Vue). Use when adding or modifying views, API modules, routes, locales, or components in src/frontend/apps/admin-antd.
 ---
 
-# Ncp.Admin 前端开发规范
+# Ncp.Admin 前端开发规范（补充）
 
-在 Ncp.Admin 前端（Vben Admin / Vue 3 + Ant Design Vue）中开发新功能时，按本技能的结构和规范执行。
+路径、文件结构、常用约定见 **.cursor/rules/frontend-vben.mdc**。本技能仅保留易错点与**权限/菜单检查清单**。
 
-## 技术栈与路径
+---
 
-- **应用根目录**：`src/frontend/apps/admin-antd/`
-- **技术**：Vue 3、Vite、TypeScript、Ant Design Vue、Vben Admin
-- **路径别名**：`#/` 指向 `src/`（如 `#/api/system/dept`、`#/views/system/dept/list.vue`）
+## API 层
 
-## 文件结构
+- `namespace` 定义类型；`requestClient` 发请求；函数命名：`getXxxList`、`getXxx`、`createXxx`、`updateXxx`、`deleteXxx`；文件末尾集中 `export { ... }`。
 
-| 类型 | 路径 | 说明 |
-|------|------|------|
-| API | `src/api/system/{feature}.ts` | 按模块划分，与后端接口一一对应 |
-| 视图-列表 | `src/views/{module}/{feature}/list.vue` | 主列表页 |
-| 视图-表单弹窗 | `src/views/{module}/{feature}/modules/form.vue` | 新建/编辑弹窗 |
-| 视图-数据配置 | `src/views/{module}/{feature}/data.ts` | 表格列、表单 Schema |
-| 路由 | `src/router/routes/modules/{module}.ts` | 路由模块 |
-| 多语言 | `src/locales/langs/{zh-CN,en-US}/{module}.json` | 按模块组织 |
-| 适配器 | `src/adapter/` | form、vxe-table 等 |
+---
 
-## API 层规范
-
-- 使用 `namespace` 定义类型：`export namespace SystemDeptApi { export interface SystemDept { ... } }`
-- 使用 `requestClient`（来自 `#/api/request`）：`requestClient.get/post/put/delete`
-- 函数命名：`getXxxList`、`getXxx`、`createXxx`、`updateXxx`、`deleteXxx`
-- 文件末尾集中 `export { ... }`
-
-## 视图层规范
-
-### list.vue（列表页）
-
-- 使用 `Page`、`useVbenVxeGrid`、`useVbenModal`
-- `data.ts` 提供 `useColumns(onActionClick)` 和 `useSchema()`
-- 表单弹窗通过 `modules/form.vue` 作为 connectedComponent
-- 操作：新建、编辑、删除等通过 `onActionClick` 与 `CellOperation` 联动
-- 使用 `$t()` 做文案国际化
-
-### modules/form.vue（表单弹窗）
-
-- 使用 `useVbenForm`、`useVbenModal`
-- Schema 来自 `../data` 的 `useSchema()`
-- `formModalApi.getData<T>()` 获取传入数据，`formModalApi.setData()` 设置编辑/新建数据
-- 提交后 `emit('success')` 触发父级刷新
+## 视图层易错点
 
 ### data.ts
 
-- `useSchema()`：返回 `VbenFormSchema[]`，用 `z` 做校验，`$t()` 做文案；表单项的 `componentProps` 建议统一加 `class: 'w-full'`，保证表单位宽。
-- `useGridFormSchema()`：列表页顶部搜索表单的 Schema；**每个表单项的 `componentProps` 必须包含 `class: 'w-full'`**，否则搜索栏会多出一列或操作列后出现空白列。
-- `useColumns(onActionClick)`：返回表格列配置，操作列用 `CellOperation`，支持 `edit`、`delete` 及自定义 `code`。**必须有一列不设 `width`**（如最后一列前的备注列，或占位列 `field: '_flex', title: ''`），作为弹性列吸收剩余空间，否则操作列右侧会多出一块空白列（参考 `views/system/dept/data.ts`）；操作列建议 `width: 200`、`attrs` 中提供 `nameField`/`nameTitle`
+- **useSchema()**：`VbenFormSchema[]`，`z` 校验，`$t()` 文案；表单项 `componentProps` 建议加 `class: 'w-full'`。
+- **useGridFormSchema()**：列表顶部搜索表单；**每个表单项 `componentProps` 必须包含 `class: 'w-full'`**，否则搜索栏多列或操作列后出现空白列。
+- **useColumns(onActionClick)**：操作列用 `CellOperation`。**必须有一列不设 `width`**（如备注列或占位列 `field: '_flex', title: ''`）作为弹性列，否则操作列右侧多出空白（参考 `views/system/dept/data.ts`）；操作列建议 `width: 200`，`attrs` 提供 `nameField`/`nameTitle`。
 
-## 路由规范
+### list.vue / form.vue
 
-- 使用 `PermissionCodes` 做权限控制：`authority: [PermissionCodes.XxxManagement]`
-- 父路由可用 `authority` 数组表示“任一权限即可”
-- 懒加载：`component: () => import('#/views/...')`
-- `meta` 含 `icon`、`title`、`order`
+- 列表：`Page`、`useVbenVxeGrid`、`useVbenModal`；弹窗用 `modules/form.vue` 作 connectedComponent；`onActionClick` 与 `CellOperation` 联动。
+- 表单：`useVbenForm`、`formModalApi.getData<T>()` / `formModalApi.setData()`；提交后 `emit('success')`。
 
-### 左侧菜单选中效果（子页面保持父菜单高亮）
+---
 
-左侧菜单的“当前选中项”由 **`route.meta?.activePath || route.path`** 决定（见 `extra-menu.vue`、`use-mixed-menu.ts`）。若新增的是**不在菜单中展示的子路由**（如新建页、编辑页，`hideInMenu: true`），且希望进入该页后**左侧仍高亮对应的父级菜单项**（例如“客户列表”下的新建/编辑页仍高亮“客户列表”），则在该子路由的 `meta` 中设置 **`activePath`** 为要高亮的菜单路径（通常为列表页 path）：
+## 路由：左侧菜单选中（子页保持父菜单高亮）
+
+"当前选中项"由 **`route.meta?.activePath || route.path`** 决定。若新增的是 **hideInMenu 的子路由**（如新建/编辑页），且希望进入后**左侧仍高亮父级菜单**，在该子路由 `meta` 中设置 **`activePath`** 为父级列表 path：
 
 ```ts
-{
-  path: '/customer/create',
-  name: 'CustomerCreate',
-  meta: {
-    activePath: '/customer/list',  // 进入此页时左侧仍高亮「客户列表」
-    hideInMenu: true,
-    title: $t('customer.create'),
-  },
-  component: () => import('#/views/customer/form.vue'),
-},
-{
-  path: '/customer/:id/edit',
-  name: 'CustomerEdit',
-  meta: {
-    activePath: '/customer/list',
-    hideInMenu: true,
-    title: $t('customer.edit'),
-  },
-  component: () => import('#/views/customer/form.vue'),
+meta: {
+  activePath: '/customer/list',  // 进入此页时左侧高亮「客户列表」
+  hideInMenu: true,
+  title: $t('customer.create'),
 },
 ```
 
-- **何时使用**：列表的“新建/编辑”改为独立页面、详情页、或其他不单独出现在侧栏的子页时，若需保持父级菜单项选中，则给该路由 `meta.activePath` 设为父级菜单的 `path`（如列表页 path）。
-- **不设置时**：子页 path 与菜单项 path 不一致，侧栏会按当前 `route.path` 匹配，可能没有高亮或高亮错误。
+---
 
-## 多语言规范
+## 权限与角色授权（易漏，必须做）
 
-- 文案统一放 `locales/langs/zh-CN/*.json` 与 `en-US/*.json`
-- 页面使用 `$t('module.sub.key')`
-- 新增功能时同步补充 zh-CN 和 en-US
+新增**带权限控制**的功能时，除路由 `authority` 外，必须同步：
 
-## 常用组件与依赖
+1. **权限码**：`src/constants/permission-codes.ts`，与后端 `PermissionCodes.cs` 一致。
+2. **权限树**：`src/utils/permission-tree.ts` 的 `buildPermissionTree()` 中增加与后端层级一致的节点；**不加则角色管理里无法勾选、菜单可能不显示**。
+3. **父级菜单**：父路由 `authority` 写成数组，包含父权限码和所有子权限码，这样拥有任一子权限即可看到父菜单。
+4. **新菜单项**：若新功能是独立菜单页，除 1–3 外，必须在父路由 `children` 中增加一条路由（path、name、meta、component），并配套 views/api/locales；**只加权限不加子路由，侧边栏不会出现该菜单**。后端需同步：PermissionCodes、PermissionDefinitionContext、PermissionMapper、端点 `Permissions()`、必要时 Seed（见后端 skill 检查清单）。
+
+---
+
+## 新增功能流程
+
+1. `api/system/` 或相应目录添加 API 与类型  
+2. `views/{module}/{feature}/` 创建 `data.ts`、`list.vue`、`modules/form.vue`  
+3. `router/routes/modules/` 添加路由（含 `meta.authority`）  
+4. `locales/langs/` 补充 zh-CN、en-US  
+5. **需权限时**：在 `permission-codes.ts` 新增，并在 **`permission-tree.ts`** 的 `buildPermissionTree()` 中增加树节点  
+
+---
+
+## 常用引用
 
 - `@vben/common-ui`：`Page`、`useVbenModal`
 - `@vben/plugins/vxe-table`：`useVbenVxeGrid`
 - `#/adapter/form`：`useVbenForm`、`VbenFormSchema`、`z`
 - `#/adapter/vxe-table`：`useVbenVxeGrid`、`OnActionClickParams`
-- `ant-design-vue`：`Button`、`message` 等
-- `#/locales`：`$t`
-
-## 权限与角色授权（易漏，必须做）
-
-新增**带权限控制**的功能时，除路由里写 `authority` 外，必须同步维护以下两处，否则菜单不显示、角色管理里也无法勾选新权限：
-
-1. **权限码常量**：`src/constants/permission-codes.ts`  
-   - 与后端 `PermissionCodes.cs` 保持一致，新增本模块的 `XxxManagement` 及子权限（如 `XxxView`、`XxxCreate` 等）。
-
-2. **权限树（角色授权用）**：`src/utils/permission-tree.ts`  
-   - 在 `buildPermissionTree()` 中增加**与后端权限层级一致**的一组节点：父节点为“某管理”，子节点为具体权限（查看/创建/编辑等）。  
-   - 角色管理里“编辑角色”的权限树即由此生成，**不在这里加就不会出现授权选项**。
-
-3. **父级菜单显示**：若希望用户只要拥有任一子权限就能看到父菜单，父路由的 `authority` 应写成数组，包含父权限码和所有子权限码，例如：  
-   `authority: [PermissionCodes.XxxManagement, PermissionCodes.XxxView, PermissionCodes.XxxCreate, ...]`
-
-4. **新增菜单项时（易漏）**：若新功能是**独立菜单页**（如“客户来源”在“客户管理”下），除上述 1–3 外，必须在父路由的 `children` 中增加一条路由（`path`、`name`、`meta.icon`、`meta.title`、`meta.authority`、`component`），并配套 `views/`、`api/`、`locales`；**只加权限、不加这条子路由，侧边栏不会出现该菜单**。后端需同步：PermissionCodes、PermissionDefinitionContext、PermissionMapper、端点 `Permissions()`、必要时 Seed 管理员权限（详见后端 skill 检查清单）。
-
-## 新增功能流程
-
-1. 在 `api/system/` 或相应目录添加 API 与类型
-2. 在 `views/{module}/{feature}/` 创建 `data.ts`、`list.vue`、`modules/form.vue`
-3. 在 `router/routes/modules/` 添加路由（含 `meta.authority`）
-4. 在 `locales/langs/` 中补充 zh-CN、en-US 文案
-5. **若该功能需要权限控制**：在 `constants/permission-codes.ts` 新增权限码，并在 **`utils/permission-tree.ts`** 的 `buildPermissionTree()` 中增加对应树节点（否则角色管理无法勾选、菜单可能不显示）
+- 文案：`$t()`，键放在 `locales/langs/{zh-CN,en-US}/*.json`

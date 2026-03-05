@@ -1,5 +1,7 @@
 ---
-applyTo: "src/Ncp.Admin.Web/Application/IntegrationEventConverters/*.cs"
+description: 集成事件转换器开发指南
+globs: src/Ncp.Admin.Web/Application/IntegrationEventConverters/**/*.cs
+alwaysApply: false
 ---
 
 # 集成事件转换器开发指南
