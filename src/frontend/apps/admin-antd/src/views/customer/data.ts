@@ -27,11 +27,14 @@ const natureOptions = () => [
 /** 省市区级联选项（与公海项目区域一致） */
 export type RegionCascaderOption = { label: string; value: string; children?: RegionCascaderOption[] };
 
+/** 行业树选项（父子层级，用于 TreeSelect） */
+export type IndustryTreeOption = { label: string; value: string; children?: IndustryTreeOption[] };
+
 /** 上传成功后写入 path 到 businessLicense 的回调，由 form.vue 传入 */
 export type SetBusinessLicensePathFn = (path: string) => void;
 
 export function useSchema(
-  industryOptions: { label: string; value: string }[],
+  industryTreeOptions: IndustryTreeOption[],
   customerSourceOptions: { label: string; value: string }[],
   regionTreeOptions: RegionCascaderOption[] = [],
   setBusinessLicensePath?: SetBusinessLicensePathFn,
@@ -62,11 +65,17 @@ export function useSchema(
       label: $t('customer.status'),
     },
     {
-      component: 'Select',
+      component: 'TreeSelect',
       componentProps: {
-        class: 'w-full',
-        mode: 'multiple',
-        options: industryOptions,
+        allowClear: true,
+        class: 'w-full customer-industry-treeselect',
+        fieldNames: { label: 'label', value: 'value', children: 'children' },
+        placeholder: $t('customer.selectIndustry'),
+        showSearch: true,
+        treeCheckable: true,
+        treeData: industryTreeOptions,
+        treeLine: true,
+        treeNodeFilterProp: 'label',
       },
       fieldName: 'industryIds',
       label: $t('customer.industryIds'),
@@ -85,9 +94,13 @@ export function useSchema(
       componentProps: {
         allowClear: true,
         class: 'w-full',
+        changeOnSelect: false,
         options: regionTreeOptions,
         placeholder: $t('customer.locationRegionPlaceholder'),
-        changeOnSelect: false,
+        showSearch: {
+          filter: (inputValue: string, path: { label: string }[]) =>
+            path.some((node) => node.label.toLowerCase().includes(inputValue.toLowerCase())),
+        },
       },
       fieldName: 'regionCodes',
       label: $t('customer.locationRegion'),

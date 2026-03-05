@@ -10,6 +10,49 @@ export type IndustryTreeItem = IndustryApi.IndustryItem & {
   children?: IndustryTreeItem[];
 };
 
+/** TreeSelect 树节点（label/value/children），用于父级行业下拉等 */
+export type IndustryTreeSelectOption = {
+  label: string;
+  value: string;
+  children?: IndustryTreeSelectOption[];
+};
+
+/** 将扁平行业列表转为 TreeSelect 树（根节点带 ▸ 前缀、按 sortOrder 排序） */
+export function buildIndustryTreeForSelect(
+  list: IndustryApi.IndustryItem[],
+): IndustryTreeSelectOption[] {
+  const sorted = [...list].sort((a, b) => a.sortOrder - b.sortOrder);
+  interface Node extends IndustryTreeSelectOption {
+    sortOrder: number;
+    children: Node[];
+  }
+  const map = new Map<string, Node>();
+  for (const x of sorted) {
+    map.set(x.id, { label: x.name, value: x.id, sortOrder: x.sortOrder, children: [] });
+  }
+  const roots: Node[] = [];
+  for (const x of sorted) {
+    const node = map.get(x.id)!;
+    const parentId = x.parentId && String(x.parentId).trim() ? x.parentId : undefined;
+    if (!parentId || !map.has(parentId)) {
+      roots.push(node);
+    } else {
+      map.get(parentId)!.children.push(node);
+    }
+  }
+  function toOption(n: Node, isRoot: boolean): IndustryTreeSelectOption {
+    const children =
+      n.children.length > 0
+        ? n.children
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((c) => toOption(c, false))
+        : undefined;
+    const label = isRoot ? `▸ ${n.label}` : n.label;
+    return { label, value: n.value, children };
+  }
+  return roots.sort((a, b) => a.sortOrder - b.sortOrder).map((r) => toOption(r, true));
+}
+
 /** 将平铺行业列表转为树结构（按 sortOrder 排序） */
 export function flatToTree(
   flat: IndustryApi.IndustryItem[],
@@ -35,12 +78,8 @@ export function flatToTree(
 }
 
 export function useSchema(
-  parentOptions: { label: string; value: string }[] = [],
+  industryTreeOptions: IndustryTreeSelectOption[] = [],
 ): VbenFormSchema[] {
-  const parentSelectOptions = [
-    { label: $t('customer.topLevel'), value: '' },
-    ...parentOptions,
-  ];
   return [
     {
       component: 'Input',
@@ -50,11 +89,16 @@ export function useSchema(
       rules: z.string().min(1, $t('ui.formRules.required', [$t('customer.industryName')])),
     },
     {
-      component: 'Select',
+      component: 'TreeSelect',
       componentProps: {
         allowClear: true,
-        class: 'w-full',
-        options: parentSelectOptions,
+        class: 'w-full customer-industry-parent-treeselect',
+        fieldNames: { label: 'label', value: 'value', children: 'children' },
+        placeholder: $t('customer.parentIndustry'),
+        showSearch: true,
+        treeData: industryTreeOptions,
+        treeLine: true,
+        treeNodeFilterProp: 'label',
       },
       fieldName: 'parentId',
       label: $t('customer.parentIndustry'),

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { RegionCascaderOption } from './data';
+import type { RegionCascaderOption, IndustryTreeOption } from './data';
 
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -35,7 +35,7 @@ const router = useRouter();
 const id = computed(() => route.params.id as string | undefined);
 const isNew = computed(() => !id.value);
 
-const industryOptions = ref<{ label: string; value: string }[]>([]);
+const industryTreeOptions = ref<IndustryTreeOption[]>([]);
 const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
 const regionList = ref<RegionApi.RegionItem[]>([]);
 const customerDetail = ref<CustomerApi.CustomerDetail | null>(null);
@@ -95,11 +95,42 @@ const regionTreeOptions = computed<RegionCascaderOption[]>(() => {
   });
 });
 
+/** 将扁平的行业列表转为树形（父子层级、按 sortOrder 排序） */
+function buildIndustryTree(
+  list: { id: string; name: string; parentId?: string; sortOrder: number }[],
+): IndustryTreeOption[] {
+  const sorted = [...list].sort((a, b) => a.sortOrder - b.sortOrder);
+  interface Node extends IndustryTreeOption {
+    sortOrder: number;
+    children: Node[];
+  }
+  const map = new Map<string, Node>();
+  for (const x of sorted) {
+    map.set(x.id, { label: x.name, value: x.id, sortOrder: x.sortOrder, children: [] });
+  }
+  const roots: Node[] = [];
+  for (const x of sorted) {
+    const node = map.get(x.id)!;
+    const parentId = x.parentId && String(x.parentId).trim() ? x.parentId : undefined;
+    if (!parentId || !map.has(parentId)) {
+      roots.push(node);
+    } else {
+      map.get(parentId)!.children.push(node);
+    }
+  }
+  function toOption(n: Node, isRoot: boolean): IndustryTreeOption {
+    const children = n.children.length > 0 ? n.children.sort((a, b) => a.sortOrder - b.sortOrder).map((c) => toOption(c, false)) : undefined;
+    const label = isRoot ? `▸ ${n.label}` : n.label;
+    return { label, value: n.value, children };
+  }
+  return roots.sort((a, b) => a.sortOrder - b.sortOrder).map((r) => toOption(r, true));
+}
+
 onMounted(() => {
   Promise.all([
     getIndustryList().then((res) => {
       const list = Array.isArray(res) ? res : (res as any)?.data ?? [];
-      industryOptions.value = list.map((x: { id: string; name: string }) => ({ label: x.name, value: x.id }));
+      industryTreeOptions.value = buildIndustryTree(list);
     }),
     getCustomerSourceList().then((list) => {
       customerSourceOptions.value = list.map((x) => ({ label: x.name, value: x.id }));
@@ -114,7 +145,7 @@ const [Form, formApi] = useVbenForm({
   layout: 'vertical',
   schema: computed(() =>
     useSchema(
-      industryOptions.value,
+      industryTreeOptions.value,
       customerSourceOptions.value,
       regionTreeOptions.value,
       (path) => formApi.setFieldValue('businessLicense', path),

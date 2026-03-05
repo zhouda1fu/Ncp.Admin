@@ -15,21 +15,44 @@ import {
 } from '#/api/system/industry';
 import { $t } from '#/locales';
 
-import { useSchema } from '../data';
+import { buildIndustryTreeForSelect, useSchema } from '../data';
+import type { IndustryTreeSelectOption } from '../data';
 
 const emit = defineEmits(['success']);
 const formData = ref<Partial<IndustryApi.IndustryItem> & { id?: string }>();
 const industryList = ref<IndustryApi.IndustryItem[]>([]);
 
-const parentOptions = computed(() =>
-  industryList.value
-    .filter((x) => x.id !== formData.value?.id)
-    .map((x) => ({ label: x.name, value: x.id })),
-);
+/** 编辑时排除当前节点及其所有后代，避免选自己或子级为父级 */
+function isDescendant(
+  item: IndustryApi.IndustryItem,
+  ancestorId: string,
+  list: IndustryApi.IndustryItem[],
+): boolean {
+  let id: string | undefined = item.parentId ?? undefined;
+  while (id) {
+    if (id === ancestorId) return true;
+    const parent = list.find((x) => x.id === id);
+    id = parent?.parentId ?? undefined;
+  }
+  return false;
+}
+
+const industryTreeOptions = computed((): IndustryTreeSelectOption[] => {
+  const list = industryList.value;
+  const currentId = formData.value?.id;
+  const filtered =
+    currentId
+      ? list.filter(
+          (x) => x.id !== currentId && !isDescendant(x, currentId, list),
+        )
+      : list;
+  const tree = buildIndustryTreeForSelect(filtered);
+  return [{ label: $t('customer.topLevel'), value: '' }, ...tree];
+});
 
 const [Form, formApi] = useVbenForm({
   layout: 'vertical',
-  schema: computed(() => useSchema(parentOptions.value)),
+  schema: computed(() => useSchema(industryTreeOptions.value)),
   showDefaultActions: false,
 });
 
