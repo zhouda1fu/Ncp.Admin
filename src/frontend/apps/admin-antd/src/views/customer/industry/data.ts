@@ -111,8 +111,12 @@ export function useSchema(
       label: $t('customer.sortOrder'),
     },
     {
-      component: 'Input',
-      componentProps: { class: 'w-full' },
+      component: 'Textarea',
+      componentProps: {
+        class: 'w-full',
+        rows: 4,
+        autoSize: { minRows: 4, maxRows: 8 },
+      },
       fieldName: 'remark',
       label: $t('customer.remark'),
     },

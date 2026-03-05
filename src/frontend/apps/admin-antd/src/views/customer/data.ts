@@ -170,8 +170,13 @@ export function useSchema(
     },
     // 备注（简称、负责人、联系人等不在前端展示，提交时用默认值或编辑时用接口返回值）
     {
-      component: 'Input',
-      componentProps: { class: 'w-full', type: 'textarea', placeholder: $t('customer.remarkPlaceholder') },
+      component: 'Textarea',
+      componentProps: {
+        class: 'w-full',
+        placeholder: $t('customer.remarkPlaceholder'),
+        rows: 6,
+        autoSize: { minRows: 6, maxRows: 14 },
+      },
       fieldName: 'remark',
       label: $t('customer.remark'),
       formItemClass: 'md:col-span-3',

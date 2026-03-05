@@ -87,7 +87,10 @@ const contactFormSchema = computed(() => [
   },
   {
     component: 'Switch',
-    componentProps: { class: 'w-full' },
+    componentProps: {
+      checkedChildren: $t('common.yes'),
+      unCheckedChildren: $t('common.no'),
+    },
     fieldName: 'isPrimary',
     label: $t('customer.isPrimary'),
   },
@@ -148,6 +151,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
       const data = drawerApi.getData<Partial<CustomerApi.CustomerContactItem>>();
       formData.value = data;
       const contact = data ?? {};
+      const isPrimary = contact.isPrimary ?? (contact as Record<string, unknown>).IsPrimary ?? false;
+      const primaryBool = isPrimary === true || isPrimary === 1 || isPrimary === 'true' || isPrimary === '1';
       formApi.setValues({
         name: contact.name ?? '',
         contactType: contact.contactType ?? '',
@@ -157,7 +162,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         mobile: contact.mobile ?? '',
         phone: contact.phone ?? '',
         email: contact.email ?? '',
-        isPrimary: contact.isPrimary ?? false,
+        isPrimary: primaryBool,
       });
     }
   },

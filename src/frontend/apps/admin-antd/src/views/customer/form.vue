@@ -45,8 +45,22 @@ const licenseBlobUrl = ref<string | null>(null);
 const submitting = ref(false);
 /** 新建客户幂等键：同一表单提交（含重复点击）使用同一 key，后端返回缓存响应防重复创建 */
 const createIdempotencyKey = ref<string | null>(null);
-const contactList = computed(() => customerDetail.value?.contacts ?? []);
+/** 规范化联系人 isPrimary（兼容 API 返回 isPrimary / IsPrimary 或 0/1） */
+function normalizeContactPrimary(contact: Record<string, unknown>) {
+  const v = contact?.isPrimary ?? contact?.IsPrimary;
+  const primary = v === true || v === 1 || v === 'true' || v === '1';
+  return { ...contact, isPrimary: primary };
+}
+
+const contactList = computed(() =>
+  (customerDetail.value?.contacts ?? []).map((c) => normalizeContactPrimary(c as Record<string, unknown>)),
+);
 const contactRecordList = computed(() => customerDetail.value?.contactRecords ?? []);
+
+/** 判断是否为主联系人 */
+function isContactPrimary(record: Record<string, unknown>): boolean {
+  return Boolean(record?.isPrimary);
+}
 
 const contactColumns = [
   { title: () => $t('customer.contactName'), dataIndex: 'name', key: 'name', width: 120 },
@@ -54,7 +68,7 @@ const contactColumns = [
   { title: () => $t('customer.contactMobile'), dataIndex: 'mobile', key: 'mobile', width: 120 },
   { title: () => $t('customer.contactPhone'), dataIndex: 'phone', key: 'phone', width: 120 },
   { title: () => $t('customer.contactPosition'), dataIndex: 'position', key: 'position', width: 100 },
-  { title: () => $t('customer.isPrimary'), key: 'isPrimary', width: 90 },
+  { title: () => $t('customer.isPrimary'), dataIndex: 'isPrimary', key: 'isPrimary', width: 90 },
   { title: () => $t('customer.operation'), key: 'action', width: 160 },
 ];
 
@@ -406,7 +420,9 @@ async function onSubmit() {
           >
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'isPrimary'">
-                <Tag v-if="record.isPrimary" color="blue">{{ $t('customer.isPrimary') }}</Tag>
+                <Tag :color="isContactPrimary(record) ? 'success' : 'default'">
+                  {{ isContactPrimary(record) ? $t('common.yes') : $t('common.no') }}
+                </Tag>
               </template>
               <template v-else-if="column.key === 'action'">
                 <Space>

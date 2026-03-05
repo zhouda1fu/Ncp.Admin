@@ -47,12 +47,12 @@ const recordFormSchema = computed(() => [
     rules: z.string().min(1, $t('ui.formRules.required', [$t('customer.recordType')])),
   },
   {
-    component: 'Input',
+    component: 'Textarea',
     componentProps: {
       class: 'w-full',
       placeholder: $t('customer.recordContentPlaceholder'),
-      type: 'textarea',
       rows: 4,
+      autoSize: { minRows: 4, maxRows: 10 },
     },
     fieldName: 'content',
     label: $t('customer.recordContent'),
