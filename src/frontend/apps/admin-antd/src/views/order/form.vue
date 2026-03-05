@@ -18,6 +18,7 @@ import { getProjectList } from '#/api/system/project';
 import { getUserList } from '#/api/system/user';
 import { $t } from '#/locales';
 import { OrderTypeEnum } from '#/api/system/order';
+import FilePreviewModal from '#/components/file-preview/FilePreviewModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -357,6 +358,9 @@ function goToDetail() {
 
 const contractFileInputRef = ref<HTMLInputElement | null>(null);
 const contractFileSearchKeyword = ref('');
+const previewModalVisible = ref(false);
+const previewFilePath = ref('');
+const previewFileName = ref('');
 
 function triggerContractUpload() {
   contractFileInputRef.value?.click();
@@ -375,14 +379,20 @@ function getFileIcon(format: string): string {
   return '?';
 }
 
+const BLOCKED_EXTS = ['doc', 'xls'];
+
 async function onContractFileSelected(e: Event) {
   const target = e.target as HTMLInputElement;
   const file = target.files?.[0];
   target.value = '';
   if (!file) return;
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+  if (BLOCKED_EXTS.includes(ext)) {
+    message.warning('不支持 .doc/.xls 旧格式文件，请转换为 .docx/.xlsx 后重新上传');
+    return;
+  }
   try {
     const res = await uploadFile(file);
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
     form.value.contractFiles.push({
       path: res.path,
       fileName: file.name,
@@ -408,14 +418,10 @@ const filteredContractFiles = computed(() => {
   );
 });
 
-async function previewContractFile(item: OrderApi.OrderContractFileItem) {
-  try {
-    const blob = await fetchFileBlob(item.path);
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-  } catch (err) {
-    message.error(String(err));
-  }
+function previewContractFile(item: OrderApi.OrderContractFileItem) {
+  previewFilePath.value = item.path;
+  previewFileName.value = item.fileName;
+  previewModalVisible.value = true;
 }
 
 async function downloadContractFile(item: OrderApi.OrderContractFileItem) {
@@ -624,7 +630,7 @@ const contractFileColumns = [
                 ref="contractFileInputRef"
                 type="file"
                 class="hidden"
-                accept=".doc,.docx,.pdf,.xls,.xlsx"
+                accept=".docx,.pdf,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.txt"
                 @change="onContractFileSelected"
               />
               <Button size="small" @click="refreshContractList">{{ $t('order.refresh') }}</Button>
@@ -870,6 +876,11 @@ const contractFileColumns = [
         <Button @click="goBack">{{ $t('common.cancel') }}</Button>
       </div>
     </div>
+    <FilePreviewModal
+      v-model:open="previewModalVisible"
+      :file-path="previewFilePath"
+      :file-name="previewFileName"
+    />
   </Page>
 </template>
 
