@@ -4,6 +4,8 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
+using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Commands.Contract;
 using Ncp.Admin.Web.AppPermissions;
@@ -11,16 +13,8 @@ using Ncp.Admin.Web.AppPermissions;
 namespace Ncp.Admin.Web.Endpoints.Contract;
 
 /// <summary>
-/// 创建合同请求
+/// 创建合同请求（全部必传，ID 使用强类型）
 /// </summary>
-/// <param name="Code">合同编号</param>
-/// <param name="Title">标题</param>
-/// <param name="PartyA">甲方</param>
-/// <param name="PartyB">乙方</param>
-/// <param name="Amount">金额</param>
-/// <param name="StartDate">开始日期</param>
-/// <param name="EndDate">结束日期</param>
-/// <param name="FileStorageKey">文件存储键</param>
 public record CreateContractRequest(
     string Code,
     string Title,
@@ -29,7 +23,26 @@ public record CreateContractRequest(
     decimal Amount,
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
-    string? FileStorageKey);
+    string FileStorageKey,
+    OrderId OrderId,
+    CustomerId CustomerId,
+    int ContractType,
+    int IncomeExpenseType,
+    DateTimeOffset SignDate,
+    string Note,
+    string Description,
+    Guid DepartmentId,
+    string BusinessManager,
+    string ResponsibleProject,
+    string InputCustomer,
+    bool NextPaymentReminder,
+    bool ContractExpiryReminder,
+    int SingleDoubleProfit,
+    string InvoicingInformation,
+    int PaymentStatus,
+    string WarrantyPeriod,
+    bool IsInstallmentPayment,
+    decimal AccumulatedAmount);
 
 /// <summary>
 /// 创建合同（当前用户为创建人）
@@ -53,7 +66,13 @@ public class CreateContractEndpoint(IMediator mediator) : Endpoint<CreateContrac
             return;
         }
         var cmd = new CreateContractCommand(req.Code, req.Title, req.PartyA, req.PartyB,
-            req.Amount, req.StartDate, req.EndDate, new UserId(uid), req.FileStorageKey);
+            req.Amount, req.StartDate, req.EndDate, new UserId(uid),
+            req.FileStorageKey, req.OrderId, req.CustomerId, req.ContractType, req.IncomeExpenseType,
+            req.SignDate, req.Note, req.Description,
+            req.DepartmentId, req.BusinessManager, req.ResponsibleProject, req.InputCustomer,
+            req.NextPaymentReminder, req.ContractExpiryReminder,
+            req.SingleDoubleProfit, req.InvoicingInformation, req.PaymentStatus, req.WarrantyPeriod,
+            req.IsInstallmentPayment, req.AccumulatedAmount);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateContractResponse(id).AsResponseData(), cancellation: ct);
     }

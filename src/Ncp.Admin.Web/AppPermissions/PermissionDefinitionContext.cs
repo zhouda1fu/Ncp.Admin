@@ -164,9 +164,18 @@ public static class PermissionDefinitionContext
         contractManagement.AddChild(PermissionCodes.ContractView, "查看合同");
         contractManagement.AddChild(PermissionCodes.ContractCreate, "创建合同");
         contractManagement.AddChild(PermissionCodes.ContractEdit, "编辑合同");
+        contractManagement.AddChild(PermissionCodes.ContractDelete, "删除合同");
         contractManagement.AddChild(PermissionCodes.ContractSubmit, "提交审批");
         contractManagement.AddChild(PermissionCodes.ContractApprove, "审批合同");
         contractManagement.AddChild(PermissionCodes.ContractArchive, "归档合同");
+        contractManagement.AddChild(PermissionCodes.ContractTypeView, "查看合同类型");
+        contractManagement.AddChild(PermissionCodes.ContractTypeCreate, "创建合同类型");
+        contractManagement.AddChild(PermissionCodes.ContractTypeEdit, "编辑合同类型");
+        contractManagement.AddChild(PermissionCodes.ContractTypeDelete, "删除合同类型");
+        contractManagement.AddChild(PermissionCodes.IncomeExpenseTypeView, "查看收支类型");
+        contractManagement.AddChild(PermissionCodes.IncomeExpenseTypeCreate, "创建收支类型");
+        contractManagement.AddChild(PermissionCodes.IncomeExpenseTypeEdit, "编辑收支类型");
+        contractManagement.AddChild(PermissionCodes.IncomeExpenseTypeDelete, "删除收支类型");
 
         // 客户管理权限
         var customerManagement = systemAccess.AddPermission(PermissionCodes.CustomerManagement, "客户管理");

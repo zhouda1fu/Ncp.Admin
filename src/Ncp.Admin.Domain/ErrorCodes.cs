@@ -520,6 +520,16 @@ public sealed class ErrorCodes
     /// </summary>
     public const int ProjectIndustryNotFound = 280010;
 
+    /// <summary>
+    /// 未找到合同类型选项
+    /// </summary>
+    public const int ContractTypeOptionNotFound = 280011;
+
+    /// <summary>
+    /// 未找到收支类型选项
+    /// </summary>
+    public const int IncomeExpenseTypeOptionNotFound = 280012;
+
     #endregion
 
     #region 订单相关错误 (290xxx)

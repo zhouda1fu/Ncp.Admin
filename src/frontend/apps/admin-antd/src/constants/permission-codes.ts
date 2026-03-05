@@ -89,9 +89,18 @@ export const PermissionCodes = {
   ContractView: 'ContractView',
   ContractCreate: 'ContractCreate',
   ContractEdit: 'ContractEdit',
+  ContractDelete: 'ContractDelete',
   ContractSubmit: 'ContractSubmit',
   ContractApprove: 'ContractApprove',
   ContractArchive: 'ContractArchive',
+  ContractTypeView: 'ContractTypeView',
+  ContractTypeCreate: 'ContractTypeCreate',
+  ContractTypeEdit: 'ContractTypeEdit',
+  ContractTypeDelete: 'ContractTypeDelete',
+  IncomeExpenseTypeView: 'IncomeExpenseTypeView',
+  IncomeExpenseTypeCreate: 'IncomeExpenseTypeCreate',
+  IncomeExpenseTypeEdit: 'IncomeExpenseTypeEdit',
+  IncomeExpenseTypeDelete: 'IncomeExpenseTypeDelete',
 
   // 客户管理权限
   CustomerManagement: 'CustomerManagement',

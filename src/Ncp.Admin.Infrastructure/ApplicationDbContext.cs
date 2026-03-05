@@ -5,7 +5,9 @@ using Ncp.Admin.Domain.AggregatesModel.AssetAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.IncomeExpenseTypeOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
@@ -149,4 +151,6 @@ public partial class ApplicationDbContext(
     public DbSet<ProjectType> ProjectTypes => Set<ProjectType>();
     public DbSet<ProjectStatusOption> ProjectStatusOptions => Set<ProjectStatusOption>();
     public DbSet<ProjectIndustry> ProjectIndustries => Set<ProjectIndustry>();
+    public DbSet<ContractTypeOption> ContractTypeOptions => Set<ContractTypeOption>();
+    public DbSet<IncomeExpenseTypeOption> IncomeExpenseTypeOptions => Set<IncomeExpenseTypeOption>();
 }

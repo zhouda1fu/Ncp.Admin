@@ -3,25 +3,17 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
+using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Web.Application.Commands.Contract;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Contract;
 
 /// <summary>
-/// 更新合同请求
+/// 更新合同请求（Id 来自路由）
 /// </summary>
-/// <param name="Id">合同 ID</param>
-/// <param name="Code">合同编号</param>
-/// <param name="Title">标题</param>
-/// <param name="PartyA">甲方</param>
-/// <param name="PartyB">乙方</param>
-/// <param name="Amount">金额</param>
-/// <param name="StartDate">开始日期</param>
-/// <param name="EndDate">结束日期</param>
-/// <param name="FileStorageKey">文件存储键</param>
 public record UpdateContractRequest(
-    ContractId Id,
     string Code,
     string Title,
     string PartyA,
@@ -29,7 +21,26 @@ public record UpdateContractRequest(
     decimal Amount,
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
-    string? FileStorageKey);
+    string? FileStorageKey = null,
+    string? OrderId = null,
+    string? CustomerId = null,
+    int? ContractType = null,
+    int? IncomeExpenseType = null,
+    DateTimeOffset? SignDate = null,
+    string? Note = null,
+    string? Description = null,
+    Guid? DepartmentId = null,
+    string? BusinessManager = null,
+    string? ResponsibleProject = null,
+    string? InputCustomer = null,
+    bool? NextPaymentReminder = null,
+    bool? ContractExpiryReminder = null,
+    int? SingleDoubleProfit = null,
+    string? InvoicingInformation = null,
+    int? PaymentStatus = null,
+    string? WarrantyPeriod = null,
+    bool? IsInstallmentPayment = null,
+    decimal? AccumulatedAmount = null);
 
 /// <summary>
 /// 更新合同
@@ -46,9 +57,16 @@ public class UpdateContractEndpoint(IMediator mediator) : Endpoint<UpdateContrac
 
     public override async Task HandleAsync(UpdateContractRequest req, CancellationToken ct)
     {
-        var cmd = new UpdateContractCommand(
-            req.Id, req.Code, req.Title, req.PartyA, req.PartyB,
-            req.Amount, req.StartDate, req.EndDate, req.FileStorageKey);
+        var id = new ContractId(Route<Guid>("id"));
+        OrderId? orderId = !string.IsNullOrWhiteSpace(req.OrderId) && Guid.TryParse(req.OrderId, out var oid) ? new OrderId(oid) : null;
+        CustomerId? customerId = !string.IsNullOrWhiteSpace(req.CustomerId) && Guid.TryParse(req.CustomerId, out var cid) ? new CustomerId(cid) : null;
+        var cmd = new UpdateContractCommand(id, req.Code, req.Title, req.PartyA, req.PartyB,
+            req.Amount, req.StartDate, req.EndDate, req.FileStorageKey,
+            orderId, customerId, req.ContractType, req.IncomeExpenseType, req.SignDate, req.Note, req.Description,
+            req.DepartmentId, req.BusinessManager, req.ResponsibleProject, req.InputCustomer,
+            req.NextPaymentReminder, req.ContractExpiryReminder, req.SingleDoubleProfit,
+            req.InvoicingInformation, req.PaymentStatus, req.WarrantyPeriod,
+            req.IsInstallmentPayment, req.AccumulatedAmount);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

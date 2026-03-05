@@ -160,9 +160,18 @@ public static class PermissionCodes
     public const string ContractView = nameof(ContractView);
     public const string ContractCreate = nameof(ContractCreate);
     public const string ContractEdit = nameof(ContractEdit);
+    public const string ContractDelete = nameof(ContractDelete);
     public const string ContractSubmit = nameof(ContractSubmit);
     public const string ContractApprove = nameof(ContractApprove);
     public const string ContractArchive = nameof(ContractArchive);
+    public const string ContractTypeView = nameof(ContractTypeView);
+    public const string ContractTypeCreate = nameof(ContractTypeCreate);
+    public const string ContractTypeEdit = nameof(ContractTypeEdit);
+    public const string ContractTypeDelete = nameof(ContractTypeDelete);
+    public const string IncomeExpenseTypeView = nameof(IncomeExpenseTypeView);
+    public const string IncomeExpenseTypeCreate = nameof(IncomeExpenseTypeCreate);
+    public const string IncomeExpenseTypeEdit = nameof(IncomeExpenseTypeEdit);
+    public const string IncomeExpenseTypeDelete = nameof(IncomeExpenseTypeDelete);
     #endregion
 
     #region 客户管理权限

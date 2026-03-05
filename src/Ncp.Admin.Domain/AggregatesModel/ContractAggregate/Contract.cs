@@ -1,5 +1,7 @@
-using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
 
@@ -71,9 +73,9 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     /// </summary>
     public ContractStatus Status { get; private set; }
     /// <summary>
-    /// 附件存储 Key（可选）
+    /// 附件存储 Key
     /// </summary>
-    public string? FileStorageKey { get; private set; }
+    public string FileStorageKey { get; private set; } = string.Empty;
     /// <summary>
     /// 创建人用户ID
     /// </summary>
@@ -88,19 +90,167 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     public UpdateTime UpdateTime { get; private set; } = new UpdateTime(DateTimeOffset.UtcNow);
 
     /// <summary>
+    /// 关联订单 ID（空为未关联）
+    /// </summary>
+    public OrderId OrderId { get; private set; } = default!;
+    /// <summary>
+    /// 关联客户 ID（空为未关联）
+    /// </summary>
+    public CustomerId CustomerId { get; private set; } = default!;
+    /// <summary>
+    /// 合同类型（类型值，对应 ContractTypeOption.TypeValue）
+    /// </summary>
+    public int ContractType { get; private set; }
+    /// <summary>
+    /// 合同类型名称（冗余，前端“合同签订公司”展示用）
+    /// </summary>
+    public string ContractTypeName { get; private set; } = string.Empty;
+    /// <summary>
+    /// 收支类型（类型值，对应 IncomeExpenseTypeOption.TypeValue）
+    /// </summary>
+    public int IncomeExpenseType { get; private set; }
+    /// <summary>
+    /// 收支类型名称（冗余）
+    /// </summary>
+    public string IncomeExpenseTypeName { get; private set; } = string.Empty;
+    /// <summary>
+    /// 签约日期
+    /// </summary>
+    public DateTimeOffset SignDate { get; private set; }
+    /// <summary>
+    /// 部门 ID
+    /// </summary>
+    public Guid DepartmentId { get; private set; }
+    /// <summary>
+    /// 业务经理
+    /// </summary>
+    public string BusinessManager { get; private set; } = string.Empty;
+    /// <summary>
+    /// 负责项目
+    /// </summary>
+    public string ResponsibleProject { get; private set; } = string.Empty;
+    /// <summary>
+    /// 录入客户（名称或标识）
+    /// </summary>
+    public string InputCustomer { get; private set; } = string.Empty;
+    /// <summary>
+    /// 下次收付款报警
+    /// </summary>
+    public bool NextPaymentReminder { get; private set; }
+    /// <summary>
+    /// 合同过期报警
+    /// </summary>
+    public bool ContractExpiryReminder { get; private set; }
+    /// <summary>
+    /// 单双盈（类型值）
+    /// </summary>
+    public int SingleDoubleProfit { get; private set; }
+    /// <summary>
+    /// 开票信息
+    /// </summary>
+    public string InvoicingInformation { get; private set; } = string.Empty;
+    /// <summary>
+    /// 到款情况（类型值）
+    /// </summary>
+    public int PaymentStatus { get; private set; }
+    /// <summary>
+    /// 质保期
+    /// </summary>
+    public string WarrantyPeriod { get; private set; } = string.Empty;
+    /// <summary>
+    /// 是否分期
+    /// </summary>
+    public bool IsInstallmentPayment { get; private set; }
+    /// <summary>
+    /// 累计金额
+    /// </summary>
+    public decimal AccumulatedAmount { get; private set; }
+    /// <summary>
+    /// 备注
+    /// </summary>
+    public string Note { get; private set; } = string.Empty;
+    /// <summary>
+    /// 合同内容/描述
+    /// </summary>
+    public string Description { get; private set; } = string.Empty;
+    /// <summary>
+    /// 审批人（审批通过时记录，未审批为 default）
+    /// </summary>
+    public UserId ApprovedBy { get; private set; } = default!;
+    /// <summary>
+    /// 审批时间（未审批为 default）
+    /// </summary>
+    public DateTimeOffset ApprovedAt { get; private set; }
+    /// <summary>
+    /// 软删标记
+    /// </summary>
+    public bool IsDeleted { get; private set; }
+
+    /// <summary>
     /// 创建合同（草稿）
     /// </summary>
-    public Contract(string code, string title, string partyA, string partyB, decimal amount, DateTimeOffset startDate, DateTimeOffset endDate, UserId creatorId, string? fileStorageKey = null)
+    public Contract(
+        string code,
+        string title,
+        string partyA,
+        string partyB,
+        decimal amount,
+        DateTimeOffset startDate,
+        DateTimeOffset endDate,
+        UserId creatorId,
+        string fileStorageKey,
+        OrderId orderId,
+        CustomerId customerId,
+        int contractType,
+        string contractTypeName,
+        int incomeExpenseType,
+        string incomeExpenseTypeName,
+        DateTimeOffset signDate,
+        string note,
+        string description,
+        Guid departmentId,
+        string businessManager,
+        string responsibleProject,
+        string inputCustomer,
+        bool nextPaymentReminder,
+        bool contractExpiryReminder,
+        int singleDoubleProfit,
+        string invoicingInformation,
+        int paymentStatus,
+        string warrantyPeriod,
+        bool isInstallmentPayment,
+        decimal accumulatedAmount)
     {
-        Code = code ;
-        Title = title ;
-        PartyA = partyA ;
-        PartyB = partyB ;
+        Code = code ?? string.Empty;
+        Title = title ?? string.Empty;
+        PartyA = partyA ?? string.Empty;
+        PartyB = partyB ?? string.Empty;
         Amount = amount;
         StartDate = startDate;
         EndDate = endDate;
         CreatorId = creatorId;
-        FileStorageKey = fileStorageKey;
+        FileStorageKey = fileStorageKey ?? string.Empty;
+        OrderId = orderId;
+        CustomerId = customerId;
+        ContractType = contractType;
+        ContractTypeName = contractTypeName ?? string.Empty;
+        IncomeExpenseType = incomeExpenseType;
+        IncomeExpenseTypeName = incomeExpenseTypeName ?? string.Empty;
+        SignDate = signDate;
+        Note = note ?? string.Empty;
+        Description = description ?? string.Empty;
+        DepartmentId = departmentId;
+        BusinessManager = businessManager ?? string.Empty;
+        ResponsibleProject = responsibleProject ?? string.Empty;
+        InputCustomer = inputCustomer ?? string.Empty;
+        NextPaymentReminder = nextPaymentReminder;
+        ContractExpiryReminder = contractExpiryReminder;
+        SingleDoubleProfit = singleDoubleProfit;
+        InvoicingInformation = invoicingInformation ?? string.Empty;
+        PaymentStatus = paymentStatus;
+        WarrantyPeriod = warrantyPeriod ?? string.Empty;
+        IsInstallmentPayment = isInstallmentPayment;
+        AccumulatedAmount = accumulatedAmount;
         Status = ContractStatus.Draft;
         CreatedAt = DateTimeOffset.UtcNow;
     }
@@ -108,18 +258,68 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     /// <summary>
     /// 更新合同信息（仅草稿可改）
     /// </summary>
-    public void Update(string code, string title, string partyA, string partyB, decimal amount, DateTimeOffset startDate, DateTimeOffset endDate, string? fileStorageKey = null)
+    public void Update(
+        string code,
+        string title,
+        string partyA,
+        string partyB,
+        decimal amount,
+        DateTimeOffset startDate,
+        DateTimeOffset endDate,
+        string fileStorageKey,
+        OrderId orderId,
+        CustomerId customerId,
+        int contractType,
+        string contractTypeName,
+        int incomeExpenseType,
+        string incomeExpenseTypeName,
+        DateTimeOffset signDate,
+        string note,
+        string description,
+        Guid departmentId,
+        string businessManager,
+        string responsibleProject,
+        string inputCustomer,
+        bool nextPaymentReminder,
+        bool contractExpiryReminder,
+        int singleDoubleProfit,
+        string invoicingInformation,
+        int paymentStatus,
+        string warrantyPeriod,
+        bool isInstallmentPayment,
+        decimal accumulatedAmount)
     {
         if (Status != ContractStatus.Draft)
             throw new KnownException("仅草稿状态可修改", ErrorCodes.ContractNotDraft);
-        Code = code ;
-        Title = title ;
-        PartyA = partyA ;
-        PartyB = partyB ;
+        Code = code ?? string.Empty;
+        Title = title ?? string.Empty;
+        PartyA = partyA ?? string.Empty;
+        PartyB = partyB ?? string.Empty;
         Amount = amount;
         StartDate = startDate;
         EndDate = endDate;
-        FileStorageKey = fileStorageKey;
+        FileStorageKey = fileStorageKey ?? string.Empty;
+        OrderId = orderId;
+        CustomerId = customerId;
+        ContractType = contractType;
+        ContractTypeName = contractTypeName ?? string.Empty;
+        IncomeExpenseType = incomeExpenseType;
+        IncomeExpenseTypeName = incomeExpenseTypeName ?? string.Empty;
+        SignDate = signDate;
+        Note = note ?? string.Empty;
+        Description = description ?? string.Empty;
+        DepartmentId = departmentId;
+        BusinessManager = businessManager ?? string.Empty;
+        ResponsibleProject = responsibleProject ?? string.Empty;
+        InputCustomer = inputCustomer ?? string.Empty;
+        NextPaymentReminder = nextPaymentReminder;
+        ContractExpiryReminder = contractExpiryReminder;
+        SingleDoubleProfit = singleDoubleProfit;
+        InvoicingInformation = invoicingInformation ?? string.Empty;
+        PaymentStatus = paymentStatus;
+        WarrantyPeriod = warrantyPeriod ?? string.Empty;
+        IsInstallmentPayment = isInstallmentPayment;
+        AccumulatedAmount = accumulatedAmount;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
@@ -137,11 +337,24 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     /// <summary>
     /// 审批通过
     /// </summary>
-    public void Approve()
+    public void Approve(UserId approvedBy)
     {
         if (Status != ContractStatus.PendingApproval)
             throw new KnownException("仅审批中可通过", ErrorCodes.ContractNotPendingApproval);
         Status = ContractStatus.Approved;
+        ApprovedBy = approvedBy;
+        ApprovedAt = DateTimeOffset.UtcNow;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 软删除（仅草稿可删）
+    /// </summary>
+    public void MarkDeleted()
+    {
+        if (Status != ContractStatus.Draft)
+            throw new KnownException("仅草稿状态可删除", ErrorCodes.ContractNotDraft);
+        IsDeleted = true;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 

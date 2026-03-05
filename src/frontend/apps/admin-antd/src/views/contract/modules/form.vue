@@ -1,7 +1,11 @@
 <script lang="ts" setup>
 import type { ContractApi } from '#/api/system/contract';
+import type {
+  ContractTypeOptionItem,
+  IncomeExpenseTypeOptionItem,
+} from '../data';
 
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 
@@ -12,6 +16,10 @@ import {
   createContract,
   updateContract,
 } from '#/api/system/contract';
+import type { ContractTypeOptionApi } from '#/api/system/contract-type';
+import type { IncomeExpenseTypeOptionApi } from '#/api/system/income-expense-type';
+import { getContractTypeOptionList } from '#/api/system/contract-type';
+import { getIncomeExpenseTypeOptionList } from '#/api/system/income-expense-type';
 import { $t } from '#/locales';
 
 import { useSchema } from '../data';
@@ -19,9 +27,25 @@ import { useSchema } from '../data';
 const emit = defineEmits(['success']);
 const formData = ref<Partial<ContractApi.ContractItem> & { id?: string }>();
 
+const contractTypeOptions = ref<ContractTypeOptionItem[]>([]);
+const incomeExpenseTypeOptions = ref<IncomeExpenseTypeOptionItem[]>([]);
+
+onMounted(async () => {
+  const [ctList, ieList] = await Promise.all([
+    getContractTypeOptionList(),
+    getIncomeExpenseTypeOptionList(),
+  ]) as unknown as [ContractTypeOptionApi.ContractTypeOptionItem[], IncomeExpenseTypeOptionApi.IncomeExpenseTypeOptionItem[]];
+  contractTypeOptions.value = ctList.map((x) => ({ label: x.name, value: x.typeValue }));
+  incomeExpenseTypeOptions.value = ieList.map((x) => ({ label: x.name, value: x.typeValue }));
+});
+
+const formSchema = computed(() =>
+  useSchema(contractTypeOptions.value, incomeExpenseTypeOptions.value),
+);
+
 const [Form, formApi] = useVbenForm({
   layout: 'vertical',
-  schema: useSchema(),
+  schema: formSchema as unknown as ReturnType<typeof useSchema>,
   showDefaultActions: false,
 });
 
@@ -49,6 +73,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
         ? new Date(data.endDate).toISOString()
         : new Date().toISOString(),
       fileStorageKey: data.fileStorageKey ? String(data.fileStorageKey) : undefined,
+      contractType: data.contractType != null ? Number(data.contractType) : 0,
+      incomeExpenseType: data.incomeExpenseType != null ? Number(data.incomeExpenseType) : 0,
+      signDate: data.signDate ? new Date(data.signDate).toISOString() : undefined,
+      note: data.note ? String(data.note) : undefined,
+      description: data.description ? String(data.description) : undefined,
+      ...(data.orderId && { orderId: String(data.orderId) }),
+      ...(data.customerId && { customerId: String(data.customerId) }),
     };
     try {
       if (formData.value?.id) {
@@ -64,7 +95,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
   },
   onOpenChange(isOpen) {
     if (isOpen) {
-      const data = drawerApi.getData<Partial<ContractApi.ContractItem> & { id?: string }>();
+      const data = drawerApi.getData<Partial<ContractApi.ContractItem> & { id?: string; orderId?: string }>();
       formData.value = data;
       const start = data?.startDate
         ? (typeof data.startDate === 'string'
@@ -76,6 +107,11 @@ const [Drawer, drawerApi] = useVbenDrawer({
             ? data.endDate.slice(0, 10)
             : '')
         : '';
+      const sign = data?.signDate
+        ? (typeof data.signDate === 'string'
+            ? data.signDate.slice(0, 10)
+            : '')
+        : '';
       formApi.setValues({
         code: data?.code ?? '',
         title: data?.title ?? '',
@@ -84,7 +120,14 @@ const [Drawer, drawerApi] = useVbenDrawer({
         amount: data?.amount ?? 0,
         startDate: start,
         endDate: end,
+        contractType: data?.contractType ?? 0,
+        incomeExpenseType: data?.incomeExpenseType ?? 0,
+        signDate: sign,
+        note: data?.note ?? '',
+        description: data?.description ?? '',
         fileStorageKey: data?.fileStorageKey ?? '',
+        orderId: data?.orderId ?? '',
+        customerId: data?.customerId ?? '',
       });
     }
   },

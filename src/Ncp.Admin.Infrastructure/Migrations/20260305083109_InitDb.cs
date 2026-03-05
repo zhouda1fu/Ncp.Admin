@@ -230,14 +230,53 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     StartDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     EndDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    FileStorageKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    FileStorageKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     CreatorId = table.Column<long>(type: "bigint", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ContractType = table.Column<int>(type: "integer", nullable: false),
+                    ContractTypeName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    IncomeExpenseType = table.Column<int>(type: "integer", nullable: false),
+                    IncomeExpenseTypeName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    SignDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    DepartmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    BusinessManager = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ResponsibleProject = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    InputCustomer = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    NextPaymentReminder = table.Column<bool>(type: "boolean", nullable: false),
+                    ContractExpiryReminder = table.Column<bool>(type: "boolean", nullable: false),
+                    SingleDoubleProfit = table.Column<int>(type: "integer", nullable: false),
+                    InvoicingInformation = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    PaymentStatus = table.Column<int>(type: "integer", nullable: false),
+                    WarrantyPeriod = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    IsInstallmentPayment = table.Column<bool>(type: "boolean", nullable: false),
+                    AccumulatedAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Note = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    Description = table.Column<string>(type: "character varying(8000)", maxLength: 8000, nullable: false),
+                    ApprovedBy = table.Column<long>(type: "bigint", nullable: false),
+                    ApprovedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_contract", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "contract_type_option",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "合同类型选项标识"),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
+                    TypeValue = table.Column<int>(type: "integer", nullable: false, comment: "类型值"),
+                    OrderSigningCompanyOptionDisplay = table.Column<bool>(type: "boolean", nullable: false, comment: "订单签订公司选项展示"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_contract_type_option", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -356,6 +395,20 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_expense_claim", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "income_expense_type_option",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "收支类型选项标识"),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
+                    TypeValue = table.Column<int>(type: "integer", nullable: false, comment: "类型值"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_income_expense_type_option", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -1348,14 +1401,44 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 column: "Code");
 
             migrationBuilder.CreateIndex(
+                name: "IX_contract_CustomerId",
+                table: "contract",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_contract_EndDate",
                 table: "contract",
                 column: "EndDate");
 
             migrationBuilder.CreateIndex(
+                name: "IX_contract_IsDeleted",
+                table: "contract",
+                column: "IsDeleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_contract_OrderId",
+                table: "contract",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_contract_SignDate",
+                table: "contract",
+                column: "SignDate");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_contract_Status",
                 table: "contract",
                 column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_contract_type_option_SortOrder",
+                table: "contract_type_option",
+                column: "SortOrder");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_contract_type_option_TypeValue",
+                table: "contract_type_option",
+                column: "TypeValue");
 
             migrationBuilder.CreateIndex(
                 name: "IX_customer_CreatedAt",
@@ -1447,6 +1530,16 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "IX_expense_item_ExpenseClaimId",
                 table: "expense_item",
                 column: "ExpenseClaimId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_income_expense_type_option_SortOrder",
+                table: "income_expense_type_option",
+                column: "SortOrder");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_income_expense_type_option_TypeValue",
+                table: "income_expense_type_option",
+                column: "TypeValue");
 
             migrationBuilder.CreateIndex(
                 name: "IX_industry_ParentId",
@@ -1892,6 +1985,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "contract");
 
             migrationBuilder.DropTable(
+                name: "contract_type_option");
+
+            migrationBuilder.DropTable(
                 name: "customer_contact");
 
             migrationBuilder.DropTable(
@@ -1911,6 +2007,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "expense_item");
+
+            migrationBuilder.DropTable(
+                name: "income_expense_type_option");
 
             migrationBuilder.DropTable(
                 name: "industry");

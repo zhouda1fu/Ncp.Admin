@@ -59,6 +59,10 @@ function goBack() {
 function onEdit() {
   router.push(`/order/${id.value}/edit`);
 }
+
+function goContractList() {
+  router.push(`/contract/list?orderId=${id.value}`);
+}
 </script>
 
 <template>
@@ -71,7 +75,10 @@ function onEdit() {
           </Button>
           <span class="text-lg font-medium">{{ $t('order.detail') }}</span>
         </div>
-        <Button type="primary" @click="onEdit">{{ $t('order.edit') }}</Button>
+        <div class="flex items-center gap-2">
+          <Button @click="goContractList">{{ $t('contract.list') }}</Button>
+          <Button type="primary" @click="onEdit">{{ $t('order.edit') }}</Button>
+        </div>
       </div>
 
       <Descriptions v-if="detail" bordered :column="2" size="small">

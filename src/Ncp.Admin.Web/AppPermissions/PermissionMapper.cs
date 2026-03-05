@@ -162,9 +162,18 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.ContractView, "查看合同" },
         { PermissionCodes.ContractCreate, "创建合同" },
         { PermissionCodes.ContractEdit, "编辑合同" },
+        { PermissionCodes.ContractDelete, "删除合同" },
         { PermissionCodes.ContractSubmit, "提交审批" },
         { PermissionCodes.ContractApprove, "审批合同" },
         { PermissionCodes.ContractArchive, "归档合同" },
+        { PermissionCodes.ContractTypeView, "查看合同类型" },
+        { PermissionCodes.ContractTypeCreate, "创建合同类型" },
+        { PermissionCodes.ContractTypeEdit, "编辑合同类型" },
+        { PermissionCodes.ContractTypeDelete, "删除合同类型" },
+        { PermissionCodes.IncomeExpenseTypeView, "查看收支类型" },
+        { PermissionCodes.IncomeExpenseTypeCreate, "创建收支类型" },
+        { PermissionCodes.IncomeExpenseTypeEdit, "编辑收支类型" },
+        { PermissionCodes.IncomeExpenseTypeDelete, "删除收支类型" },
 
         // 客户管理权限
         { PermissionCodes.CustomerManagement, "客户管理" },

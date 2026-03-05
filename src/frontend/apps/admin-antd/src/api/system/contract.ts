@@ -5,6 +5,12 @@ import { requestClient } from '#/api/request';
 /** 合同状态：0 草稿 1 审批中 2 已生效 3 已归档 */
 export type ContractStatus = 0 | 1 | 2 | 3;
 
+/** 合同类型为 int，取值来自合同类型选项（ContractTypeOption）的 typeValue */
+export type ContractType = number;
+
+/** 收支类型为 int，取值来自收支类型选项（IncomeExpenseTypeOption）的 typeValue */
+export type IncomeExpenseType = number;
+
 export namespace ContractApi {
   export interface ContractItem {
     id: string;
@@ -19,6 +25,31 @@ export namespace ContractApi {
     fileStorageKey?: string;
     creatorId: string;
     createdAt: string;
+    orderId?: string;
+    customerId?: string;
+    customerName?: string;
+    contractType: ContractType;
+    contractTypeName?: string;
+    incomeExpenseType: IncomeExpenseType;
+    incomeExpenseTypeName?: string;
+    signDate?: string;
+    note?: string;
+    description?: string;
+    approvedBy?: string;
+    approvedAt?: string;
+    hasAttachment?: boolean;
+    departmentId?: string;
+    businessManager?: string;
+    responsibleProject?: string;
+    inputCustomer?: string;
+    nextPaymentReminder?: boolean;
+    contractExpiryReminder?: boolean;
+    singleDoubleProfit?: number;
+    invoicingInformation?: string;
+    paymentStatus?: number;
+    warrantyPeriod?: string;
+    isInstallmentPayment?: boolean;
+    accumulatedAmount?: number;
   }
 }
 
@@ -52,6 +83,25 @@ async function createContract(data: {
   startDate: string;
   endDate: string;
   fileStorageKey?: string;
+  orderId?: string;
+  customerId?: string;
+  contractType?: ContractType;
+  incomeExpenseType?: IncomeExpenseType;
+  signDate?: string;
+  note?: string;
+  description?: string;
+  departmentId?: string;
+  businessManager?: string;
+  responsibleProject?: string;
+  inputCustomer?: string;
+  nextPaymentReminder?: boolean;
+  contractExpiryReminder?: boolean;
+  singleDoubleProfit?: number;
+  invoicingInformation?: string;
+  paymentStatus?: number;
+  warrantyPeriod?: string;
+  isInstallmentPayment?: boolean;
+  accumulatedAmount?: number;
 }) {
   return requestClient.post<{ id: string }>('/contracts', data);
 }
@@ -70,9 +120,35 @@ async function updateContract(
     startDate: string;
     endDate: string;
     fileStorageKey?: string;
+    orderId?: string;
+    customerId?: string;
+    contractType?: ContractType;
+    incomeExpenseType?: IncomeExpenseType;
+    signDate?: string;
+    note?: string;
+    description?: string;
+    departmentId?: string;
+    businessManager?: string;
+    responsibleProject?: string;
+    inputCustomer?: string;
+    nextPaymentReminder?: boolean;
+    contractExpiryReminder?: boolean;
+    singleDoubleProfit?: number;
+    invoicingInformation?: string;
+    paymentStatus?: number;
+    warrantyPeriod?: string;
+    isInstallmentPayment?: boolean;
+    accumulatedAmount?: number;
   },
 ) {
   return requestClient.put(`/contracts/${id}`, data);
+}
+
+/**
+ * 删除合同（仅草稿可删，软删）
+ */
+async function deleteContract(id: string) {
+  return requestClient.delete(`/contracts/${id}`);
 }
 
 /**
@@ -101,6 +177,7 @@ export {
   getContract,
   createContract,
   updateContract,
+  deleteContract,
   submitContract,
   approveContract,
   archiveContract,

@@ -352,6 +352,10 @@ function goBack() {
   router.push('/order/list');
 }
 
+function goContractList() {
+  if (id.value) router.push(`/contract/list?orderId=${id.value}`);
+}
+
 function goToDetail() {
   if (id.value) router.push(`/order/${id.value}`);
 }
@@ -470,10 +474,13 @@ const contractFileColumns = [
     <div class="p-4">
       <!-- 顶部操作栏 -->
       <div class="mb-4 flex flex-wrap items-center gap-2">
-        <Button @click="goBack">
-          <ArrowLeft class="size-4" />
-        </Button>
-        <span class="text-lg font-medium text-foreground">{{ isNew ? $t('order.create') : $t('order.edit') }}</span>
+        <div class="flex items-center gap-2">
+          <Button @click="goBack">
+            <ArrowLeft class="size-4" />
+          </Button>
+          <span class="text-lg font-medium text-foreground">{{ isNew ? $t('order.create') : $t('order.edit') }}</span>
+          <Button v-if="!isNew" size="small" @click="goContractList">{{ $t('contract.list') }}</Button>
+        </div>
         <template v-if="!isNew && id">
           <Button type="link" class="p-0" @click="goToDetail">
             {{ $t('order.changeRecord') }}
