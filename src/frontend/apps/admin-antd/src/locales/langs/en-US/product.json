@@ -1,0 +1,12 @@
+{
+  "title": "Product Management",
+  "list": "Product List",
+  "create": "Create Product",
+  "edit": "Edit Product",
+  "name": "Product Name",
+  "code": "Product Code",
+  "model": "Model",
+  "unit": "Unit",
+  "keyword": "Keyword",
+  "confirmDelete": "Are you sure you want to delete this product?"
+}

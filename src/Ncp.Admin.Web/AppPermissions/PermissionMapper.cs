@@ -190,6 +190,11 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.OrderCreate, "创建订单" },
         { PermissionCodes.OrderEdit, "编辑订单" },
         { PermissionCodes.OrderDelete, "删除订单" },
+        { PermissionCodes.ProductManagement, "产品管理" },
+        { PermissionCodes.ProductView, "查看产品" },
+        { PermissionCodes.ProductCreate, "创建产品" },
+        { PermissionCodes.ProductEdit, "编辑产品" },
+        { PermissionCodes.ProductDelete, "删除产品" },
 
         // 所有接口访问权限
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },

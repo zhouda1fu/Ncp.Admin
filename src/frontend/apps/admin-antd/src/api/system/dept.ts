@@ -14,10 +14,10 @@ export namespace SystemDeptApi {
 }
 
 /**
- * 获取部门列表数据
+ * 获取部门列表数据（后端无 GET /dept，使用 /dept/tree 返回树，调用方需自行 flatten 或直接使用树）
  */
 async function getDeptList() {
-  return requestClient.get<Array<SystemDeptApi.SystemDept>>('/dept');
+  return requestClient.get<Array<SystemDeptApi.SystemDept>>('/dept/tree');
 }
 
 /**

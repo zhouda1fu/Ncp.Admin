@@ -114,6 +114,13 @@ public static class SeedDatabaseExtension
                 PermissionCodes.OrderEdit,
                 PermissionCodes.OrderDelete,
 
+                // 产品管理权限
+                PermissionCodes.ProductManagement,
+                PermissionCodes.ProductView,
+                PermissionCodes.ProductCreate,
+                PermissionCodes.ProductEdit,
+                PermissionCodes.ProductDelete,
+
                 // 所有接口访问权限
                 PermissionCodes.AllApiAccess,
             };

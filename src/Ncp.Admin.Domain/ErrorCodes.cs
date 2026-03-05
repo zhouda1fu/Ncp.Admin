@@ -529,5 +529,10 @@ public sealed class ErrorCodes
     /// </summary>
     public const int OrderNotFound = 290001;
 
+    /// <summary>
+    /// 未找到产品
+    /// </summary>
+    public const int ProductNotFound = 290002;
+
     #endregion
 }

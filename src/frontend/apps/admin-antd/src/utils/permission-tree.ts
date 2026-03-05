@@ -324,6 +324,17 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       ],
     },
     {
+      value: PermissionCodes.ProductManagement,
+      label: '产品管理',
+      icon: 'mdi:package-variant',
+      children: [
+        { value: PermissionCodes.ProductView, label: '查看产品', icon: 'mdi:eye' },
+        { value: PermissionCodes.ProductCreate, label: '创建产品', icon: 'mdi:plus' },
+        { value: PermissionCodes.ProductEdit, label: '编辑产品', icon: 'mdi:pencil' },
+        { value: PermissionCodes.ProductDelete, label: '删除产品', icon: 'mdi:delete' },
+      ],
+    },
+    {
       value: PermissionCodes.AttendanceManagement,
       label: '考勤管理',
       icon: 'mdi:clock-check',

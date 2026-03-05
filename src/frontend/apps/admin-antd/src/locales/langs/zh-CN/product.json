@@ -1,0 +1,12 @@
+{
+  "title": "产品管理",
+  "list": "产品列表",
+  "create": "新建产品",
+  "edit": "编辑产品",
+  "name": "产品名称",
+  "code": "产品编号",
+  "model": "型号",
+  "unit": "单位",
+  "keyword": "关键词",
+  "confirmDelete": "确定要删除该产品吗？"
+}

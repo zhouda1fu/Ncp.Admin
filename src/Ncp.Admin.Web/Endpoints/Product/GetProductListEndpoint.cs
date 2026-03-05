@@ -22,7 +22,7 @@ public class GetProductListEndpoint(ProductQuery query)
         Tags("Product");
         Get("/api/admin/products");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.OrderView);
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.OrderView, PermissionCodes.ProductView);
     }
 
     public override async Task HandleAsync(GetProductListRequest req, CancellationToken ct)

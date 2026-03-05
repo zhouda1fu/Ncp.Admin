@@ -203,6 +203,14 @@ public static class PermissionCodes
     public const string OrderDelete = nameof(OrderDelete);
     #endregion
 
+    #region 产品管理权限
+    public const string ProductManagement = nameof(ProductManagement);
+    public const string ProductView = nameof(ProductView);
+    public const string ProductCreate = nameof(ProductCreate);
+    public const string ProductEdit = nameof(ProductEdit);
+    public const string ProductDelete = nameof(ProductDelete);
+    #endregion
+
     #region 请假管理权限
     public const string LeaveManagement = nameof(LeaveManagement);
     public const string LeaveRequestView = nameof(LeaveRequestView);

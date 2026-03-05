@@ -169,6 +169,13 @@ export const PermissionCodes = {
   OrderEdit: 'OrderEdit',
   OrderDelete: 'OrderDelete',
 
+  // 产品管理权限
+  ProductManagement: 'ProductManagement',
+  ProductView: 'ProductView',
+  ProductCreate: 'ProductCreate',
+  ProductEdit: 'ProductEdit',
+  ProductDelete: 'ProductDelete',
+
   // 请假管理权限
   LeaveManagement: 'LeaveManagement',
   LeaveRequestView: 'LeaveRequestView',
