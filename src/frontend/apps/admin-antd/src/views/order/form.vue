@@ -489,7 +489,7 @@ const contractFileColumns = [
         <h4 class="order-section-title">{{ $t('order.sectionMarketing') }}</h4>
         <div class="grid gap-4 md:grid-cols-4">
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.type') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.type') }}</label>
             <Select
               v-model:value="form.type"
               class="w-full"
@@ -502,7 +502,7 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.status') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.status') }}</label>
             <Select
               v-model:value="form.status"
               class="w-full"
@@ -516,7 +516,7 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.orderNumber') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.orderNumber') }}</label>
             <Input v-model:value="form.orderNumber" placeholder="" />
           </div>
           <div>
@@ -544,7 +544,7 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.dept') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.dept') }}</label>
             <Select
               v-model:value="form.deptId"
               allow-clear
@@ -556,7 +556,7 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.owner') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.owner') }}</label>
             <Select
               v-model:value="form.ownerId"
               allow-clear
@@ -567,7 +567,7 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.customer') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.customer') }}</label>
             <Select
               v-model:value="form.customerId"
               allow-clear
@@ -582,7 +582,7 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.project') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.project') }}</label>
             <Select
               v-model:value="form.projectId"
               allow-clear
@@ -593,7 +593,7 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contractSigningCompany') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.contractSigningCompany') }}</label>
             <Input v-model:value="form.contractSigningCompany" placeholder="---请选择---" />
           </div>
           <div>
@@ -613,11 +613,11 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.installationFee') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.installationFee') }}</label>
             <InputNumber v-model:value="form.installationFee" class="w-full" :min="0" :precision="2" />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.estimatedFreight') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.estimatedFreight') }}</label>
             <InputNumber v-model:value="form.estimatedFreight" class="w-full" :min="0" :precision="2" />
           </div>
           <!-- 合同上传与列表 -->
@@ -681,7 +681,7 @@ const contractFileColumns = [
             <InputNumber v-model:value="form.amount" class="w-full" :min="0" :precision="2" />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contract') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.contract') }}</label>
             <Select
               v-model:value="form.contractId"
               allow-clear
@@ -774,7 +774,7 @@ const contractFileColumns = [
             <Input v-model:value="form.receiverAddress" />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.payDate') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.payDate') }}</label>
             <DatePicker
               v-model:value="form.payDate"
               value-format="YYYY-MM-DD"
@@ -784,7 +784,7 @@ const contractFileColumns = [
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.deliveryDate') }} *</label>
+            <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.deliveryDate') }}</label>
             <DatePicker
               v-model:value="form.deliveryDate"
               value-format="YYYY-MM-DD"
