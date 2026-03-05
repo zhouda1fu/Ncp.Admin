@@ -13,15 +13,19 @@ namespace Ncp.Admin.Web.Endpoints.ProjectTask;
 /// <summary>
 /// 创建任务请求
 /// </summary>
-public class CreateTaskRequest
-{
-    public Guid ProjectId { get; set; }
-    public string Title { get; set; } = "";
-    public string? Description { get; set; }
-    public long? AssigneeId { get; set; }
-    public string? DueDate { get; set; }
-    public int SortOrder { get; set; }
-}
+/// <param name="ProjectId">项目 ID</param>
+/// <param name="Title">标题</param>
+/// <param name="Description">描述</param>
+/// <param name="AssigneeId">负责人用户 ID</param>
+/// <param name="DueDate">截止日期（yyyy-MM-dd）</param>
+/// <param name="SortOrder">排序</param>
+public record CreateTaskRequest(
+    ProjectId ProjectId,
+    string Title,
+    string? Description,
+    UserId? AssigneeId,
+    string? DueDate,
+    int SortOrder);
 
 /// <summary>
 /// 创建任务
@@ -42,10 +46,10 @@ public class CreateTaskEndpoint(IMediator mediator) : Endpoint<CreateTaskRequest
         if (!string.IsNullOrWhiteSpace(req.DueDate) && DateOnly.TryParse(req.DueDate, out var d))
             dueDate = d;
         var cmd = new CreateTaskCommand(
-            new ProjectId(req.ProjectId),
+            req.ProjectId,
             req.Title,
             req.Description,
-            req.AssigneeId.HasValue ? new UserId(req.AssigneeId.Value) : null,
+            req.AssigneeId,
             dueDate,
             req.SortOrder);
         var id = await mediator.Send(cmd, ct);

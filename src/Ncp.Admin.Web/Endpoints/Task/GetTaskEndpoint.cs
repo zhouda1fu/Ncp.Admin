@@ -10,7 +10,8 @@ namespace Ncp.Admin.Web.Endpoints.ProjectTask;
 /// <summary>
 /// 获取任务详情请求
 /// </summary>
-public record GetTaskRequest(Guid Id);
+/// <param name="Id">任务 ID</param>
+public record GetTaskRequest(ProjectTaskId Id);
 
 /// <summary>
 /// 获取任务详情（含评论）
@@ -28,7 +29,7 @@ public class GetTaskEndpoint(TaskQuery query)
 
     public override async global::System.Threading.Tasks.Task HandleAsync(GetTaskRequest req, CancellationToken ct)
     {
-        var result = await query.GetByIdAsync(new ProjectTaskId(req.Id), ct);
+        var result = await query.GetByIdAsync(req.Id, ct);
         if (result == null)
         {
             await Send.NotFoundAsync(ct);

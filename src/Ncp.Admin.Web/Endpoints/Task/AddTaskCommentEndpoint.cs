@@ -13,11 +13,9 @@ namespace Ncp.Admin.Web.Endpoints.ProjectTask;
 /// <summary>
 /// 添加任务评论请求
 /// </summary>
-public class AddTaskCommentRequest
-{
-    public Guid TaskId { get; set; }
-    public string Content { get; set; } = "";
-}
+/// <param name="TaskId">任务 ID</param>
+/// <param name="Content">评论内容</param>
+public record AddTaskCommentRequest(ProjectTaskId TaskId, string Content);
 
 /// <summary>
 /// 添加任务评论（当前用户为评论人）
@@ -40,7 +38,7 @@ public class AddTaskCommentEndpoint(IMediator mediator) : Endpoint<AddTaskCommen
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        var cmd = new AddTaskCommentCommand(new ProjectTaskId(req.TaskId), req.Content, new UserId(uid));
+        var cmd = new AddTaskCommentCommand(req.TaskId, req.Content, new UserId(uid));
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

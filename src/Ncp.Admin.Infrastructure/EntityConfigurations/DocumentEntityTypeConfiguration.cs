@@ -14,11 +14,11 @@ internal class DocumentEntityTypeConfiguration : IEntityTypeConfiguration<Docume
     {
         builder.ToTable("document");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property(x => x.Title).IsRequired().HasMaxLength(500);
-        builder.Property(x => x.CreatorId).IsRequired();
-        builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.UpdateTime);
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("文档标识");
+        builder.Property(x => x.Title).IsRequired().HasMaxLength(500).HasComment("标题");
+        builder.Property(x => x.CreatorId).IsRequired().HasComment("创建人用户ID");
+        builder.Property(x => x.CreatedAt).IsRequired().HasComment("创建时间");
+        builder.Property(x => x.UpdateTime).HasComment("更新时间");
         builder.HasIndex(x => x.CreatorId);
 
         builder.HasMany(x => x.Versions)

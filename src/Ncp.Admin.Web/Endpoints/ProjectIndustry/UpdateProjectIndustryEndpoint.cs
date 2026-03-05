@@ -11,12 +11,10 @@ namespace Ncp.Admin.Web.Endpoints.ProjectIndustry;
 /// <summary>
 /// 更新项目行业请求
 /// </summary>
-public class UpdateProjectIndustryRequest
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = "";
-    public int SortOrder { get; set; }
-}
+/// <param name="Id">项目行业 ID</param>
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record UpdateProjectIndustryRequest(ProjectIndustryId Id, string Name, int SortOrder);
 
 /// <summary>
 /// 更新项目行业
@@ -33,7 +31,7 @@ public class UpdateProjectIndustryEndpoint(IMediator mediator) : Endpoint<Update
 
     public override async Task HandleAsync(UpdateProjectIndustryRequest req, CancellationToken ct)
     {
-        var cmd = new UpdateProjectIndustryCommand(new ProjectIndustryId(req.Id), req.Name, req.SortOrder);
+        var cmd = new UpdateProjectIndustryCommand(req.Id, req.Name, req.SortOrder);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

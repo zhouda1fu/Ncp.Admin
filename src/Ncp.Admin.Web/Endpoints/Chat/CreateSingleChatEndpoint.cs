@@ -13,10 +13,8 @@ namespace Ncp.Admin.Web.Endpoints.Chat;
 /// <summary>
 /// 创建单聊请求
 /// </summary>
-public class CreateSingleChatRequest
-{
-    public long OtherUserId { get; set; }
-}
+/// <param name="OtherUserId">对方用户 ID</param>
+public record CreateSingleChatRequest(UserId OtherUserId);
 
 /// <summary>
 /// 创建单聊（与指定用户 1:1）
@@ -40,7 +38,7 @@ public class CreateSingleChatEndpoint(IMediator mediator)
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        var cmd = new CreateSingleChatCommand(new UserId(uid), new UserId(req.OtherUserId));
+        var cmd = new CreateSingleChatCommand(new UserId(uid), req.OtherUserId);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateChatGroupResponse(id).AsResponseData(), cancellation: ct);
     }

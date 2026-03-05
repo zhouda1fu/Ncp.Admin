@@ -4,7 +4,7 @@ using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.Commands.Region;
 
-public record CreateRegionCommand(long Code, string Name, long ParentCode, int Level, int SortOrder = 0)
+public record CreateRegionCommand(long Code, string Name, RegionId ParentId, int Level, int SortOrder = 0)
     : ICommand<RegionId>;
 
 public class CreateRegionCommandValidator : AbstractValidator<CreateRegionCommand>
@@ -24,7 +24,7 @@ public class CreateRegionCommandHandler(IRegionRepository repository)
         var entity = new Ncp.Admin.Domain.AggregatesModel.RegionAggregate.Region(
             new RegionId(request.Code),
             request.Name,
-            new RegionId(request.ParentCode),
+            request.ParentId,
             request.Level,
             request.SortOrder);
         await repository.AddAsync(entity, cancellationToken);

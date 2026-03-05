@@ -10,20 +10,20 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("user");
         builder.HasKey(t => t.Id);
-        builder.Property(t => t.Id).UseSnowFlakeValueGenerator();
+        builder.Property(t => t.Id).UseSnowFlakeValueGenerator().HasComment("用户标识");
 
-        builder.Property(b => b.Name).HasMaxLength(50).IsRequired();
-        builder.Property(b => b.Email).HasMaxLength(100).IsRequired();
-        builder.Property(b => b.PasswordHash).HasMaxLength(255).IsRequired();
-        builder.Property(b => b.Phone).HasMaxLength(20);
-        builder.Property(b => b.RealName).HasMaxLength(50);
-        builder.Property(b => b.Gender).HasMaxLength(10);
-        builder.Property(b => b.Age);
-        builder.Property(b => b.BirthDate);
-        builder.Property(b => b.IsActive);
-        builder.Property(b => b.CreatedAt);
-        builder.Property(b => b.LastLoginTime);
-        builder.Property(b => b.UpdateTime);
+        builder.Property(b => b.Name).HasMaxLength(50).IsRequired().HasComment("用户名");
+        builder.Property(b => b.Email).HasMaxLength(100).IsRequired().HasComment("邮箱");
+        builder.Property(b => b.PasswordHash).HasMaxLength(255).IsRequired().HasComment("密码哈希");
+        builder.Property(b => b.Phone).HasMaxLength(20).HasComment("手机号");
+        builder.Property(b => b.RealName).HasMaxLength(50).HasComment("真实姓名");
+        builder.Property(b => b.Gender).HasMaxLength(10).HasComment("性别");
+        builder.Property(b => b.Age).HasComment("年龄");
+        builder.Property(b => b.BirthDate).HasComment("出生日期");
+        builder.Property(b => b.IsActive).HasComment("是否启用");
+        builder.Property(b => b.CreatedAt).HasComment("创建时间");
+        builder.Property(b => b.LastLoginTime).HasComment("最后登录时间");
+        builder.Property(b => b.UpdateTime).HasComment("更新时间");
 
         builder.HasIndex(b => b.Name);
         builder.HasIndex(b => b.Email);

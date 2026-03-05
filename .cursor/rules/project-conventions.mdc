@@ -16,9 +16,9 @@ Ncp.Admin.sln
 │   ├── Ncp.Admin.Infrastructure/ # 基础设施层 - EF配置、仓储接口、仓储实现
 │   └── Ncp.Admin.Web/           # 表现层 - API、应用服务
 └── test/                            # 测试项目
-    ├── Ncp.Admin.Domain.UnitTests/         # 领域层测试项目
-    ├── Ncp.Admin.Infrastructure.UnitTests/ # 基础设施层测试项目
-    └── Ncp.Admin.Web.UnitTests/           # 表现层测试项目
+    ├── Ncp.Admin.Domain.Tests/            # 领域层测试项目
+    ├── Ncp.Admin.Infrastructure.Tests/    # 基础设施层测试项目
+    └── Ncp.Admin.Web.Tests/              # 表现层测试项目
 ```
 
 **分层依赖关系：** Web → Infrastructure → Domain（严格单向依赖）

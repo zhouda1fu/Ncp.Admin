@@ -14,11 +14,9 @@ namespace Ncp.Admin.Web.Endpoints.Document;
 /// <summary>
 /// 上传新版本请求（multipart: file）
 /// </summary>
-public class AddDocumentVersionRequest
-{
-    public Guid DocumentId { get; set; }
-    public IFormFile? File { get; set; }
-}
+/// <param name="DocumentId">文档 ID</param>
+/// <param name="File">上传文件</param>
+public record AddDocumentVersionRequest(DocumentId DocumentId, IFormFile? File);
 
 /// <summary>
 /// 为文档添加新版本（上传新文件）
@@ -46,7 +44,7 @@ public class AddDocumentVersionEndpoint(IMediator mediator, IFileStorageService 
         await using var stream = req.File.OpenReadStream();
         var fileKey = await fileStorage.UploadAsync(stream, req.File.FileName ?? "file", ct);
         var cmd = new AddDocumentVersionCommand(
-            new DocumentId(req.DocumentId), fileKey, req.File.FileName ?? "file", req.File.Length);
+            req.DocumentId, fileKey, req.File.FileName ?? "file", req.File.Length);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

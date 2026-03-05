@@ -96,45 +96,56 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.AssetAggregate.Asset", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("资产标识");
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasComment("分类");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasComment("编码");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("创建时间");
 
                     b.Property<long>("CreatorId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("创建人用户ID");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("名称");
 
                     b.Property<DateTimeOffset>("PurchaseDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("购置日期");
 
                     b.Property<string>("Remark")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("character varying(500)")
+                        .HasComment("备注");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("状态");
 
                     b.Property<DateTimeOffset>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("更新时间");
 
                     b.Property<decimal>("Value")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric(18,2)")
+                        .HasComment("价值");
 
                     b.HasKey("Id");
 
@@ -469,7 +480,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.CustomerAggregate.Customer", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("客户标识");
 
                     b.Property<string>("BusinessLicense")
                         .HasMaxLength(500)
@@ -517,12 +529,14 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("CustomerSourceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("客户来源ID");
 
                     b.Property<string>("CustomerSourceName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("客户来源名称");
 
                     b.Property<string>("DistrictCode")
                         .HasMaxLength(20)
@@ -538,7 +552,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasComment("客户全称");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("boolean");
@@ -550,7 +565,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsVoided")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasComment("是否作废");
 
                     b.Property<string>("MainContactName")
                         .HasMaxLength(50)
@@ -564,7 +580,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<long?>("OwnerId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("负责人用户ID");
 
                     b.Property<string>("OwnerName")
                         .HasMaxLength(100)
@@ -747,15 +764,18 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate.CustomerSource", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("客户来源标识");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("名称");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("排序");
 
                     b.HasKey("Id");
 
@@ -811,21 +831,26 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.DocumentAggregate.Document", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("文档标识");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("创建时间");
 
                     b.Property<long>("CreatorId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("创建人用户ID");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("character varying(500)")
+                        .HasComment("标题");
 
                     b.Property<DateTimeOffset>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("更新时间");
 
                     b.HasKey("Id");
 
@@ -940,22 +965,27 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.IndustryAggregate.Industry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("行业标识");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("名称");
 
                     b.Property<Guid?>("ParentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("父级行业ID");
 
                     b.Property<string>("Remark")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("character varying(500)")
+                        .HasComment("备注");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("排序");
 
                     b.HasKey("Id");
 
@@ -1205,11 +1235,13 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.OrderAggregate.Order", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("订单标识");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("numeric(18,4)")
+                        .HasComment("金额");
 
                     b.Property<decimal>("ContractAmount")
                         .HasPrecision(18, 4)
@@ -1225,7 +1257,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("character varying(8000)");
 
                     b.Property<Guid>("ContractId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("合同ID");
 
                     b.Property<bool>("ContractNotCompanyTemplate")
                         .HasColumnType("boolean");
@@ -1247,15 +1280,18 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("客户ID");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasComment("客户名称");
 
                     b.Property<DateTimeOffset>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("删除时间");
 
                     b.Property<DateTimeOffset>("DeliveryDate")
                         .HasColumnType("timestamp with time zone");
@@ -1277,7 +1313,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("numeric(18,4)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasComment("是否软删");
 
                     b.Property<bool>("IsShipped")
                         .HasColumnType("boolean");
@@ -1288,7 +1325,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<string>("OrderNumber")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("订单编号");
 
                     b.Property<long>("OwnerId")
                         .HasColumnType("bigint");
@@ -1317,7 +1355,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("项目ID");
 
                     b.Property<string>("ReceiverAddress")
                         .IsRequired()
@@ -1345,10 +1384,12 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("订单状态");
 
                     b.Property<int>("Type")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("订单类型");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1493,27 +1534,32 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProductAggregate.Product", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("产品标识");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("产品编码");
 
                     b.Property<string>("Model")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("型号");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasComment("产品名称");
 
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasComment("单位");
 
                     b.HasKey("Id");
 
@@ -1525,7 +1571,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectAggregate.Project", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("项目标识");
 
                     b.Property<string>("CityName")
                         .HasMaxLength(50)
@@ -1535,14 +1582,17 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("创建时间");
 
                     b.Property<long>("CreatorId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("创建人用户ID");
 
                     b.Property<string>("CreatorName")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("创建人姓名");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
@@ -1554,7 +1604,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                        .HasColumnType("character varying(2000)")
+                        .HasComment("项目描述");
 
                     b.Property<string>("DistrictName")
                         .HasMaxLength(50)
@@ -1566,7 +1617,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasComment("项目名称");
 
                     b.Property<string>("ProjectContent")
                         .IsRequired()
@@ -1619,10 +1671,12 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("date");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("项目状态");
 
                     b.Property<DateTimeOffset>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("更新时间");
 
                     b.HasKey("Id");
 
@@ -1732,15 +1786,18 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectIndustryAggregate.ProjectIndustry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("项目行业标识");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("名称");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("排序");
 
                     b.HasKey("Id");
 
@@ -1752,20 +1809,24 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate.ProjectStatusOption", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("项目状态选项标识");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasComment("编码");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("名称");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("排序");
 
                     b.HasKey("Id");
 
@@ -1777,15 +1838,18 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ProjectTypeAggregate.ProjectType", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("项目类型标识");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("名称");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("排序");
 
                     b.HasKey("Id");
 
@@ -1797,21 +1861,26 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.RegionAggregate.Region", b =>
                 {
                     b.Property<long>("Id")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("区域标识");
 
                     b.Property<int>("Level")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("层级");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasComment("区域名称");
 
                     b.Property<long>("ParentId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("父级区域ID");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("排序");
 
                     b.HasKey("Id");
 
@@ -1919,37 +1988,47 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.TaskAggregate.ProjectTask", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("任务标识");
 
                     b.Property<long?>("AssigneeId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("负责人用户ID");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("创建时间");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                        .HasColumnType("character varying(2000)")
+                        .HasComment("任务描述");
 
                     b.Property<DateOnly?>("DueDate")
-                        .HasColumnType("date");
+                        .HasColumnType("date")
+                        .HasComment("截止日期");
 
                     b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("项目ID");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("排序");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("任务状态");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("character varying(500)")
+                        .HasComment("任务标题");
 
                     b.Property<DateTimeOffset>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("更新时间");
 
                     b.HasKey("Id");
 
@@ -1991,16 +2070,20 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.UserAggregate.User", b =>
                 {
                     b.Property<long>("Id")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("用户标识");
 
                     b.Property<int>("Age")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("年龄");
 
                     b.Property<DateTimeOffset>("BirthDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("出生日期");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("创建时间");
 
                     b.Property<DateTimeOffset>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -2008,47 +2091,56 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("邮箱");
 
                     b.Property<string>("Gender")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("character varying(10)")
+                        .HasComment("性别");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasComment("是否启用");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastLoginTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("最后登录时间");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasComment("用户名");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasComment("密码哈希");
 
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasComment("手机号");
 
                     b.Property<string>("RealName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasComment("真实姓名");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("更新时间");
 
                     b.HasKey("Id");
 
@@ -2137,30 +2229,37 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.VehicleAggregate.Vehicle", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasComment("车辆标识");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("创建时间");
 
                     b.Property<string>("Model")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasComment("型号");
 
                     b.Property<string>("PlateNumber")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasComment("车牌号");
 
                     b.Property<string>("Remark")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("character varying(500)")
+                        .HasComment("备注");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasComment("状态");
 
                     b.Property<DateTimeOffset>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasComment("更新时间");
 
                     b.HasKey("Id");
 

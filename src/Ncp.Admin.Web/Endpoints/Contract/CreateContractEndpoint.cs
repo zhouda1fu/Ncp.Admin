@@ -13,17 +13,23 @@ namespace Ncp.Admin.Web.Endpoints.Contract;
 /// <summary>
 /// 创建合同请求
 /// </summary>
-public class CreateContractRequest
-{
-    public string Code { get; set; } = "";
-    public string Title { get; set; } = "";
-    public string PartyA { get; set; } = "";
-    public string PartyB { get; set; } = "";
-    public decimal Amount { get; set; }
-    public DateTimeOffset StartDate { get; set; }
-    public DateTimeOffset EndDate { get; set; }
-    public string? FileStorageKey { get; set; }
-}
+/// <param name="Code">合同编号</param>
+/// <param name="Title">标题</param>
+/// <param name="PartyA">甲方</param>
+/// <param name="PartyB">乙方</param>
+/// <param name="Amount">金额</param>
+/// <param name="StartDate">开始日期</param>
+/// <param name="EndDate">结束日期</param>
+/// <param name="FileStorageKey">文件存储键</param>
+public record CreateContractRequest(
+    string Code,
+    string Title,
+    string PartyA,
+    string PartyB,
+    decimal Amount,
+    DateTimeOffset StartDate,
+    DateTimeOffset EndDate,
+    string? FileStorageKey);
 
 /// <summary>
 /// 创建合同（当前用户为创建人）

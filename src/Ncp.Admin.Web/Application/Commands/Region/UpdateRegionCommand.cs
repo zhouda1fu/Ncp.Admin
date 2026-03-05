@@ -5,7 +5,7 @@ using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.Commands.Region;
 
-public record UpdateRegionCommand(long Id, string Name, long ParentCode, int Level, int SortOrder = 0)
+public record UpdateRegionCommand(RegionId Id, string Name, RegionId ParentId, int Level, int SortOrder = 0)
     : ICommand<bool>;
 
 public class UpdateRegionCommandValidator : AbstractValidator<UpdateRegionCommand>
@@ -22,10 +22,9 @@ public class UpdateRegionCommandHandler(IRegionRepository repository)
 {
     public async Task<bool> Handle(UpdateRegionCommand request, CancellationToken cancellationToken)
     {
-        var id = new RegionId(request.Id);
-        var entity = await repository.GetAsync(id, cancellationToken)
+        var entity = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到区域", ErrorCodes.RegionNotFound);
-        entity.Update(request.Name, new RegionId(request.ParentCode), request.Level, request.SortOrder);
+        entity.Update(request.Name, request.ParentId, request.Level, request.SortOrder);
         return true;
     }
 }

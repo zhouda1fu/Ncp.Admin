@@ -11,11 +11,9 @@ namespace Ncp.Admin.Web.Endpoints.ProjectType;
 /// <summary>
 /// 创建项目类型请求
 /// </summary>
-public class CreateProjectTypeRequest
-{
-    public string Name { get; set; } = "";
-    public int SortOrder { get; set; }
-}
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record CreateProjectTypeRequest(string Name, int SortOrder);
 
 /// <summary>
 /// 创建项目类型响应

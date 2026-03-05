@@ -14,14 +14,12 @@ namespace Ncp.Admin.Web.Endpoints.Contact;
 /// <summary>
 /// 创建联系人请求
 /// </summary>
-public class CreateContactRequest
-{
-    public string Name { get; set; } = "";
-    public string? Phone { get; set; }
-    public string? Email { get; set; }
-    public string? Company { get; set; }
-    public Guid? GroupId { get; set; }
-}
+/// <param name="Name">姓名</param>
+/// <param name="Phone">电话</param>
+/// <param name="Email">邮箱</param>
+/// <param name="Company">公司</param>
+/// <param name="GroupId">联系组 ID</param>
+public record CreateContactRequest(string Name, string? Phone, string? Email, string? Company, ContactGroupId? GroupId);
 
 /// <summary>
 /// 创建联系人（当前用户为创建人）
@@ -45,8 +43,7 @@ public class CreateContactEndpoint(IMediator mediator)
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        var groupId = req.GroupId.HasValue ? new ContactGroupId(req.GroupId.Value) : (ContactGroupId?)null;
-        var cmd = new CreateContactCommand(new UserId(uid), req.Name, req.Phone, req.Email, req.Company, groupId);
+        var cmd = new CreateContactCommand(new UserId(uid), req.Name, req.Phone, req.Email, req.Company, req.GroupId);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateContactResponse(id).AsResponseData(), cancellation: ct);
     }

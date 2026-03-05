@@ -10,9 +10,9 @@ internal class CustomerSourceEntityTypeConfiguration : IEntityTypeConfiguration<
     {
         builder.ToTable("customer_source");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.SortOrder).IsRequired();
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("客户来源标识");
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(100).HasComment("名称");
+        builder.Property(x => x.SortOrder).IsRequired().HasComment("排序");
         builder.HasIndex(x => x.SortOrder);
     }
 }

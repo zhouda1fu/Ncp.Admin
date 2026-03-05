@@ -13,14 +13,14 @@ public interface IProductRepository : IRepository<Product, ProductId>
 /// <summary>
 /// 产品仓储实现
 /// </summary>
-public class ProductRepository(ApplicationDbContext context)
-    : RepositoryBase<Product, ProductId, ApplicationDbContext>(context), IProductRepository
+public class ProductRepository(ApplicationDbContext dbContext)
+    : RepositoryBase<Product, ProductId, ApplicationDbContext>(dbContext), IProductRepository
 {
     /// <inheritdoc />
     public async Task RemoveAsync(ProductId id, CancellationToken cancellationToken = default)
     {
-        var entity = await context.Products.FindAsync([id], cancellationToken);
+        var entity = await DbContext.Products.FindAsync([id], cancellationToken);
         if (entity != null)
-            context.Products.Remove(entity);
+            DbContext.Products.Remove(entity);
     }
 }

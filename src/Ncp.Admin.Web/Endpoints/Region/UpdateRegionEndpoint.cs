@@ -2,20 +2,25 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Web.Application.Commands.Region;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Region;
 
-public class UpdateRegionRequest
-{
-    public long Id { get; set; }
-    public string Name { get; set; } = "";
-    public long ParentCode { get; set; }
-    public int Level { get; set; }
-    public int SortOrder { get; set; }
-}
+/// <summary>
+/// 更新区域请求
+/// </summary>
+/// <param name="Id">区域 ID</param>
+/// <param name="Name">区域名称</param>
+/// <param name="ParentId">父级区域 ID</param>
+/// <param name="Level">层级</param>
+/// <param name="SortOrder">排序</param>
+public record UpdateRegionRequest(RegionId Id, string Name, RegionId ParentId, int Level, int SortOrder);
 
+/// <summary>
+/// 更新区域
+/// </summary>
 public class UpdateRegionEndpoint(IMediator mediator)
     : Endpoint<UpdateRegionRequest, ResponseData<bool>>
 {
@@ -29,7 +34,7 @@ public class UpdateRegionEndpoint(IMediator mediator)
 
     public override async Task HandleAsync(UpdateRegionRequest req, CancellationToken ct)
     {
-        var cmd = new UpdateRegionCommand(req.Id, req.Name, req.ParentCode, req.Level, req.SortOrder);
+        var cmd = new UpdateRegionCommand(req.Id, req.Name, req.ParentId, req.Level, req.SortOrder);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

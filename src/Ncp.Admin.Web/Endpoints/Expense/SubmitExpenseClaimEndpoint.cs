@@ -9,15 +9,10 @@ using Ncp.Admin.Web.AppPermissions;
 namespace Ncp.Admin.Web.Endpoints.Expense;
 
 /// <summary>
-/// 提交报销单请求（路由 {id} 为报销单 ID）
+/// 提交报销单请求
 /// </summary>
-public class SubmitExpenseClaimRequest
-{
-    /// <summary>
-    /// 报销单 ID
-    /// </summary>
-    public Guid Id { get; set; }
-}
+/// <param name="Id">报销单 ID</param>
+public record SubmitExpenseClaimRequest(ExpenseClaimId Id);
 
 /// <summary>
 /// 提交报销单（仅草稿可提交）
@@ -34,7 +29,7 @@ public class SubmitExpenseClaimEndpoint(IMediator mediator) : Endpoint<SubmitExp
 
     public override async Task HandleAsync(SubmitExpenseClaimRequest req, CancellationToken ct)
     {
-        await mediator.Send(new SubmitExpenseClaimCommand(new ExpenseClaimId(req.Id)), ct);
+        await mediator.Send(new SubmitExpenseClaimCommand(req.Id), ct);
         await Send.OkAsync(ct);
     }
 }

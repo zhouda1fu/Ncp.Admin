@@ -14,11 +14,9 @@ namespace Ncp.Admin.Web.Endpoints.ShareLink;
 /// <summary>
 /// 创建共享链接请求
 /// </summary>
-public class CreateShareLinkRequest
-{
-    public Guid DocumentId { get; set; }
-    public DateTimeOffset? ExpiresAt { get; set; }
-}
+/// <param name="DocumentId">文档 ID</param>
+/// <param name="ExpiresAt">过期时间，null 表示永久</param>
+public record CreateShareLinkRequest(DocumentId DocumentId, DateTimeOffset? ExpiresAt);
 
 /// <summary>
 /// 创建文档共享链接
@@ -42,7 +40,7 @@ public class CreateShareLinkEndpoint(IMediator mediator)
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        var cmd = new CreateShareLinkCommand(new DocumentId(req.DocumentId), new UserId(uid), req.ExpiresAt);
+        var cmd = new CreateShareLinkCommand(req.DocumentId, new UserId(uid), req.ExpiresAt);
         var (id, token) = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateShareLinkResponse(id, token).AsResponseData(), cancellation: ct);
     }

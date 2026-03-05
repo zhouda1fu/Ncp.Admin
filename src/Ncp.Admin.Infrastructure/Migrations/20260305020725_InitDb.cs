@@ -49,17 +49,17 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "asset",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    PurchaseDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Value = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    CreatorId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "资产标识"),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
+                    Category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, comment: "分类"),
+                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, comment: "编码"),
+                    Status = table.Column<int>(type: "integer", nullable: false, comment: "状态"),
+                    PurchaseDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "购置日期"),
+                    Value = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false, comment: "价值"),
+                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true, comment: "备注"),
+                    CreatorId = table.Column<long>(type: "bigint", nullable: false, comment: "创建人用户ID"),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "创建时间"),
+                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "更新时间")
                 },
                 constraints: table =>
                 {
@@ -244,12 +244,12 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "customer",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    OwnerId = table.Column<long>(type: "bigint", nullable: true),
-                    CustomerSourceId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CustomerSourceName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    IsVoided = table.Column<bool>(type: "boolean", nullable: false),
-                    FullName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "客户标识"),
+                    OwnerId = table.Column<long>(type: "bigint", nullable: true, comment: "负责人用户ID"),
+                    CustomerSourceId = table.Column<Guid>(type: "uuid", nullable: false, comment: "客户来源ID"),
+                    CustomerSourceName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "客户来源名称"),
+                    IsVoided = table.Column<bool>(type: "boolean", nullable: false, comment: "是否作废"),
+                    FullName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "客户全称"),
                     ShortName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     Status = table.Column<int>(type: "integer", nullable: true),
                     Nature = table.Column<int>(type: "integer", nullable: true),
@@ -297,9 +297,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "customer_source",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "客户来源标识"),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序")
                 },
                 constraints: table =>
                 {
@@ -329,11 +329,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "document",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    CreatorId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "文档标识"),
+                    Title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false, comment: "标题"),
+                    CreatorId = table.Column<long>(type: "bigint", nullable: false, comment: "创建人用户ID"),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "创建时间"),
+                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "更新时间")
                 },
                 constraints: table =>
                 {
@@ -362,11 +362,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "industry",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    ParentId = table.Column<Guid>(type: "uuid", nullable: true),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false),
-                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "行业标识"),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
+                    ParentId = table.Column<Guid>(type: "uuid", nullable: true, comment: "父级行业ID"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序"),
+                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true, comment: "备注")
                 },
                 constraints: table =>
                 {
@@ -476,6 +476,55 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "order",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "订单标识"),
+                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false, comment: "客户ID"),
+                    CustomerName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "客户名称"),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false, comment: "项目ID"),
+                    ContractId = table.Column<Guid>(type: "uuid", nullable: false, comment: "合同ID"),
+                    OrderNumber = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "订单编号"),
+                    Type = table.Column<int>(type: "integer", nullable: false, comment: "订单类型"),
+                    Status = table.Column<int>(type: "integer", nullable: false, comment: "订单状态"),
+                    Amount = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false, comment: "金额"),
+                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    OwnerId = table.Column<long>(type: "bigint", nullable: false),
+                    OwnerName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    DeptId = table.Column<long>(type: "bigint", nullable: false),
+                    DeptName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ProjectContactName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ProjectContactPhone = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Warranty = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    ContractSigningCompany = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    ContractTrustee = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    NeedInvoice = table.Column<bool>(type: "boolean", nullable: false),
+                    InstallationFee = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    EstimatedFreight = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    ContractFilesJson = table.Column<string>(type: "character varying(8000)", maxLength: 8000, nullable: false),
+                    SelectedContractFileId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    IsShipped = table.Column<bool>(type: "boolean", nullable: false),
+                    PaymentStatus = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    ContractNotCompanyTemplate = table.Column<bool>(type: "boolean", nullable: false),
+                    ContractDiscount = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    ContractAmount = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    ReceiverName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ReceiverPhone = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    ReceiverAddress = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    PayDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    DeliveryDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false, comment: "是否软删"),
+                    DeletedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "删除时间"),
+                    CreatorId = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_order", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "position",
                 columns: table => new
                 {
@@ -497,24 +546,47 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "product",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "产品标识"),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "产品名称"),
+                    Code = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "产品编码"),
+                    Model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "型号"),
+                    Unit = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, comment: "单位")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_product", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "project",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
-                    CreatorId = table.Column<long>(type: "bigint", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "项目标识"),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "项目名称"),
+                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false, comment: "项目描述"),
+                    CreatorId = table.Column<long>(type: "bigint", nullable: false, comment: "创建人用户ID"),
+                    CreatorName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true, comment: "创建人姓名"),
+                    Status = table.Column<int>(type: "integer", nullable: false, comment: "项目状态"),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "创建时间"),
+                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "更新时间"),
                     CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProjectTypeId = table.Column<Guid>(type: "uuid", nullable: true),
-                    ProjectStatusOptionId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CustomerName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    ProjectTypeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectTypeName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    ProjectStatusOptionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectStatusOptionName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     ProjectNumber = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     ProjectIndustryId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProvinceRegionId = table.Column<long>(type: "bigint", nullable: true),
-                    CityRegionId = table.Column<long>(type: "bigint", nullable: true),
-                    DistrictRegionId = table.Column<long>(type: "bigint", nullable: true),
+                    ProjectIndustryName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    ProvinceRegionId = table.Column<long>(type: "bigint", nullable: false),
+                    ProvinceName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    CityRegionId = table.Column<long>(type: "bigint", nullable: false),
+                    CityName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    DistrictRegionId = table.Column<long>(type: "bigint", nullable: false),
+                    DistrictName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     StartDate = table.Column<DateOnly>(type: "date", nullable: true),
                     ProjectEstimate = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     PurchaseAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
@@ -529,9 +601,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "project_industry",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "项目行业标识"),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序")
                 },
                 constraints: table =>
                 {
@@ -542,10 +614,10 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "project_status_option",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "项目状态选项标识"),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
+                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, comment: "编码"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序")
                 },
                 constraints: table =>
                 {
@@ -556,16 +628,16 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "project_task",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    AssigneeId = table.Column<long>(type: "bigint", nullable: true),
-                    DueDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "任务标识"),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false, comment: "项目ID"),
+                    Title = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false, comment: "任务标题"),
+                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true, comment: "任务描述"),
+                    AssigneeId = table.Column<long>(type: "bigint", nullable: true, comment: "负责人用户ID"),
+                    DueDate = table.Column<DateOnly>(type: "date", nullable: true, comment: "截止日期"),
+                    Status = table.Column<int>(type: "integer", nullable: false, comment: "任务状态"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序"),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "创建时间"),
+                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "更新时间")
                 },
                 constraints: table =>
                 {
@@ -576,9 +648,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "project_type",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "项目类型标识"),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序")
                 },
                 constraints: table =>
                 {
@@ -589,11 +661,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "region",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    ParentId = table.Column<long>(type: "bigint", nullable: false),
-                    Level = table.Column<int>(type: "integer", nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false, comment: "区域标识"),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "区域名称"),
+                    ParentId = table.Column<long>(type: "bigint", nullable: false, comment: "父级区域ID"),
+                    Level = table.Column<int>(type: "integer", nullable: false, comment: "层级"),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序")
                 },
                 constraints: table =>
                 {
@@ -656,22 +728,22 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "user",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false),
-                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    RealName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Id = table.Column<long>(type: "bigint", nullable: false, comment: "用户标识"),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, comment: "用户名"),
+                    Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "邮箱"),
+                    Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, comment: "手机号"),
+                    RealName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, comment: "真实姓名"),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    LastLoginTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false, comment: "密码哈希"),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false, comment: "是否启用"),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "创建时间"),
+                    LastLoginTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true, comment: "最后登录时间"),
+                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "更新时间"),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     DeletedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Gender = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
-                    Age = table.Column<int>(type: "integer", nullable: false),
-                    BirthDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Gender = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false, comment: "性别"),
+                    Age = table.Column<int>(type: "integer", nullable: false, comment: "年龄"),
+                    BirthDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "出生日期")
                 },
                 constraints: table =>
                 {
@@ -682,13 +754,13 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "vehicle",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    PlateNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "车辆标识"),
+                    PlateNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, comment: "车牌号"),
+                    Model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "型号"),
+                    Status = table.Column<int>(type: "integer", nullable: false, comment: "状态"),
+                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true, comment: "备注"),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "创建时间"),
+                    UpdateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "更新时间")
                 },
                 constraints: table =>
                 {
@@ -892,6 +964,85 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         name: "FK_expense_item_expense_claim_ExpenseClaimId",
                         column: x => x.ExpenseClaimId,
                         principalTable: "expense_claim",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "order_item",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Number = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Qty = table.Column<int>(type: "integer", nullable: false),
+                    Unit = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_order_item", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_order_item_order_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "order",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "project_contact",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CustomerContactId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Position = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Mobile = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
+                    OfficePhone = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
+                    QQ = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
+                    Wechat = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    IsPrimary = table.Column<bool>(type: "boolean", nullable: false),
+                    Remark = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_project_contact", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_project_contact_project_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "project",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "project_follow_up_record",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    VisitDate = table.Column<DateOnly>(type: "date", nullable: true),
+                    ReminderIntervalDays = table.Column<int>(type: "integer", nullable: false),
+                    Content = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    CreatorId = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_project_follow_up_record", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_project_follow_up_record_project_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "project",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1374,6 +1525,56 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 column: "Type");
 
             migrationBuilder.CreateIndex(
+                name: "IX_order_ContractId",
+                table: "order",
+                column: "ContractId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_CreatedAt",
+                table: "order",
+                column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_CustomerId",
+                table: "order",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_DeptId",
+                table: "order",
+                column: "DeptId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_IsDeleted",
+                table: "order",
+                column: "IsDeleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_OrderNumber",
+                table: "order",
+                column: "OrderNumber");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_OwnerId",
+                table: "order",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_ProjectId",
+                table: "order",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_item_OrderId",
+                table: "order_item",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_order_item_ProductId",
+                table: "order_item",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_position_Code",
                 table: "position",
                 column: "Code",
@@ -1395,6 +1596,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_product_Code",
+                table: "product",
+                column: "Code");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_project_CreatorId",
                 table: "project",
                 column: "CreatorId");
@@ -1413,6 +1619,21 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "IX_project_Status",
                 table: "project",
                 column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_contact_ProjectId",
+                table: "project_contact",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_follow_up_record_ProjectId",
+                table: "project_follow_up_record",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_project_follow_up_record_VisitDate",
+                table: "project_follow_up_record",
+                column: "VisitDate");
 
             migrationBuilder.CreateIndex(
                 name: "IX_project_industry_SortOrder",
@@ -1710,10 +1931,19 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "notification");
 
             migrationBuilder.DropTable(
+                name: "order_item");
+
+            migrationBuilder.DropTable(
                 name: "position");
 
             migrationBuilder.DropTable(
-                name: "project");
+                name: "product");
+
+            migrationBuilder.DropTable(
+                name: "project_contact");
+
+            migrationBuilder.DropTable(
+                name: "project_follow_up_record");
 
             migrationBuilder.DropTable(
                 name: "project_industry");
@@ -1771,6 +2001,12 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "expense_claim");
+
+            migrationBuilder.DropTable(
+                name: "order");
+
+            migrationBuilder.DropTable(
+                name: "project");
 
             migrationBuilder.DropTable(
                 name: "project_task");

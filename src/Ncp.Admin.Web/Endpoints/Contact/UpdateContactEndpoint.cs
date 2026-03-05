@@ -12,15 +12,13 @@ namespace Ncp.Admin.Web.Endpoints.Contact;
 /// <summary>
 /// 更新联系人请求
 /// </summary>
-public class UpdateContactRequest
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = "";
-    public string? Phone { get; set; }
-    public string? Email { get; set; }
-    public string? Company { get; set; }
-    public Guid? GroupId { get; set; }
-}
+/// <param name="Id">联系人 ID</param>
+/// <param name="Name">姓名</param>
+/// <param name="Phone">电话</param>
+/// <param name="Email">邮箱</param>
+/// <param name="Company">公司</param>
+/// <param name="GroupId">联系组 ID</param>
+public record UpdateContactRequest(ContactId Id, string Name, string? Phone, string? Email, string? Company, ContactGroupId? GroupId);
 
 /// <summary>
 /// 更新联系人
@@ -37,9 +35,7 @@ public class UpdateContactEndpoint(IMediator mediator) : Endpoint<UpdateContactR
 
     public override async Task HandleAsync(UpdateContactRequest req, CancellationToken ct)
     {
-        var id = new ContactId(req.Id);
-        var groupId = req.GroupId.HasValue ? new ContactGroupId(req.GroupId.Value) : (ContactGroupId?)null;
-        var cmd = new UpdateContactCommand(id, req.Name, req.Phone, req.Email, req.Company, groupId);
+        var cmd = new UpdateContactCommand(req.Id, req.Name, req.Phone, req.Email, req.Company, req.GroupId);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

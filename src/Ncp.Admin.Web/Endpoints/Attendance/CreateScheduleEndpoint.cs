@@ -12,29 +12,12 @@ namespace Ncp.Admin.Web.Endpoints.Attendance;
 /// <summary>
 /// 创建排班请求
 /// </summary>
-public class CreateScheduleRequest
-{
-    /// <summary>
-    /// 排班用户 ID
-    /// </summary>
-    public long UserId { get; set; }
-    /// <summary>
-    /// 工作日期，格式 YYYY-MM-DD
-    /// </summary>
-    public string WorkDate { get; set; } = "";
-    /// <summary>
-    /// 上班时间，格式 HH:mm
-    /// </summary>
-    public string StartTime { get; set; } = "";
-    /// <summary>
-    /// 下班时间，格式 HH:mm
-    /// </summary>
-    public string EndTime { get; set; } = "";
-    /// <summary>
-    /// 班次名称（可选）
-    /// </summary>
-    public string? ShiftName { get; set; }
-}
+/// <param name="UserId">排班用户 ID</param>
+/// <param name="WorkDate">工作日期，格式 YYYY-MM-DD</param>
+/// <param name="StartTime">上班时间，格式 HH:mm</param>
+/// <param name="EndTime">下班时间，格式 HH:mm</param>
+/// <param name="ShiftName">班次名称（可选）</param>
+public record CreateScheduleRequest(UserId UserId, string WorkDate, string StartTime, string EndTime, string? ShiftName);
 
 /// <summary>
 /// 创建排班
@@ -54,7 +37,7 @@ public class CreateScheduleEndpoint(IMediator mediator) : Endpoint<CreateSchedul
         var workDate = DateOnly.Parse(req.WorkDate);
         var startTime = TimeOnly.Parse(req.StartTime);
         var endTime = TimeOnly.Parse(req.EndTime);
-        var cmd = new CreateScheduleCommand(new UserId(req.UserId), workDate, startTime, endTime, req.ShiftName);
+        var cmd = new CreateScheduleCommand(req.UserId, workDate, startTime, endTime, req.ShiftName);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateScheduleResponse(id).AsResponseData(), cancellation: ct);
     }

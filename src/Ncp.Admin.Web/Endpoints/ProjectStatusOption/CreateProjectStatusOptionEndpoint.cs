@@ -11,12 +11,10 @@ namespace Ncp.Admin.Web.Endpoints.ProjectStatusOption;
 /// <summary>
 /// 创建项目状态选项请求
 /// </summary>
-public class CreateProjectStatusOptionRequest
-{
-    public string Name { get; set; } = "";
-    public string? Code { get; set; }
-    public int SortOrder { get; set; }
-}
+/// <param name="Name">名称</param>
+/// <param name="Code">编码</param>
+/// <param name="SortOrder">排序</param>
+public record CreateProjectStatusOptionRequest(string Name, string? Code, int SortOrder);
 
 /// <summary>
 /// 创建项目状态选项响应

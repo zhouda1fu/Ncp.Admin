@@ -8,10 +8,11 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Asset;
 
-public class ScrapAssetRequest
-{
-    public Guid Id { get; set; }
-}
+/// <summary>
+/// 报废资产请求
+/// </summary>
+/// <param name="Id">资产 ID</param>
+public record ScrapAssetRequest(AssetId Id);
 
 public class ScrapAssetEndpoint(IMediator mediator) : Endpoint<ScrapAssetRequest, ResponseData<bool>>
 {
@@ -25,7 +26,7 @@ public class ScrapAssetEndpoint(IMediator mediator) : Endpoint<ScrapAssetRequest
 
     public override async Task HandleAsync(ScrapAssetRequest req, CancellationToken ct)
     {
-        var cmd = new ScrapAssetCommand(new AssetId(req.Id));
+        var cmd = new ScrapAssetCommand(req.Id);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

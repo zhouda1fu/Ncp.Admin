@@ -14,14 +14,14 @@ internal class ProjectEntityTypeConfiguration : IEntityTypeConfiguration<Project
     {
         builder.ToTable("project");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
-        builder.Property(x => x.Description).HasMaxLength(2000);
-        builder.Property(x => x.CreatorId).IsRequired();
-        builder.Property(x => x.CreatorName).IsRequired(false).HasMaxLength(100);
-        builder.Property(x => x.Status).IsRequired();
-        builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.UpdateTime);
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("项目标识");
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(200).HasComment("项目名称");
+        builder.Property(x => x.Description).HasMaxLength(2000).HasComment("项目描述");
+        builder.Property(x => x.CreatorId).IsRequired().HasComment("创建人用户ID");
+        builder.Property(x => x.CreatorName).IsRequired(false).HasMaxLength(100).HasComment("创建人姓名");
+        builder.Property(x => x.Status).IsRequired().HasComment("项目状态");
+        builder.Property(x => x.CreatedAt).IsRequired().HasComment("创建时间");
+        builder.Property(x => x.UpdateTime).HasComment("更新时间");
         builder.Property(x => x.CustomerId).IsRequired();
         builder.Property(x => x.CustomerName).IsRequired(false).HasMaxLength(200);
         builder.Property(x => x.ProjectTypeId).IsRequired();

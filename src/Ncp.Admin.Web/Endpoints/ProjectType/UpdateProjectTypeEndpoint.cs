@@ -11,12 +11,10 @@ namespace Ncp.Admin.Web.Endpoints.ProjectType;
 /// <summary>
 /// 更新项目类型请求
 /// </summary>
-public class UpdateProjectTypeRequest
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = "";
-    public int SortOrder { get; set; }
-}
+/// <param name="Id">项目类型 ID</param>
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record UpdateProjectTypeRequest(ProjectTypeId Id, string Name, int SortOrder);
 
 /// <summary>
 /// 更新项目类型
@@ -33,7 +31,7 @@ public class UpdateProjectTypeEndpoint(IMediator mediator) : Endpoint<UpdateProj
 
     public override async Task HandleAsync(UpdateProjectTypeRequest req, CancellationToken ct)
     {
-        var cmd = new UpdateProjectTypeCommand(new ProjectTypeId(req.Id), req.Name, req.SortOrder);
+        var cmd = new UpdateProjectTypeCommand(req.Id, req.Name, req.SortOrder);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

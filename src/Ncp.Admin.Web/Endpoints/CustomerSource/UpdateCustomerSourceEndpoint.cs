@@ -8,13 +8,17 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.CustomerSource;
 
-public class UpdateCustomerSourceRequest
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = "";
-    public int SortOrder { get; set; }
-}
+/// <summary>
+/// 更新客户来源请求
+/// </summary>
+/// <param name="Id">客户来源 ID</param>
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record UpdateCustomerSourceRequest(CustomerSourceId Id, string Name, int SortOrder);
 
+/// <summary>
+/// 更新客户来源
+/// </summary>
 public class UpdateCustomerSourceEndpoint(IMediator mediator) : Endpoint<UpdateCustomerSourceRequest, ResponseData<bool>>
 {
     public override void Configure()
@@ -27,7 +31,7 @@ public class UpdateCustomerSourceEndpoint(IMediator mediator) : Endpoint<UpdateC
 
     public override async Task HandleAsync(UpdateCustomerSourceRequest req, CancellationToken ct)
     {
-        var cmd = new UpdateCustomerSourceCommand(new CustomerSourceId(req.Id), req.Name, req.SortOrder);
+        var cmd = new UpdateCustomerSourceCommand(req.Id, req.Name, req.SortOrder);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

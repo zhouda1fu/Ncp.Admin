@@ -8,14 +8,15 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Region;
 
-public class CreateRegionRequest
-{
-    public long Code { get; set; }
-    public string Name { get; set; } = "";
-    public long ParentCode { get; set; }
-    public int Level { get; set; }
-    public int SortOrder { get; set; }
-}
+/// <summary>
+/// 创建区域请求
+/// </summary>
+/// <param name="Code">区域编码（作为区域 ID 值）</param>
+/// <param name="Name">区域名称</param>
+/// <param name="ParentId">父级区域 ID</param>
+/// <param name="Level">层级</param>
+/// <param name="SortOrder">排序</param>
+public record CreateRegionRequest(long Code, string Name, RegionId ParentId, int Level, int SortOrder);
 
 public record CreateRegionResponse(RegionId Id);
 
@@ -32,7 +33,7 @@ public class CreateRegionEndpoint(IMediator mediator)
 
     public override async Task HandleAsync(CreateRegionRequest req, CancellationToken ct)
     {
-        var cmd = new CreateRegionCommand(req.Code, req.Name, req.ParentCode, req.Level, req.SortOrder);
+        var cmd = new CreateRegionCommand(req.Code, req.Name, req.ParentId, req.Level, req.SortOrder);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateRegionResponse(id).AsResponseData(), cancellation: ct);
     }

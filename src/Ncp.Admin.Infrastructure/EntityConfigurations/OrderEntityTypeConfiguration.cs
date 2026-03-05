@@ -10,15 +10,15 @@ internal class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
     {
         builder.ToTable("order");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property(x => x.CustomerId).IsRequired();
-        builder.Property(x => x.CustomerName).IsRequired().HasMaxLength(200);
-        builder.Property(x => x.ProjectId).IsRequired();
-        builder.Property(x => x.ContractId).IsRequired();
-        builder.Property(x => x.OrderNumber).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.Type).IsRequired();
-        builder.Property(x => x.Status).IsRequired();
-        builder.Property(x => x.Amount).IsRequired().HasPrecision(18, 4);
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("订单标识");
+        builder.Property(x => x.CustomerId).IsRequired().HasComment("客户ID");
+        builder.Property(x => x.CustomerName).IsRequired().HasMaxLength(200).HasComment("客户名称");
+        builder.Property(x => x.ProjectId).IsRequired().HasComment("项目ID");
+        builder.Property(x => x.ContractId).IsRequired().HasComment("合同ID");
+        builder.Property(x => x.OrderNumber).IsRequired().HasMaxLength(100).HasComment("订单编号");
+        builder.Property(x => x.Type).IsRequired().HasComment("订单类型");
+        builder.Property(x => x.Status).IsRequired().HasComment("订单状态");
+        builder.Property(x => x.Amount).IsRequired().HasPrecision(18, 4).HasComment("金额");
         builder.Property(x => x.Remark).IsRequired().HasMaxLength(500);
         builder.Property(x => x.OwnerId).IsRequired();
         builder.Property(x => x.OwnerName).IsRequired().HasMaxLength(100);
@@ -44,8 +44,8 @@ internal class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.ReceiverAddress).IsRequired().HasMaxLength(500);
         builder.Property(x => x.PayDate).IsRequired();
         builder.Property(x => x.DeliveryDate).IsRequired();
-        builder.Property(x => x.IsDeleted).IsRequired();
-        builder.Property(x => x.DeletedAt).IsRequired();
+        builder.Property(x => x.IsDeleted).IsRequired().HasComment("是否软删");
+        builder.Property(x => x.DeletedAt).IsRequired().HasComment("删除时间");
         builder.Property(x => x.CreatorId).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired();
@@ -57,6 +57,7 @@ internal class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         builder.HasIndex(x => x.DeptId);
         builder.HasIndex(x => x.CreatedAt);
         builder.HasIndex(x => x.IsDeleted);
+        builder.HasQueryFilter(o => !o.IsDeleted);
 
         builder.HasMany(o => o.Items)
             .WithOne()

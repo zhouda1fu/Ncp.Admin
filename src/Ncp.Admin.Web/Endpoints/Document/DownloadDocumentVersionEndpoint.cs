@@ -24,7 +24,7 @@ public class DownloadDocumentVersionEndpoint(DocumentQuery documentQuery, IFileS
 
     public override async Task HandleAsync(DownloadDocumentVersionRequest req, CancellationToken ct)
     {
-        var info = await documentQuery.GetVersionDownloadInfoAsync(new DocumentVersionId(req.VersionId), ct);
+        var info = await documentQuery.GetVersionDownloadInfoAsync(req.VersionId, ct);
         if (info == null)
         {
             await Send.NotFoundAsync(ct);
@@ -40,8 +40,9 @@ public class DownloadDocumentVersionEndpoint(DocumentQuery documentQuery, IFileS
     }
 }
 
-public class DownloadDocumentVersionRequest
-{
-    public Guid DocumentId { get; set; }
-    public Guid VersionId { get; set; }
-}
+/// <summary>
+/// 下载文档指定版本请求
+/// </summary>
+/// <param name="DocumentId">文档 ID</param>
+/// <param name="VersionId">版本 ID</param>
+public record DownloadDocumentVersionRequest(DocumentId DocumentId, DocumentVersionId VersionId);

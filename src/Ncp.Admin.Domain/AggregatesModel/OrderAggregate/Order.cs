@@ -157,10 +157,10 @@ public class Order : Entity<OrderId>, IAggregateRoot
     public DateTimeOffset DeliveryDate { get; private set; }
 
     /// <summary>是否软删</summary>
-    public bool IsDeleted { get; private set; }
+    public Deleted IsDeleted { get; private set; } = new Deleted(false);
 
     /// <summary>删除时间</summary>
-    public DateTimeOffset DeletedAt { get; private set; }
+    public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
 
     /// <summary>创建人用户 ID</summary>
     public UserId CreatorId { get; private set; } = default!;
@@ -246,8 +246,8 @@ public class Order : Entity<OrderId>, IAggregateRoot
             ReceiverAddress = receiverAddress ?? string.Empty,
             PayDate = payDate,
             DeliveryDate = deliveryDate,
-            IsDeleted = false,
-            DeletedAt = default,
+            IsDeleted = new Deleted(false),
+            DeletedAt = new DeletedTime(DateTimeOffset.UtcNow),
             CreatorId = creatorId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = default,
@@ -341,7 +341,7 @@ public class Order : Entity<OrderId>, IAggregateRoot
     public void MarkDeleted()
     {
         IsDeleted = true;
-        DeletedAt = DateTimeOffset.UtcNow;
+        DeletedAt = new DeletedTime(DateTimeOffset.UtcNow);
         AddDomainEvent(new OrderDeletedDomainEvent(this));
     }
 }

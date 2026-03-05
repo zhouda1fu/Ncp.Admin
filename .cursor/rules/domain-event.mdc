@@ -35,7 +35,7 @@ alwaysApply: false
 **文件**: `src/Ncp.Admin.Domain/DomainEvents/UserDomainEvents.cs`
 
 ```csharp
-using Ncp.Admin.Domain.Aggregates.UserAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 namespace Ncp.Admin.Domain.DomainEvents;
 

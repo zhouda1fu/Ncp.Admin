@@ -11,14 +11,9 @@ namespace Ncp.Admin.Web.Endpoints.ProjectTask;
 /// <summary>
 /// 设置任务状态请求
 /// </summary>
-public class SetTaskStatusRequest
-{
-    public Guid Id { get; set; }
-    /// <summary>
-    /// 0 待办 1 进行中 2 已完成 3 已取消
-    /// </summary>
-    public int Status { get; set; }
-}
+/// <param name="Id">任务 ID</param>
+/// <param name="Status">状态：0 待办 1 进行中 2 已完成 3 已取消</param>
+public record SetTaskStatusRequest(ProjectTaskId Id, int Status);
 
 /// <summary>
 /// 设置任务状态
@@ -35,7 +30,7 @@ public class SetTaskStatusEndpoint(IMediator mediator) : Endpoint<SetTaskStatusR
 
     public override async System.Threading.Tasks.Task HandleAsync(SetTaskStatusRequest req, CancellationToken ct)
     {
-        var cmd = new SetTaskStatusCommand(new ProjectTaskId(req.Id), (ProjectTaskStatus)req.Status);
+        var cmd = new SetTaskStatusCommand(req.Id, (ProjectTaskStatus)req.Status);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

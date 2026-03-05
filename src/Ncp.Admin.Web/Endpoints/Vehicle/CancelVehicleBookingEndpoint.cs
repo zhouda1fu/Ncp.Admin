@@ -8,11 +8,16 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Vehicle;
 
-public class CancelVehicleBookingRequest
-{
-    public Guid Id { get; set; }
-}
+/// <summary>
+/// 取消车辆预约请求
+/// </summary>
+/// <param name="Id">车辆预约 ID</param>
+public record CancelVehicleBookingRequest(VehicleBookingId Id);
 
+/// <summary>
+/// 取消车辆预约
+/// </summary>
+/// <param name="mediator">MediatR 中介者</param>
 public class CancelVehicleBookingEndpoint(IMediator mediator) : Endpoint<CancelVehicleBookingRequest, ResponseData<bool>>
 {
     public override void Configure()
@@ -25,7 +30,7 @@ public class CancelVehicleBookingEndpoint(IMediator mediator) : Endpoint<CancelV
 
     public override async Task HandleAsync(CancelVehicleBookingRequest req, CancellationToken ct)
     {
-        var cmd = new CancelVehicleBookingCommand(new VehicleBookingId(req.Id));
+        var cmd = new CancelVehicleBookingCommand(req.Id);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

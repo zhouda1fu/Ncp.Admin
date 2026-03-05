@@ -10,11 +10,11 @@ internal class IndustryEntityTypeConfiguration : IEntityTypeConfiguration<Indust
     {
         builder.ToTable("industry");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.ParentId);
-        builder.Property(x => x.SortOrder).IsRequired();
-        builder.Property(x => x.Remark).HasMaxLength(500);
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("行业标识");
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(100).HasComment("名称");
+        builder.Property(x => x.ParentId).HasComment("父级行业ID");
+        builder.Property(x => x.SortOrder).IsRequired().HasComment("排序");
+        builder.Property(x => x.Remark).HasMaxLength(500).HasComment("备注");
         builder.HasIndex(x => x.ParentId);
     }
 }

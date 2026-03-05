@@ -8,12 +8,13 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Vehicle;
 
-public class CreateVehicleRequest
-{
-    public string PlateNumber { get; set; } = "";
-    public string Model { get; set; } = "";
-    public string? Remark { get; set; }
-}
+/// <summary>
+/// 创建车辆请求
+/// </summary>
+/// <param name="PlateNumber">车牌号</param>
+/// <param name="Model">型号</param>
+/// <param name="Remark">备注</param>
+public record CreateVehicleRequest(string PlateNumber, string Model, string? Remark);
 
 public class CreateVehicleEndpoint(IMediator mediator) : Endpoint<CreateVehicleRequest, ResponseData<CreateVehicleResponse>>
 {

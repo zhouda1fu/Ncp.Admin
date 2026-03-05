@@ -11,11 +11,9 @@ namespace Ncp.Admin.Web.Endpoints.ProjectIndustry;
 /// <summary>
 /// 创建项目行业请求
 /// </summary>
-public class CreateProjectIndustryRequest
-{
-    public string Name { get; set; } = "";
-    public int SortOrder { get; set; }
-}
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record CreateProjectIndustryRequest(string Name, int SortOrder);
 
 /// <summary>
 /// 创建项目行业响应

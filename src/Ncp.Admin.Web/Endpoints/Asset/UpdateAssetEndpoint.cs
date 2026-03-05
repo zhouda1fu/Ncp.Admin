@@ -8,16 +8,17 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Asset;
 
-public class UpdateAssetRequest
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = "";
-    public string Category { get; set; } = "";
-    public string Code { get; set; } = "";
-    public DateTimeOffset PurchaseDate { get; set; }
-    public decimal Value { get; set; }
-    public string? Remark { get; set; }
-}
+/// <summary>
+/// 更新资产请求
+/// </summary>
+/// <param name="Id">资产 ID</param>
+/// <param name="Name">名称</param>
+/// <param name="Category">分类</param>
+/// <param name="Code">编码</param>
+/// <param name="PurchaseDate">购置日期</param>
+/// <param name="Value">价值</param>
+/// <param name="Remark">备注</param>
+public record UpdateAssetRequest(AssetId Id, string Name, string Category, string Code, DateTimeOffset PurchaseDate, decimal Value, string? Remark);
 
 public class UpdateAssetEndpoint(IMediator mediator) : Endpoint<UpdateAssetRequest, ResponseData<bool>>
 {
@@ -31,7 +32,7 @@ public class UpdateAssetEndpoint(IMediator mediator) : Endpoint<UpdateAssetReque
 
     public override async Task HandleAsync(UpdateAssetRequest req, CancellationToken ct)
     {
-        var cmd = new UpdateAssetCommand(new AssetId(req.Id), req.Name, req.Category, req.Code, req.PurchaseDate, req.Value, req.Remark);
+        var cmd = new UpdateAssetCommand(req.Id, req.Name, req.Category, req.Code, req.PurchaseDate, req.Value, req.Remark);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

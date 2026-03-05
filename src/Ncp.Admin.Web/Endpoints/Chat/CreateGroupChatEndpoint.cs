@@ -13,11 +13,9 @@ namespace Ncp.Admin.Web.Endpoints.Chat;
 /// <summary>
 /// 创建群聊请求
 /// </summary>
-public class CreateGroupChatRequest
-{
-    public string Name { get; set; } = "";
-    public List<long> MemberIds { get; set; } = [];
-}
+/// <param name="Name">群组名称</param>
+/// <param name="MemberIds">成员用户 ID 列表</param>
+public record CreateGroupChatRequest(string Name, IReadOnlyList<UserId> MemberIds);
 
 /// <summary>
 /// 创建群聊
@@ -41,8 +39,7 @@ public class CreateGroupChatEndpoint(IMediator mediator)
             await Send.UnauthorizedAsync(ct);
             return;
         }
-        var memberIds = (req.MemberIds ?? []).Select(x => new UserId(x)).ToList();
-        var cmd = new CreateGroupChatCommand(new UserId(uid), req.Name, memberIds);
+        var cmd = new CreateGroupChatCommand(new UserId(uid), req.Name, req.MemberIds ?? Array.Empty<UserId>());
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateChatGroupResponse(id).AsResponseData(), cancellation: ct);
     }

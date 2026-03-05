@@ -9,15 +9,10 @@ using Ncp.Admin.Web.AppPermissions;
 namespace Ncp.Admin.Web.Endpoints.Attendance;
 
 /// <summary>
-/// 考勤签退请求（考勤记录 ID）
+/// 考勤签退请求
 /// </summary>
-public class CheckOutRequest
-{
-    /// <summary>
-    /// 考勤记录 ID
-    /// </summary>
-    public Guid Id { get; set; }
-}
+/// <param name="Id">考勤记录 ID</param>
+public record CheckOutRequest(AttendanceRecordId Id);
 
 /// <summary>
 /// 考勤签退（按考勤记录 ID）
@@ -34,7 +29,7 @@ public class CheckOutEndpoint(IMediator mediator) : Endpoint<CheckOutRequest>
 
     public override async Task HandleAsync(CheckOutRequest req, CancellationToken ct)
     {
-        var cmd = new CheckOutCommand(new AttendanceRecordId(req.Id));
+        var cmd = new CheckOutCommand(req.Id);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(ct);
     }

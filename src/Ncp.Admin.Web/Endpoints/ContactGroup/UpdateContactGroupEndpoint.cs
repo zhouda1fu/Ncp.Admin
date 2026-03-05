@@ -11,12 +11,10 @@ namespace Ncp.Admin.Web.Endpoints.ContactGroup;
 /// <summary>
 /// 更新联系组请求
 /// </summary>
-public class UpdateContactGroupRequest
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = "";
-    public int SortOrder { get; set; }
-}
+/// <param name="Id">联系组 ID</param>
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record UpdateContactGroupRequest(ContactGroupId Id, string Name, int SortOrder);
 
 /// <summary>
 /// 更新联系组
@@ -33,8 +31,7 @@ public class UpdateContactGroupEndpoint(IMediator mediator) : Endpoint<UpdateCon
 
     public override async Task HandleAsync(UpdateContactGroupRequest req, CancellationToken ct)
     {
-        var id = new ContactGroupId(req.Id);
-        var cmd = new UpdateContactGroupCommand(id, req.Name, req.SortOrder);
+        var cmd = new UpdateContactGroupCommand(req.Id, req.Name, req.SortOrder);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

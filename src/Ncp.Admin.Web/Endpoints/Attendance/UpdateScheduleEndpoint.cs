@@ -9,27 +9,13 @@ using Ncp.Admin.Web.AppPermissions;
 namespace Ncp.Admin.Web.Endpoints.Attendance;
 
 /// <summary>
-/// 更新排班请求（路由 {id} 与 Body 时间、班次名）
+/// 更新排班请求
 /// </summary>
-public class UpdateScheduleRequest
-{
-    /// <summary>
-    /// 排班 ID（路由参数）
-    /// </summary>
-    public Guid Id { get; set; }
-    /// <summary>
-    /// 上班时间，格式 HH:mm
-    /// </summary>
-    public string StartTime { get; set; } = "";
-    /// <summary>
-    /// 下班时间，格式 HH:mm
-    /// </summary>
-    public string EndTime { get; set; } = "";
-    /// <summary>
-    /// 班次名称（可选）
-    /// </summary>
-    public string? ShiftName { get; set; }
-}
+/// <param name="Id">排班 ID</param>
+/// <param name="StartTime">上班时间，格式 HH:mm</param>
+/// <param name="EndTime">下班时间，格式 HH:mm</param>
+/// <param name="ShiftName">班次名称（可选）</param>
+public record UpdateScheduleRequest(ScheduleId Id, string StartTime, string EndTime, string? ShiftName);
 
 /// <summary>
 /// 更新排班（班次时间与名称）
@@ -48,7 +34,7 @@ public class UpdateScheduleEndpoint(IMediator mediator) : Endpoint<UpdateSchedul
     {
         var startTime = TimeOnly.Parse(req.StartTime);
         var endTime = TimeOnly.Parse(req.EndTime);
-        var cmd = new UpdateScheduleCommand(new ScheduleId(req.Id), startTime, endTime, req.ShiftName);
+        var cmd = new UpdateScheduleCommand(req.Id, startTime, endTime, req.ShiftName);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(ct);
     }

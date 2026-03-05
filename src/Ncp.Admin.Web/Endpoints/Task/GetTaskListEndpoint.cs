@@ -11,13 +11,11 @@ namespace Ncp.Admin.Web.Endpoints.ProjectTask;
 /// <summary>
 /// 获取任务列表请求
 /// </summary>
-public class GetTaskListRequest
-{
-    public int PageIndex { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
-    public Guid? ProjectId { get; set; }
-    public int? Status { get; set; }
-}
+/// <param name="PageIndex">页码</param>
+/// <param name="PageSize">每页条数</param>
+/// <param name="ProjectId">项目 ID 筛选</param>
+/// <param name="Status">状态筛选</param>
+public record GetTaskListRequest(int PageIndex = 1, int PageSize = 20, ProjectId? ProjectId = null, int? Status = null);
 
 /// <summary>
 /// 获取任务分页列表
@@ -39,7 +37,7 @@ public class GetTaskListEndpoint(TaskQuery query)
         {
             PageIndex = req.PageIndex,
             PageSize = req.PageSize,
-            ProjectId = req.ProjectId.HasValue ? new ProjectId(req.ProjectId.Value) : null,
+            ProjectId = req.ProjectId,
             Status = req.Status.HasValue ? (ProjectTaskStatus?)req.Status.Value : null,
         };
         var result = await query.GetPagedAsync(input, ct);

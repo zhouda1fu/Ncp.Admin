@@ -13,11 +13,9 @@ namespace Ncp.Admin.Web.Endpoints.ContactGroup;
 /// <summary>
 /// 创建联系组请求
 /// </summary>
-public class CreateContactGroupRequest
-{
-    public string Name { get; set; } = "";
-    public int SortOrder { get; set; }
-}
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record CreateContactGroupRequest(string Name, int SortOrder);
 
 /// <summary>
 /// 创建联系组（当前用户为创建人）

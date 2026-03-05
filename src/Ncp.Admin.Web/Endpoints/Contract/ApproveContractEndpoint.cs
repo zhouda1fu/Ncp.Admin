@@ -11,10 +11,8 @@ namespace Ncp.Admin.Web.Endpoints.Contract;
 /// <summary>
 /// 审批合同请求
 /// </summary>
-public class ApproveContractRequest
-{
-    public Guid Id { get; set; }
-}
+/// <param name="Id">合同 ID</param>
+public record ApproveContractRequest(ContractId Id);
 
 /// <summary>
 /// 审批通过合同
@@ -31,7 +29,7 @@ public class ApproveContractEndpoint(IMediator mediator) : Endpoint<ApproveContr
 
     public override async Task HandleAsync(ApproveContractRequest req, CancellationToken ct)
     {
-        var cmd = new ApproveContractCommand(new ContractId(req.Id));
+        var cmd = new ApproveContractCommand(req.Id);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

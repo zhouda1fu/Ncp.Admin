@@ -11,27 +11,13 @@ using Ncp.Admin.Web.AppPermissions;
 namespace Ncp.Admin.Web.Endpoints.Meeting;
 
 /// <summary>
-/// 创建会议室预订请求（会议室、主题、开始/结束时间）
+/// 创建会议室预订请求
 /// </summary>
-public class CreateMeetingBookingRequest
-{
-    /// <summary>
-    /// 会议室 ID
-    /// </summary>
-    public Guid MeetingRoomId { get; set; }
-    /// <summary>
-    /// 会议主题
-    /// </summary>
-    public string Title { get; set; } = "";
-    /// <summary>
-    /// 开始时间，ISO8601 格式
-    /// </summary>
-    public string StartAt { get; set; } = "";
-    /// <summary>
-    /// 结束时间，ISO8601 格式
-    /// </summary>
-    public string EndAt { get; set; } = "";
-}
+/// <param name="MeetingRoomId">会议室 ID</param>
+/// <param name="Title">会议主题</param>
+/// <param name="StartAt">开始时间，ISO8601 格式</param>
+/// <param name="EndAt">结束时间，ISO8601 格式</param>
+public record CreateMeetingBookingRequest(MeetingRoomId MeetingRoomId, string Title, string StartAt, string EndAt);
 
 /// <summary>
 /// 创建会议室预订（当前用户为预订人，校验时段冲突）
@@ -57,7 +43,7 @@ public class CreateMeetingBookingEndpoint(IMediator mediator) : Endpoint<CreateM
         var startAt = DateTimeOffset.Parse(req.StartAt);
         var endAt = DateTimeOffset.Parse(req.EndAt);
         var cmd = new CreateMeetingBookingCommand(
-            new MeetingRoomId(req.MeetingRoomId),
+            req.MeetingRoomId,
             new UserId(uid),
             req.Title,
             startAt,

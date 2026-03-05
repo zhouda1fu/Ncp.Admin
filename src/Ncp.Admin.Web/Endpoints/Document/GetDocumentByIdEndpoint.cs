@@ -23,7 +23,7 @@ public class GetDocumentByIdEndpoint(DocumentQuery query)
 
     public override async Task HandleAsync(GetDocumentByIdRequest req, CancellationToken ct)
     {
-        var doc = await query.GetByIdAsync(new DocumentId(req.Id), ct);
+        var doc = await query.GetByIdAsync(req.Id, ct);
         if (doc == null)
         {
             await Send.NotFoundAsync(ct);
@@ -33,7 +33,8 @@ public class GetDocumentByIdEndpoint(DocumentQuery query)
     }
 }
 
-public class GetDocumentByIdRequest
-{
-    public Guid Id { get; set; }
-}
+/// <summary>
+/// 按 ID 获取文档请求
+/// </summary>
+/// <param name="Id">文档 ID</param>
+public record GetDocumentByIdRequest(DocumentId Id);

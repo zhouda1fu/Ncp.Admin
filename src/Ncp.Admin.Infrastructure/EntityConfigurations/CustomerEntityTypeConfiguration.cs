@@ -10,12 +10,12 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
     {
         builder.ToTable("customer");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property(x => x.OwnerId);
-        builder.Property(x => x.CustomerSourceId).IsRequired();
-        builder.Property(x => x.CustomerSourceName).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.IsVoided).IsRequired();
-        builder.Property(x => x.FullName).IsRequired().HasMaxLength(200);
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("客户标识");
+        builder.Property(x => x.OwnerId).HasComment("负责人用户ID");
+        builder.Property(x => x.CustomerSourceId).IsRequired().HasComment("客户来源ID");
+        builder.Property(x => x.CustomerSourceName).IsRequired().HasMaxLength(100).HasComment("客户来源名称");
+        builder.Property(x => x.IsVoided).IsRequired().HasComment("是否作废");
+        builder.Property(x => x.FullName).IsRequired().HasMaxLength(200).HasComment("客户全称");
         builder.Property(x => x.ShortName).IsRequired(false).HasMaxLength(100);
         builder.Property(x => x.Status).IsRequired(false);
         builder.Property(x => x.Nature).IsRequired(false);

@@ -10,15 +10,16 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Asset;
 
-public class CreateAssetRequest
-{
-    public string Name { get; set; } = "";
-    public string Category { get; set; } = "";
-    public string Code { get; set; } = "";
-    public DateTimeOffset PurchaseDate { get; set; }
-    public decimal Value { get; set; }
-    public string? Remark { get; set; }
-}
+/// <summary>
+/// 创建资产请求
+/// </summary>
+/// <param name="Name">名称</param>
+/// <param name="Category">分类</param>
+/// <param name="Code">编码</param>
+/// <param name="PurchaseDate">购置日期</param>
+/// <param name="Value">价值</param>
+/// <param name="Remark">备注</param>
+public record CreateAssetRequest(string Name, string Category, string Code, DateTimeOffset PurchaseDate, decimal Value, string? Remark);
 
 public class CreateAssetEndpoint(IMediator mediator) : Endpoint<CreateAssetRequest, ResponseData<CreateAssetResponse>>
 {

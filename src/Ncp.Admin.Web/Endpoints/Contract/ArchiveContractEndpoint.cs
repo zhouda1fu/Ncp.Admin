@@ -11,10 +11,8 @@ namespace Ncp.Admin.Web.Endpoints.Contract;
 /// <summary>
 /// 归档合同请求
 /// </summary>
-public class ArchiveContractRequest
-{
-    public Guid Id { get; set; }
-}
+/// <param name="Id">合同 ID</param>
+public record ArchiveContractRequest(ContractId Id);
 
 /// <summary>
 /// 归档合同
@@ -31,7 +29,7 @@ public class ArchiveContractEndpoint(IMediator mediator) : Endpoint<ArchiveContr
 
     public override async Task HandleAsync(ArchiveContractRequest req, CancellationToken ct)
     {
-        var cmd = new ArchiveContractCommand(new ContractId(req.Id));
+        var cmd = new ArchiveContractCommand(req.Id);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

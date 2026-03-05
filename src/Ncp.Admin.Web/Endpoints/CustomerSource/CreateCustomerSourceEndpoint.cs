@@ -8,11 +8,12 @@ using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.CustomerSource;
 
-public class CreateCustomerSourceRequest
-{
-    public string Name { get; set; } = "";
-    public int SortOrder { get; set; }
-}
+/// <summary>
+/// 创建客户来源请求
+/// </summary>
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record CreateCustomerSourceRequest(string Name, int SortOrder);
 
 public record CreateCustomerSourceResponse(CustomerSourceId Id);
 
