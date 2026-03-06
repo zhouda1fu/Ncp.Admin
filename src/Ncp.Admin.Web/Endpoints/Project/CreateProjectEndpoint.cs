@@ -20,7 +20,6 @@ namespace Ncp.Admin.Web.Endpoints.Project;
 /// </summary>
 public record CreateProjectRequest(
     string Name,
-    string? Description,
     CustomerId CustomerId,
     string CustomerName,
     ProjectTypeId ProjectTypeId,
@@ -35,9 +34,9 @@ public record CreateProjectRequest(
     string CityName,
     RegionId DistrictRegionId,
     string DistrictName,
-    string? ProjectNumber,
+    string ProjectNumber,
     DateOnly? StartDate,
-    string? ProjectEstimate,
+    decimal? Budget,
     decimal? PurchaseAmount,
     string? ProjectContent);
 
@@ -81,10 +80,9 @@ public class CreateProjectEndpoint(IMediator mediator) : Endpoint<CreateProjectR
             req.DistrictRegionId,
             req.DistrictName ?? "",
             req.Name,
-            req.Description ?? string.Empty,
             req.ProjectNumber ?? string.Empty,
             req.StartDate,
-            req.ProjectEstimate ?? string.Empty,
+            req.Budget ?? 0,
             req.PurchaseAmount ?? 0,
             req.ProjectContent ?? string.Empty);
         var id = await mediator.Send(cmd, ct);

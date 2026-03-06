@@ -8,7 +8,7 @@ namespace Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate;
 public partial record ProjectStatusOptionId : IGuidStronglyTypedId;
 
 /// <summary>
-/// 项目状态选项聚合根：主数据，供项目引用（如新项目/进行中/已完成）
+/// 项目状态选项聚合根：主数据，供项目引用（如新项目/跟进中/已挂网/项目暂停/中标待采/黄了）
 /// </summary>
 public class ProjectStatusOption : Entity<ProjectStatusOptionId>, IAggregateRoot
 {

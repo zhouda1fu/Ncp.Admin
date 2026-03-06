@@ -14,7 +14,8 @@ public record CreateCustomerCommand(
     string CustomerSourceName,
     string FullName,
     string ShortName,
-    CompanyNature? Nature,
+    CustomerStatus Status,
+    CompanyNature Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
@@ -49,6 +50,8 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
     {
         RuleFor(c => c.FullName).NotEmpty().MaximumLength(200);
         RuleFor(c => c.ShortName).MaximumLength(100);
+        RuleFor(c => c.Status).IsInEnum().WithMessage("客户状态必填且有效");
+        RuleFor(c => c.Nature).IsInEnum().WithMessage("公司性质必填且有效");
     }
 }
 
@@ -58,7 +61,7 @@ public class CreateCustomerCommandHandler(ICustomerRepository repository) : ICom
     {
         var customer = new Customer(
             request.OwnerId, request.CustomerSourceId, request.CustomerSourceName, request.FullName,
-            request.ShortName, request.Nature, request.ProvinceCode, request.CityCode, request.DistrictCode,
+            request.ShortName, request.Status, request.Nature, request.ProvinceCode, request.CityCode, request.DistrictCode,
             request.ProvinceName, request.CityName, request.DistrictName,
             request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode,
             request.PhoneProvinceName, request.PhoneCityName, request.PhoneDistrictName,

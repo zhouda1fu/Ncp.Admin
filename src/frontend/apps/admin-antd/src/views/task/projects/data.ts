@@ -84,9 +84,13 @@ export function useSchema(
     },
     {
       component: 'Input',
-      componentProps: { class: 'w-full' },
+      componentProps: {
+        class: 'w-full',
+        placeholder: $t('task.project.projectNumberPlaceholder'),
+      },
       fieldName: 'projectNumber',
       label: $t('task.project.projectNumber'),
+      rules: z.string().min(1, $t('ui.formRules.required', [$t('task.project.projectNumber')])),
     },
     {
       component: 'Input',
@@ -109,18 +113,13 @@ export function useSchema(
       rules: z.string().min(1, $t('ui.formRules.required', [$t('task.projectIndustry.title')])),
     },
     {
-      component: 'ApiSelect',
-      componentProps: {
-        allowClear: false,
-        api: getCustomerOptions,
-        class: 'w-full',
-        labelField: 'label',
-        valueField: 'value',
-      },
+      component: 'Input',
+      componentProps: { class: 'w-full', readonly: true },
       fieldName: 'customerId',
       label: $t('task.project.customer'),
       rules: z.string().min(1, $t('ui.formRules.required', [$t('task.project.customer')])),
-    },
+      slot: 'customerId',
+    } as VbenFormSchema,
     {
       component: 'Cascader',
       componentProps: {
@@ -147,10 +146,10 @@ export function useSchema(
       label: $t('task.project.startDate'),
     },
     {
-      component: 'Input',
-      componentProps: { class: 'w-full' },
-      fieldName: 'projectEstimate',
-      label: $t('task.project.projectEstimate'),
+      component: 'InputNumber',
+      componentProps: { class: 'w-full', min: 0, precision: 2 },
+      fieldName: 'budget',
+      label: $t('task.project.projectBudget'),
     },
     {
       component: 'InputNumber',
@@ -159,15 +158,8 @@ export function useSchema(
       label: $t('task.project.purchaseAmount'),
     },
     {
-      component: 'Input',
-      componentProps: { class: 'w-full', type: 'textarea', rows: 4 },
-      fieldName: 'description',
-      label: $t('task.project.description'),
-      formItemClass: 'md:col-span-4',
-    },
-    {
-      component: 'Input',
-      componentProps: { class: 'w-full', type: 'textarea', rows: 4 },
+      component: 'Textarea',
+      componentProps: { class: 'w-full', rows: 4 },
       fieldName: 'projectContent',
       label: $t('task.project.projectContent'),
       formItemClass: 'md:col-span-4',
@@ -248,9 +240,8 @@ export function useColumns(
   onActionClick?: OnActionClickFn<ProjectApi.ProjectItem>,
 ): VxeTableGridOptions<ProjectApi.ProjectItem>['columns'] {
   return [
-    { field: 'name', title: $t('task.project.projectName'), width: 160 },
+    { field: 'name', title: $t('task.project.projectName'), minWidth: 160 },
     { field: 'projectNumber', title: $t('task.project.projectNumber'), width: 120 },
-    { field: 'description', title: $t('task.project.description'), minWidth: 120 },
     {
       field: 'customerName',
       title: $t('task.project.customer'),
@@ -298,7 +289,7 @@ export function useColumns(
       headerAlign: 'center',
       showOverflow: false,
       title: $t('task.project.operation'),
-      width: 180,
+      width: 200,
     },
   ];
 }

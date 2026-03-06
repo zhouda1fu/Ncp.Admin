@@ -249,7 +249,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string customerSourceName,
         string fullName,
         string shortName,
-        CompanyNature? nature,
+        CustomerStatus status,
+        CompanyNature nature,
         string provinceCode,
         string cityCode,
         string districtCode,
@@ -283,7 +284,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         IsVoided = false;
         FullName = fullName;
         ShortName = shortName;
-        Status = null;
+        Status = status;
         Nature = nature;
         ProvinceCode = provinceCode;
         CityCode = cityCode;
@@ -616,6 +617,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         {
             foreach (var c in Contacts.Where(c => c != contact))
                 c.Update(c.Name, c.ContactType, c.Gender, c.Birthday, c.Position, c.Mobile, c.Phone, c.Email, false);
+            MainContactName = name ?? string.Empty;
+            MainContactPhone = !string.IsNullOrEmpty(mobile) ? mobile : (phone ?? string.Empty);
         }
         AddDomainEvent(new CustomerContactAddedDomainEvent(this, contact));
         return contact.Id;
@@ -643,6 +646,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         {
             foreach (var c in Contacts.Where(c => c != contact))
                 c.Update(c.Name, c.ContactType, c.Gender, c.Birthday, c.Position, c.Mobile, c.Phone, c.Email, false);
+            MainContactName = name ?? string.Empty;
+            MainContactPhone = !string.IsNullOrEmpty(mobile) ? mobile : (phone ?? string.Empty);
         }
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
         AddDomainEvent(new CustomerContactUpdatedDomainEvent(this, contact));
@@ -655,8 +660,14 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     {
         var contact = Contacts.FirstOrDefault(c => c.Id == contactId)
             ?? throw new KnownException("未找到客户联系人", ErrorCodes.CustomerContactNotFound);
+        var wasPrimary = contact.IsPrimary;
         AddDomainEvent(new CustomerContactRemovedDomainEvent(this, contact.Id));
         Contacts.Remove(contact);
+        if (wasPrimary)
+        {
+            MainContactName = string.Empty;
+            MainContactPhone = string.Empty;
+        }
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 

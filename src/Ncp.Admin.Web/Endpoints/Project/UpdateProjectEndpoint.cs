@@ -18,7 +18,6 @@ namespace Ncp.Admin.Web.Endpoints.Project;
 public record UpdateProjectRequest(
     ProjectId Id,
     string Name,
-    string? Description,
     ProjectTypeId ProjectTypeId,
     string ProjectTypeName,
     ProjectStatusOptionId ProjectStatusOptionId,
@@ -33,7 +32,7 @@ public record UpdateProjectRequest(
     RegionId DistrictRegionId,
     string DistrictName,
     DateOnly? StartDate,
-    string? ProjectEstimate,
+    decimal? Budget,
     decimal? PurchaseAmount,
     string? ProjectContent);
 
@@ -55,7 +54,6 @@ public class UpdateProjectEndpoint(IMediator mediator) : Endpoint<UpdateProjectR
         var cmd = new UpdateProjectCommand(
             req.Id,
             req.Name,
-            req.Description ?? string.Empty,
             req.ProjectTypeId,
             req.ProjectTypeName ?? "",
             req.ProjectStatusOptionId,
@@ -70,7 +68,7 @@ public class UpdateProjectEndpoint(IMediator mediator) : Endpoint<UpdateProjectR
             req.DistrictRegionId,
             req.DistrictName ?? "",
             req.StartDate,
-            req.ProjectEstimate ?? string.Empty,
+            req.Budget ?? 0,
             req.PurchaseAmount ?? 0,
             req.ProjectContent ?? string.Empty);
         await mediator.Send(cmd, ct);

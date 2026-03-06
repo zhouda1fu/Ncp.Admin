@@ -39,10 +39,6 @@ public class Project : Entity<ProjectId>, IAggregateRoot
     /// </summary>
     public string Name { get; private set; } = string.Empty;
     /// <summary>
-    /// 项目描述
-    /// </summary>
-    public string Description { get; private set; } = string.Empty;
-    /// <summary>
     /// 创建人用户ID
     /// </summary>
     public UserId CreatorId { get; private set; } = default!;
@@ -128,9 +124,9 @@ public class Project : Entity<ProjectId>, IAggregateRoot
     /// </summary>
     public DateOnly? StartDate { get; private set; }
     /// <summary>
-    /// 项目预估（文本或金额说明）
+    /// 项目预算（金额）
     /// </summary>
-    public string ProjectEstimate { get; private set; } = string.Empty;
+    public decimal Budget { get; private set; }
     /// <summary>
     /// 采购金额
     /// </summary>
@@ -171,10 +167,9 @@ public class Project : Entity<ProjectId>, IAggregateRoot
         string name,
         UserId creatorId,
         string creatorName,
-        string description,
         string projectNumber = "",
         DateOnly? startDate = null,
-        string projectEstimate = "",
+        decimal budget = 0,
         decimal purchaseAmount = 0,
         string projectContent = "")
     {
@@ -195,10 +190,9 @@ public class Project : Entity<ProjectId>, IAggregateRoot
         Name = name;
         CreatorId = creatorId;
         CreatorName = creatorName ?? string.Empty;
-        Description = description ?? string.Empty;
         ProjectNumber = projectNumber ?? string.Empty;
         StartDate = startDate;
-        ProjectEstimate = projectEstimate ?? string.Empty;
+        Budget = budget;
         PurchaseAmount = purchaseAmount;
         ProjectContent = projectContent ?? string.Empty;
         Status = ProjectStatus.Active;
@@ -210,7 +204,6 @@ public class Project : Entity<ProjectId>, IAggregateRoot
     /// </summary>
     public void Update(
         string name,
-        string description,
         ProjectTypeId projectTypeId,
         string projectTypeName,
         ProjectStatusOptionId projectStatusOptionId,
@@ -225,12 +218,11 @@ public class Project : Entity<ProjectId>, IAggregateRoot
         RegionId districtRegionId,
         string districtName,
         DateOnly? startDate,
-        string projectEstimate,
+        decimal budget,
         decimal purchaseAmount,
         string projectContent)
     {
         Name = name;
-        Description = description ?? string.Empty;
         ProjectTypeId = projectTypeId;
         ProjectTypeName = projectTypeName ?? string.Empty;
         ProjectStatusOptionId = projectStatusOptionId;
@@ -245,7 +237,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
         DistrictRegionId = districtRegionId;
         DistrictName = districtName ?? string.Empty;
         StartDate = startDate;
-        ProjectEstimate = projectEstimate ?? string.Empty;
+        Budget = budget;
         PurchaseAmount = purchaseAmount;
         ProjectContent = projectContent ?? string.Empty;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);

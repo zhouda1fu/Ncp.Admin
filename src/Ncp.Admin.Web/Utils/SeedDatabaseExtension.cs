@@ -4,6 +4,9 @@ using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IncomeExpenseTypeOptionAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectIndustryAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProjectTypeAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
@@ -220,6 +223,56 @@ public static class SeedDatabaseExtension
                 };
                 foreach (var opt in incomeExpenseTypeOptions)
                     dbContext.IncomeExpenseTypeOptions.Add(opt);
+                dbContext.SaveChanges();
+            }
+
+            // 初始化项目状态选项：新项目、跟进中、已挂网、项目暂停、中标待采、黄了
+            if (!dbContext.ProjectStatusOptions.Any())
+            {
+                var projectStatusOptions = new[]
+                {
+                    new ProjectStatusOption("新项目", "new", 0),
+                    new ProjectStatusOption("跟进中", "following", 1),
+                    new ProjectStatusOption("已挂网", "listed", 2),
+                    new ProjectStatusOption("项目暂停", "paused", 3),
+                    new ProjectStatusOption("中标待采", "won", 4),
+                    new ProjectStatusOption("黄了", "failed", 5),
+                };
+                foreach (var opt in projectStatusOptions)
+                    dbContext.ProjectStatusOptions.Add(opt);
+                dbContext.SaveChanges();
+            }
+
+            // 初始化项目类型：小型、中型、大型
+            if (!dbContext.ProjectTypes.Any())
+            {
+                var projectTypes = new[]
+                {
+                    new ProjectType("小型", 0),
+                    new ProjectType("中型", 1),
+                    new ProjectType("大型", 2),
+                };
+                foreach (var t in projectTypes)
+                    dbContext.ProjectTypes.Add(t);
+                dbContext.SaveChanges();
+            }
+
+            // 初始化项目行业：司法系统、检法系统、教育系统、部队、企事业单位、卫生系统、公安系统、其他
+            if (!dbContext.ProjectIndustries.Any())
+            {
+                var projectIndustries = new[]
+                {
+                    new ProjectIndustry("司法系统", 0),
+                    new ProjectIndustry("检法系统", 1),
+                    new ProjectIndustry("教育系统", 2),
+                    new ProjectIndustry("部队", 3),
+                    new ProjectIndustry("企事业单位", 4),
+                    new ProjectIndustry("卫生系统", 5),
+                    new ProjectIndustry("公安系统", 6),
+                    new ProjectIndustry("其他", 7),
+                };
+                foreach (var ind in projectIndustries)
+                    dbContext.ProjectIndustries.Add(ind);
                 dbContext.SaveChanges();
             }
 

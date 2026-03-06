@@ -16,7 +16,6 @@ internal class ProjectEntityTypeConfiguration : IEntityTypeConfiguration<Project
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("项目标识");
         builder.Property(x => x.Name).IsRequired().HasMaxLength(200).HasComment("项目名称");
-        builder.Property(x => x.Description).HasMaxLength(2000).HasComment("项目描述");
         builder.Property(x => x.CreatorId).IsRequired().HasComment("创建人用户ID");
         builder.Property(x => x.CreatorName).IsRequired(false).HasMaxLength(100).HasComment("创建人姓名");
         builder.Property(x => x.Status).IsRequired().HasComment("项目状态");
@@ -38,7 +37,7 @@ internal class ProjectEntityTypeConfiguration : IEntityTypeConfiguration<Project
         builder.Property(x => x.DistrictRegionId).IsRequired();
         builder.Property(x => x.DistrictName).IsRequired(false).HasMaxLength(50);
         builder.Property(x => x.StartDate);
-        builder.Property(x => x.ProjectEstimate).HasMaxLength(200);
+        builder.Property(x => x.Budget).HasPrecision(18, 2).HasComment("项目预算");
         builder.Property(x => x.PurchaseAmount).HasPrecision(18, 2);
         builder.Property(x => x.ProjectContent).HasMaxLength(4000);
         builder.HasIndex(x => x.CreatorId);

@@ -32,10 +32,9 @@ public record CreateProjectCommand(
     RegionId DistrictRegionId,
     string DistrictName,
     string Name,
-    string Description,
     string ProjectNumber = "",
     DateOnly? StartDate = null,
-    string ProjectEstimate = "",
+    decimal Budget = 0,
     decimal PurchaseAmount = 0,
     string ProjectContent = "") : ICommand<ProjectId>;
 
@@ -63,6 +62,7 @@ public class CreateProjectCommandValidator : AbstractValidator<CreateProjectComm
         RuleFor(c => c.CityRegionId).NotNull();
         RuleFor(c => c.DistrictRegionId).NotNull();
         RuleFor(c => c.Name).NotEmpty().MaximumLength(200);
+        RuleFor(c => c.ProjectNumber).NotEmpty().MaximumLength(50);
     }
 }
 
@@ -98,10 +98,9 @@ public class CreateProjectCommandHandler(
             request.Name,
             request.CreatorId,
             request.CreatorName ?? string.Empty,
-            request.Description ?? string.Empty,
             request.ProjectNumber ?? string.Empty,
             request.StartDate,
-            request.ProjectEstimate ?? string.Empty,
+            request.Budget,
             request.PurchaseAmount,
             request.ProjectContent ?? string.Empty);
         await repository.AddAsync(project, cancellationToken);

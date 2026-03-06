@@ -84,6 +84,9 @@
       "internalServerError": "内部服务器错误，请稍后再试。"
     }
   },
+  "pagination": {
+    "total": "共 {0} 条"
+  },
   "widgets": {
     "document": "文档",
     "qa": "问题 & 帮助",

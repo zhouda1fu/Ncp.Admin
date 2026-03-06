@@ -56,13 +56,14 @@ export function useSchema(
     {
       component: 'Select',
       componentProps: {
-        allowClear: true,
+        allowClear: false,
         class: 'w-full',
         options: statusOptions(),
         placeholder: $t('customer.statusPlaceholder'),
       },
       fieldName: 'status',
       label: $t('customer.status'),
+      rules: z.number({ required_error: $t('ui.formRules.required', [$t('customer.status')]) }),
     },
     {
       component: 'TreeSelect',
@@ -124,13 +125,14 @@ export function useSchema(
     {
       component: 'Select',
       componentProps: {
-        allowClear: true,
+        allowClear: false,
         class: 'w-full',
         options: natureOptions(),
         placeholder: $t('customer.naturePlaceholder'),
       },
       fieldName: 'nature',
       label: $t('customer.nature'),
+      rules: z.number({ required_error: $t('ui.formRules.required', [$t('customer.nature')]) }),
     },
     {
       component: 'InputNumber',

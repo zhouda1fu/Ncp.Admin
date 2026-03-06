@@ -15,7 +15,6 @@ namespace Ncp.Admin.Web.Application.Commands.Project;
 public record UpdateProjectCommand(
     ProjectId Id,
     string Name,
-    string Description,
     ProjectTypeId ProjectTypeId,
     string ProjectTypeName,
     ProjectStatusOptionId ProjectStatusOptionId,
@@ -30,7 +29,7 @@ public record UpdateProjectCommand(
     RegionId DistrictRegionId,
     string DistrictName,
     DateOnly? StartDate,
-    string ProjectEstimate,
+    decimal Budget,
     decimal PurchaseAmount,
     string ProjectContent) : ICommand<bool>;
 
@@ -69,7 +68,6 @@ public class UpdateProjectCommandHandler(IProjectRepository repository) : IComma
             ?? throw new KnownException("未找到项目", ErrorCodes.ProjectNotFound);
         project.Update(
             request.Name,
-            request.Description ?? string.Empty,
             request.ProjectTypeId,
             request.ProjectTypeName ?? string.Empty,
             request.ProjectStatusOptionId,
@@ -84,7 +82,7 @@ public class UpdateProjectCommandHandler(IProjectRepository repository) : IComma
             request.DistrictRegionId,
             request.DistrictName ?? string.Empty,
             request.StartDate,
-            request.ProjectEstimate ?? string.Empty,
+            request.Budget,
             request.PurchaseAmount,
             request.ProjectContent ?? string.Empty);
         return true;

@@ -1812,6 +1812,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasComment("项目标识");
 
+                    b.Property<decimal>("Budget")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasComment("项目预算");
+
                     b.Property<string>("CityName")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -1839,12 +1844,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasComment("项目描述");
-
                     b.Property<string>("DistrictName")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -1862,11 +1861,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
-
-                    b.Property<string>("ProjectEstimate")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
 
                     b.Property<Guid>("ProjectIndustryId")
                         .HasColumnType("uuid");

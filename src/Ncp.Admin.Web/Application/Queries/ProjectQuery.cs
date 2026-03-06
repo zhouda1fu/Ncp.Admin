@@ -16,7 +16,6 @@ namespace Ncp.Admin.Web.Application.Queries;
 public record ProjectQueryDto(
     ProjectId Id,
     string Name,
-    string? Description,
     UserId CreatorId,
     string CreatorName,
     int Status,
@@ -37,7 +36,7 @@ public record ProjectQueryDto(
     RegionId DistrictRegionId,
     string DistrictName,
     DateOnly? StartDate,
-    string? ProjectEstimate,
+    decimal Budget,
     decimal? PurchaseAmount,
     string? ProjectContent);
 
@@ -75,7 +74,6 @@ public record ProjectFollowUpRecordDto(
 public record ProjectDetailDto(
     ProjectId Id,
     string Name,
-    string? Description,
     UserId CreatorId,
     string CreatorName,
     int Status,
@@ -96,7 +94,7 @@ public record ProjectDetailDto(
     RegionId DistrictRegionId,
     string DistrictName,
     DateOnly? StartDate,
-    string? ProjectEstimate,
+    decimal Budget,
     decimal? PurchaseAmount,
     string? ProjectContent,
     IReadOnlyList<ProjectContactDto> Contacts,
@@ -147,11 +145,11 @@ public class ProjectQuery(ApplicationDbContext dbContext) : IQuery
             .AsNoTracking()
             .Where(p => p.Id == id)
             .Select(p => new ProjectQueryDto(
-                p.Id, p.Name, p.Description, p.CreatorId, p.CreatorName, (int)p.Status, p.CreatedAt,
+                p.Id, p.Name, p.CreatorId, p.CreatorName, (int)p.Status, p.CreatedAt,
                 p.CustomerId, p.CustomerName, p.ProjectTypeId, p.ProjectTypeName, p.ProjectStatusOptionId, p.ProjectStatusOptionName,
                 p.ProjectNumber, p.ProjectIndustryId, p.ProjectIndustryName,
                 p.ProvinceRegionId, p.ProvinceName, p.CityRegionId, p.CityName, p.DistrictRegionId, p.DistrictName,
-                p.StartDate, p.ProjectEstimate, p.PurchaseAmount, p.ProjectContent))
+                p.StartDate, p.Budget, p.PurchaseAmount, p.ProjectContent))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -167,11 +165,11 @@ public class ProjectQuery(ApplicationDbContext dbContext) : IQuery
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (p == null) return null;
         return new ProjectDetailDto(
-            p.Id, p.Name, p.Description, p.CreatorId, p.CreatorName, (int)p.Status, p.CreatedAt,
+            p.Id, p.Name, p.CreatorId, p.CreatorName, (int)p.Status, p.CreatedAt,
             p.CustomerId, p.CustomerName, p.ProjectTypeId, p.ProjectTypeName, p.ProjectStatusOptionId, p.ProjectStatusOptionName,
             p.ProjectNumber, p.ProjectIndustryId, p.ProjectIndustryName,
             p.ProvinceRegionId, p.ProvinceName, p.CityRegionId, p.CityName, p.DistrictRegionId, p.DistrictName,
-            p.StartDate, p.ProjectEstimate, p.PurchaseAmount, p.ProjectContent,
+            p.StartDate, p.Budget, p.PurchaseAmount, p.ProjectContent,
             p.Contacts.Select(c => new ProjectContactDto(c.Id, c.CustomerContactId, c.Name, c.Position, c.Mobile, c.OfficePhone, c.QQ, c.Wechat, c.Email, c.IsPrimary, c.Remark)).ToList(),
             p.FollowUpRecords.OrderByDescending(r => r.CreatedAt).Select(r => new ProjectFollowUpRecordDto(r.Id, r.Title, r.VisitDate, r.ReminderIntervalDays, r.Content, r.CreatedAt, r.CreatorId)).ToList());
     }
@@ -197,11 +195,11 @@ public class ProjectQuery(ApplicationDbContext dbContext) : IQuery
         return await query
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new ProjectQueryDto(
-                p.Id, p.Name, p.Description, p.CreatorId, p.CreatorName, (int)p.Status, p.CreatedAt,
+                p.Id, p.Name, p.CreatorId, p.CreatorName, (int)p.Status, p.CreatedAt,
                 p.CustomerId, p.CustomerName, p.ProjectTypeId, p.ProjectTypeName, p.ProjectStatusOptionId, p.ProjectStatusOptionName,
                 p.ProjectNumber, p.ProjectIndustryId, p.ProjectIndustryName,
                 p.ProvinceRegionId, p.ProvinceName, p.CityRegionId, p.CityName, p.DistrictRegionId, p.DistrictName,
-                p.StartDate, p.ProjectEstimate, p.PurchaseAmount, p.ProjectContent))
+                p.StartDate, p.Budget, p.PurchaseAmount, p.ProjectContent))
             .ToPagedDataAsync(input, cancellationToken);
     }
 }

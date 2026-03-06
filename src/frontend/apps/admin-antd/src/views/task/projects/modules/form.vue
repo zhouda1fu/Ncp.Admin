@@ -82,7 +82,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
         if (formData.value?.id) {
           await updateProject(formData.value.id, {
             name: String(data.name),
-            description: data.description ? String(data.description) : undefined,
             projectTypeId: data.projectTypeId ? String(data.projectTypeId) : undefined,
             projectStatusOptionId: data.projectStatusOptionId
               ? String(data.projectStatusOptionId)
@@ -93,7 +92,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
             cityRegionId,
             districtRegionId,
             startDate: data.startDate ? String(data.startDate) : undefined,
-            projectEstimate: data.projectEstimate ? String(data.projectEstimate) : undefined,
+            budget:
+              data.budget != null && data.budget !== '' ? Number(data.budget) : undefined,
             purchaseAmount:
               data.purchaseAmount != null && data.purchaseAmount !== ''
                 ? Number(data.purchaseAmount)
@@ -103,7 +103,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
         } else {
           await createProject({
             name: String(data.name),
-            description: data.description ? String(data.description) : undefined,
             customerId: String(data.customerId),
             projectIndustryId: String(data.projectIndustryId),
             projectTypeId: data.projectTypeId ? String(data.projectTypeId) : undefined,
@@ -115,7 +114,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
             cityRegionId,
             districtRegionId,
             startDate: data.startDate ? String(data.startDate) : undefined,
-            projectEstimate: data.projectEstimate ? String(data.projectEstimate) : undefined,
+            budget:
+              data.budget != null && data.budget !== '' ? Number(data.budget) : undefined,
             purchaseAmount:
               data.purchaseAmount != null && data.purchaseAmount !== ''
                 ? Number(data.purchaseAmount)
@@ -143,7 +143,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
       if (data?.districtRegionId != null) regionIds.push(String(data.districtRegionId));
       formApi.setValues({
         name: data?.name ?? '',
-        description: data?.description ?? '',
         projectTypeId: data?.projectTypeId ?? undefined,
         projectStatusOptionId: data?.projectStatusOptionId ?? undefined,
         projectNumber: data?.projectNumber ?? '',
@@ -151,7 +150,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         customerId: data?.customerId ?? '',
         regionIds: regionIds.length > 0 ? regionIds : undefined,
         startDate: data?.startDate ?? undefined,
-        projectEstimate: data?.projectEstimate ?? '',
+        budget: data?.budget ?? undefined,
         purchaseAmount: data?.purchaseAmount ?? undefined,
         projectContent: data?.projectContent ?? '',
       });

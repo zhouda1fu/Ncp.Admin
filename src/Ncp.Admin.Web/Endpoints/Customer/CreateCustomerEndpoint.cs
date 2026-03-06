@@ -19,7 +19,8 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// <param name="CustomerSourceId">客户来源 ID</param>
 /// <param name="CustomerSourceName">客户来源名称（前端传入）</param>
 /// <param name="FullName">客户全称</param>
-/// <param name="Nature">公司性质（枚举值）</param>
+/// <param name="Status">客户状态（枚举值，必填）</param>
+/// <param name="Nature">公司性质（枚举值，必填）</param>
 /// <param name="ProvinceCode">省区域码</param>
 /// <param name="CityCode">市区域码</param>
 /// <param name="DistrictCode">区/县区域码</param>
@@ -46,7 +47,8 @@ public record CreateCustomerRequest(
     CustomerSourceId CustomerSourceId,
     string CustomerSourceName,
     string FullName,
-    CompanyNature? Nature,
+    CustomerStatus Status,
+    CompanyNature Nature,
     string ProvinceCode,
     string CityCode,
     string DistrictCode,
@@ -104,7 +106,7 @@ public class CreateCustomerEndpoint(IMediator mediator) : Endpoint<CreateCustome
         var ownerId = new UserId(uid);
         var cmd = new CreateCustomerCommand(
             ownerId, req.CustomerSourceId, req.CustomerSourceName, req.FullName,
-            string.Empty, req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.ProvinceName, req.CityName, req.DistrictName,
+            string.Empty, req.Status, req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.ProvinceName, req.CityName, req.DistrictName,
             req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode, req.PhoneProvinceName, req.PhoneCityName, req.PhoneDistrictName,
             req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.EmployeeCount, req.BusinessLicense ?? string.Empty,
             string.Empty, string.Empty, req.ContactQq, req.ContactWechat, string.Empty, req.Remark, false, new UserId(uid), creatorName, req.IndustryIds);

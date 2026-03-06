@@ -620,7 +620,6 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "项目标识"),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "项目名称"),
-                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false, comment: "项目描述"),
                     CreatorId = table.Column<long>(type: "bigint", nullable: false, comment: "创建人用户ID"),
                     CreatorName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true, comment: "创建人姓名"),
                     Status = table.Column<int>(type: "integer", nullable: false, comment: "项目状态"),
@@ -642,7 +641,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     DistrictRegionId = table.Column<long>(type: "bigint", nullable: false),
                     DistrictName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     StartDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    ProjectEstimate = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Budget = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false, comment: "项目预算"),
                     PurchaseAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     ProjectContent = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false)
                 },

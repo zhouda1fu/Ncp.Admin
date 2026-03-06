@@ -24,6 +24,24 @@ const customerContactOptions = computed(() =>
   props.customerContacts.map((c) => ({ label: c.name, value: c.id })),
 );
 
+const isInitializing = ref(false);
+
+function fillByCustomerContactId(customerContactId?: string) {
+  if (isInitializing.value) return;
+  if (!customerContactId) return;
+  const c = props.customerContacts.find((x) => x.id === customerContactId);
+  if (!c) return;
+  // 客户联系人信息回填到项目联系人表单（保持 isPrimary/remark 不被覆盖）
+  formApi.setValues({
+    customerContactId,
+    name: c.name ?? '',
+    position: c.position ?? '',
+    mobile: c.mobile ?? '',
+    officePhone: c.phone ?? '',
+    email: c.email ?? '',
+  });
+}
+
 const contactFormSchema = computed(() => [
   {
     component: 'Select',
@@ -32,6 +50,7 @@ const contactFormSchema = computed(() => [
       options: customerContactOptions.value,
       placeholder: $t('task.project.customerContactPlaceholder'),
       allowClear: true,
+      onChange: (val: unknown) => fillByCustomerContactId(val ? String(val) : undefined),
     },
     fieldName: 'customerContactId',
     label: $t('task.project.customerContact'),
@@ -81,15 +100,21 @@ const contactFormSchema = computed(() => [
   },
   {
     component: 'Switch',
-    componentProps: { class: 'w-full' },
+    componentProps: {
+      checkedChildren: $t('common.yes'),
+      unCheckedChildren: $t('common.no'),
+    },
     fieldName: 'isPrimary',
     label: $t('task.project.isPrimary'),
+    help: $t('task.project.isPrimaryHint'),
+    formItemClass: 'md:col-span-2',
   },
   {
-    component: 'Input',
-    componentProps: { class: 'w-full', type: 'textarea', rows: 3 },
+    component: 'Textarea',
+    componentProps: { class: 'w-full', rows: 3 },
     fieldName: 'remark',
     label: $t('task.project.contactRemark'),
+    formItemClass: 'md:col-span-2',
   },
 ]);
 
@@ -103,7 +128,7 @@ const [Form, formApi] = useVbenForm({
   layout: 'vertical',
   schema: contactFormSchema as any,
   showDefaultActions: false,
-  wrapperClass: 'grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4',
+  wrapperClass: 'grid grid-cols-1 gap-y-5 md:grid-cols-2 md:gap-x-8 md:gap-y-5',
 });
 
 const [Drawer, drawerApi] = useVbenDrawer({
@@ -141,6 +166,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       const data = drawerApi.getData<Partial<ProjectApi.ProjectContactItem>>();
       formData.value = data;
       const contact = data ?? {};
+      isInitializing.value = true;
       formApi.setValues({
         customerContactId: contact.customerContactId ?? undefined,
         name: contact.name ?? '',
@@ -153,6 +179,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         isPrimary: contact.isPrimary ?? false,
         remark: contact.remark ?? '',
       });
+      isInitializing.value = false;
     }
   },
 });
@@ -166,6 +193,8 @@ defineExpose({ open });
 
 <template>
   <Drawer :title="drawerTitle">
-    <Form class="mx-4" />
+    <div class="px-4 pb-6">
+      <Form />
+    </div>
   </Drawer>
 </template>

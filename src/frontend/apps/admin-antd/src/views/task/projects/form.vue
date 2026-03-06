@@ -5,9 +5,9 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
-import { ArrowLeft } from '@vben/icons';
+import { ArrowLeft, Search } from '@vben/icons';
 
-import { Button, message, Modal, Space, Table, Tag } from 'ant-design-vue';
+import { Button, Input, message, Modal, Space, Table, Tag } from 'ant-design-vue';
 import type { TableColumnType } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
@@ -30,6 +30,7 @@ import { $t } from '#/locales';
 
 import ContactDrawer from './modules/contact-drawer.vue';
 import FollowUpRecordDrawer from './modules/follow-up-record-drawer.vue';
+import CustomerSelectModal from './modules/customer-select-modal.vue';
 import { useSchema } from './data';
 
 const route = useRoute();
@@ -48,15 +49,17 @@ const projectDetail = ref<ProjectApi.ProjectItem | null>(null);
 const customerContacts = ref<CustomerApi.CustomerContactItem[]>([]);
 const contactDrawerRef = ref<InstanceType<typeof ContactDrawer> | null>(null);
 const followUpRecordDrawerRef = ref<InstanceType<typeof FollowUpRecordDrawer> | null>(null);
+const customerSelectModalRef = ref<InstanceType<typeof CustomerSelectModal> | null>(null);
+const selectedCustomerName = ref('');
 
 const contactList = computed(() => projectDetail.value?.contacts ?? []);
 const followUpRecordList = computed(() => projectDetail.value?.followUpRecords ?? []);
 
 const contactColumns: TableColumnType<ProjectApi.ProjectContactItem>[] = [
-  { title: () => $t('task.project.contactName'), dataIndex: 'name', key: 'name', width: 100 },
-  { title: () => $t('task.project.contactPosition'), dataIndex: 'position', key: 'position', width: 90 },
+  { title: () => $t('task.project.contactName'), dataIndex: 'name', key: 'name', width: 120 },
+  { title: () => $t('task.project.contactPosition'), dataIndex: 'position', key: 'position', width: 100 },
   { title: () => $t('task.project.contactMobile'), dataIndex: 'mobile', key: 'mobile', width: 120 },
-  { title: () => $t('task.project.contactOfficePhone'), dataIndex: 'officePhone', key: 'officePhone', width: 110 },
+  { title: () => $t('task.project.contactOfficePhone'), dataIndex: 'officePhone', key: 'officePhone', width: 120 },
   { title: () => $t('task.project.contactEmail'), dataIndex: 'email', key: 'email', width: 140 },
   { title: () => $t('task.project.isPrimary'), dataIndex: 'isPrimary', key: 'isPrimary', width: 90 },
   { title: () => $t('task.project.operation'), key: 'action', width: 160 },
@@ -113,8 +116,37 @@ function goBack() {
   router.push('/task/projects');
 }
 
+/** 生成项目编号，格式 yyyyMMddHHmmss */
+function generateProjectNumber(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const h = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  return `${y}${m}${d}${h}${min}${s}`;
+}
+
 function resetForm() {
   formApi.resetForm();
+  selectedCustomerName.value = '';
+  if (isNew.value) {
+    formApi.setFieldValue('projectNumber', generateProjectNumber());
+  }
+}
+
+function openCustomerSelectModal() {
+  customerSelectModalRef.value?.open({
+    onSelect(row: CustomerApi.CustomerItem) {
+      formApi.setFieldValue('customerId', row.id);
+      const label = row.shortName ? `${row.fullName}（${row.shortName}）` : row.fullName;
+      selectedCustomerName.value = label;
+      if (!customerOptions.value.some((o) => o.value === row.id)) {
+        customerOptions.value = [...customerOptions.value, { label, value: row.id }];
+      }
+    },
+  });
 }
 
 async function loadDetail() {
@@ -127,7 +159,6 @@ async function loadDetail() {
   if (detail.districtRegionId != null) regionIds.push(String(detail.districtRegionId));
   formApi.setValues({
     name: detail.name ?? '',
-    description: detail.description ?? '',
     projectTypeId: detail.projectTypeId ?? undefined,
     projectStatusOptionId: detail.projectStatusOptionId ?? undefined,
     projectNumber: detail.projectNumber ?? '',
@@ -135,7 +166,7 @@ async function loadDetail() {
     customerId: detail.customerId ?? '',
     regionIds: regionIds.length > 0 ? regionIds : undefined,
     startDate: detail.startDate ?? undefined,
-    projectEstimate: detail.projectEstimate ?? '',
+    budget: detail.budget ?? undefined,
     purchaseAmount: detail.purchaseAmount ?? undefined,
     projectContent: detail.projectContent ?? '',
   });
@@ -143,9 +174,16 @@ async function loadDetail() {
     try {
       const customerDetail = await getCustomer(detail.customerId);
       customerContacts.value = customerDetail.contacts ?? [];
+      selectedCustomerName.value = customerDetail.shortName
+        ? `${customerDetail.fullName}（${customerDetail.shortName}）`
+        : customerDetail.fullName;
     } catch {
       customerContacts.value = [];
+      selectedCustomerName.value =
+        customerOptions.value.find((o) => o.value === detail.customerId)?.label ?? '';
     }
+  } else {
+    selectedCustomerName.value = '';
   }
 }
 
@@ -241,7 +279,6 @@ async function onSubmit() {
     if (id.value) {
       await updateProject(id.value, {
         name: String(data.name),
-        description: data.description != null ? String(data.description) : '',
         projectTypeId: String(data.projectTypeId ?? ''),
         projectTypeName: names.projectTypeName,
         projectStatusOptionId: String(data.projectStatusOptionId ?? ''),
@@ -256,7 +293,8 @@ async function onSubmit() {
         districtRegionId,
         districtName: names.districtName,
         startDate: data.startDate ? String(data.startDate) : undefined,
-        projectEstimate: data.projectEstimate != null ? String(data.projectEstimate) : '',
+        budget:
+          data.budget != null && data.budget !== '' ? Number(data.budget) : 0,
         purchaseAmount:
           data.purchaseAmount != null && data.purchaseAmount !== ''
             ? Number(data.purchaseAmount)
@@ -267,7 +305,6 @@ async function onSubmit() {
     } else {
       await createProject({
         name: String(data.name),
-        description: data.description != null ? String(data.description) : '',
         customerId: String(data.customerId),
         customerName: names.customerName,
         projectTypeId: String(data.projectTypeId ?? ''),
@@ -284,7 +321,8 @@ async function onSubmit() {
         districtName: names.districtName,
         projectNumber: data.projectNumber != null ? String(data.projectNumber) : '',
         startDate: data.startDate ? String(data.startDate) : undefined,
-        projectEstimate: data.projectEstimate != null ? String(data.projectEstimate) : '',
+        budget:
+          data.budget != null && data.budget !== '' ? Number(data.budget) : 0,
         purchaseAmount:
           data.purchaseAmount != null && data.purchaseAmount !== ''
             ? Number(data.purchaseAmount)
@@ -321,7 +359,11 @@ onMounted(() => {
       value: x.id,
     }));
   });
-  loadDetail();
+  loadDetail().then(() => {
+    if (isNew.value) {
+      formApi.setFieldValue('projectNumber', generateProjectNumber());
+    }
+  });
 });
 </script>
 
@@ -341,7 +383,30 @@ onMounted(() => {
     </div>
 
     <div class="w-full flex-1 min-w-0">
-      <Form />
+      <Form>
+        <template #customerId>
+          <Input
+            :value="selectedCustomerName"
+            readonly
+            class="w-full cursor-pointer"
+            :placeholder="$t('task.project.searchCustomer')"
+            @click="openCustomerSelectModal"
+          >
+            <template #suffix>
+              <span
+                class="cursor-pointer text-gray-500 hover:text-primary transition-colors"
+                role="button"
+                tabindex="0"
+                @click.stop="openCustomerSelectModal"
+                @keydown.enter.prevent="openCustomerSelectModal"
+              >
+                <Search class="size-4" />
+              </span>
+            </template>
+          </Input>
+        </template>
+      </Form>
+      <CustomerSelectModal ref="customerSelectModalRef" />
       <!-- 项目联系人（仅编辑页展示） -->
       <template v-if="id">
         <div class="mt-8 border-t border-gray-200 pt-6">
@@ -361,7 +426,9 @@ onMounted(() => {
           >
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'isPrimary'">
-                <Tag v-if="record.isPrimary" color="blue">{{ $t('task.project.isPrimary') }}</Tag>
+                <Tag :color="record.isPrimary ? 'success' : 'default'">
+                  {{ record.isPrimary ? $t('common.yes') : $t('common.no') }}
+                </Tag>
               </template>
               <template v-else-if="column.key === 'action'">
                 <Space>

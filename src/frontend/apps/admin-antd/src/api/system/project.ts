@@ -35,7 +35,6 @@ export namespace ProjectApi {
   export interface ProjectItem {
     id: string;
     name: string;
-    description?: string;
     creatorId: string;
     creatorName?: string;
     status: ProjectStatus;
@@ -56,7 +55,7 @@ export namespace ProjectApi {
     districtRegionId: number;
     districtName?: string;
     startDate?: string;
-    projectEstimate?: string;
+    budget?: number;
     purchaseAmount?: number;
     projectContent?: string;
     /** 项目联系人（详情接口返回） */
@@ -67,7 +66,6 @@ export namespace ProjectApi {
 
   export interface CreateProjectParams {
     name: string;
-    description?: string;
     customerId: string;
     customerName: string;
     projectTypeId: string;
@@ -84,14 +82,13 @@ export namespace ProjectApi {
     districtName: string;
     projectNumber?: string;
     startDate?: string;
-    projectEstimate?: string;
+    budget?: number;
     purchaseAmount?: number;
     projectContent?: string;
   }
 
   export interface UpdateProjectParams {
     name: string;
-    description?: string;
     projectTypeId: string;
     projectTypeName: string;
     projectStatusOptionId: string;
@@ -106,7 +103,7 @@ export namespace ProjectApi {
     districtRegionId: number;
     districtName: string;
     startDate?: string;
-    projectEstimate?: string;
+    budget?: number;
     purchaseAmount?: number;
     projectContent?: string;
   }

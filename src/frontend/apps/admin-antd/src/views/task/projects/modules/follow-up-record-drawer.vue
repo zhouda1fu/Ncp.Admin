@@ -53,8 +53,8 @@ const recordFormSchema = computed(() => [
     label: $t('task.project.followUpReminderFrequency'),
   },
   {
-    component: 'Input',
-    componentProps: { class: 'w-full', type: 'textarea', rows: 6 },
+    component: 'Textarea',
+    componentProps: { class: 'w-full', rows: 6 },
     fieldName: 'content',
     label: $t('task.project.followUpContent'),
   },
