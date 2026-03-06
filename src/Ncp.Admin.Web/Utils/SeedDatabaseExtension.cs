@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
+using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.IncomeExpenseTypeOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
@@ -181,6 +183,41 @@ public static class SeedDatabaseExtension
                 }
                 var childIndividual = new Dept("C#", "第一个子节点的子节点", childGroupId, 1);
                 dbContext.Depts.Add(childIndividual);
+                dbContext.SaveChanges();
+            }
+
+            // 初始化合同签订公司（合同类型选项），第一项为默认值（SortOrder 最小）
+            if (!dbContext.ContractTypeOptions.Any())
+            {
+                var contractTypeOptions = new[]
+                {
+                    new ContractTypeOption("安徽阳光心健科技发展有限公司第三分公司", 1, true, 0),
+                    new ContractTypeOption("安徽阳光心健科技发展有限公司第五分公司", 2, true, 1),
+                    new ContractTypeOption("安徽阳光心健科技发展有限公司", 3, true, 2),
+                    new ContractTypeOption("安徽百睿特新材料科技有限公司", 4, true, 3),
+                    new ContractTypeOption("安徽惠明教育科技有限公司", 5, true, 4),
+                    new ContractTypeOption("合肥楚一贸易有限公司", 6, true, 5),
+                    new ContractTypeOption("合肥市新晨心理咨询有限公司", 7, true, 6),
+                    new ContractTypeOption("安徽乐康教育装备有限公司", 8, true, 7),
+                    new ContractTypeOption("合肥市叶懋智能科技有限公司", 9, true, 8),
+                };
+                foreach (var opt in contractTypeOptions)
+                    dbContext.ContractTypeOptions.Add(opt);
+                dbContext.SaveChanges();
+            }
+
+            // 初始化收支类型选项，第一项为默认值（SortOrder 最小）
+            if (!dbContext.IncomeExpenseTypeOptions.Any())
+            {
+                var incomeExpenseTypeOptions = new[]
+                {
+                    new IncomeExpenseTypeOption("对公转款", 1, 0),
+                    new IncomeExpenseTypeOption("微信", 2, 1),
+                    new IncomeExpenseTypeOption("支付宝", 3, 2),
+                    new IncomeExpenseTypeOption("现金", 4, 3),
+                };
+                foreach (var opt in incomeExpenseTypeOptions)
+                    dbContext.IncomeExpenseTypeOptions.Add(opt);
                 dbContext.SaveChanges();
             }
 

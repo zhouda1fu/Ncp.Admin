@@ -37,7 +37,7 @@ public record CreateContractRequest(
     string InputCustomer,
     bool NextPaymentReminder,
     bool ContractExpiryReminder,
-    int SingleDoubleProfit,
+    int SingleDoubleSeal,
     string InvoicingInformation,
     int PaymentStatus,
     string WarrantyPeriod,
@@ -71,7 +71,7 @@ public class CreateContractEndpoint(IMediator mediator) : Endpoint<CreateContrac
             req.SignDate, req.Note, req.Description,
             req.DepartmentId, req.BusinessManager, req.ResponsibleProject, req.InputCustomer,
             req.NextPaymentReminder, req.ContractExpiryReminder,
-            req.SingleDoubleProfit, req.InvoicingInformation, req.PaymentStatus, req.WarrantyPeriod,
+            req.SingleDoubleSeal, req.InvoicingInformation, req.PaymentStatus, req.WarrantyPeriod,
             req.IsInstallmentPayment, req.AccumulatedAmount);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateContractResponse(id).AsResponseData(), cancellation: ct);

@@ -247,7 +247,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     InputCustomer = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     NextPaymentReminder = table.Column<bool>(type: "boolean", nullable: false),
                     ContractExpiryReminder = table.Column<bool>(type: "boolean", nullable: false),
-                    SingleDoubleProfit = table.Column<int>(type: "integer", nullable: false),
+                    SingleDoubleSeal = table.Column<int>(type: "integer", nullable: false),
                     InvoicingInformation = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     PaymentStatus = table.Column<int>(type: "integer", nullable: false),
                     WarrantyPeriod = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
@@ -908,6 +908,37 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "contract_invoice",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ContractId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    InvoiceNumber = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    TaxRate = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    AmountExclTax = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Source = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Status = table.Column<bool>(type: "boolean", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    InvoicedAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Handler = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    BillingDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    Remarks = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    AttachmentStorageKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_contract_invoice", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_contract_invoice_contract_ContractId",
+                        column: x => x.ContractId,
+                        principalTable: "contract",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "customer_contact",
                 columns: table => new
                 {
@@ -1429,6 +1460,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "IX_contract_Status",
                 table: "contract",
                 column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_contract_invoice_ContractId",
+                table: "contract_invoice",
+                column: "ContractId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_contract_type_option_SortOrder",
@@ -1982,7 +2018,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "contact_group");
 
             migrationBuilder.DropTable(
-                name: "contract");
+                name: "contract_invoice");
 
             migrationBuilder.DropTable(
                 name: "contract_type_option");
@@ -2091,6 +2127,9 @@ namespace Ncp.Admin.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "chat_group");
+
+            migrationBuilder.DropTable(
+                name: "contract");
 
             migrationBuilder.DropTable(
                 name: "customer");

@@ -40,7 +40,7 @@ internal class ContractEntityTypeConfiguration : IEntityTypeConfiguration<Contra
         builder.Property(x => x.InputCustomer).IsRequired().HasMaxLength(200);
         builder.Property(x => x.NextPaymentReminder).IsRequired();
         builder.Property(x => x.ContractExpiryReminder).IsRequired();
-        builder.Property(x => x.SingleDoubleProfit).IsRequired();
+        builder.Property(x => x.SingleDoubleSeal).IsRequired();
         builder.Property(x => x.InvoicingInformation).IsRequired().HasMaxLength(500);
         builder.Property(x => x.PaymentStatus).IsRequired();
         builder.Property(x => x.WarrantyPeriod).IsRequired().HasMaxLength(100);
@@ -58,5 +58,36 @@ internal class ContractEntityTypeConfiguration : IEntityTypeConfiguration<Contra
         builder.HasIndex(x => x.CustomerId);
         builder.HasIndex(x => x.SignDate);
         builder.HasIndex(x => x.IsDeleted);
+
+        builder.HasMany(c => c.Invoices)
+            .WithOne()
+            .HasForeignKey(i => i.ContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(c => c.Invoices).AutoInclude();
+    }
+}
+
+internal class ContractInvoiceEntityTypeConfiguration : IEntityTypeConfiguration<ContractInvoice>
+{
+    public void Configure(EntityTypeBuilder<ContractInvoice> builder)
+    {
+        builder.ToTable("contract_invoice");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
+        builder.Property(x => x.ContractId).IsRequired();
+        builder.Property(x => x.Type).IsRequired();
+        builder.Property(x => x.InvoiceNumber).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.TaxRate).IsRequired().HasPrecision(18, 4);
+        builder.Property(x => x.AmountExclTax).IsRequired().HasPrecision(18, 2);
+        builder.Property(x => x.Source).IsRequired().HasMaxLength(200);
+        builder.Property(x => x.Status).IsRequired();
+        builder.Property(x => x.Title).IsRequired().HasMaxLength(200);
+        builder.Property(x => x.TaxAmount).IsRequired().HasPrecision(18, 2);
+        builder.Property(x => x.InvoicedAmount).IsRequired().HasPrecision(18, 2);
+        builder.Property(x => x.Handler).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.BillingDate).IsRequired();
+        builder.Property(x => x.Remarks).IsRequired().HasMaxLength(2000);
+        builder.Property(x => x.AttachmentStorageKey).IsRequired().HasMaxLength(500);
+        builder.HasIndex(x => x.ContractId);
     }
 }

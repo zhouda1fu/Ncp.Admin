@@ -380,7 +380,10 @@ function getFileIcon(format: string): string {
   const f = (format || '').toLowerCase();
   if (f === 'doc' || f === 'docx') return 'W';
   if (f === 'pdf') return 'PDF';
-  return '?';
+  if (f === 'xls' || f === 'xlsx') return 'X';
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(f)) return '图';
+  if (f === 'txt') return 'TXT';
+  return f || '?';
 }
 
 const BLOCKED_EXTS = ['doc', 'xls'];
@@ -465,7 +468,7 @@ const contractFileColumns = [
   { title: () => $t('order.contractFileSize'), dataIndex: 'size', key: 'size', width: 90 },
   { title: () => $t('order.contractFileUpdated'), dataIndex: 'updatedAt', key: 'updatedAt', width: 165 },
   { title: () => $t('order.contractFileStatus'), key: 'status', width: 80 },
-  { title: () => $t('order.operation'), key: 'action', width: 180, fixed: 'right' as const },
+  { title: () => $t('order.operation'), key: 'action', width: 220, fixed: 'right' as const, ellipsis: false },
 ];
 </script>
 
@@ -673,11 +676,11 @@ const contractFileColumns = [
                   <span class="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">{{ $t('order.statusGeneral') }}</span>
                 </template>
                 <template v-else-if="column.key === 'action'">
-                  <div class="flex gap-1">
-                    <Button type="link" size="small" @click="previewContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.preview') }}</Button>
-                    <Button type="link" size="small" @click="downloadContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.download') }}</Button>
-                    <Button type="link" size="small" @click="printContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.print') }}</Button>
-                    <Button type="link" size="small" danger @click="removeContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.delete') }}</Button>
+                  <div class="flex flex-wrap gap-x-1 gap-y-0.5">
+                    <Button type="link" size="small" class="p-0 min-w-0 h-auto leading-normal" @click="previewContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.preview') }}</Button>
+                    <Button type="link" size="small" class="p-0 min-w-0 h-auto leading-normal" @click="downloadContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.download') }}</Button>
+                    <Button type="link" size="small" class="p-0 min-w-0 h-auto leading-normal" @click="printContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.print') }}</Button>
+                    <Button type="link" size="small" danger class="p-0 min-w-0 h-auto leading-normal" @click="removeContractFile(record as OrderApi.OrderContractFileItem)">{{ $t('order.delete') }}</Button>
                   </div>
                 </template>
               </template>

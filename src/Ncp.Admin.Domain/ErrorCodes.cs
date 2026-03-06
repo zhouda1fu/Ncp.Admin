@@ -530,6 +530,11 @@ public sealed class ErrorCodes
     /// </summary>
     public const int IncomeExpenseTypeOptionNotFound = 280012;
 
+    /// <summary>
+    /// 未找到合同发票
+    /// </summary>
+    public const int ContractInvoiceNotFound = 280013;
+
     #endregion
 
     #region 订单相关错误 (290xxx)

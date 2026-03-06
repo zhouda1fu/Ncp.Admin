@@ -142,9 +142,9 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     /// </summary>
     public bool ContractExpiryReminder { get; private set; }
     /// <summary>
-    /// 单双盈（类型值）
+    /// 单双章（类型值，0=单章 1=双章）
     /// </summary>
-    public int SingleDoubleProfit { get; private set; }
+    public int SingleDoubleSeal { get; private set; }
     /// <summary>
     /// 开票信息
     /// </summary>
@@ -187,6 +187,11 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     public bool IsDeleted { get; private set; }
 
     /// <summary>
+    /// 发票列表（一对多子实体）
+    /// </summary>
+    public virtual ICollection<ContractInvoice> Invoices { get; } = [];
+
+    /// <summary>
     /// 创建合同（草稿）
     /// </summary>
     public Contract(
@@ -214,7 +219,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         string inputCustomer,
         bool nextPaymentReminder,
         bool contractExpiryReminder,
-        int singleDoubleProfit,
+        int singleDoubleSeal,
         string invoicingInformation,
         int paymentStatus,
         string warrantyPeriod,
@@ -245,7 +250,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         InputCustomer = inputCustomer ?? string.Empty;
         NextPaymentReminder = nextPaymentReminder;
         ContractExpiryReminder = contractExpiryReminder;
-        SingleDoubleProfit = singleDoubleProfit;
+        SingleDoubleSeal = singleDoubleSeal;
         InvoicingInformation = invoicingInformation ?? string.Empty;
         PaymentStatus = paymentStatus;
         WarrantyPeriod = warrantyPeriod ?? string.Empty;
@@ -282,7 +287,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         string inputCustomer,
         bool nextPaymentReminder,
         bool contractExpiryReminder,
-        int singleDoubleProfit,
+        int singleDoubleSeal,
         string invoicingInformation,
         int paymentStatus,
         string warrantyPeriod,
@@ -314,7 +319,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         InputCustomer = inputCustomer ?? string.Empty;
         NextPaymentReminder = nextPaymentReminder;
         ContractExpiryReminder = contractExpiryReminder;
-        SingleDoubleProfit = singleDoubleProfit;
+        SingleDoubleSeal = singleDoubleSeal;
         InvoicingInformation = invoicingInformation ?? string.Empty;
         PaymentStatus = paymentStatus;
         WarrantyPeriod = warrantyPeriod ?? string.Empty;
@@ -355,6 +360,75 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         if (Status != ContractStatus.Draft)
             throw new KnownException("仅草稿状态可删除", ErrorCodes.ContractNotDraft);
         IsDeleted = true;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 新增发票（仅草稿可操作）
+    /// </summary>
+    public ContractInvoice AddInvoice(
+        InvoiceType type,
+        string invoiceNumber,
+        decimal taxRate,
+        decimal amountExclTax,
+        string source,
+        bool status,
+        string title,
+        decimal taxAmount,
+        decimal invoicedAmount,
+        string handler,
+        DateTimeOffset billingDate,
+        string remarks,
+        string attachmentStorageKey)
+    {
+        if (Status != ContractStatus.Draft)
+            throw new KnownException("仅草稿状态可新增发票", ErrorCodes.ContractNotDraft);
+        var invoice = ContractInvoice.Create(
+            Id, type, invoiceNumber, taxRate, amountExclTax, source, status,
+            title, taxAmount, invoicedAmount, handler, billingDate, remarks, attachmentStorageKey);
+        Invoices.Add(invoice);
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        return invoice;
+    }
+
+    /// <summary>
+    /// 更新发票（仅草稿可操作）
+    /// </summary>
+    public void UpdateInvoice(
+        ContractInvoiceId invoiceId,
+        InvoiceType type,
+        string invoiceNumber,
+        decimal taxRate,
+        decimal amountExclTax,
+        string source,
+        bool status,
+        string title,
+        decimal taxAmount,
+        decimal invoicedAmount,
+        string handler,
+        DateTimeOffset billingDate,
+        string remarks,
+        string attachmentStorageKey)
+    {
+        if (Status != ContractStatus.Draft)
+            throw new KnownException("仅草稿状态可修改发票", ErrorCodes.ContractNotDraft);
+        var invoice = Invoices.FirstOrDefault(x => x.Id == invoiceId)
+            ?? throw new KnownException("未找到该发票", ErrorCodes.ContractInvoiceNotFound);
+        invoice.Update(type, invoiceNumber, taxRate, amountExclTax, source, status,
+            title, taxAmount, invoicedAmount, handler, billingDate, remarks, attachmentStorageKey);
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 移除发票（仅草稿可操作）
+    /// </summary>
+    public void RemoveInvoice(ContractInvoiceId invoiceId)
+    {
+        if (Status != ContractStatus.Draft)
+            throw new KnownException("仅草稿状态可删除发票", ErrorCodes.ContractNotDraft);
+        var invoice = Invoices.FirstOrDefault(x => x.Id == invoiceId)
+            ?? throw new KnownException("未找到该发票", ErrorCodes.ContractInvoiceNotFound);
+        Invoices.Remove(invoice);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 

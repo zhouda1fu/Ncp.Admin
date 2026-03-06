@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ncp.Admin.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260305083109_InitDb")]
+    [Migration("20260305094549_InitDb")]
     partial class InitDb
     {
         /// <inheritdoc />
@@ -539,7 +539,7 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("SignDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("SingleDoubleProfit")
+                    b.Property<int>("SingleDoubleSeal")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("StartDate")
@@ -578,6 +578,76 @@ namespace Ncp.Admin.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("contract", (string)null);
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ContractAggregate.ContractInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AmountExclTax")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("AttachmentStorageKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("BillingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ContractId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Handler")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("InvoicedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("TaxRate")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractId");
+
+                    b.ToTable("contract_invoice", (string)null);
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate.ContractTypeOption", b =>
@@ -2859,6 +2929,15 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ContractAggregate.ContractInvoice", b =>
+                {
+                    b.HasOne("Ncp.Admin.Domain.AggregatesModel.ContractAggregate.Contract", null)
+                        .WithMany("Invoices")
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.CustomerAggregate.CustomerContact", b =>
                 {
                     b.HasOne("Ncp.Admin.Domain.AggregatesModel.CustomerAggregate.Customer", null)
@@ -2997,6 +3076,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate.ChatGroup", b =>
                 {
                     b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.ContractAggregate.Contract", b =>
+                {
+                    b.Navigation("Invoices");
                 });
 
             modelBuilder.Entity("Ncp.Admin.Domain.AggregatesModel.CustomerAggregate.Customer", b =>

@@ -118,7 +118,7 @@ function handleClose() {
           <VueOfficeExcel :src="fileBuffer" style="min-height: 70vh" />
         </div>
         <div v-else-if="isImage && blobUrl" class="flex justify-center overflow-auto">
-          <Image :src="blobUrl" class="max-w-full" />
+          <Image :src="blobUrl" :preview="false" class="max-w-full" />
         </div>
         <pre
           v-else-if="isText"

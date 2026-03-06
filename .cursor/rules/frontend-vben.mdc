@@ -26,6 +26,15 @@ alwaysApply: false
 - 表单用 `useVbenForm`、`formModalApi.getData/setData`，提交后 `emit('success')`
 - 文案使用 `$t()` 做国际化
 
+## 表单抽屉（Drawer）
+
+**带表单的抽屉必须与主题一致**，统一使用 **useVbenDrawer + useVbenForm**，不要使用 Ant Design Vue 的 `Drawer` 组件 + 手写表单项。
+
+- **抽屉壳**：`useVbenDrawer`（来自 `@vben/common-ui`），提供标题、关闭、底部取消/确定、提交中 lock 等，与其它抽屉样式一致。
+- **表单内容**：`useVbenForm` + 在 `data.ts` 中定义的 **表单 schema**（与主表单一样用 `VbenFormSchema`、`z` 校验、`formItemClass` 等），保证标签、间距、栅格与主题表单一致。
+- **流程**：打开时 `drawerApi.setData({ ... }).open()`，在 `onOpenChange(isOpen)` 里根据 `drawerApi.getData()` 给 `formApi.setValues(...)`；确定时在 `onConfirm` 里 `formApi.validate()` → `formApi.getValues()` → 调接口或写本地状态，成功后 `drawerApi.close()`，提交中用 `drawerApi.lock(true/false)`。
+- **参考**：`src/views/contract/form-page.vue` 中的新增/编辑发票抽屉、`src/views/customer/modules/contact-drawer.vue`、`src/views/leave/balances/modules/form.vue`。
+
 ## 新增带权限的功能时（前端必做）
 
 1. `src/constants/permission-codes.ts` 新增权限码，与后端 PermissionCodes.cs 一致
@@ -37,5 +46,6 @@ alwaysApply: false
 
 - **data.ts**：`useGridFormSchema()` 每项 `componentProps` 必须含 `class: 'w-full'`；`useColumns` 必须有一列不设 `width` 作弹性列，否则操作列右侧空白（参考 `views/system/dept/data.ts`）
 - **子页高亮父菜单**：不在菜单中的子路由（如新建/编辑页）在 `meta` 中设 `activePath: '/父列表path'`
+- **抽屉**：带表单的抽屉用 useVbenDrawer + useVbenForm + schema，不要用 AVD `Drawer` 配手写 label/input，否则样式与主题不一致（见上文「表单抽屉」）
 
 更完整清单与示例见 `.cursor/skills/ncp-admin-frontend/SKILL.md`。

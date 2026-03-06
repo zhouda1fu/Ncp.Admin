@@ -32,7 +32,7 @@ public record CreateContractCommand(
     string InputCustomer,
     bool NextPaymentReminder,
     bool ContractExpiryReminder,
-    int SingleDoubleProfit,
+    int SingleDoubleSeal,
     string InvoicingInformation,
     int PaymentStatus,
     string WarrantyPeriod,
@@ -73,7 +73,7 @@ public class CreateContractCommandHandler(
             request.IncomeExpenseType, incomeExpenseTypeName,
             request.SignDate, request.Note, request.Description,
             request.DepartmentId, request.BusinessManager, request.ResponsibleProject, request.InputCustomer,
-            request.NextPaymentReminder, request.ContractExpiryReminder, request.SingleDoubleProfit,
+            request.NextPaymentReminder, request.ContractExpiryReminder, request.SingleDoubleSeal,
             request.InvoicingInformation, request.PaymentStatus, request.WarrantyPeriod,
             request.IsInstallmentPayment, request.AccumulatedAmount);
         await repository.AddAsync(contract, cancellationToken);

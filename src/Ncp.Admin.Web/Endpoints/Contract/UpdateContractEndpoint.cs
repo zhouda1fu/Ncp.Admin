@@ -35,7 +35,7 @@ public record UpdateContractRequest(
     string? InputCustomer = null,
     bool? NextPaymentReminder = null,
     bool? ContractExpiryReminder = null,
-    int? SingleDoubleProfit = null,
+    int? SingleDoubleSeal = null,
     string? InvoicingInformation = null,
     int? PaymentStatus = null,
     string? WarrantyPeriod = null,
@@ -64,7 +64,7 @@ public class UpdateContractEndpoint(IMediator mediator) : Endpoint<UpdateContrac
             req.Amount, req.StartDate, req.EndDate, req.FileStorageKey,
             orderId, customerId, req.ContractType, req.IncomeExpenseType, req.SignDate, req.Note, req.Description,
             req.DepartmentId, req.BusinessManager, req.ResponsibleProject, req.InputCustomer,
-            req.NextPaymentReminder, req.ContractExpiryReminder, req.SingleDoubleProfit,
+            req.NextPaymentReminder, req.ContractExpiryReminder, req.SingleDoubleSeal,
             req.InvoicingInformation, req.PaymentStatus, req.WarrantyPeriod,
             req.IsInstallmentPayment, req.AccumulatedAmount);
         await mediator.Send(cmd, ct);

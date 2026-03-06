@@ -44,12 +44,48 @@ export namespace ContractApi {
     inputCustomer?: string;
     nextPaymentReminder?: boolean;
     contractExpiryReminder?: boolean;
-    singleDoubleProfit?: number;
+    singleDoubleSeal?: number;
     invoicingInformation?: string;
     paymentStatus?: number;
     warrantyPeriod?: string;
     isInstallmentPayment?: boolean;
     accumulatedAmount?: number;
+    invoices?: ContractApi.ContractInvoiceItem[];
+  }
+
+  /** 合同发票子项（详情接口返回） */
+  export interface ContractInvoiceItem {
+    id: string;
+    type: number;
+    invoiceNumber: string;
+    taxRate: number;
+    amountExclTax: number;
+    source: string;
+    status: boolean;
+    title: string;
+    taxAmount: number;
+    invoicedAmount: number;
+    handler: string;
+    billingDate: string;
+    remarks: string;
+    attachmentStorageKey: string;
+  }
+
+  /** 新增/更新发票请求体 */
+  export interface CreateContractInvoicePayload {
+    type: number;
+    invoiceNumber: string;
+    taxRate: number;
+    amountExclTax: number;
+    source: string;
+    status: boolean;
+    title: string;
+    taxAmount: number;
+    invoicedAmount: number;
+    handler?: string;
+    billingDate?: string;
+    remarks?: string;
+    attachmentStorageKey?: string;
   }
 }
 
@@ -96,7 +132,7 @@ async function createContract(data: {
   inputCustomer?: string;
   nextPaymentReminder?: boolean;
   contractExpiryReminder?: boolean;
-  singleDoubleProfit?: number;
+  singleDoubleSeal?: number;
   invoicingInformation?: string;
   paymentStatus?: number;
   warrantyPeriod?: string;
@@ -133,7 +169,7 @@ async function updateContract(
     inputCustomer?: string;
     nextPaymentReminder?: boolean;
     contractExpiryReminder?: boolean;
-    singleDoubleProfit?: number;
+    singleDoubleSeal?: number;
     invoicingInformation?: string;
     paymentStatus?: number;
     warrantyPeriod?: string;
@@ -172,6 +208,31 @@ async function archiveContract(id: string) {
   return requestClient.post(`/contracts/${id}/archive`);
 }
 
+/**
+ * 新增合同发票
+ */
+async function createContractInvoice(contractId: string, data: ContractApi.CreateContractInvoicePayload) {
+  return requestClient.post<{ id: string }>(`/contracts/${contractId}/invoices`, data);
+}
+
+/**
+ * 更新合同发票
+ */
+async function updateContractInvoice(
+  contractId: string,
+  invoiceId: string,
+  data: ContractApi.CreateContractInvoicePayload,
+) {
+  return requestClient.put(`/contracts/${contractId}/invoices/${invoiceId}`, data);
+}
+
+/**
+ * 删除合同发票
+ */
+async function removeContractInvoice(contractId: string, invoiceId: string) {
+  return requestClient.delete(`/contracts/${contractId}/invoices/${invoiceId}`);
+}
+
 export {
   getContractList,
   getContract,
@@ -181,4 +242,7 @@ export {
   submitContract,
   approveContract,
   archiveContract,
+  createContractInvoice,
+  updateContractInvoice,
+  removeContractInvoice,
 };
