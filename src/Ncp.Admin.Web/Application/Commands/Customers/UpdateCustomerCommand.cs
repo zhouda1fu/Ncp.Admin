@@ -15,6 +15,7 @@ namespace Ncp.Admin.Web.Application.Commands.Customers;
 public record UpdateCustomerCommand(
     CustomerId Id,
     CustomerSourceId CustomerSourceId,
+    string CustomerSourceName,
     string FullName,
     CustomerStatus? Status,
     CompanyNature? Nature,
@@ -40,27 +41,25 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
     public UpdateCustomerCommandValidator()
     {
         RuleFor(c => c.Id).NotEmpty();
+        RuleFor(c => c.CustomerSourceName).NotEmpty().MaximumLength(100);
         RuleFor(c => c.FullName).NotEmpty().MaximumLength(200);
     }
 }
 
 public class UpdateCustomerCommandHandler(
     ICustomerRepository repository,
-    ICustomerSourceRepository customerSourceRepository,
     IRegionRepository regionRepository) : ICommandHandler<UpdateCustomerCommand, bool>
 {
     public async Task<bool> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
     {
         var customer = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
-        var source = await customerSourceRepository.GetAsync(request.CustomerSourceId, cancellationToken)
-            ?? throw new KnownException("未找到客户来源", ErrorCodes.CustomerSourceNotFound);
         var (provinceName, cityName, districtName) = await ResolveRegionNamesAsync(
             request.ProvinceCode, request.CityCode, request.DistrictCode, cancellationToken);
         var (phoneProvinceName, phoneCityName, phoneDistrictName) = await ResolveRegionNamesAsync(
             request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode, cancellationToken);
         customer.Update(
-            customer.OwnerId, request.CustomerSourceId, source.Name, request.FullName,
+            customer.OwnerId, request.CustomerSourceId, request.CustomerSourceName, request.FullName,
             customer.ShortName, request.Status, request.Nature, request.ProvinceCode,
             request.CityCode, request.DistrictCode,
             provinceName, cityName, districtName,

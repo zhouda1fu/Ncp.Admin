@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate;
+using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IncomeExpenseTypeOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
@@ -221,6 +223,79 @@ public static class SeedDatabaseExtension
                 dbContext.SaveChanges();
             }
 
+            // 初始化客户来源（方案 A：按使用场景区分，公海 / 客户列表 / 通用）
+            if (!dbContext.CustomerSources.Any())
+            {
+                var sea = CustomerSourceUsageScene.Sea;
+                var list = CustomerSourceUsageScene.List;
+                var both = CustomerSourceUsageScene.Both;
+                var customerSources = new[]
+                {
+                    // 公海侧
+                    new CustomerSource("爱番番", 0, sea),
+                    new CustomerSource("网站直接访问", 1, sea),
+                    new CustomerSource("360搜索", 2, sea),
+                    new CustomerSource("百度自然搜索", 3, sea),
+                    new CustomerSource("非搜索引擎来源", 4, sea),
+                    new CustomerSource("百度搜索推广-基木鱼", 5, sea),
+                    new CustomerSource("微软必应", 6, sea),
+                    new CustomerSource("百度其他-基木鱼", 7, sea),
+                    new CustomerSource("谷歌(.com)", 8, sea),
+                    new CustomerSource("神马搜索", 9, sea),
+                    new CustomerSource("搜狗", 10, sea),
+                    new CustomerSource("天猫", 11, sea),
+                    new CustomerSource("淘宝", 12, sea),
+                    new CustomerSource("京东", 13, sea),
+                    new CustomerSource("抖音", 14, sea),
+                    new CustomerSource("400电话", 15, sea),
+                    new CustomerSource("阿里巴巴", 16, sea),
+                    new CustomerSource("小红书", 17, sea),
+                    new CustomerSource("其他", 18, sea),
+                    // 列表侧
+                    new CustomerSource("网络推广", 19, list),
+                    new CustomerSource("陌生开发", 20, list),
+                    new CustomerSource("同事分享", 21, list),
+                    new CustomerSource("客户公海", 22, list),
+                    // 通用（两处都显示）
+                    new CustomerSource("展会", 23, both),
+                    new CustomerSource("客户介绍", 24, both),
+                };
+                foreach (var source in customerSources)
+                    dbContext.CustomerSources.Add(source);
+                dbContext.SaveChanges();
+            }
+
+            // 初始化行业主数据（从 Utils/SeedDatas/IndustrySeed.txt 读取：第一部分父级，第二部分子级）
+            if (!dbContext.Industries.Any())
+            {
+                var industrySeedPath = Path.Combine(env.ContentRootPath, "Utils", "SeedDatas", "IndustrySeed.txt");
+                var (parentRows, childRows) = GetIndustrySeedLinesFromFile(industrySeedPath);
+                if (parentRows.Count > 0)
+                {
+                    var parentList = parentRows.OrderBy(x => x.SortOrder).ToList();
+                    foreach (var p in parentList)
+                    {
+                        var industry = new Industry(p.Name, null, p.SortOrder, null);
+                        dbContext.Industries.Add(industry);
+                    }
+                    dbContext.SaveChanges();
+                    var parentIdByOldPk = new Dictionary<int, IndustryId>();
+                    var savedParents = dbContext.Industries.Where(x => x.ParentId == null).OrderBy(x => x.SortOrder).ToList();
+                    for (var i = 0; i < parentList.Count && i < savedParents.Count; i++)
+                        parentIdByOldPk[parentList[i].Pk] = savedParents[i].Id;
+                    foreach (var c in childRows)
+                    {
+                        if (string.IsNullOrWhiteSpace(c.Title)) continue;
+                        IndustryId? parentId = null;
+                        if (c.FkIndustry > 0 && parentIdByOldPk.TryGetValue(c.FkIndustry, out var pid))
+                            parentId = pid;
+                        var child = new Industry(c.Title.Trim(), parentId, c.SortOrder, string.IsNullOrWhiteSpace(c.Remark) ? null : c.Remark.Trim());
+                        dbContext.Industries.Add(child);
+                    }
+                    dbContext.SaveChanges();
+                }
+            }
+
             // 初始化区域主数据（从 Utils/SeedDatas/RegionSeed.txt 读取：Code, Name, Parent_Code, Level）
             if (!dbContext.Regions.Any())
             {
@@ -314,6 +389,51 @@ public static class SeedDatabaseExtension
             Log.Error(ex, "数据库种子数据初始化失败");
             throw;
         }
+    }
+
+    /// <summary>
+    /// 从 IndustrySeed.txt 读取行业种子数据。第一部分：pk_Industry, Title, OrderNum（父级）；第二部分：fk_Industry, Title, OrderNum, Remark（子级）。
+    /// </summary>
+    private static (List<(int Pk, string Name, int SortOrder)> Parents, List<(int FkIndustry, string Title, int SortOrder, string Remark)> Children) GetIndustrySeedLinesFromFile(string filePath)
+    {
+        var parents = new List<(int Pk, string Name, int SortOrder)>();
+        var children = new List<(int FkIndustry, string Title, int SortOrder, string Remark)>();
+        if (!File.Exists(filePath))
+        {
+            Log.Warning("行业种子文件不存在，跳过行业初始化: {Path}", filePath);
+            return (parents, children);
+        }
+        var lines = File.ReadAllLines(filePath);
+        var inParent = false;
+        var inChild = false;
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                inParent = false;
+                inChild = false;
+                continue;
+            }
+            if (line.StartsWith("pk_Industry\t", StringComparison.OrdinalIgnoreCase))
+            {
+                inParent = true;
+                inChild = false;
+                continue;
+            }
+            if (line.StartsWith("pk_Item\t", StringComparison.OrdinalIgnoreCase))
+            {
+                inParent = false;
+                inChild = true;
+                continue;
+            }
+            var parts = line.Split('\t');
+            if (inParent && parts.Length >= 4 && int.TryParse(parts[0], out var pk) && int.TryParse(parts[3], out var pOrder))
+                parents.Add((pk, parts[1].Trim(), pOrder));
+            if (inChild && parts.Length >= 5 && int.TryParse(parts[1], out var fk) && int.TryParse(parts[4], out var cOrder))
+                children.Add((fk, parts[2].Trim(), cOrder, parts.Length > 5 ? parts[5].Trim() : ""));
+        }
+        return (parents, children);
     }
 
     /// <summary>

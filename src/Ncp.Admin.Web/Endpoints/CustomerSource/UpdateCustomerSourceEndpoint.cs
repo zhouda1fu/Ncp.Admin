@@ -14,7 +14,8 @@ namespace Ncp.Admin.Web.Endpoints.CustomerSource;
 /// <param name="Id">客户来源 ID</param>
 /// <param name="Name">名称</param>
 /// <param name="SortOrder">排序</param>
-public record UpdateCustomerSourceRequest(CustomerSourceId Id, string Name, int SortOrder);
+/// <param name="UsageScene">使用场景（0公海 1客户列表 2通用）</param>
+public record UpdateCustomerSourceRequest(CustomerSourceId Id, string Name, int SortOrder, CustomerSourceUsageScene UsageScene);
 
 /// <summary>
 /// 更新客户来源
@@ -31,7 +32,7 @@ public class UpdateCustomerSourceEndpoint(IMediator mediator) : Endpoint<UpdateC
 
     public override async Task HandleAsync(UpdateCustomerSourceRequest req, CancellationToken ct)
     {
-        var cmd = new UpdateCustomerSourceCommand(req.Id, req.Name, req.SortOrder);
+        var cmd = new UpdateCustomerSourceCommand(req.Id, req.Name, req.SortOrder, req.UsageScene);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

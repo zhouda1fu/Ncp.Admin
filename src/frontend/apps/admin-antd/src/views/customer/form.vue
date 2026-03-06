@@ -146,7 +146,7 @@ onMounted(() => {
       const list = Array.isArray(res) ? res : (res as any)?.data ?? [];
       industryTreeOptions.value = buildIndustryTree(list);
     }),
-    getCustomerSourceList().then((list) => {
+    getCustomerSourceList({ scene: 'list' }).then((list) => {
       customerSourceOptions.value = list.map((x) => ({ label: x.name, value: x.id }));
     }),
     getRegionList().then((list) => {
@@ -190,8 +190,8 @@ async function loadCustomer() {
     formApi.setValues({
       fullName: detail?.fullName ?? '',
       customerSourceId: detail?.customerSourceId ?? '',
-      status: detail?.status,
-      nature: detail?.nature,
+      status: detail?.status != null ? Number(detail.status) : undefined,
+      nature: detail?.nature != null ? Number(detail.nature) : undefined,
       regionCodes: regionCodes.length > 0 ? regionCodes : undefined,
       coverRegion: detail?.coverRegion ?? '',
       registerAddress: detail?.registerAddress ?? '',
@@ -444,54 +444,52 @@ async function onSubmit() {
           @success="onContactSuccess"
         />
       </template>
-      <!-- 客户联系记录 -->
-      <div class="mt-6 border-t border-gray-200 pt-6">
-        <div class="mb-3 flex items-center justify-between">
-          <span class="text-base font-medium">{{ $t('customer.contactRecords') }}</span>
-          <Button
-            v-if="id"
-            type="primary"
-            class="inline-flex items-center gap-1"
-            @click="openContactRecordDrawer"
+      <!-- 客户联系记录（仅编辑页展示） -->
+      <template v-if="id">
+        <div class="mt-6 border-t border-gray-200 pt-6">
+          <div class="mb-3 flex items-center justify-between">
+            <span class="text-base font-medium">{{ $t('customer.contactRecords') }}</span>
+            <Button
+              type="primary"
+              class="inline-flex items-center gap-1"
+              @click="openContactRecordDrawer"
+            >
+              + {{ $t('customer.addContactRecord') }}
+            </Button>
+          </div>
+          <Table
+            :columns="contactRecordColumns"
+            :data-source="contactRecordList"
+            :pagination="false"
+            row-key="id"
+            size="small"
+            class="mt-2"
           >
-            + {{ $t('customer.addContactRecord') }}
-          </Button>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'recordAt'">
+                {{ formatRecordAt(record.recordAt) }}
+              </template>
+              <template v-else-if="column.key === 'action'">
+                <Button
+                  type="link"
+                  size="small"
+                  danger
+                  @click="handleDeleteContactRecord(record as CustomerApi.CustomerContactRecordItem)"
+                >
+                  {{ $t('customer.deleteRecord') }}
+                </Button>
+              </template>
+            </template>
+          </Table>
+          <ContactRecordDrawer
+            ref="contactRecordDrawerRef"
+            :customer-id="id"
+            @success="onContactRecordSuccess"
+          />
         </div>
-        <Table
-          v-if="id"
-          :columns="contactRecordColumns"
-          :data-source="contactRecordList"
-          :pagination="false"
-          row-key="id"
-          size="small"
-          class="mt-2"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'recordAt'">
-              {{ formatRecordAt(record.recordAt) }}
-            </template>
-            <template v-else-if="column.key === 'action'">
-              <Button
-                type="link"
-                size="small"
-                danger
-                @click="handleDeleteContactRecord(record as CustomerApi.CustomerContactRecordItem)"
-              >
-                {{ $t('customer.deleteRecord') }}
-              </Button>
-            </template>
-          </template>
-        </Table>
-        <ContactRecordDrawer
-          v-if="id"
-          ref="contactRecordDrawerRef"
-          :customer-id="id"
-          @success="onContactRecordSuccess"
-        />
-      </div>
+      </template>
       <div class="mt-6 flex gap-2">
         <Button type="primary" :loading="submitting" :disabled="submitting" @click="onSubmit">{{ $t('common.confirm') }}</Button>
-        <Button type="primary" danger @click="resetForm">{{ $t('common.reset') }}</Button>
         <Button @click="goBack">{{ $t('common.cancel') }}</Button>
       </div>
     </div>

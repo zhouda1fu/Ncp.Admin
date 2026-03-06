@@ -35,7 +35,11 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerSourceApi.CustomerSourceItem>({
           _params: { page: { currentPage: number; pageSize: number } },
           formValues: Recordable<any>,
         ) => {
-          const list = await getCustomerSourceList();
+          const sceneParam =
+            formValues?.scene === 'sea' || formValues?.scene === 'list'
+              ? { scene: formValues.scene as 'sea' | 'list' }
+              : undefined;
+          const list = await getCustomerSourceList(sceneParam);
           let items = list;
           if (formValues?.name) {
             const kw = String(formValues.name).trim().toLowerCase();

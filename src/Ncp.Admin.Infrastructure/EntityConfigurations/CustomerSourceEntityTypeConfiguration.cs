@@ -13,6 +13,8 @@ internal class CustomerSourceEntityTypeConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("客户来源标识");
         builder.Property(x => x.Name).IsRequired().HasMaxLength(100).HasComment("名称");
         builder.Property(x => x.SortOrder).IsRequired().HasComment("排序");
+        builder.Property(x => x.UsageScene).IsRequired().HasComment("使用场景：0公海 1客户列表 2通用");
         builder.HasIndex(x => x.SortOrder);
+        builder.HasIndex(x => x.UsageScene);
     }
 }

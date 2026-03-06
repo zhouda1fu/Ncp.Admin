@@ -13,7 +13,8 @@ namespace Ncp.Admin.Web.Endpoints.CustomerSource;
 /// </summary>
 /// <param name="Name">名称</param>
 /// <param name="SortOrder">排序</param>
-public record CreateCustomerSourceRequest(string Name, int SortOrder);
+/// <param name="UsageScene">使用场景（0公海 1客户列表 2通用）</param>
+public record CreateCustomerSourceRequest(string Name, int SortOrder, CustomerSourceUsageScene UsageScene = CustomerSourceUsageScene.Both);
 
 public record CreateCustomerSourceResponse(CustomerSourceId Id);
 
@@ -29,7 +30,7 @@ public class CreateCustomerSourceEndpoint(IMediator mediator) : Endpoint<CreateC
 
     public override async Task HandleAsync(CreateCustomerSourceRequest req, CancellationToken ct)
     {
-        var cmd = new CreateCustomerSourceCommand(req.Name, req.SortOrder);
+        var cmd = new CreateCustomerSourceCommand(req.Name, req.SortOrder, req.UsageScene);
         var id = await mediator.Send(cmd, ct);
         await Send.OkAsync(new CreateCustomerSourceResponse(id).AsResponseData(), cancellation: ct);
     }

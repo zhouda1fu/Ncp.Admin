@@ -980,9 +980,15 @@ namespace Ncp.Admin.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasComment("排序");
 
+                    b.Property<int>("UsageScene")
+                        .HasColumnType("integer")
+                        .HasComment("使用场景：0公海 1客户列表 2通用");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SortOrder");
+
+                    b.HasIndex("UsageScene");
 
                     b.ToTable("customer_source", (string)null);
                 });

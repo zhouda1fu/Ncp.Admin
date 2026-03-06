@@ -21,6 +21,9 @@
     "deleteConfirm": "Are you sure to delete {0}?",
     "deleting": "Deleting {0} ...",
     "deleteSuccess": "{0} deleted successfully",
+    "updateSuccess": "Saved successfully",
+    "createSuccess": "Created successfully",
+    "loadFailed": "Load failed",
     "operationSuccess": "Operation succeeded",
     "operationFailed": "Operation failed"
   },

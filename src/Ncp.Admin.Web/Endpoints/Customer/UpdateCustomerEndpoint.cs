@@ -16,6 +16,7 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 /// </summary>
 /// <param name="Id">客户 ID</param>
 /// <param name="CustomerSourceId">客户来源 ID</param>
+/// <param name="CustomerSourceName">客户来源名称（前端传入）</param>
 /// <param name="FullName">客户全称</param>
 /// <param name="Status">客户状态（枚举值）</param>
 /// <param name="Nature">公司性质（枚举值）</param>
@@ -39,6 +40,7 @@ namespace Ncp.Admin.Web.Endpoints.Customer;
 public record UpdateCustomerRequest(
     CustomerId Id,
     CustomerSourceId CustomerSourceId,
+    string CustomerSourceName,
     string FullName,
     CustomerStatus? Status,
     CompanyNature? Nature,
@@ -78,7 +80,7 @@ public class UpdateCustomerEndpoint(IMediator mediator) : Endpoint<UpdateCustome
     public override async Task HandleAsync(UpdateCustomerRequest req, CancellationToken ct)
     {
         var cmd = new UpdateCustomerCommand(
-            req.Id, req.CustomerSourceId, req.FullName,
+            req.Id, req.CustomerSourceId, req.CustomerSourceName, req.FullName,
             req.Status, req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode,
             req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.EmployeeCount, req.BusinessLicense ?? string.Empty,
             req.ContactQq, req.ContactWechat, req.Remark, req.IsHidden, req.IndustryIds);

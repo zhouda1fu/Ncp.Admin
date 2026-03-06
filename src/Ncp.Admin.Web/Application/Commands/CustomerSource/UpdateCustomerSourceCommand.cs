@@ -5,7 +5,7 @@ using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.Commands.CustomerSource;
 
-public record UpdateCustomerSourceCommand(CustomerSourceId Id, string Name, int SortOrder) : ICommand<bool>;
+public record UpdateCustomerSourceCommand(CustomerSourceId Id, string Name, int SortOrder, CustomerSourceUsageScene UsageScene) : ICommand<bool>;
 
 public class UpdateCustomerSourceCommandValidator : AbstractValidator<UpdateCustomerSourceCommand>
 {
@@ -22,7 +22,7 @@ public class UpdateCustomerSourceCommandHandler(ICustomerSourceRepository reposi
     {
         var entity = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到客户来源", ErrorCodes.CustomerSourceNotFound);
-        entity.Update(request.Name, request.SortOrder);
+        entity.Update(request.Name, request.SortOrder, request.UsageScene);
         return true;
     }
 }

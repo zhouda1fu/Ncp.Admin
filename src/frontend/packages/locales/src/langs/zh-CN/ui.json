@@ -21,6 +21,9 @@
     "deleteConfirm": "确定删除 {0} 吗？",
     "deleting": "正在删除 {0} ...",
     "deleteSuccess": "{0} 删除成功",
+    "updateSuccess": "保存成功",
+    "createSuccess": "创建成功",
+    "loadFailed": "加载失败",
     "operationSuccess": "操作成功",
     "operationFailed": "操作失败"
   },

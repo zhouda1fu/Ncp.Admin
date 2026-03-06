@@ -3,12 +3,27 @@ using Ncp.Admin.Domain;
 namespace Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 
 /// <summary>
+/// 客户来源使用场景：公海、客户列表、通用（两处都显示）。
+/// </summary>
+public enum CustomerSourceUsageScene
+{
+    /// <summary>公海创建客户时可选</summary>
+    Sea = 0,
+
+    /// <summary>客户列表新建/编辑时可选</summary>
+    List = 1,
+
+    /// <summary>公海与客户列表均可选</summary>
+    Both = 2,
+}
+
+/// <summary>
 /// 客户来源 ID（强类型）。
 /// </summary>
 public partial record CustomerSourceId : IGuidStronglyTypedId;
 
 /// <summary>
-/// 客户来源聚合根：主数据，仅 id + 名称，供用户维护、客户档案引用。
+/// 客户来源聚合根：主数据，id + 名称 + 使用场景，供用户维护、客户档案引用。
 /// </summary>
 public class CustomerSource : Entity<CustomerSourceId>, IAggregateRoot
 {
@@ -28,20 +43,27 @@ public class CustomerSource : Entity<CustomerSourceId>, IAggregateRoot
     public int SortOrder { get; private set; }
 
     /// <summary>
+    /// 使用场景（公海 / 客户列表 / 通用）。
+    /// </summary>
+    public CustomerSourceUsageScene UsageScene { get; private set; }
+
+    /// <summary>
     /// 创建客户来源。
     /// </summary>
-    public CustomerSource(string name, int sortOrder = 0)
+    public CustomerSource(string name, int sortOrder = 0, CustomerSourceUsageScene usageScene = CustomerSourceUsageScene.Both)
     {
-        Name = name ;
+        Name = name;
         SortOrder = sortOrder;
+        UsageScene = usageScene;
     }
 
     /// <summary>
     /// 更新客户来源。
     /// </summary>
-    public void Update(string name, int sortOrder)
+    public void Update(string name, int sortOrder, CustomerSourceUsageScene usageScene)
     {
-        Name = name ;
+        Name = name;
         SortOrder = sortOrder;
+        UsageScene = usageScene;
     }
 }

@@ -4,7 +4,7 @@ using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.Commands.CustomerSource;
 
-public record CreateCustomerSourceCommand(string Name, int SortOrder = 0) : ICommand<CustomerSourceId>;
+public record CreateCustomerSourceCommand(string Name, int SortOrder = 0, CustomerSourceUsageScene UsageScene = CustomerSourceUsageScene.Both) : ICommand<CustomerSourceId>;
 
 public class CreateCustomerSourceCommandValidator : AbstractValidator<CreateCustomerSourceCommand>
 {
@@ -18,7 +18,7 @@ public class CreateCustomerSourceCommandHandler(ICustomerSourceRepository reposi
 {
     public async Task<CustomerSourceId> Handle(CreateCustomerSourceCommand request, CancellationToken cancellationToken)
     {
-        var entity = new Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate.CustomerSource(request.Name, request.SortOrder);
+        var entity = new Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate.CustomerSource(request.Name, request.SortOrder, request.UsageScene);
         await repository.AddAsync(entity, cancellationToken);
         return entity.Id;
     }

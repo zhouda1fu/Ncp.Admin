@@ -214,7 +214,7 @@ onMounted(() => {
     getRegionList().then((list) => {
       regionList.value = list;
     }),
-    getCustomerSourceList().then((list) => {
+    getCustomerSourceList({ scene: 'sea' }).then((list) => {
       customerSourceOptions.value = list.map((x) => ({ label: x.name, value: x.id }));
     }),
   ]);

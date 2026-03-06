@@ -37,15 +37,18 @@ const [Drawer, drawerApi] = useVbenDrawer({
     drawerApi.lock();
     const data = await formApi.getValues();
     try {
+      const usageScene = Number(data.usageScene) ?? 2;
       if (formData.value?.id) {
         await updateCustomerSource(formData.value.id, {
           name: String(data.name ?? ''),
           sortOrder: Number(data.sortOrder) ?? 0,
+          usageScene,
         });
       } else {
         await createCustomerSource({
           name: String(data.name ?? ''),
           sortOrder: Number(data.sortOrder) ?? 0,
+          usageScene,
         });
       }
       drawerApi.close();
@@ -62,6 +65,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       formData.value = data;
       formApi.setValues({
         name: data?.name ?? '',
+        usageScene: data?.usageScene ?? 2,
         sortOrder: data?.sortOrder ?? 0,
       });
     }

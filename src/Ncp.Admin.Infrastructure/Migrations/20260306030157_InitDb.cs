@@ -338,7 +338,8 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "客户来源标识"),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, comment: "名称"),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序")
+                    SortOrder = table.Column<int>(type: "integer", nullable: false, comment: "排序"),
+                    UsageScene = table.Column<int>(type: "integer", nullable: false, comment: "使用场景：0公海 1客户列表 2通用")
                 },
                 constraints: table =>
                 {
@@ -1521,6 +1522,11 @@ namespace Ncp.Admin.Infrastructure.Migrations
                 name: "IX_customer_source_SortOrder",
                 table: "customer_source",
                 column: "SortOrder");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_customer_source_UsageScene",
+                table: "customer_source",
+                column: "UsageScene");
 
             migrationBuilder.CreateIndex(
                 name: "IX_dept_IsDeleted",
