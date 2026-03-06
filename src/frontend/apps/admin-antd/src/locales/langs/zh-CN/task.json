@@ -61,6 +61,7 @@
     "isPrimaryHint": "仅可设置一名主要联系人",
     "contactRemark": "备注",
     "followUpRecords": "项目跟进记录",
+    "noFollowUpRecords": "暂无跟进记录",
     "addFollowUpRecord": "添加跟进记录",
     "editFollowUpRecord": "编辑",
     "deleteFollowUpRecord": "删除",

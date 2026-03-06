@@ -61,6 +61,7 @@
     "isPrimaryHint": "Only one primary contact can be set",
     "contactRemark": "Remark",
     "followUpRecords": "Follow-up Records",
+    "noFollowUpRecords": "No follow-up records yet",
     "addFollowUpRecord": "Add Follow-up",
     "editFollowUpRecord": "Edit",
     "deleteFollowUpRecord": "Delete",

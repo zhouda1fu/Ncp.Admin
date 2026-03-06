@@ -7,7 +7,18 @@ import { useRoute, useRouter } from 'vue-router';
 import { Page } from '@vben/common-ui';
 import { ArrowLeft, Search } from '@vben/icons';
 
-import { Button, Input, message, Modal, Space, Table, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  Input,
+  message,
+  Modal,
+  Space,
+  Table,
+  Tag,
+  Timeline,
+  TimelineItem,
+} from 'ant-design-vue';
 import type { TableColumnType } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
@@ -55,6 +66,16 @@ const selectedCustomerName = ref('');
 const contactList = computed(() => projectDetail.value?.contacts ?? []);
 const followUpRecordList = computed(() => projectDetail.value?.followUpRecords ?? []);
 
+/** 按 visitDate 或 createdAt 排序，最新在上 */
+const sortedFollowUpRecords = computed(() => {
+  const list = [...(followUpRecordList.value ?? [])];
+  return list.sort((a, b) => {
+    const da = a.visitDate || a.createdAt || '';
+    const db = b.visitDate || b.createdAt || '';
+    return db.localeCompare(da);
+  });
+});
+
 const contactColumns: TableColumnType<ProjectApi.ProjectContactItem>[] = [
   { title: () => $t('task.project.contactName'), dataIndex: 'name', key: 'name', width: 120 },
   { title: () => $t('task.project.contactPosition'), dataIndex: 'position', key: 'position', width: 100 },
@@ -62,14 +83,6 @@ const contactColumns: TableColumnType<ProjectApi.ProjectContactItem>[] = [
   { title: () => $t('task.project.contactOfficePhone'), dataIndex: 'officePhone', key: 'officePhone', width: 120 },
   { title: () => $t('task.project.contactEmail'), dataIndex: 'email', key: 'email', width: 140 },
   { title: () => $t('task.project.isPrimary'), dataIndex: 'isPrimary', key: 'isPrimary', width: 90 },
-  { title: () => $t('task.project.operation'), key: 'action', width: 160 },
-];
-
-const followUpRecordColumns: TableColumnType<ProjectApi.ProjectFollowUpRecordItem>[] = [
-  { title: () => $t('task.project.followUpTitle'), dataIndex: 'title', key: 'title', width: 140 },
-  { title: () => $t('task.project.followUpVisitDate'), dataIndex: 'visitDate', key: 'visitDate', width: 120 },
-  { title: () => $t('task.project.followUpReminderFrequency'), dataIndex: 'reminderIntervalDays', key: 'reminderIntervalDays', width: 100 },
-  { title: () => $t('task.project.followUpContent'), dataIndex: 'content', key: 'content', ellipsis: true },
   { title: () => $t('task.project.operation'), key: 'action', width: 160 },
 ];
 
@@ -103,6 +116,22 @@ const regionTreeOptions = computed<RegionCascaderOption[]>(() => {
 function getRegionNameById(regionId: number | string): string {
   const r = regionList.value.find((x) => String(x.id) === String(regionId));
   return r?.name ?? '';
+}
+
+function formatFollowUpDate(dt?: string): string {
+  if (!dt) return '-';
+  return new Date(dt).toLocaleDateString('zh-CN');
+}
+
+function formatReminderText(reminderIntervalDays: number): string {
+  return reminderIntervalDays === 0
+    ? '-'
+    : $t('task.project.followUpReminderDays', [String(reminderIntervalDays)]);
+}
+
+/** 有提醒的跟进记录用橙色节点，无提醒用蓝色 */
+function getFollowUpTimelineColor(reminderIntervalDays: number): string {
+  return reminderIntervalDays > 0 ? 'orange' : 'blue';
 }
 
 const [Form, formApi] = useVbenForm({
@@ -450,39 +479,51 @@ onMounted(() => {
           :customer-contacts="customerContacts"
           @success="onContactSuccess"
         />
-        <!-- 项目跟进记录 -->
-        <div class="mt-6 border-t border-gray-200 pt-6">
-          <div class="mb-3 flex items-center justify-between">
-            <span class="text-base font-medium">{{ $t('task.project.followUpRecords') }}</span>
-            <Button type="primary" class="inline-flex items-center gap-1" @click="openFollowUpRecordDrawer()">
+        <!-- 项目跟进记录（时间线展示，参考 workflow 审批记录 Card 布局） -->
+        <Card
+          :title="$t('task.project.followUpRecords')"
+          class="mt-6 border-border bg-card"
+          :bordered="true"
+        >
+          <template #extra>
+            <Button type="primary" size="small" @click="openFollowUpRecordDrawer()">
               + {{ $t('task.project.addFollowUpRecord') }}
             </Button>
+          </template>
+          <div v-if="sortedFollowUpRecords.length === 0" class="py-12 text-center text-muted-foreground">
+            {{ $t('task.project.noFollowUpRecords') }}
           </div>
-          <Table
-            :columns="followUpRecordColumns"
-            :data-source="followUpRecordList"
-            :pagination="false"
-            row-key="id"
-            size="small"
-            class="mt-2"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'reminderIntervalDays'">
-                {{ record.reminderIntervalDays === 0 ? '-' : $t('task.project.followUpReminderDays', [String(record.reminderIntervalDays)]) }}
-              </template>
-              <template v-else-if="column.key === 'action'">
-                <Space>
-                  <Button type="link" size="small" @click="openFollowUpRecordDrawer(record)">
+          <Timeline v-else>
+            <TimelineItem
+              v-for="record in sortedFollowUpRecords"
+              :key="record.id"
+              :color="getFollowUpTimelineColor(record.reminderIntervalDays)"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium text-foreground">
+                    {{ record.title }}
+                  </div>
+                  <div class="mt-1 flex flex-wrap gap-x-4 gap-y-0 text-sm text-muted-foreground">
+                    <span>{{ $t('task.project.followUpVisitDate') }}: {{ formatFollowUpDate(record.visitDate ?? record.createdAt) }}</span>
+                    <span>{{ $t('task.project.followUpReminderFrequency') }}: {{ formatReminderText(record.reminderIntervalDays) }}</span>
+                  </div>
+                  <div v-if="record.content" class="mt-2 rounded-md border border-border bg-muted/30 px-3 py-2 whitespace-pre-wrap text-sm text-card-foreground">
+                    {{ record.content }}
+                  </div>
+                </div>
+                <Space class="shrink-0">
+                  <Button type="link" size="small" class="!p-0" @click="openFollowUpRecordDrawer(record)">
                     {{ $t('task.project.editFollowUpRecord') }}
                   </Button>
-                  <Button type="link" size="small" danger @click="handleDeleteFollowUpRecord(record)">
+                  <Button type="link" size="small" danger class="!p-0" @click="handleDeleteFollowUpRecord(record)">
                     {{ $t('task.project.deleteFollowUpRecord') }}
                   </Button>
                 </Space>
-              </template>
-            </template>
-          </Table>
-        </div>
+              </div>
+            </TimelineItem>
+          </Timeline>
+        </Card>
         <FollowUpRecordDrawer
           v-if="id"
           ref="followUpRecordDrawerRef"
