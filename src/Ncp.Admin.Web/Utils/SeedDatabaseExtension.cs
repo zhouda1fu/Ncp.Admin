@@ -196,15 +196,15 @@ public static class SeedDatabaseExtension
             {
                 var contractTypeOptions = new[]
                 {
-                    new ContractTypeOption("安徽阳光心健科技发展有限公司第三分公司", 1, true, 0),
-                    new ContractTypeOption("安徽阳光心健科技发展有限公司第五分公司", 2, true, 1),
-                    new ContractTypeOption("安徽阳光心健科技发展有限公司", 3, true, 2),
-                    new ContractTypeOption("安徽百睿特新材料科技有限公司", 4, true, 3),
-                    new ContractTypeOption("安徽惠明教育科技有限公司", 5, true, 4),
-                    new ContractTypeOption("合肥楚一贸易有限公司", 6, true, 5),
-                    new ContractTypeOption("合肥市新晨心理咨询有限公司", 7, true, 6),
-                    new ContractTypeOption("安徽乐康教育装备有限公司", 8, true, 7),
-                    new ContractTypeOption("合肥市叶懋智能科技有限公司", 9, true, 8),
+                    new ContractTypeOption("示例签订公司（第一分公司）", 1, true, 0),
+                    new ContractTypeOption("示例签订公司（第二分公司）", 2, true, 1),
+                    new ContractTypeOption("示例签订公司（总部）", 3, true, 2),
+                    new ContractTypeOption("示例签订公司 A", 4, true, 3),
+                    new ContractTypeOption("示例签订公司 B", 5, true, 4),
+                    new ContractTypeOption("示例签订公司 C", 6, true, 5),
+                    new ContractTypeOption("示例签订公司 D", 7, true, 6),
+                    new ContractTypeOption("示例签订公司 E", 8, true, 7),
+                    new ContractTypeOption("示例签订公司 F", 9, true, 8),
                 };
                 foreach (var opt in contractTypeOptions)
                     dbContext.ContractTypeOptions.Add(opt);

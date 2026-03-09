@@ -59,7 +59,13 @@ export function useColumns(
       field: 'orderSigningCompanyOptionDisplay',
       title: $t('contract.orderSigningCompanyOptionDisplay'),
       width: 160,
-      formatter: ({ cell }) => (cell ? $t('common.yes') : $t('common.no')),
+      cellRender: {
+        name: 'CellTag',
+        options: [
+          { color: 'success', label: $t('common.yes'), value: true },
+          { color: 'default', label: $t('common.no'), value: false },
+        ],
+      },
     },
     { field: 'sortOrder', title: $t('contract.sortOrder'), width: 100 },
     {

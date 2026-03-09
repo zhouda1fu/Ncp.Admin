@@ -3,15 +3,30 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
-import { ArrowLeft } from '@vben/icons';
+import { ArrowLeft, Search } from '@vben/icons';
 
-import { Button, Card, DatePicker, Input, InputNumber, message, Select, Table, Tooltip } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  DatePicker,
+  Input,
+  InputNumber,
+  message,
+  Select,
+  Table,
+  Tooltip,
+  TreeSelect,
+} from 'ant-design-vue';
 
 import type { OrderApi } from '#/api/system/order';
 import { createOrder, getOrder, updateOrder } from '#/api/system/order';
 import { getContractList } from '#/api/system/contract';
-import { getCustomerSearch } from '#/api/system/customer';
-import { getDeptList } from '#/api/system/dept';
+import type { ContractTypeOptionApi } from '#/api/system/contract-type';
+import { getContractTypeOptionList } from '#/api/system/contract-type';
+import type { CustomerApi } from '#/api/system/customer';
+import { getCustomer } from '#/api/system/customer';
+import { getDeptTree } from '#/api/system/dept';
+import type { SystemDeptApi } from '#/api/system/dept';
 import { fetchFileBlob, uploadFile } from '#/api/system/file';
 import { getProductList } from '#/api/system/product';
 import { getProjectList } from '#/api/system/project';
@@ -19,6 +34,7 @@ import { getUserList } from '#/api/system/user';
 import { $t } from '#/locales';
 import { OrderTypeEnum } from '#/api/system/order';
 import FilePreviewModal from '#/components/file-preview/FilePreviewModal.vue';
+import CustomerSelectModal from '#/views/task/projects/modules/customer-select-modal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -28,12 +44,18 @@ const isNew = computed(() => !id.value);
 
 const loading = ref(false);
 const submitting = ref(false);
-const customerOptions = ref<{ label: string; value: string; name: string }[]>([]);
 const userOptions = ref<{ label: string; value: string }[]>([]);
+const customerSelectModalRef = ref<InstanceType<typeof CustomerSelectModal> | null>(null);
+const selectedCustomerName = ref('');
 const contractOptions = ref<{ label: string; value: string }[]>([]);
+/** 合同签订公司选项：来自合同类型中「订单签订公司选项展示」为是的项 */
+const contractSigningCompanyOptions = ref<{ label: string; value: string }[]>([]);
 const projectOptions = ref<{ label: string; value: string }[]>([]);
 const productOptions = ref<{ label: string; value: string; name: string; model: string; unit: string }[]>([]);
-const deptOptions = ref<{ label: string; value: string }[]>([]);
+/** 部门树（原始接口数据，用于按 id 查名称） */
+const deptTreeRaw = ref<SystemDeptApi.SystemDept[]>([]);
+/** 部门树选项（TreeSelect tree-data 格式） */
+const deptTreeData = ref<{ title: string; value: string; key: string; children?: any[] }[]>([]);
 
 const paymentStatusOptions = [
   { label: '已到款', value: '已到款' },
@@ -130,17 +152,36 @@ function removeItem(index: number) {
   form.value.items.splice(index, 1);
 }
 
-function onCustomerSearch(keyword: string) {
-  if (!keyword || keyword.length < 1) {
-    customerOptions.value = [];
-    return;
+/** 将部门接口树转为 TreeSelect treeData */
+function buildDeptTreeData(nodes: SystemDeptApi.SystemDept[]): { title: string; value: string; key: string; children?: any[] }[] {
+  return nodes.map((d) => ({
+    title: d.name ?? String(d.id),
+    value: String(d.id),
+    key: String(d.id),
+    children: d.children && d.children.length > 0 ? buildDeptTreeData(d.children) : undefined,
+  }));
+}
+
+/** 从部门树中根据 id 查部门名称 */
+function findDeptName(nodes: SystemDeptApi.SystemDept[], deptId: string): string {
+  for (const d of nodes) {
+    if (String(d.id) === String(deptId)) return d.name ?? '';
+    if (d.children?.length) {
+      const found = findDeptName(d.children, deptId);
+      if (found) return found;
+    }
   }
-  getCustomerSearch({ keyword, pageIndex: 1, pageSize: 20 }).then((res) => {
-    customerOptions.value = (res.items ?? []).map((x) => ({
-      label: `${x.fullName} ${x.mainContactPhone || ''}`.trim(),
-      value: x.id,
-      name: x.fullName,
-    }));
+  return '';
+}
+
+function openCustomerSelectModal() {
+  customerSelectModalRef.value?.open({
+    onSelect(row: CustomerApi.CustomerItem) {
+      form.value.customerId = row.id;
+      const label = row.shortName ? `${row.fullName}（${row.shortName}）` : row.fullName;
+      form.value.customerName = row.fullName;
+      selectedCustomerName.value = label;
+    },
   });
 }
 
@@ -209,6 +250,18 @@ async function loadDetail() {
         remark: i.remark ?? '',
       })),
     };
+    if (data.customerId) {
+      try {
+        const customerDetail = await getCustomer(data.customerId);
+        selectedCustomerName.value = customerDetail.shortName
+          ? `${customerDetail.fullName}（${customerDetail.shortName}）`
+          : customerDetail.fullName;
+      } catch {
+        selectedCustomerName.value = data.customerName ?? '';
+      }
+    } else {
+      selectedCustomerName.value = '';
+    }
   } finally {
     loading.value = false;
   }
@@ -227,6 +280,12 @@ onMounted(() => {
       value: x.id,
     }));
   });
+  getContractTypeOptionList().then((raw) => {
+    const list = Array.isArray(raw) ? (Array.isArray(raw[0]) ? (raw as ContractTypeOptionApi.ContractTypeOptionItem[][]).flat() : raw as ContractTypeOptionApi.ContractTypeOptionItem[]) : [];
+    contractSigningCompanyOptions.value = list
+      .filter((x) => x.orderSigningCompanyOptionDisplay === true)
+      .map((x) => ({ label: x.name, value: x.name }));
+  });
   getProjectList({ pageIndex: 1, pageSize: 500 }).then((res) => {
     projectOptions.value = (res.items ?? []).map((x) => ({
       label: x.name || x.id,
@@ -242,13 +301,10 @@ onMounted(() => {
       unit: x.unit,
     }));
   });
-  getDeptList().then((res) => {
+  getDeptTree().then((res) => {
     const list = Array.isArray(res) ? res : (res as any)?.data ?? [];
-    const flatten = (arr: any[]): any[] => {
-      return arr.flatMap((x) => [x, ...(x.children ? flatten(x.children) : [])]);
-    };
-    const flat = flatten(list);
-    deptOptions.value = flat.map((x) => ({ label: x.name ?? x.id, value: String(x.id) }));
+    deptTreeRaw.value = list as SystemDeptApi.SystemDept[];
+    deptTreeData.value = buildDeptTreeData(deptTreeRaw.value);
   });
   if (!isNew.value) loadDetail();
 });
@@ -555,14 +611,16 @@ const contractFileColumns = [
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.dept') }}</label>
-            <Select
+            <TreeSelect
               v-model:value="form.deptId"
               allow-clear
+              show-search
               class="w-full"
-              :options="deptOptions"
-              :field-names="{ label: 'label', value: 'value' }"
+              :tree-data="deptTreeData"
+              tree-node-filter-prop="title"
               placeholder="--请选择--"
-              @select="(_: unknown, opt: unknown) => { form.deptName = (opt as { label?: string })?.label ?? ''; }"
+              :filter-tree-node="(inputValue, treeNode) => treeNode?.title?.toString().toLowerCase().includes(inputValue?.toLowerCase())"
+              @change="(val: string) => { form.deptName = val ? findDeptName(deptTreeRaw, val) : ''; }"
             />
           </div>
           <div>
@@ -578,18 +636,25 @@ const contractFileColumns = [
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.customer') }}</label>
-            <Select
-              v-model:value="form.customerId"
-              allow-clear
-              :filter-option="() => true"
-              placeholder="输入关键词搜索客户"
-              show-search
-              class="w-full"
-              :options="customerOptions"
-              :field-names="{ label: 'label', value: 'value' }"
-              @search="onCustomerSearch"
-              @select="(_: unknown, opt: unknown) => { form.customerName = (opt as { name?: string })?.name ?? ''; }"
-            />
+            <Input
+              :model-value="selectedCustomerName"
+              readonly
+              class="w-full cursor-pointer"
+              :placeholder="$t('task.project.searchCustomer')"
+              @click="openCustomerSelectModal"
+            >
+              <template #suffix>
+                <span
+                  class="cursor-pointer text-gray-500 hover:text-primary transition-colors"
+                  role="button"
+                  tabindex="0"
+                  @click.stop="openCustomerSelectModal"
+                  @keydown.enter.prevent="openCustomerSelectModal"
+                >
+                  <Search class="size-4" />
+                </span>
+              </template>
+            </Input>
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.project') }}</label>
@@ -604,7 +669,14 @@ const contractFileColumns = [
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.contractSigningCompany') }}</label>
-            <Input v-model:value="form.contractSigningCompany" placeholder="---请选择---" />
+            <Select
+              v-model:value="form.contractSigningCompany"
+              allow-clear
+              class="w-full"
+              :options="contractSigningCompanyOptions"
+              :field-names="{ label: 'label', value: 'value' }"
+              placeholder="--请选择--"
+            />
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contractTrustee') }}</label>
@@ -886,6 +958,7 @@ const contractFileColumns = [
         <Button @click="goBack">{{ $t('common.cancel') }}</Button>
       </div>
     </div>
+    <CustomerSelectModal ref="customerSelectModalRef" />
     <FilePreviewModal
       v-model:open="previewModalVisible"
       :file-path="previewFilePath"
