@@ -26,7 +26,6 @@ public class ProjectRepository(ApplicationDbContext context)
         if (entity != null)
         {
             context.Projects.Remove(entity);
-            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }
