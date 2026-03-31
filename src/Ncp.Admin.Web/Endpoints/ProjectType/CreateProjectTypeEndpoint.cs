@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.ProjectTypeAggregate;
-using Ncp.Admin.Web.Application.Commands.ProjectType;
+using Ncp.Admin.Web.Application.Commands.ProjectTypeModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.ProjectType;

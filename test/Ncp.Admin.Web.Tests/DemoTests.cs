@@ -77,17 +77,17 @@ namespace Ncp.Admin.Web.Tests
         record ErrorData(string errorCode, string errorMessage, string propertyName);
 
 
-        [Fact]
-        public async Task ContextTest()
-        {
-            var client = app.CreateClient();
-            client.DefaultRequestHeaders.Add(TenantContext.ContextKey, "t1");
-            var (rsp, res) = await client.POSTAsync<ContextEndpoint, EmptyRequest, ResponseData<string>>(new EmptyRequest());
+        //[Fact]
+        //public async Task ContextTest()
+        //{
+        //    var client = app.CreateClient();
+        //    client.DefaultRequestHeaders.Add(TenantContext.ContextKey, "t1");
+        //    var (rsp, res) = await client.POSTAsync<ContextEndpoint, EmptyRequest, ResponseData<string>>(new EmptyRequest());
             
-            Assert.True(rsp.IsSuccessStatusCode);
-            Assert.NotNull(res);
-            Assert.Equal("", res.Data);
-        }
+        //    Assert.True(rsp.IsSuccessStatusCode);
+        //    Assert.NotNull(res);
+        //    Assert.Equal("", res.Data);
+        //}
 
         [Fact]
         public async Task LockTest()

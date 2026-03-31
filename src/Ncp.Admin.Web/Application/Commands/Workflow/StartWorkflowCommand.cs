@@ -43,7 +43,11 @@ public class StartWorkflowCommandValidator : AbstractValidator<StartWorkflowComm
 
     private static bool BeValidJson(string? value)
     {
-        if (string.IsNullOrEmpty(value)) return true;
+        if (string.IsNullOrEmpty(value))
+        {
+            return true;
+        }
+
         try
         {
             System.Text.Json.JsonDocument.Parse(value);
@@ -58,19 +62,19 @@ public class StartWorkflowCommandValidator : AbstractValidator<StartWorkflowComm
 
 /// <summary>
 /// 发起流程命令处理器
-/// Handler 负责编排，领域逻辑（获取首节点）下沉到聚合根，审批人由 WorkflowAssigneeResolverQuery 解析
+/// 使用 WorkflowTreeTraverser 从设计器树 JSON 解析首个审批节点，审批人由 WorkflowAssigneeResolverQuery 解析。
 /// </summary>
 public class StartWorkflowCommandHandler(
     IWorkflowDefinitionRepository definitionRepository,
     IWorkflowInstanceRepository instanceRepository,
     WorkflowInstanceQuery instanceQuery,
     UserQuery userQuery,
+    WorkflowTreeTraverser treeTraverser,
     WorkflowAssigneeResolverQuery assigneeResolverQuery)
     : ICommandHandler<StartWorkflowCommand, WorkflowInstanceId>
 {
     public async Task<WorkflowInstanceId> Handle(StartWorkflowCommand request, CancellationToken cancellationToken)
     {
-        // 同一业务键防重：若已有运行中的流程则不允许重复发起
         var existsRunning = await instanceQuery.ExistsRunningInstanceByBusinessKeyAsync(
             request.BusinessType,
             request.BusinessKey,
@@ -80,7 +84,6 @@ public class StartWorkflowCommandHandler(
             throw new KnownException("同一业务已有审批中的流程，请勿重复发起", ErrorCodes.WorkflowDuplicateBusinessKey);
         }
 
-        // 获取流程定义
         var definition = await definitionRepository.GetAsync(request.WorkflowDefinitionId, cancellationToken)
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
 
@@ -89,11 +92,11 @@ public class StartWorkflowCommandHandler(
             throw new KnownException("流程定义未发布，无法发起流程", ErrorCodes.WorkflowDefinitionAlreadyArchived);
         }
 
-        // 获取发起人信息以获取部门ID
         var initiator = await userQuery.GetUserByIdAsync(request.InitiatorId, cancellationToken)
             ?? throw new KnownException("未找到发起人", ErrorCodes.UserNotFound);
 
-        // 创建流程实例
+        var initiatorDisplayName = !string.IsNullOrWhiteSpace(initiator.RealName) ? initiator.RealName : initiator.Name;
+
         var instance = new WorkflowInstance(
             request.WorkflowDefinitionId,
             definition.Name,
@@ -101,41 +104,38 @@ public class StartWorkflowCommandHandler(
             request.BusinessType,
             request.Title,
             request.InitiatorId,
-            request.InitiatorName,
+            initiatorDisplayName,
             initiator.DeptId,
             request.Variables,
             request.Remark);
 
-        await instanceRepository.AddAsync(instance, cancellationToken);
-
-        // 通过聚合根领域方法解析条件分支，得到第一个需审批的节点
-        var evaluator = WorkflowConditionEvaluator.CreateEvaluator(request.Variables);
-        var firstNode = definition.GetFirstReachableApprovalNode(evaluator);
-        if (firstNode != null)
+        var node = treeTraverser.FindFirstTaskNode(definition.DefinitionJson, request.Variables);
+        while (node != null)
         {
-            if (firstNode.ApprovalMode == ApprovalMode.CounterSign)
+            var ordered = await assigneeResolverQuery.ResolveOrderedAssigneesAsync(node, instance, cancellationToken);
+            if (node.Type == 1 && ordered.Count == 0)
             {
-                // 会签：按人创建多条任务
-                var assignees = await assigneeResolverQuery.ResolveAssigneesAsync(firstNode, instance, cancellationToken);
-                foreach (var a in assignees)
-                {
-                    if (a.AssigneeId != null)
-                        instance.CreateTask(firstNode.NodeName, WorkflowTaskType.Approval, a.AssigneeId, a.DisplayName);
-                }
+                throw new KnownException("无法解析审批节点的处理人，请检查流程配置", ErrorCodes.WorkflowAssigneeResolutionFailed);
             }
-            else
+
+            var toCreate = WorkflowDesignerTaskHelper.SelectAssigneesForNodeEntry(node, ordered);
+            var taskType = node.Type == 2 ? WorkflowTaskType.CarbonCopy : WorkflowTaskType.Approval;
+            WorkflowDesignerTaskHelper.AddTasksToInstance(instance, node, taskType, toCreate);
+
+            if (node.Type == 1)
             {
-                // 或签/依次：单条任务（指定用户或按角色查待办）
-                var assignee = await assigneeResolverQuery.ResolveAssigneeAsync(firstNode, instance, cancellationToken);
-                if (assignee != null)
-                {
-                    if (assignee.AssigneeId != null)
-                        instance.CreateTask(firstNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeId!, assignee.DisplayName);
-                    else
-                        instance.CreateTaskForRole(firstNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeRoleId!, assignee.DisplayName);
-                }
+                break;
             }
+
+            node = treeTraverser.FindNextTaskNode(definition.DefinitionJson, node.NodeKey, request.Variables);
         }
+
+        if (instance.Tasks.Count == 0)
+        {
+            throw new KnownException("流程未生成任何待办任务，请检查流程定义是否包含审批或抄送节点", ErrorCodes.WorkflowNoTasksOnStart);
+        }
+
+        await instanceRepository.AddAsync(instance, cancellationToken);
 
         return instance.Id;
     }

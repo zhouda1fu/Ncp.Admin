@@ -240,6 +240,12 @@ async function handleDelegateOk() {
 </script>
 <template>
   <Page auto-content-height>
+    <div class="mb-3 text-muted-foreground text-sm">
+      {{ $t('system.workflow.task.pendingTip') }}
+      <Button type="link" class="p-0 h-auto min-h-0 ml-1" @click="router.push('/workflow/my-workflows')">
+        {{ $t('system.workflow.task.myWorkflows') }}
+      </Button>
+    </div>
     <Grid :table-title="$t('system.workflow.task.pendingTitle')">
       <template #action="{ row }">
         <Button size="small" type="primary" @click="onApprove(row)">

@@ -16,8 +16,7 @@ public record UpdateDefinitionRequest(
     string Name,
     string Description,
     string Category,
-    string DefinitionJson,
-    IEnumerable<WorkflowNodeData> Nodes);
+    string DefinitionJson);
 
 /// <summary>
 /// 更新流程定义端点
@@ -40,8 +39,7 @@ public class UpdateDefinitionEndpoint(IMediator mediator) : Endpoint<UpdateDefin
             req.Name,
             req.Description,
             req.Category,
-            req.DefinitionJson,
-            req.Nodes);
+            req.DefinitionJson ?? string.Empty);
 
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);

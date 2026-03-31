@@ -7,7 +7,7 @@ namespace Ncp.Admin.Web.Application.Services.Notification;
 /// </summary>
 public record NotificationMessage(
     long ReceiverId,
-    Ncp.Admin.Domain.AggregatesModel.NotificationAggregate.NotificationId? NotificationId,
+    NotificationId? NotificationId,
     string Title,
     string Content,
     NotificationType Type,

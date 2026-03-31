@@ -19,7 +19,7 @@ internal class ExpenseClaimEntityTypeConfiguration : IEntityTypeConfiguration<Ex
         builder.Property(x => x.ApplicantName).IsRequired().HasMaxLength(100);
         builder.Property(x => x.TotalAmount).IsRequired();
         builder.Property(x => x.Status).IsRequired();
-        builder.Property(x => x.WorkflowInstanceId);
+        builder.Property(x => x.WorkflowInstanceId).IsRequired().HasComment("工作流实例ID（未关联为 Guid.Empty）");
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdateTime);
         builder.HasIndex(x => x.ApplicantId);

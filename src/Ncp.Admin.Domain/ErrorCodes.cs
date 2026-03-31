@@ -46,7 +46,17 @@ public sealed class ErrorCodes
     /// 无效的刷新令牌
     /// </summary>
     public const int InvalidRefreshToken = 100007;
-    
+
+    /// <summary>
+    /// Excel 文件无效或表头不符合要求
+    /// </summary>
+    public const int InvalidExcelFile = 100008;
+
+    /// <summary>
+    /// 导出用户行数超过上限
+    /// </summary>
+    public const int UserExportTooManyRows = 100009;
+
     #endregion
     
     #region 角色相关错误 (110xxx)
@@ -109,7 +119,22 @@ public sealed class ErrorCodes
     /// 子部门不能为空
     /// </summary>
     public const int ChildDeptCannotBeEmpty = 120007;
-    
+
+    /// <summary>
+    /// 该部门下存在用户，无法删除
+    /// </summary>
+    public const int DeptHasUsersCannotDelete = 120008;
+
+    /// <summary>
+    /// 该部门下存在岗位，无法删除
+    /// </summary>
+    public const int DeptHasPositionsCannotDelete = 120009;
+
+    /// <summary>
+    /// 上级部门不能为自己或自己的下级部门
+    /// </summary>
+    public const int DeptParentCannotBeSelfOrDescendant = 120010;
+
     #endregion
 
     #region 工作流相关错误 (130xxx)
@@ -133,6 +158,11 @@ public sealed class ErrorCodes
     /// 流程定义已删除
     /// </summary>
     public const int WorkflowDefinitionAlreadyDeleted = 130004;
+
+    /// <summary>
+    /// 流程定义当前状态不允许删除
+    /// </summary>
+    public const int WorkflowDefinitionCannotDelete = 130005;
 
     /// <summary>
     /// 未找到流程实例
@@ -178,6 +208,26 @@ public sealed class ErrorCodes
     /// 同一业务键已有运行中的流程，请勿重复发起
     /// </summary>
     public const int WorkflowDuplicateBusinessKey = 130205;
+
+    /// <summary>
+    /// 无权限操作该任务（非任务处理人或所属角色成员）
+    /// </summary>
+    public const int WorkflowTaskNotAssignedToOperator = 130206;
+
+    /// <summary>
+    /// 流程发起时未生成任何任务（流程配置可能无效）
+    /// </summary>
+    public const int WorkflowNoTasksOnStart = 130207;
+
+    /// <summary>
+    /// 不支持的审批人类型（设计器选项与后端未对齐）
+    /// </summary>
+    public const int WorkflowUnsupportedAssigneeType = 130208;
+
+    /// <summary>
+    /// 流程定义中审批/抄送节点未配置处理人或所选角色下无成员
+    /// </summary>
+    public const int WorkflowDefinitionInvalidAssigneeConfig = 130209;
 
     #endregion
 
@@ -545,9 +595,65 @@ public sealed class ErrorCodes
     public const int OrderNotFound = 290001;
 
     /// <summary>
+    /// 订单不是审核中状态
+    /// </summary>
+    public const int OrderNotPendingAudit = 290010;
+
+    /// <summary>
+    /// 订单不是已驳回状态
+    /// </summary>
+    public const int OrderNotRejected = 290011;
+
+    /// <summary>
+    /// 未配置订单审批流程
+    /// </summary>
+    public const int OrderWorkflowNotConfigured = 290012;
+
+    /// <summary>
+    /// 只有草稿或已驳回的订单可以提交审批
+    /// </summary>
+    public const int OrderCannotSubmitForApproval = 290013;
+
+    public const int OrderInvoiceTypeOptionNotFound = 290014;
+
+    public const int OrderLogisticsCompanyIdInvalid = 290015;
+
+    public const int OrderLogisticsMethodIdInvalid = 290016;
+
+    /// <summary>
+    /// 未找到订单备注
+    /// </summary>
+    public const int OrderRemarkNotFound = 290017;
+
+    /// <summary>
+    /// 订单备注类型不匹配
+    /// </summary>
+    public const int OrderRemarkTypeMismatch = 290018;
+
+    /// <summary>
     /// 未找到产品
     /// </summary>
     public const int ProductNotFound = 290002;
+
+    /// <summary>
+    /// 未找到产品参数
+    /// </summary>
+    public const int ProductParameterNotFound = 290003;
+
+    /// <summary>
+    /// 未找到产品分类
+    /// </summary>
+    public const int ProductCategoryNotFound = 290004;
+
+    /// <summary>
+    /// 未找到产品类型
+    /// </summary>
+    public const int ProductTypeNotFound = 290006;
+
+    /// <summary>
+    /// 未找到供应商
+    /// </summary>
+    public const int SupplierNotFound = 290005;
 
     #endregion
 }

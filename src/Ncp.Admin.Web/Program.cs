@@ -25,6 +25,7 @@ using Serilog.Formatting.Json;
 using StackExchange.Redis;
 using System.Reflection;
 using System.Text.Json;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 // Create a minimal logger for startup
 Log.Logger = new LoggerConfiguration()
@@ -158,7 +159,10 @@ try
     });
 
     builder.Services.Configure<JsonOptions>(o =>
-        o.SerializerOptions.AddNetCorePalJsonConverters());
+    {
+        o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        o.SerializerOptions.AddNetCorePalJsonConverters();
+    });
 
     #endregion
 
@@ -173,12 +177,14 @@ try
     #region Query
     // 自动注册所有实现 IQuery 接口的查询类
     builder.Services.AddQueries(Assembly.GetExecutingAssembly());
+    builder.Services.AddScoped<WorkflowTreeTraverser>();
+    builder.Services.AddScoped<WorkflowOutgoingTaskService>();
+    builder.Services.AddScoped<WorkflowDefinitionAssigneeConfigValidator>();
     #endregion
 
     #region 基础设施
 
     builder.Services.AddRepositories(typeof(ApplicationDbContext).Assembly);
-
     // When using Aspire, database connection is managed by Aspire
     // Use AddDbContext instead of AddMySqlDbContext/AddSqlServerDbContext/AddNpgsqlDbContext
     // to avoid ExecutionStrategy issues with user-initiated transactions
@@ -192,10 +198,21 @@ try
         }
         options.EnableDetailedErrors();
     });
-    builder.Services.Configure<LocalFileStorageOptions>(builder.Configuration.GetSection(LocalFileStorageOptions.SectionName));
-    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+    var fileStorageProvider = builder.Configuration.GetValue<string>("FileStorage:Provider") ?? "Local";
+    if (string.Equals(fileStorageProvider, "MinIO", StringComparison.OrdinalIgnoreCase))
+    {
+        builder.Services.Configure<MinioFileStorageOptions>(builder.Configuration.GetSection(MinioFileStorageOptions.SectionName));
+        builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
+    }
+    else
+    {
+        builder.Services.Configure<LocalFileStorageOptions>(builder.Configuration.GetSection(LocalFileStorageOptions.SectionName));
+        builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+    }
     builder.Services.AddScoped<Ncp.Admin.Web.Application.Services.Notification.INotificationSender, Ncp.Admin.Web.Application.Services.Notification.SignalRNotificationSender>();
     builder.Services.AddUnitOfWork<ApplicationDbContext>();
+    builder.Services.AddSingleton<OperationLogChannel>();
+    builder.Services.AddHostedService<OperationLogBackgroundService>();
     // Redis locks use the Aspire-managed Redis connection
     builder.Services.AddRedisLocks();
     builder.Services.AddContext().AddEnvContext().AddDataPermissionContext().AddCapContextProcessor();
@@ -322,7 +339,14 @@ try
     #region Scalar
 
     app.UseOutputCache();
-    app.UseFastEndpoints();
+    app.UseFastEndpoints(c =>
+    {
+        c.Endpoints.Configurator = ep =>
+        {
+            ep.PreProcessor<Ncp.Admin.Web.Processors.OperationLogGlobalPreProcessor>(FastEndpoints.Order.Before);
+            ep.PostProcessor<Ncp.Admin.Web.Processors.OperationLogGlobalPostProcessor>(FastEndpoints.Order.After);
+        };
+    });
     app.UseOpenApi(c => c.Path = "/openapi/{documentName}.json");
     app.MapScalarApiReference("scalar", options =>
     {

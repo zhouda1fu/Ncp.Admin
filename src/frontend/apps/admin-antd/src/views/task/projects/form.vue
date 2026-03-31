@@ -399,8 +399,9 @@ onMounted(() => {
 <template>
   <Page auto-content-height content-class="flex flex-col">
     <div class="mb-4 flex items-center gap-2">
-      <Button type="text" @click="goBack">
-        <ArrowLeft class="size-4" />
+      <Button class="inline-flex items-center gap-1" @click="goBack">
+        <ArrowLeft class="size-4 shrink-0" />
+        {{ $t('common.back') }}
       </Button>
       <span class="text-lg font-medium">
         {{

@@ -2,6 +2,7 @@ using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.PositionCommands;
@@ -13,10 +14,13 @@ public record UpdatePositionCommand(PositionId Id, string Name, string Code, str
 
 public class UpdatePositionCommandValidator : AbstractValidator<UpdatePositionCommand>
 {
-    public UpdatePositionCommandValidator()
+    public UpdatePositionCommandValidator(PositionQuery positionQuery)
     {
         RuleFor(p => p.Name).NotEmpty().WithMessage("岗位名称不能为空");
         RuleFor(p => p.Code).NotEmpty().WithMessage("岗位编码不能为空");
+        RuleFor(p => p)
+            .MustAsync(async (cmd, ct) => !await positionQuery.DoesPositionCodeExist(cmd.Code, cmd.Id, ct))
+            .WithMessage(p => $"该岗位编码已存在，Code={p.Code}");
         RuleFor(p => p.Status).InclusiveBetween(0, 1).WithMessage("状态值必须为0或1");
     }
 }

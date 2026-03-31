@@ -2,8 +2,8 @@ import type { Recordable } from '@vben/types';
 
 import { requestClient } from '#/api/request';
 
-/** 数据权限范围：0=全部 1=本部门 2=本部门及下级 3=仅本人 */
-export type DataScope = 0 | 1 | 2 | 3;
+/** 数据权限范围：0=全部 1=本部门 2=本部门及下级 3=仅本人 4=自定义部门及下级 */
+export type DataScope = 0 | 1 | 2 | 3 | 4;
 
 export namespace SystemRoleApi {
   export interface SystemRole {
@@ -12,6 +12,7 @@ export namespace SystemRoleApi {
     name: string;
     description: string;
     dataScope?: DataScope;
+    customDeptIds?: Array<string | number>;
     isActive: boolean;
     createdAt: string;
     permissionCodes: string[];
@@ -56,6 +57,7 @@ async function createRole(data: {
   description: string;
   dataScope?: DataScope;
   permissionCodes: string[];
+  customDeptIds?: Array<string | number>;
 }) {
   return requestClient.post('/roles', data);
 }
@@ -73,6 +75,7 @@ async function updateRole(
     description: string;
     dataScope?: DataScope;
     permissionCodes: string[];
+    customDeptIds?: Array<string | number>;
   },
 ) {
   return requestClient.put('/roles/update', {

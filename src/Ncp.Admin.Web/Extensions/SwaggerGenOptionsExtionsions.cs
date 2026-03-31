@@ -1,5 +1,5 @@
-using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.OpenApi;
 
 namespace Ncp.Admin.Web.Extensions;
 
@@ -15,7 +15,7 @@ public static class SwaggerGenOptionsExtionsions
                 if (type.IsClass && Array.Exists(type.GetInterfaces(), p => p == typeof(IEntityId)))
                 {
                     swaggerGenOptions.MapType(type,
-                        () => new OpenApiSchema { Type = typeof(string).Name.ToLower() });
+                        () => new OpenApiSchema { Type = JsonSchemaType.String });
                 }
             }
         }

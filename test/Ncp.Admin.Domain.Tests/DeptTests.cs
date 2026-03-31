@@ -1,5 +1,6 @@
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 namespace Ncp.Admin.Domain.Tests;
 
@@ -9,6 +10,8 @@ namespace Ncp.Admin.Domain.Tests;
 /// </summary>
 public class DeptTests
 {
+    private static readonly UserId TestManagerId = new(0);
+
     /// <summary>
     /// 创建部门时，应正确设置名称、备注、上级部门ID和状态。
     /// </summary>
@@ -16,11 +19,12 @@ public class DeptTests
     public void Constructor_WithValidArgs_ShouldSetProperties()
     {
         var parentId = new DeptId(0);
-        var dept = new Dept("研发部", "技术研发", parentId, 1);
+        var dept = new Dept("研发部", "技术研发", parentId, 1, TestManagerId);
 
         Assert.Equal("研发部", dept.Name);
         Assert.Equal("技术研发", dept.Remark);
         Assert.Equal(parentId, dept.ParentId);
+        Assert.Equal(TestManagerId, dept.ManagerId);
         Assert.Equal(1, dept.Status);
         Assert.False(dept.IsDeleted);
     }
@@ -33,13 +37,15 @@ public class DeptTests
     {
         var parentId = new DeptId(0);
         var newParentId = new DeptId(100);
-        var dept = new Dept("研发部", "技术研发", parentId, 1);
+        var newManagerId = new UserId(100);
+        var dept = new Dept("研发部", "技术研发", parentId, 1, TestManagerId);
 
-        dept.UpdateInfo("研发中心", "核心技术部门", newParentId, 1);
+        dept.UpdateInfo("研发中心", "核心技术部门", newParentId, 1, newManagerId);
 
         Assert.Equal("研发中心", dept.Name);
         Assert.Equal("核心技术部门", dept.Remark);
         Assert.Equal(newParentId, dept.ParentId);
+        Assert.Equal(newManagerId, dept.ManagerId);
         Assert.Equal(1, dept.Status);
     }
 
@@ -49,7 +55,7 @@ public class DeptTests
     [Fact]
     public void Activate_WhenDeactivated_ShouldSetStatusToOne()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 0);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 0, TestManagerId);
 
         dept.Activate();
 
@@ -62,7 +68,7 @@ public class DeptTests
     [Fact]
     public void Activate_WhenAlreadyActivated_ShouldThrow()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
 
         var ex = Assert.Throws<KnownException>(() => dept.Activate());
 
@@ -76,7 +82,7 @@ public class DeptTests
     [Fact]
     public void Deactivate_WhenActivated_ShouldSetStatusToZero()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
 
         dept.Deactivate();
 
@@ -89,7 +95,7 @@ public class DeptTests
     [Fact]
     public void Deactivate_WhenAlreadyDeactivated_ShouldThrow()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 0);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 0, TestManagerId);
 
         var ex = Assert.Throws<KnownException>(() => dept.Deactivate());
 
@@ -103,7 +109,7 @@ public class DeptTests
     [Fact]
     public void SoftDelete_WhenNotDeleted_ShouldSetIsDeleted()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
 
         dept.SoftDelete();
 
@@ -116,7 +122,7 @@ public class DeptTests
     [Fact]
     public void SoftDelete_WhenAlreadyDeleted_ShouldThrow()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
         dept.SoftDelete();
 
         var ex = Assert.Throws<KnownException>(() => dept.SoftDelete());
@@ -131,8 +137,8 @@ public class DeptTests
     [Fact]
     public void AddChild_WithValidChild_ShouldAddToChildren()
     {
-        var parent = new Dept("总部", "根", new DeptId(0), 1);
-        var child = new Dept("分公司", "子部门", new DeptId(0), 1);
+        var parent = new Dept("总部", "根", new DeptId(0), 1, TestManagerId);
+        var child = new Dept("分公司", "子部门", new DeptId(0), 1, TestManagerId);
 
         parent.AddChild(child);
 
@@ -146,7 +152,7 @@ public class DeptTests
     [Fact]
     public void AddChild_WithNull_ShouldThrow()
     {
-        var parent = new Dept("总部", "根", new DeptId(0), 1);
+        var parent = new Dept("总部", "根", new DeptId(0), 1, TestManagerId);
 
         var ex = Assert.Throws<KnownException>(() => parent.AddChild(null!));
 
@@ -160,8 +166,8 @@ public class DeptTests
     [Fact]
     public void RemoveChild_WithExistingChild_ShouldRemoveFromChildren()
     {
-        var parent = new Dept("总部", "根", new DeptId(0), 1);
-        var child = new Dept("分公司", "子部门", new DeptId(0), 1);
+        var parent = new Dept("总部", "根", new DeptId(0), 1, TestManagerId);
+        var child = new Dept("分公司", "子部门", new DeptId(0), 1, TestManagerId);
         parent.AddChild(child);
 
         parent.RemoveChild(child);
@@ -175,7 +181,7 @@ public class DeptTests
     [Fact]
     public void RemoveChild_WithNull_ShouldThrow()
     {
-        var parent = new Dept("总部", "根", new DeptId(0), 1);
+        var parent = new Dept("总部", "根", new DeptId(0), 1, TestManagerId);
 
         var ex = Assert.Throws<KnownException>(() => parent.RemoveChild(null!));
 
@@ -189,9 +195,9 @@ public class DeptTests
     [Fact]
     public void GetAllChildren_WithNestedChildren_ShouldReturnAllDescendants()
     {
-        var root = new Dept("根", "根", new DeptId(0), 1);
-        var level1 = new Dept("一级", "备注", new DeptId(0), 1);
-        var level2 = new Dept("二级", "备注", new DeptId(0), 1);
+        var root = new Dept("根", "根", new DeptId(0), 1, TestManagerId);
+        var level1 = new Dept("一级", "备注", new DeptId(0), 1, TestManagerId);
+        var level2 = new Dept("二级", "备注", new DeptId(0), 1, TestManagerId);
         root.AddChild(level1);
         level1.AddChild(level2);
 
@@ -208,7 +214,7 @@ public class DeptTests
     [Fact]
     public void GetAllChildren_WithNoChildren_ShouldReturnEmpty()
     {
-        var dept = new Dept("叶子", "备注", new DeptId(0), 1);
+        var dept = new Dept("叶子", "备注", new DeptId(0), 1, TestManagerId);
 
         var all = dept.GetAllChildren().ToList();
 
@@ -221,7 +227,7 @@ public class DeptTests
     [Fact]
     public void GetPath_ShouldReturnName()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
 
         var path = dept.GetPath();
 

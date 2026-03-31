@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
-using Ncp.Admin.Web.Application.Commands.Orders;
+using Ncp.Admin.Web.Application.Commands.Order;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Order;

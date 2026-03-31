@@ -10,14 +10,6 @@ using Ncp.Admin.Web.Application.Queries;
 namespace Ncp.Admin.Web.Application.Commands.Leave;
 
 /// <summary>
-/// 请假审批流程分类（与流程定义前端的 category 选项 value 一致：LeaveRequest）
-/// </summary>
-public static class LeaveWorkflowCategory
-{
-    public const string Category = "LeaveRequest";
-}
-
-/// <summary>
 /// 提交请假申请（发起审批流程，流程按分类内置选择，无需前端传流程定义ID）
 /// </summary>
 public record SubmitLeaveRequestCommand(
@@ -44,7 +36,7 @@ public class SubmitLeaveRequestCommandHandler(
             ?? throw new KnownException("未找到请假申请", ErrorCodes.LeaveRequestNotFound);
 
         var definitionDto = await workflowDefinitionQuery.GetFirstPublishedByCategoryAsync(
-            LeaveWorkflowCategory.Category, cancellationToken)
+            WorkflowBusinessTypes.LeaveRequest, cancellationToken)
             ?? throw new KnownException("未配置请假审批流程，请在流程定义中发布分类为「请假审批」的流程", ErrorCodes.LeaveWorkflowNotConfigured);
 
         var variables = new LeaveRequestVariables

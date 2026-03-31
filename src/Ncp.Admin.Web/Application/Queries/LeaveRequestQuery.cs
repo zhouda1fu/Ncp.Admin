@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.LeaveRequestAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure;
 
 namespace Ncp.Admin.Web.Application.Queries;
@@ -18,7 +19,7 @@ public record LeaveRequestQueryDto(
     decimal Days,
     string Reason,
     LeaveRequestStatus Status,
-    Guid? WorkflowInstanceId,
+    WorkflowInstanceId WorkflowInstanceId,
     DateTimeOffset CreatedAt);
 
 /// <summary>
@@ -41,7 +42,7 @@ public class LeaveRequestQuery(ApplicationDbContext dbContext) : IQuery
                 r.Days,
                 r.Reason,
                 r.Status,
-                r.WorkflowInstanceId != null ? r.WorkflowInstanceId.Id : (Guid?)null,
+                r.WorkflowInstanceId,
                 r.CreatedAt))
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -74,7 +75,7 @@ public class LeaveRequestQuery(ApplicationDbContext dbContext) : IQuery
                 r.Days,
                 r.Reason,
                 r.Status,
-                r.WorkflowInstanceId != null ? r.WorkflowInstanceId.Id : (Guid?)null,
+                r.WorkflowInstanceId,
                 r.CreatedAt))
             .ToPagedDataAsync(input, cancellationToken);
     }

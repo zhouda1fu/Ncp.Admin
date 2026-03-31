@@ -33,7 +33,7 @@ public class AddCustomerContactRecordCommandHandler(ICustomerRepository reposito
             request.RecordAt,
             request.RecordType,
             request.Content ?? string.Empty,
-            request.RecorderId,
+            request.RecorderId ?? new UserId(0),
             request.RecorderName ?? string.Empty);
         return id;
     }

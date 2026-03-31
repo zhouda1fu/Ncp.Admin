@@ -9,6 +9,8 @@ export namespace SystemDeptApi {
     remark?: string;
     parentId?: string;
     status: 0 | 1;
+    managerId: string;
+    managerName?: string;
     createdAt: string;
   }
 }
@@ -44,6 +46,7 @@ async function createDept(data: {
   remark?: string;
   parentId?: string;
   status: 0 | 1;
+  managerId: string;
 }) {
   return requestClient.post('/dept', data);
 }
@@ -61,6 +64,7 @@ async function updateDept(
     remark?: string;
     parentId?: string;
     status: 0 | 1;
+    managerId: string;
   },
 ) {
   return requestClient.put('/dept', {

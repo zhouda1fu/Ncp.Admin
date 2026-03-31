@@ -1,4 +1,5 @@
 using FluentValidation;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
@@ -7,7 +8,12 @@ using Ncp.Admin.Web.AppPermissions;
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 
 
-public record CreateRoleCommand(string Name, string Description, IEnumerable<string> PermissionCodes, DataScope DataScope = DataScope.All) : ICommand<RoleId>;
+public record CreateRoleCommand(
+    string Name,
+    string Description,
+    IEnumerable<string> PermissionCodes,
+    DataScope DataScope = DataScope.All,
+    IEnumerable<DeptId>? CustomDeptIds = null) : ICommand<RoleId>;
 
 public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
 {
@@ -17,6 +23,11 @@ public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
         RuleFor(r => r.Description).MaximumLength(200).WithMessage("角色描述长度不能超过200个字符");
         RuleFor(r => r.Name).MustAsync(async (n, ct) => !await roleQuery.DoesRoleExist(n, ct))
             .WithMessage(r => $"该角色已存在，Name={r.Name}");
+
+        RuleFor(r => r.CustomDeptIds)
+            .NotEmpty()
+            .When(r => r.DataScope == DataScope.CustomDeptAndSub)
+            .WithMessage("自定义部门数据范围必须至少选择一个部门");
     }
 }
 
@@ -31,6 +42,8 @@ public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
         });
 
         var role = new Role(request.Name, request.Description, permissions, request.DataScope);
+        if (request.DataScope == DataScope.CustomDeptAndSub)
+            role.SetCustomDataDepts(request.CustomDeptIds ?? []);
 
         await roleRepository.AddAsync(role, cancellationToken);
 

@@ -4,15 +4,11 @@ import type { WorkflowApi } from '#/api/system/workflow';
 
 import { $t } from '#/locales';
 
-/** 流程分类选项（统一维护） */
+/** 流程分类选项：仅保留用户管理、订单审批 */
 export function useCategoryOptions() {
   return [
-    { label: $t('system.workflow.category.userManagement'), value: 'UserManagement' },
-    { label: $t('system.workflow.category.roleManagement'), value: 'RoleManagement' },
-    { label: $t('system.workflow.category.leaveRequest'), value: 'LeaveRequest' },
-    { label: $t('system.workflow.category.purchaseOrder'), value: 'PurchaseOrder' },
-    { label: $t('system.workflow.category.reimbursement'), value: 'Reimbursement' },
-    { label: $t('system.workflow.category.general'), value: 'General' },
+    { label: $t('system.workflow.category.userManagement'), value: 'CreateUser' },
+    { label: $t('system.workflow.category.order'), value: 'Order' },
   ];
 }
 
@@ -81,19 +77,25 @@ export function useGridFormSchema(): VbenFormSchema[] {
   ];
 }
 
-const statusMap: Record<number, { color: string; label: string }> = {
-  0: { color: 'default', label: '' },
-  1: { color: 'success', label: '' },
-  2: { color: 'warning', label: '' },
-};
-
-function getStatusLabel(status: number): string {
-  const labels: Record<number, string> = {
-    0: $t('system.workflow.definition.statusDraft'),
-    1: $t('system.workflow.definition.statusPublished'),
-    2: $t('system.workflow.definition.statusArchived'),
-  };
-  return labels[status] ?? '';
+/** 状态列 Tag 选项：草稿 / 已发布 / 已归档，使用主题色区分 */
+function useStatusTagOptions(): Array<{ color: string; label: string; value: number }> {
+  return [
+    {
+      value: 0,
+      label: $t('system.workflow.definition.statusDraft'),
+      color: 'default',
+    },
+    {
+      value: 1,
+      label: $t('system.workflow.definition.statusPublished'),
+      color: 'success',
+    },
+    {
+      value: 2,
+      label: $t('system.workflow.definition.statusArchived'),
+      color: 'warning',
+    },
+  ];
 }
 
 export function useColumns<T = WorkflowApi.WorkflowDefinition>(
@@ -122,18 +124,11 @@ export function useColumns<T = WorkflowApi.WorkflowDefinition>(
     {
       cellRender: {
         name: 'CellTag',
-        props: (row: { status: number }) => {
-          const info = statusMap[row.status];
-          return {
-            color: info?.color ?? 'default',
-          };
-        },
+        options: useStatusTagOptions(),
       },
       field: 'status',
-      formatter: ({ row }: { row: { status: number } }) =>
-        getStatusLabel(row.status),
       title: $t('system.workflow.definition.status'),
-      width: 100,
+      width: 120,
     },
     {
       field: 'description',
@@ -156,13 +151,32 @@ export function useColumns<T = WorkflowApi.WorkflowDefinition>(
         },
         name: 'CellOperation',
         options: [
-          'edit',
+          {
+            code: 'view',
+            text: $t('system.workflow.definition.view'),
+          },
+          {
+            code: 'edit',
+            text: $t('system.workflow.definition.edit'),
+            show: (row: WorkflowApi.WorkflowDefinition) => row.status === 0,
+          },
+          {
+            code: 'newVersion',
+            text: '基于此创建新版本',
+            show: (row: WorkflowApi.WorkflowDefinition) =>
+              row.status === 1 || row.status === 2,
+          },
           {
             code: 'publish',
             text: $t('system.workflow.definition.publish'),
             show: (row: WorkflowApi.WorkflowDefinition) => row.status === 0,
           },
-          'delete',
+          {
+            code: 'delete',
+            text: $t('common.delete'),
+            show: (row: WorkflowApi.WorkflowDefinition) =>
+              row.status === 0,
+          },
         ],
       },
       field: 'operation',

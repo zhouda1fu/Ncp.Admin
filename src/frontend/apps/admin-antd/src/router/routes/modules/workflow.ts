@@ -52,22 +52,14 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/workflow/definition/list.vue'),
       },
       {
-        path: '/workflow/definitions/new',
-        name: 'WorkflowDefinitionNew',
+        path: '/workflow/designer/:id?',
+        name: 'WorkflowDesigner',
         meta: {
           hideInMenu: true,
-          title: $t('common.create', [$t('system.workflow.definition.name')]),
+          title: '流程设计器',
+          activePath: '/workflow/definitions',
         },
-        component: () => import('#/views/workflow/definition/edit.vue'),
-      },
-      {
-        path: '/workflow/definitions/:id/edit',
-        name: 'WorkflowDefinitionEdit',
-        meta: {
-          hideInMenu: true,
-          title: $t('common.edit', [$t('system.workflow.definition.name')]),
-        },
-        component: () => import('#/views/workflow/definition/edit.vue'),
+        component: () => import('#/views/workflow/designer/index.vue'),
       },
       {
         path: '/workflow/monitor',
@@ -85,6 +77,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           hideInMenu: true,
           title: $t('system.workflow.instance.detail'),
+          activePath: '/workflow/pending',
         },
         component: () => import('#/views/workflow/instance/detail.vue'),
       },

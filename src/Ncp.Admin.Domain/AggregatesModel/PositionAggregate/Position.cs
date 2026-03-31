@@ -1,4 +1,5 @@
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.DomainEvents.PositionEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 
@@ -93,6 +94,7 @@ public class Position : Entity<PositionId>, IAggregateRoot
         SortOrder = sortOrder;
         Status = status;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new PositionInfoChangedDomainEvent(this));
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { SystemRoleApi } from '#/api/system/role';
 import type { DataScope } from '#/api/system/role';
 
+import { getDeptTree } from '#/api/system/dept';
 import { $t } from '#/locales';
 
 function formatDataScope(value: DataScope | undefined) {
@@ -11,6 +12,7 @@ function formatDataScope(value: DataScope | undefined) {
     1: $t('system.role.dataScopeDept'),
     2: $t('system.role.dataScopeDeptAndSub'),
     3: $t('system.role.dataScopeSelf'),
+    4: $t('system.role.dataScopeCustomDeptAndSub'),
   };
   return value !== undefined && value in labels ? labels[value as DataScope] : '-';
 }
@@ -51,6 +53,7 @@ export function useFormSchema(): VbenFormSchema[] {
           { label: $t('system.role.dataScopeDept'), value: 1 },
           { label: $t('system.role.dataScopeDeptAndSub'), value: 2 },
           { label: $t('system.role.dataScopeSelf'), value: 3 },
+          { label: $t('system.role.dataScopeCustomDeptAndSub'), value: 4 },
         ],
       },
       defaultValue: 0,
@@ -58,12 +61,35 @@ export function useFormSchema(): VbenFormSchema[] {
       label: $t('system.role.dataScope'),
     },
     {
+      component: 'ApiTreeSelect',
+      componentProps: {
+        api: getDeptTree,
+        class: 'w-full',
+        labelField: 'name',
+        valueField: 'id',
+        childrenField: 'children',
+        multiple: true,
+        allowClear: true,
+        maxTagCount: 3,
+        placeholder: $t('system.role.customDeptIdsPlaceholder'),
+      },
+      dependencies: {
+        if(values) {
+          return (values.dataScope ?? 0) === 4;
+        },
+        triggerFields: ['dataScope'],
+      },
+      fieldName: 'customDeptIds',
+      label: $t('system.role.customDeptIds'),
+    },
+    {
       component: 'Input',
       fieldName: 'permissionCodes',
       formItemClass: 'items-start',
       label: $t('system.role.setPermissions'),
       modelPropName: 'modelValue',
-      slot: 'permissionCodes',
+      // schema 类型定义未暴露 slot 字段，这里按运行时约定使用
+      ...( { slot: 'permissionCodes' } as any ),
     },
   ];
 }
@@ -141,7 +167,7 @@ export function useColumns<T = SystemRoleApi.SystemRole>(
       field: 'dataScope',
       title: $t('system.role.dataScope'),
       width: 160,
-      formatter: ({ row }: { row: T }) => formatDataScope(row.dataScope),
+      formatter: ({ row }: { row: T }) => formatDataScope((row as any).dataScope),
     },
     {
       field: 'createdAt',

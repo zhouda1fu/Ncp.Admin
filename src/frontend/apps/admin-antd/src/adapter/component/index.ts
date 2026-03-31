@@ -20,6 +20,7 @@ import {
   defineAsyncComponent,
   defineComponent,
   h,
+  inject,
   ref,
   render,
   unref,
@@ -522,7 +523,51 @@ export type ComponentType =
   | 'TimePicker'
   | 'TreeSelect'
   | 'Upload'
+  | 'ProductResourceUpload'
   | BaseFormComponentType;
+
+/** 产品表单内「操作流程资源/产品介绍资源」上传块，由 form-page 通过 provide('productResourceUpload') 注入 API */
+const ProductResourceUpload = defineComponent({
+  name: 'ProductResourceUpload',
+  props: { type: { type: String as () => 'operation' | 'introduction', required: true } },
+  setup(props) {
+    const api = inject<{
+      operation: { list: Ref<string[]>; loading: Ref<boolean>; trigger: () => void; remove: (i: number) => void };
+      introduction: { list: Ref<string[]>; loading: Ref<boolean>; trigger: () => void; remove: (i: number) => void };
+    }>('productResourceUpload');
+    return () => {
+      const ctx = api?.[props.type];
+      if (!ctx) return null;
+      const label = props.type === 'operation' ? $t('product.operationProcessResources') : $t('product.introductionResources');
+      const btnText = props.type === 'operation' ? $t('product.uploadOperationResources') : $t('product.uploadIntroductionResources');
+      return h('div', { class: 'flex flex-col gap-2' }, [
+        h('div', { class: 'flex flex-wrap items-center gap-2' }, [
+          h('span', { class: 'text-sm font-medium' }, label),
+          h(Button, {
+            loading: ctx.loading.value,
+            type: 'default',
+            onClick: () => ctx.trigger(),
+          }, () => btnText),
+        ]),
+        ctx.list.value.length
+          ? h('div', { class: 'flex flex-wrap gap-1' }, ctx.list.value.map((p, i) =>
+            h('span', {
+              class: 'inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs',
+              key: i,
+            }, [
+              p,
+              h('button', {
+                class: 'text-red-500 hover:underline',
+                type: 'button',
+                onClick: () => ctx.remove(i),
+              }, '×'),
+            ]),
+          ))
+          : null,
+      ]);
+    };
+  },
+});
 
 async function initComponentAdapter() {
   const components: Partial<Record<ComponentType, Component>> = {
@@ -585,6 +630,7 @@ async function initComponentAdapter() {
     TimePicker,
     TreeSelect: withDefaultPlaceholder(TreeSelect, 'select'),
     Upload: withPreviewUpload(),
+    ProductResourceUpload,
   };
 
   // 将组件注册到全局共享状态中

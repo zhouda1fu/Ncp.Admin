@@ -6,6 +6,8 @@ export namespace CustomerApi {
   export interface CustomerItem {
     id: string;
     ownerId?: string;
+    ownerDeptId?: string;
+    ownerDeptName?: string;
     customerSourceId: string;
     customerSourceName: string;
     fullName: string;
@@ -89,7 +91,14 @@ export namespace CustomerApi {
   }
 }
 
-async function getCustomerList(params: Recordable<any>) {
+export interface GetCustomerListParams extends Recordable<any> {
+  pageIndex?: number;
+  pageSize?: number;
+  fullName?: string;
+  ownerId?: string;
+}
+
+async function getCustomerList(params: GetCustomerListParams) {
   const res = await requestClient.get<{
     items: CustomerApi.CustomerItem[];
     total: number;
@@ -130,12 +139,24 @@ async function getCustomerSearch(params: Recordable<any>) {
   return res;
 }
 
+async function getCustomerShares(id: string) {
+  return requestClient.get<{ sharedToUserIds: string[] }>(`/customers/${id}/shares`);
+}
+
+async function shareCustomer(id: string, sharedToUserIds: string[]) {
+  return requestClient.post(`/customers/${id}/share`, { id, sharedToUserIds });
+}
+
+async function unshareCustomer(id: string, sharedToUserIds: string[]) {
+  return requestClient.delete(`/customers/${id}/share`, { data: { id, sharedToUserIds } as any });
+}
+
 async function releaseCustomerToSea(id: string) {
-  return requestClient.post(`/customers/${id}/release-to-sea`);
+  return requestClient.post(`/customers/${id}/release-to-sea`, {});
 }
 
 async function claimCustomerFromSea(id: string) {
-  return requestClient.post(`/customers/${id}/claim`);
+  return requestClient.post(`/customers/${id}/claim`, {});
 }
 
 async function updateSeaCustomer(id: string, data: Recordable<any>) {
@@ -143,7 +164,7 @@ async function updateSeaCustomer(id: string, data: Recordable<any>) {
 }
 
 async function voidCustomer(id: string) {
-  return requestClient.post(`/customers/${id}/void`);
+  return requestClient.post(`/customers/${id}/void`, {});
 }
 
 async function deleteCustomer(id: string) {
@@ -182,6 +203,9 @@ export {
   updateCustomer,
   updateSeaCustomer,
   getCustomerSearch,
+  getCustomerShares,
+  shareCustomer,
+  unshareCustomer,
   releaseCustomerToSea,
   claimCustomerFromSea,
   voidCustomer,

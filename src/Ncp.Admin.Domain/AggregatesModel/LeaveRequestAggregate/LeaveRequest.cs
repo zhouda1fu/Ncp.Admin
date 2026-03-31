@@ -60,9 +60,9 @@ public class LeaveRequest : Entity<LeaveRequestId>, IAggregateRoot
     public LeaveRequestStatus Status { get; private set; }
 
     /// <summary>
-    /// 关联的工作流实例ID（提交审批后填充）
+    /// 关联的工作流实例ID（提交前为哨兵 <c>Guid.Empty</c>）
     /// </summary>
-    public WorkflowInstanceId? WorkflowInstanceId { get; private set; }
+    public WorkflowInstanceId WorkflowInstanceId { get; private set; } = new WorkflowInstanceId(Guid.Empty);
 
     /// <summary>
     /// 创建时间

@@ -4,7 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.ContactAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ContactGroupAggregate;
-using Ncp.Admin.Web.Application.Commands.Contact;
+using Ncp.Admin.Web.Application.Commands.ContactModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Contact;

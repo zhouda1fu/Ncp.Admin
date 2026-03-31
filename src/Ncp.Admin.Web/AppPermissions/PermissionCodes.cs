@@ -22,6 +22,8 @@ public static class PermissionCodes
     public const string UserView = nameof(UserView);
     public const string UserRoleAssign = nameof(UserRoleAssign);
     public const string UserResetPassword = nameof(UserResetPassword);
+    public const string UserExport = nameof(UserExport);
+    public const string UserImport = nameof(UserImport);
     #endregion
 
     #region 部门管理权限
@@ -183,6 +185,7 @@ public static class PermissionCodes
     public const string CustomerContactEdit = nameof(CustomerContactEdit);
     public const string CustomerReleaseToSea = nameof(CustomerReleaseToSea);
     public const string CustomerClaimFromSea = nameof(CustomerClaimFromSea);
+    public const string CustomerShare = nameof(CustomerShare);
     public const string IndustryView = nameof(IndustryView);
     /// <summary>创建行业</summary>
     public const string IndustryCreate = nameof(IndustryCreate);
@@ -210,6 +213,14 @@ public static class PermissionCodes
     public const string OrderCreate = nameof(OrderCreate);
     public const string OrderEdit = nameof(OrderEdit);
     public const string OrderDelete = nameof(OrderDelete);
+    public const string OrderSubmit = nameof(OrderSubmit);
+    public const string OrderSpecialDataDisplay = nameof(OrderSpecialDataDisplay);
+    public const string OrderContractUpload = nameof(OrderContractUpload);
+    public const string OrderContractSelect = nameof(OrderContractSelect);
+    public const string OrderContractNotCompanyTemplate = nameof(OrderContractNotCompanyTemplate);
+    public const string OrderNeedInvoice = nameof(OrderNeedInvoice);
+    public const string OrderContractAmount = nameof(OrderContractAmount);
+    public const string OrderTechnicalStatus = nameof(OrderTechnicalStatus);
     #endregion
 
     #region 产品管理权限
@@ -229,6 +240,11 @@ public static class PermissionCodes
     public const string LeaveRequestCancel = nameof(LeaveRequestCancel);
     public const string LeaveBalanceView = nameof(LeaveBalanceView);
     public const string LeaveBalanceEdit = nameof(LeaveBalanceEdit);
+    #endregion
+
+    #region 操作日志权限
+    public const string OperationLogManagement = nameof(OperationLogManagement);
+    public const string OperationLogView = nameof(OperationLogView);
     #endregion
 
     #region 所有接口访问权限

@@ -15,6 +15,7 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   deleteDefinition,
   getDefinitionList,
+  createDefinitionNewVersion,
   publishDefinition,
 } from '#/api/system/workflow';
 import { $t } from '#/locales';
@@ -76,6 +77,14 @@ function onActionClick(
       onEdit(e.row);
       break;
     }
+    case 'view': {
+      onView(e.row);
+      break;
+    }
+    case 'newVersion': {
+      onCreateNewVersion(e.row);
+      break;
+    }
     case 'publish': {
       onPublish(e.row);
       break;
@@ -83,12 +92,16 @@ function onActionClick(
   }
 }
 
+function onView(row: WorkflowApi.WorkflowDefinition) {
+  router.push({ path: `/workflow/designer/${row.id}`, query: { view: '1' } });
+}
+
 function onEdit(row: WorkflowApi.WorkflowDefinition) {
   if (row.status === 1) {
     message.warning($t('system.workflow.definition.cannotEditPublished'));
     return;
   }
-  router.push(`/workflow/definitions/${row.id}/edit`);
+  router.push(`/workflow/designer/${row.id}`);
 }
 
 function onDelete(row: WorkflowApi.WorkflowDefinition) {
@@ -122,25 +135,37 @@ function onPublish(row: WorkflowApi.WorkflowDefinition) {
   });
 }
 
+function onCreateNewVersion(row: WorkflowApi.WorkflowDefinition) {
+  Modal.confirm({
+    content: `确认要基于流程定义「${row.name}」创建新版本吗？`,
+    title: '创建新版本确认',
+    async onOk() {
+      const newId = await createDefinitionNewVersion(row.id);
+      message.success(`已基于「${row.name}」创建新版本`);
+      router.push(`/workflow/designer/${newId}`);
+    },
+  });
+}
+
 function onRefresh() {
   gridApi.query();
 }
 
-function onCreate() {
-  router.push('/workflow/definitions/new');
+function onDesigner() {
+  router.push('/workflow/designer');
 }
 </script>
 <template>
   <Page auto-content-height>
     <Grid :table-title="$t('system.workflow.definition.list')">
       <template #toolbar-tools>
-        <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">
+        <Button
+          type="primary"
+          class="inline-flex items-center gap-1"
+          @click="onDesigner"
+        >
           <Plus class="size-5 shrink-0" />
-          {{
-            $t('ui.actionTitle.create', [
-              $t('system.workflow.definition.name'),
-            ])
-          }}
+          流程设计器
         </Button>
       </template>
     </Grid>

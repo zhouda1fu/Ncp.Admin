@@ -10,7 +10,7 @@ public partial record WorkflowDefinitionId : IGuidStronglyTypedId;
 
 /// <summary>
 /// 流程定义聚合根
-/// 用于管理工作流模板的定义、版本和发布状态
+/// 用于管理工作流模板的定义、版本和发布状态。流程结构存储在 DefinitionJson（设计器树形 JSON）中。
 /// </summary>
 public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
 {
@@ -44,9 +44,14 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     public WorkflowDefinitionStatus Status { get; private set; } = WorkflowDefinitionStatus.Draft;
 
     /// <summary>
-    /// 流程定义JSON
+    /// 流程定义JSON（设计器树形结构）
     /// </summary>
     public string DefinitionJson { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 基于哪条流程定义创建（通过「基于此创建新版本」产生时为源定义ID，否则为 Guid.Empty）
+    /// </summary>
+    public WorkflowDefinitionId BasedOnId { get; private set; } = new WorkflowDefinitionId(Guid.Empty);
 
     /// <summary>
     /// 创建人ID
@@ -74,29 +79,25 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
 
     /// <summary>
-    /// 流程节点集合
+    /// 创建流程定义
     /// </summary>
-    public virtual ICollection<WorkflowNode> Nodes { get; init; } = [];
-
-    /// <summary>
-    /// 创建流程定义（含节点，与 Role 构造函数模式一致）
-    /// </summary>
-    public WorkflowDefinition(string name, string description, string category, string definitionJson, UserId createdBy, IEnumerable<WorkflowNode> nodes)
+    /// <param name="basedOnId">基于哪条流程定义创建，仅「基于此创建新版本」时传入</param>
+    public WorkflowDefinition(string name, string description, string category, string definitionJson, UserId createdBy, WorkflowDefinitionId? basedOnId = null)
     {
         CreatedAt = DateTimeOffset.UtcNow;
         Name = name;
         Description = description;
         Category = category;
-        DefinitionJson = definitionJson;
+        DefinitionJson = definitionJson ?? string.Empty;
         CreatedBy = createdBy;
+        BasedOnId = basedOnId ?? new WorkflowDefinitionId(Guid.Empty);
         Status = WorkflowDefinitionStatus.Draft;
-        Nodes = new List<WorkflowNode>(nodes);
     }
 
     /// <summary>
     /// 更新流程定义信息
     /// </summary>
-    public void UpdateInfo(string name, string description, string category, string definitionJson, IEnumerable<WorkflowNode> nodes)
+    public void UpdateInfo(string name, string description, string category, string definitionJson)
     {
         if (Status == WorkflowDefinitionStatus.Published)
         {
@@ -106,15 +107,8 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
         Name = name;
         Description = description;
         Category = category;
-        DefinitionJson = definitionJson;
+        DefinitionJson = definitionJson ?? string.Empty;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
-
-        // 更新节点
-        Nodes.Clear();
-        foreach (var node in nodes)
-        {
-            Nodes.Add(node);
-        }
 
         AddDomainEvent(new WorkflowDefinitionInfoChangedDomainEvent(this));
     }
@@ -155,128 +149,14 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     }
 
     /// <summary>
-    /// 获取按排序的审批节点列表
-    /// </summary>
-    public IReadOnlyList<WorkflowNode> GetOrderedApprovalNodes()
-    {
-        return Nodes
-            .Where(n => n.NodeType == WorkflowNodeType.Approval)
-            .OrderBy(n => n.SortOrder)
-            .ToList();
-    }
-
-    /// <summary>
-    /// 获取第一个审批节点
-    /// </summary>
-    public WorkflowNode? GetFirstApprovalNode()
-    {
-        return GetOrderedApprovalNodes().FirstOrDefault();
-    }
-
-    /// <summary>
-    /// 根据当前节点名称获取下一个审批节点（仅线性审批，不考虑条件分支）
-    /// </summary>
-    public WorkflowNode? GetNextApprovalNode(string currentNodeName)
-    {
-        var orderedNodes = GetOrderedApprovalNodes();
-        var currentIndex = orderedNodes.ToList().FindIndex(n => n.NodeName == currentNodeName);
-
-        if (currentIndex >= 0 && currentIndex < orderedNodes.Count - 1)
-        {
-            return orderedNodes[currentIndex + 1];
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// 按节点名称获取节点
-    /// </summary>
-    public WorkflowNode? GetNodeByName(string nodeName)
-    {
-        return Nodes.FirstOrDefault(n => n.NodeName == nodeName);
-    }
-
-    /// <summary>
-    /// 按 SortOrder 获取当前节点之后的下一个节点（可能是审批、条件等）
-    /// </summary>
-    public WorkflowNode? GetNextNodeInOrder(string currentNodeName)
-    {
-        var ordered = Nodes.OrderBy(n => n.SortOrder).ToList();
-        var idx = ordered.FindIndex(n => n.NodeName == currentNodeName);
-        if (idx < 0 || idx >= ordered.Count - 1) return null;
-        return ordered[idx + 1];
-    }
-
-    /// <summary>
-    /// 从流程开始解析，经过条件分支后得到第一个需要创建任务的审批节点（用于发起流程）
-    /// </summary>
-    public WorkflowNode? GetFirstReachableApprovalNode(Func<string, bool> conditionEvaluator)
-    {
-        var ordered = Nodes.OrderBy(n => n.SortOrder).ToList();
-        if (ordered.Count == 0) return null;
-        return ResolveToNextApproval(ordered[0], conditionEvaluator, new HashSet<string>());
-    }
-
-    /// <summary>
-    /// 从当前审批节点之后解析，经过条件分支后得到下一个需要创建任务的审批节点（用于审批通过后流转）
-    /// </summary>
-    public WorkflowNode? GetNextReachableApprovalNode(string currentNodeName, Func<string, bool> conditionEvaluator)
-    {
-        var nextInOrder = GetNextNodeInOrder(currentNodeName);
-        if (nextInOrder == null) return null;
-        return ResolveToNextApproval(nextInOrder, conditionEvaluator, new HashSet<string>());
-    }
-
-    private WorkflowNode? ResolveToNextApproval(WorkflowNode node, Func<string, bool> conditionEvaluator, HashSet<string> visited)
-    {
-        if (visited.Contains(node.NodeName)) return null;
-        visited.Add(node.NodeName);
-
-        if (node.NodeType == WorkflowNodeType.Approval)
-            return node;
-
-        if (node.NodeType == WorkflowNodeType.Condition)
-        {
-            var nextName = conditionEvaluator(node.ConditionExpression) ? node.TrueNextNodeName : node.FalseNextNodeName;
-            if (string.IsNullOrWhiteSpace(nextName)) return null;
-            var nextNode = GetNodeByName(nextName);
-            if (nextNode == null) return null;
-            return ResolveToNextApproval(nextNode, conditionEvaluator, visited);
-        }
-
-        if (node.NodeType == WorkflowNodeType.CarbonCopy || node.NodeType == WorkflowNodeType.Notification)
-        {
-            var nextInOrder = GetNextNodeInOrder(node.NodeName);
-            if (nextInOrder == null) return null;
-            return ResolveToNextApproval(nextInOrder, conditionEvaluator, visited);
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// 创建新版本（基于当前定义）
+    /// 创建新版本（基于当前定义），新定义的 BasedOnId 指向当前聚合，发布新版本时可据此归档当前定义
     /// </summary>
     public WorkflowDefinition CreateNewVersion()
     {
-        var clonedNodes = Nodes.Select(node => new WorkflowNode(
-            node.NodeName,
-            node.NodeType,
-            node.AssigneeType,
-            node.AssigneeValue,
-            node.SortOrder,
-            node.Description,
-            node.ApprovalMode,
-            node.ConditionExpression,
-            node.TrueNextNodeName,
-            node.FalseNextNodeName));
-
-        var newDefinition = new WorkflowDefinition(Name, Description, Category, DefinitionJson, CreatedBy, clonedNodes)
+        var newDefinition = new WorkflowDefinition(Name, Description, Category, DefinitionJson, CreatedBy, Id)
         {
             Version = Version + 1
         };
-
         return newDefinition;
     }
 

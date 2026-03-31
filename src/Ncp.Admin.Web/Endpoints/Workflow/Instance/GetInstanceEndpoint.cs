@@ -1,6 +1,9 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Security.Claims;
+using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.AppPermissions;
@@ -28,7 +31,13 @@ public class GetInstanceEndpoint(WorkflowInstanceQuery query) : Endpoint<GetInst
 
     public override async Task HandleAsync(GetInstanceRequest req, CancellationToken ct)
     {
-        var result = await query.GetInstanceDetailAsync(req.Id, ct);
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !long.TryParse(userIdString, out var userIdValue))
+        {
+            throw new KnownException("无效的用户身份", ErrorCodes.InvalidUserIdentity);
+        }
+
+        var result = await query.GetInstanceDetailAsync(req.Id, new UserId(userIdValue), ct);
         if (result == null)
             await Send.NotFoundAsync(ct);
         else

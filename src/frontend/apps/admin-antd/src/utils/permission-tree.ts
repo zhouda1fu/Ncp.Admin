@@ -69,6 +69,16 @@ export function buildPermissionTree(): PermissionTreeNode[] {
           label: '重置用户密码',
           icon: 'mdi:lock-reset',
         },
+        {
+          value: PermissionCodes.UserExport,
+          label: '导出用户',
+          icon: 'mdi:file-excel',
+        },
+        {
+          value: PermissionCodes.UserImport,
+          label: '导入用户',
+          icon: 'mdi:upload',
+        },
       ],
     },
     {
@@ -154,6 +164,18 @@ export function buildPermissionTree(): PermissionTreeNode[] {
           value: PermissionCodes.PositionDelete,
           label: '删除岗位',
           icon: 'mdi:delete',
+        },
+      ],
+    },
+    {
+      value: PermissionCodes.OperationLogManagement,
+      label: '操作日志',
+      icon: 'mdi:history',
+      children: [
+        {
+          value: PermissionCodes.OperationLogView,
+          label: '查看操作日志',
+          icon: 'mdi:eye',
         },
       ],
     },
@@ -313,6 +335,7 @@ export function buildPermissionTree(): PermissionTreeNode[] {
         { value: PermissionCodes.CustomerContactEdit, label: '编辑客户联系人', icon: 'mdi:account-edit' },
         { value: PermissionCodes.CustomerReleaseToSea, label: '释放到公海', icon: 'mdi:share' },
         { value: PermissionCodes.CustomerClaimFromSea, label: '公海领用', icon: 'mdi:hand-extended' },
+        { value: PermissionCodes.CustomerShare, label: '共享客户', icon: 'mdi:account-multiple' },
         { value: PermissionCodes.IndustryView, label: '查看行业', icon: 'mdi:eye' },
         { value: PermissionCodes.IndustryCreate, label: '创建行业', icon: 'mdi:plus' },
         { value: PermissionCodes.IndustryEdit, label: '编辑行业', icon: 'mdi:pencil' },
@@ -330,6 +353,20 @@ export function buildPermissionTree(): PermissionTreeNode[] {
         { value: PermissionCodes.OrderCreate, label: '创建订单', icon: 'mdi:plus' },
         { value: PermissionCodes.OrderEdit, label: '编辑订单', icon: 'mdi:pencil' },
         { value: PermissionCodes.OrderDelete, label: '删除订单', icon: 'mdi:delete' },
+        { value: PermissionCodes.OrderSubmit, label: '提交订单审批', icon: 'mdi:send' },
+        {
+          value: PermissionCodes.OrderSpecialDataDisplay,
+          label: '特殊数据展示',
+          icon: 'mdi:shield-lock',
+          children: [
+            { value: PermissionCodes.OrderContractUpload, label: '合同上传', icon: 'mdi:upload' },
+            { value: PermissionCodes.OrderContractSelect, label: '选择合同', icon: 'mdi:file-select' },
+            { value: PermissionCodes.OrderContractNotCompanyTemplate, label: '合同非公司模版', icon: 'mdi:file-document-outline' },
+            { value: PermissionCodes.OrderNeedInvoice, label: '是否需要发票', icon: 'mdi:receipt' },
+            { value: PermissionCodes.OrderContractAmount, label: '合同金额', icon: 'mdi:currency-cny' },
+            { value: PermissionCodes.OrderTechnicalStatus, label: '技术状态', icon: 'mdi:cog' },
+          ],
+        },
       ],
     },
     {
@@ -337,9 +374,9 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       label: '产品管理',
       icon: 'mdi:package-variant',
       children: [
-        { value: PermissionCodes.ProductView, label: '查看产品', icon: 'mdi:eye' },
+        { value: PermissionCodes.ProductView, label: '查看产品/分类/供应商', icon: 'mdi:eye' },
         { value: PermissionCodes.ProductCreate, label: '创建产品', icon: 'mdi:plus' },
-        { value: PermissionCodes.ProductEdit, label: '编辑产品', icon: 'mdi:pencil' },
+        { value: PermissionCodes.ProductEdit, label: '编辑产品/分类/供应商', icon: 'mdi:pencil' },
         { value: PermissionCodes.ProductDelete, label: '删除产品', icon: 'mdi:delete' },
       ],
     },

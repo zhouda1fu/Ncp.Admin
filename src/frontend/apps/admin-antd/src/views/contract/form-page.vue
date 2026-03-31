@@ -91,6 +91,18 @@ function getInvoiceRowKey(record: ContractApi.ContractInvoiceItem | PendingInvoi
   return 'id' in record && record.id ? record.id : (record as PendingInvoiceItem)._tempId;
 }
 
+/** 生成合同编号，格式：YYYYMMDDHHmmss，与项目/订单编号一致 */
+function generateContractNumber(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const h = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  return `${y}${m}${d}${h}${min}${s}`;
+}
+
 async function doSaveInvoiceFromForm() {
   const data = await invoiceFormApi.getValues();
   const payload = {
@@ -239,6 +251,7 @@ onMounted(async () => {
     const today = new Date().toISOString().slice(0, 10);
     const orderIdFromQuery = route.query.orderId as string | undefined;
     formApi.setValues({
+      code: generateContractNumber(),
       status: 0,
       startDate: today,
       endDate: today,

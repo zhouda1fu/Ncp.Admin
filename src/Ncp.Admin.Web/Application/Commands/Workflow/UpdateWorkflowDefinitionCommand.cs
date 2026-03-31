@@ -13,8 +13,7 @@ public record UpdateWorkflowDefinitionCommand(
     string Name,
     string Description,
     string Category,
-    string DefinitionJson,
-    IEnumerable<WorkflowNodeData> Nodes) : ICommand;
+    string DefinitionJson) : ICommand;
 
 /// <summary>
 /// 更新流程定义命令验证器
@@ -36,7 +35,8 @@ public class UpdateWorkflowDefinitionCommandValidator : AbstractValidator<Update
 /// </summary>
 public class UpdateWorkflowDefinitionCommandHandler(
     IWorkflowDefinitionRepository repository,
-    IMemoryCache memoryCache)
+    IMemoryCache memoryCache,
+    WorkflowDefinitionAssigneeConfigValidator assigneeConfigValidator)
     : ICommandHandler<UpdateWorkflowDefinitionCommand>
 {
     public async Task Handle(UpdateWorkflowDefinitionCommand request, CancellationToken cancellationToken)
@@ -44,20 +44,11 @@ public class UpdateWorkflowDefinitionCommandHandler(
         var definition = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
 
-        var nodes = request.Nodes.Select(n => new WorkflowNode(
-            n.NodeName,
-            n.NodeType,
-            n.AssigneeType,
-            n.AssigneeValue,
-            n.SortOrder,
-            n.Description,
-            n.ApprovalMode,
-            n.ConditionExpression,
-            n.TrueNextNodeName,
-            n.FalseNextNodeName));
+        await assigneeConfigValidator.ValidateAsync(request.DefinitionJson, cancellationToken);
 
-        definition.UpdateInfo(request.Name, request.Description, request.Category, request.DefinitionJson, nodes);
+        definition.UpdateInfo(request.Name, request.Description, request.Category, request.DefinitionJson ?? string.Empty);
 
         memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(request.Id));
+        memoryCache.Remove(WorkflowCacheKeys.PublishedListKey);
     }
 }

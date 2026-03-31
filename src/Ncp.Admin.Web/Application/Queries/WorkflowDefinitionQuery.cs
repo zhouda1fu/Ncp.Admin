@@ -18,23 +18,7 @@ public record WorkflowDefinitionQueryDto(
     WorkflowDefinitionStatus Status,
     UserId CreatedBy,
     DateTimeOffset CreatedAt,
-    IEnumerable<WorkflowNodeQueryDto> Nodes);
-
-/// <summary>
-/// 流程节点查询DTO
-/// </summary>
-public record WorkflowNodeQueryDto(
-    WorkflowNodeId Id,
-    string NodeName,
-    WorkflowNodeType NodeType,
-    AssigneeType AssigneeType,
-    string AssigneeValue,
-    int SortOrder,
-    string Description,
-    ApprovalMode ApprovalMode,
-    string ConditionExpression,
-    string TrueNextNodeName,
-    string FalseNextNodeName);
+    string DefinitionJson);
 
 /// <summary>
 /// 流程定义查询输入
@@ -47,7 +31,7 @@ public class WorkflowDefinitionQueryInput : PageRequest
 }
 
 /// <summary>
-/// 流程定义查询（与 RoleQuery 模式一致，注入 IMemoryCache 用于缓存）
+/// 流程定义查询
 /// </summary>
 public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, IMemoryCache memoryCache) : IQuery
 {
@@ -75,23 +59,12 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                 d.Status,
                 d.CreatedBy,
                 d.CreatedAt,
-                d.Nodes.OrderBy(n => n.SortOrder).Select(n => new WorkflowNodeQueryDto(
-                    n.Id,
-                    n.NodeName,
-                    n.NodeType,
-                    n.AssigneeType,
-                    n.AssigneeValue,
-                    n.SortOrder,
-                    n.Description,
-                    n.ApprovalMode,
-                    n.ConditionExpression,
-                    n.TrueNextNodeName,
-                    n.FalseNextNodeName))))
+                d.DefinitionJson))
             .ToPagedDataAsync(query, cancellationToken);
     }
 
     /// <summary>
-    /// 根据ID获取流程定义（带缓存，与 RoleQuery.GetRoleByIdAsync 模式一致）
+    /// 根据ID获取流程定义（带缓存）
     /// </summary>
     public async Task<WorkflowDefinitionQueryDto?> GetDefinitionByIdAsync(
         WorkflowDefinitionId id, CancellationToken cancellationToken)
@@ -113,18 +86,7 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                     d.Status,
                     d.CreatedBy,
                     d.CreatedAt,
-                    d.Nodes.OrderBy(n => n.SortOrder).Select(n => new WorkflowNodeQueryDto(
-                        n.Id,
-                        n.NodeName,
-                        n.NodeType,
-                        n.AssigneeType,
-                        n.AssigneeValue,
-                        n.SortOrder,
-                        n.Description,
-                        n.ApprovalMode,
-                        n.ConditionExpression,
-                        n.TrueNextNodeName,
-                        n.FalseNextNodeName))))
+                    d.DefinitionJson))
                 .FirstOrDefaultAsync(cancellationToken);
         });
     }
@@ -151,18 +113,7 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                     d.Status,
                     d.CreatedBy,
                     d.CreatedAt,
-                    d.Nodes.OrderBy(n => n.SortOrder).Select(n => new WorkflowNodeQueryDto(
-                        n.Id,
-                        n.NodeName,
-                        n.NodeType,
-                        n.AssigneeType,
-                        n.AssigneeValue,
-                        n.SortOrder,
-                        n.Description,
-                        n.ApprovalMode,
-                        n.ConditionExpression,
-                        n.TrueNextNodeName,
-                        n.FalseNextNodeName))))
+                    d.DefinitionJson))
                 .ToListAsync(cancellationToken);
         }))!;
     }
@@ -187,18 +138,7 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                 d.Status,
                 d.CreatedBy,
                 d.CreatedAt,
-                d.Nodes.OrderBy(n => n.SortOrder).Select(n => new WorkflowNodeQueryDto(
-                    n.Id,
-                    n.NodeName,
-                    n.NodeType,
-                    n.AssigneeType,
-                    n.AssigneeValue,
-                    n.SortOrder,
-                    n.Description,
-                    n.ApprovalMode,
-                    n.ConditionExpression,
-                    n.TrueNextNodeName,
-                    n.FalseNextNodeName))))
+                d.DefinitionJson))
             .FirstOrDefaultAsync(cancellationToken);
     }
 }

@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
-using Ncp.Admin.Web.Application.Commands.CustomerSource;
+using Ncp.Admin.Web.Application.Commands.CustomerSourceModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.CustomerSource;

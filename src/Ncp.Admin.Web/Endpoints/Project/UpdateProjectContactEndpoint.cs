@@ -4,7 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
-using Ncp.Admin.Web.Application.Commands.Projects;
+using Ncp.Admin.Web.Application.Commands.ProjectModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Project;

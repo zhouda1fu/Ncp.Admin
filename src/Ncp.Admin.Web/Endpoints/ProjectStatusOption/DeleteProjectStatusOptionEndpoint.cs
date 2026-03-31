@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate;
-using Ncp.Admin.Web.Application.Commands.ProjectStatusOption;
+using Ncp.Admin.Web.Application.Commands.ProjectStatusOptionModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.ProjectStatusOption;

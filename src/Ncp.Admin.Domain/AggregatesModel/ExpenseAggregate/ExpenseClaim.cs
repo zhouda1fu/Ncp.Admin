@@ -57,9 +57,9 @@ public class ExpenseClaim : Entity<ExpenseClaimId>, IAggregateRoot
     /// </summary>
     public ExpenseClaimStatus Status { get; private set; }
     /// <summary>
-    /// 关联的工作流实例ID（提交审批后可选填充）
+    /// 关联的工作流实例ID（未提交或未关联时为哨兵 <c>Guid.Empty</c>）
     /// </summary>
-    public WorkflowInstanceId? WorkflowInstanceId { get; private set; }
+    public WorkflowInstanceId WorkflowInstanceId { get; private set; } = new WorkflowInstanceId(Guid.Empty);
     /// <summary>
     /// 创建时间
     /// </summary>
@@ -123,11 +123,17 @@ public class ExpenseClaim : Entity<ExpenseClaimId>, IAggregateRoot
     }
 
     /// <summary>
+    /// 提交报销单；仅草稿状态可调用，且至少有一条明细（不关联工作流实例）
+    /// </summary>
+    /// <exception cref="KnownException">非草稿或无明细时抛出</exception>
+    public void Submit() => Submit(new WorkflowInstanceId(Guid.Empty));
+
+    /// <summary>
     /// 提交报销单；仅草稿状态可调用，且至少有一条明细
     /// </summary>
-    /// <param name="workflowInstanceId">关联的工作流实例ID（可选）</param>
+    /// <param name="workflowInstanceId">关联的工作流实例ID</param>
     /// <exception cref="KnownException">非草稿或无明细时抛出</exception>
-    public void Submit(WorkflowInstanceId? workflowInstanceId = null)
+    public void Submit(WorkflowInstanceId workflowInstanceId)
     {
         if (Status != ExpenseClaimStatus.Draft)
             throw new KnownException("只有草稿可提交", ErrorCodes.ExpenseClaimInvalidStatus);

@@ -9,7 +9,7 @@ namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 /// 删除用户命令
 /// </summary>
 /// <param name="UserId">用户ID</param>
-public record DeleteUserCommand(UserId UserId) : ICommand;
+public record DeleteUserCommand(UserId UserId, UserId DeleterId) : ICommand;
 
 /// <summary>
 /// 删除用户命令验证器
@@ -32,7 +32,7 @@ public class DeleteUserCommandHandler(IUserRepository userRepository) : ICommand
         var user = await userRepository.GetAsync(request.UserId, cancellationToken) ??
                    throw new KnownException($"未找到用户，UserId = {request.UserId}", ErrorCodes.UserNotFound);
 
-        user.SoftDelete();
+        user.SoftDelete(request.DeleterId);
     }
 }
 

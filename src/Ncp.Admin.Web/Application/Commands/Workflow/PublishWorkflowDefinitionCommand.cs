@@ -26,13 +26,27 @@ public class PublishWorkflowDefinitionCommandValidator : AbstractValidator<Publi
 /// </summary>
 public class PublishWorkflowDefinitionCommandHandler(
     IWorkflowDefinitionRepository repository,
-    IMemoryCache memoryCache)
+    IMemoryCache memoryCache,
+    WorkflowDefinitionAssigneeConfigValidator assigneeConfigValidator)
     : ICommandHandler<PublishWorkflowDefinitionCommand>
 {
     public async Task Handle(PublishWorkflowDefinitionCommand request, CancellationToken cancellationToken)
     {
         var definition = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
+
+        await assigneeConfigValidator.ValidateAsync(definition.DefinitionJson, cancellationToken);
+
+        // 若当前定义是基于某条流程创建的新版本（BasedOnId != Guid.Empty），发布时将该源定义归档
+        if (definition.BasedOnId != new WorkflowDefinitionId(Guid.Empty))
+        {
+            var source = await repository.GetAsync(definition.BasedOnId, cancellationToken);
+            if (source != null && source.Status == WorkflowDefinitionStatus.Published)
+            {
+                source.Archive();
+                memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(definition.BasedOnId));
+            }
+        }
 
         definition.Publish();
 

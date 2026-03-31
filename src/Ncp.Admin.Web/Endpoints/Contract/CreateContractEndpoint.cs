@@ -7,7 +7,7 @@ using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Web.Application.Commands.Contract;
+using Ncp.Admin.Web.Application.Commands.ContractModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Contract;

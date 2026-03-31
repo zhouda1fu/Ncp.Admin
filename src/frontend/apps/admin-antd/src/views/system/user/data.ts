@@ -5,6 +5,7 @@ import type { SystemUserApi } from '#/api/system/user';
 import { z } from '#/adapter/form';
 import { getDeptTree } from '#/api/system/dept';
 import { getRoleList } from '#/api/system/role';
+import { uploadFile } from '#/api/system/file';
 import { $t } from '#/locales';
 
 /**
@@ -22,10 +23,13 @@ async function getAllRolesForSelect() {
   }));
 }
 
+/** 上传成功后写入 path 到 avatarUrl 的回调，由 form.vue 传入 */
+export type SetAvatarUrlPathFn = (path: string) => void;
+
 /**
  * 获取编辑表单的字段配置
  */
-export function useFormSchema(): VbenFormSchema[] {
+export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSchema[] {
   return [
     {
       component: 'Input',
@@ -43,10 +47,9 @@ export function useFormSchema(): VbenFormSchema[] {
       component: 'Input',
       fieldName: 'phone',
       label: $t('system.user.phone'),
-      rules: z
-        .string()
-        .regex(/^1[3-9]\d{9}$/, $t('ui.formRules.phone'))
-        .optional(),
+      rules: z.string().refine((val) => !val || /^1[3-9]\d{9}$/.test(val), {
+        message: $t('ui.formRules.phone'),
+      }).optional(),
     },
     {
       component: 'Input',
@@ -78,30 +81,53 @@ export function useFormSchema(): VbenFormSchema[] {
       label: $t('system.user.birthDate'),
     },
     {
-      component: 'ApiTreeSelect',
-      componentProps: {
-        allowClear: true,
-        api: getDeptTree,
-        class: 'w-full',
-        labelField: 'name',
-        valueField: 'id',
-        childrenField: 'children',
-      },
-      fieldName: 'deptId',
-      label: $t('system.user.dept'),
+      component: 'Input',
+      fieldName: 'idCardNumber',
+      label: $t('system.user.idCardNumber'),
     },
     {
-      component: 'ApiSelect',
+      component: 'Input',
+      fieldName: 'address',
+      label: $t('system.user.address'),
+    },
+    {
+      component: 'Input',
+      fieldName: 'education',
+      label: $t('system.user.education'),
+    },
+    {
+      component: 'Input',
+      fieldName: 'graduateSchool',
+      label: $t('system.user.graduateSchool'),
+    },
+    {
+      component: 'Input',
+      componentProps: { type: 'hidden', class: 'hidden' },
+      fieldName: 'avatarUrl',
+      label: $t('system.user.avatarUrl'),
+      formItemClass: 'hidden',
+    },
+    {
+      component: 'Upload',
       componentProps: {
-        allowClear: true,
-        api: getAllRolesForSelect,
+        accept: 'image/*',
         class: 'w-full',
-        labelField: 'label',
-        valueField: 'value',
-        mode: 'multiple',
+        listType: 'picture',
+        maxCount: 1,
+        placeholder: $t('system.user.avatarUploadPlaceholder'),
+        customRequest: (options: { file: File | Blob; onSuccess?: (res: unknown) => void; onError?: (e: Error) => void }) => {
+          const file = options.file as File;
+          uploadFile(file)
+            .then((res) => {
+              setAvatarUrlPath?.(res.path);
+              options.onSuccess?.(res);
+            })
+            .catch((e) => options.onError?.(e ?? new Error('Upload failed')));
+        },
       },
-      fieldName: 'roleIds',
-      label: $t('system.user.roles'),
+      fieldName: 'avatarFileList',
+      label: $t('system.user.avatarUrl'),
+      formItemClass: 'sm:col-span-1',
     },
     {
       component: 'RadioGroup',
@@ -115,13 +141,93 @@ export function useFormSchema(): VbenFormSchema[] {
       },
       defaultValue: 1,
       fieldName: 'status',
+      formItemClass: 'sm:col-span-1',
       label: $t('system.user.status'),
+    },
+    {
+      component: 'RadioGroup',
+      componentProps: {
+        buttonStyle: 'solid',
+        options: [
+          { label: $t('common.yes'), value: true },
+          { label: $t('common.no'), value: false },
+        ],
+        optionType: 'button',
+      },
+      defaultValue: false,
+      fieldName: 'notOrderMeal',
+      formItemClass: 'sm:col-span-1',
+      label: $t('system.user.notOrderMeal'),
+      rules: z.boolean().optional().default(false),
+    },
+    {
+      component: 'RadioGroup',
+      componentProps: {
+        buttonStyle: 'solid',
+        options: [
+          { label: $t('common.yes'), value: true },
+          { label: $t('common.no'), value: false },
+        ],
+        optionType: 'button',
+      },
+      defaultValue: false,
+      fieldName: 'isResigned',
+      formItemClass: 'sm:col-span-1',
+      label: $t('system.user.isResigned'),
+      rules: z.boolean().optional().default(false),
+    },
+    {
+      component: 'ApiTreeSelect',
+      componentProps: {
+        allowClear: true,
+        api: getDeptTree,
+        class: 'w-full',
+        labelField: 'name',
+        valueField: 'id',
+        childrenField: 'children',
+      },
+      fieldName: 'deptId',
+      formItemClass: 'sm:col-span-1',
+      label: $t('system.user.dept'),
+    },
+    {
+      component: 'RadioGroup',
+      componentProps: {
+        buttonStyle: 'solid',
+        options: [
+          { label: $t('common.yes'), value: true },
+          { label: $t('common.no'), value: false },
+        ],
+        optionType: 'button',
+      },
+      defaultValue: false,
+      fieldName: 'isDeptManager',
+      formItemClass: 'sm:col-span-1',
+      label: $t('system.dept.manager'),
+      rules: z.boolean().optional().default(false),
+    },
+    {
+      component: 'ApiSelect',
+      componentProps: {
+        allowClear: true,
+        api: getAllRolesForSelect,
+        class: 'w-full',
+        labelField: 'label',
+        valueField: 'value',
+        mode: 'multiple',
+      },
+      fieldName: 'roleIds',
+      formItemClass: 'sm:col-span-1',
+      label: $t('system.user.roles'),
     },
     {
       component: 'InputPassword',
       fieldName: 'password',
+      formItemClass: 'sm:col-span-1',
       label: $t('system.user.password'),
-      rules: z.string().min(6, $t('ui.formRules.minLength', [$t('system.user.password'), 6])).optional(),
+      rules: z.string().refine((val) => !val || val.length >= 6, {
+        message: $t('ui.formRules.minLength', [$t('system.user.password'), 6]),
+      }).optional(),
     },
   ];
 }
@@ -147,6 +253,18 @@ export function useGridFormSchema(): VbenFormSchema[] {
       },
       fieldName: 'status',
       label: $t('system.user.status'),
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        allowClear: true,
+        options: [
+          { label: $t('system.user.employmentActive'), value: false },
+          { label: $t('system.user.employmentResigned'), value: true },
+        ],
+      },
+      fieldName: 'isResigned',
+      label: $t('system.user.employmentStatus'),
     },
   ];
 }
@@ -196,6 +314,12 @@ export function useColumns<T = SystemUserApi.SystemUser>(
       field: 'deptName',
       title: $t('system.user.dept'),
       width: 150,
+    },
+    {
+      field: 'isResigned',
+      title: $t('system.user.isResigned'),
+      width: 110,
+      formatter: ({ cellValue }) => (cellValue ? $t('common.yes') : $t('common.no')),
     },
     {
       field: 'roles',

@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
-using Ncp.Admin.Web.Application.Commands.Industry;
+using Ncp.Admin.Web.Application.Commands.IndustryModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Industry;

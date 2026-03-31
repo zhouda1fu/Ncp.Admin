@@ -34,6 +34,13 @@ public class DeleteWorkflowDefinitionCommandHandler(
         var definition = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
 
+        if (definition.Status is WorkflowDefinitionStatus.Published or WorkflowDefinitionStatus.Archived)
+        {
+            throw new KnownException(
+                "已发布或已归档的流程定义不能删除，请保留历史版本或创建新版本后使用新流程。",
+                ErrorCodes.WorkflowDefinitionCannotDelete);
+        }
+
         definition.SoftDelete();
 
         memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(request.Id));

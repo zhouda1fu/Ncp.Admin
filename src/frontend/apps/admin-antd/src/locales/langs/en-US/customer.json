@@ -43,7 +43,15 @@
   "claimStatusUnclaimed": "Unclaimed",
   "claimStatusClaimed": "Claimed",
   "select": "Select",
+  "ownerDept": "Owner Department",
+  "share": "Share",
+  "shareTitle": "Share Customer",
+  "shareHint": "After sharing, the user can view this customer regardless of data scope restrictions.",
+  "sharePlaceholder": "Select users to share with",
   "operation": "Operation",
+  "formSectionTitle": "Customer Information",
+  "formCardTitle": "Basic Information",
+  "formSectionDesc": "Please fill in the following basic information. Fields marked with * are required.",
   "create": "New Customer",
   "edit": "Edit",
   "view": "View",
@@ -121,5 +129,6 @@
   "recorderName": "Recorder",
   "addRecordTitle": "Add Contact Record",
   "deleteRecord": "Delete",
-  "confirmDeleteRecord": "Are you sure you want to delete this contact record?"
+  "confirmDeleteRecord": "Are you sure you want to delete this contact record?",
+  "pleaseCompleteRequired": "Please complete all required fields before submitting"
 }

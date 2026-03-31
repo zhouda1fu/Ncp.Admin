@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ChatMessageAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Web.Application.Commands.ChatMessage;
+using Ncp.Admin.Web.Application.Commands.ChatMessageModule;
 using Ncp.Admin.Web.Application.Queries;
 
 namespace Ncp.Admin.Web.Application.Hubs;

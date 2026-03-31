@@ -1,23 +1,9 @@
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflow;
-
-/// <summary>
-/// 流程节点请求数据
-/// </summary>
-public record WorkflowNodeData(
-    string NodeName,
-    WorkflowNodeType NodeType,
-    AssigneeType AssigneeType,
-    string AssigneeValue,
-    int SortOrder,
-    string Description,
-    ApprovalMode ApprovalMode = ApprovalMode.OrSign,
-    string? ConditionExpression = null,
-    string? TrueNextNodeName = null,
-    string? FalseNextNodeName = null);
 
 /// <summary>
 /// 创建流程定义命令
@@ -27,8 +13,7 @@ public record CreateWorkflowDefinitionCommand(
     string Description,
     string Category,
     string DefinitionJson,
-    UserId CreatedBy,
-    IEnumerable<WorkflowNodeData> Nodes) : ICommand<WorkflowDefinitionId>;
+    UserId CreatedBy) : ICommand<WorkflowDefinitionId>;
 
 /// <summary>
 /// 创建流程定义命令验证器
@@ -46,33 +31,22 @@ public class CreateWorkflowDefinitionCommandValidator : AbstractValidator<Create
 
 /// <summary>
 /// 创建流程定义命令处理器
-/// 与 CreateRoleCommandHandler 模式一致：在 Handler 中构建子集合，通过构造函数传入聚合根
 /// </summary>
-public class CreateWorkflowDefinitionCommandHandler(IWorkflowDefinitionRepository repository)
+public class CreateWorkflowDefinitionCommandHandler(
+    IWorkflowDefinitionRepository repository,
+    WorkflowDefinitionAssigneeConfigValidator assigneeConfigValidator)
     : ICommandHandler<CreateWorkflowDefinitionCommand, WorkflowDefinitionId>
 {
     public async Task<WorkflowDefinitionId> Handle(CreateWorkflowDefinitionCommand request, CancellationToken cancellationToken)
     {
-        // 构建节点集合（与 Role + RolePermission 模式一致）
-        var nodes = request.Nodes.Select(n => new WorkflowNode(
-            n.NodeName,
-            n.NodeType,
-            n.AssigneeType,
-            n.AssigneeValue,
-            n.SortOrder,
-            n.Description,
-            n.ApprovalMode,
-            n.ConditionExpression,
-            n.TrueNextNodeName,
-            n.FalseNextNodeName));
+        await assigneeConfigValidator.ValidateAsync(request.DefinitionJson, cancellationToken);
 
         var definition = new WorkflowDefinition(
             request.Name,
             request.Description,
             request.Category,
-            request.DefinitionJson,
-            request.CreatedBy,
-            nodes);
+            request.DefinitionJson ?? string.Empty,
+            request.CreatedBy);
 
         await repository.AddAsync(definition, cancellationToken);
         return definition.Id;

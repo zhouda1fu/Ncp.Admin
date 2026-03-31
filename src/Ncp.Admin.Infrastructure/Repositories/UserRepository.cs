@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
@@ -16,6 +17,11 @@ public interface IUserRepository : IRepository<User, UserId>
     /// 批量更新指定部门下所有用户的部门名称（用于部门信息变更时同步冗余的 DeptName）
     /// </summary>
     Task BulkUpdateUserDeptNamesAsync(DeptId deptId, string newDeptName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 批量更新指定岗位下所有用户的岗位名称（用于岗位信息变更时同步冗余的 PositionName）
+    /// </summary>
+    Task BulkUpdateUserPositionNamesAsync(PositionId positionId, string newPositionName, CancellationToken cancellationToken = default);
 }
 
 public class UserRepository(ApplicationDbContext context) : RepositoryBase<User, UserId, ApplicationDbContext>(context), IUserRepository
@@ -41,6 +47,15 @@ public class UserRepository(ApplicationDbContext context) : RepositoryBase<User,
             .Where(ud => ud.DeptId == deptId)
             .ExecuteUpdateAsync(
                 setters => setters.SetProperty(ud => ud.DeptName, newDeptName),
+                cancellationToken);
+    }
+
+    public async Task BulkUpdateUserPositionNamesAsync(PositionId positionId, string newPositionName, CancellationToken cancellationToken = default)
+    {
+        await context.UserPositions
+            .Where(up => up.PositionId == positionId)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(up => up.PositionName, newPositionName),
                 cancellationToken);
     }
 }

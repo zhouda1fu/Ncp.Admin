@@ -24,6 +24,9 @@ internal class RoleEntityTypeConfiguration : IEntityTypeConfiguration<Role>
         builder.HasMany(r => r.Permissions).WithOne().HasForeignKey(rp => rp.RoleId);
         builder.Navigation(e => e.Permissions).AutoInclude();
 
+        builder.HasMany(r => r.DataDepts).WithOne().HasForeignKey(rd => rd.RoleId);
+        builder.Navigation(e => e.DataDepts).AutoInclude();
+
         builder.HasQueryFilter(b => !b.IsDeleted);
     }
 }
@@ -44,6 +47,24 @@ internal class RolePermissionEntityTypeConfiguration : IEntityTypeConfiguration<
         builder.HasOne<Role>()
             .WithMany(r => r.Permissions)
             .HasForeignKey(rp => rp.RoleId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal class RoleDataDeptEntityTypeConfiguration : IEntityTypeConfiguration<RoleDataDept>
+{
+    public void Configure(EntityTypeBuilder<RoleDataDept> builder)
+    {
+        builder.ToTable("role_data_dept");
+
+        builder.HasKey(t => new { t.RoleId, t.DeptId });
+
+        builder.Property(b => b.RoleId);
+        builder.Property(b => b.DeptId);
+
+        builder.HasOne<Role>()
+            .WithMany(r => r.DataDepts)
+            .HasForeignKey(rd => rd.RoleId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

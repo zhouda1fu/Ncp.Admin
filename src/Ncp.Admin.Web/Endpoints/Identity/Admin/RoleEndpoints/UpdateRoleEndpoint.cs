@@ -2,6 +2,7 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 using Ncp.Admin.Web.AppPermissions;
@@ -15,7 +16,14 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.RoleEndpoints;
 /// <param name="Name">新的角色名称</param>
 /// <param name="Description">新的角色描述</param>
 /// <param name="PermissionCodes">新的权限代码列表</param>
-public record UpdateRoleInfoRequest(RoleId RoleId, string Name, string Description, DataScope? DataScope, IEnumerable<string> PermissionCodes);
+/// <param name="CustomDeptIds">自定义部门ID列表（当 DataScope=CustomDeptAndSub 时必填）</param>
+public record UpdateRoleInfoRequest(
+    RoleId RoleId,
+    string Name,
+    string Description,
+    DataScope? DataScope,
+    IEnumerable<string> PermissionCodes,
+    IEnumerable<DeptId>? CustomDeptIds = null);
 
 /// <summary>
 /// 更新角色
@@ -39,7 +47,8 @@ public class UpdateRoleEndpoint(IMediator mediator) : Endpoint<UpdateRoleInfoReq
             request.Name,
             request.Description,
             request.DataScope,
-            request.PermissionCodes);
+            request.PermissionCodes,
+            request.CustomDeptIds);
         await mediator.Send(cmd, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

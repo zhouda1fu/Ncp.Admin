@@ -2,6 +2,7 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 using Ncp.Admin.Web.AppPermissions;
@@ -14,7 +15,13 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.RoleEndpoints;
 /// <param name="Name">角色名称</param>
 /// <param name="Description">角色描述</param>
 /// <param name="PermissionCodes">权限代码列表</param>
-public record CreateRoleRequest(string Name, string Description, IEnumerable<string> PermissionCodes, DataScope DataScope = DataScope.All);
+/// <param name="CustomDeptIds">自定义部门ID列表（当 DataScope=CustomDeptAndSub 时必填）</param>
+public record CreateRoleRequest(
+    string Name,
+    string Description,
+    IEnumerable<string> PermissionCodes,
+    DataScope DataScope = DataScope.All,
+    IEnumerable<DeptId>? CustomDeptIds = null);
 
 /// <summary>
 /// 创建角色的响应模型
@@ -41,7 +48,7 @@ public class CreateRoleEndpoint(IMediator mediator) : Endpoint<CreateRoleRequest
 
     public override async Task HandleAsync(CreateRoleRequest req, CancellationToken ct)
     {
-        var cmd = new CreateRoleCommand(req.Name, req.Description, req.PermissionCodes, req.DataScope);
+        var cmd = new CreateRoleCommand(req.Name, req.Description, req.PermissionCodes, req.DataScope, req.CustomDeptIds);
         var result = await mediator.Send(cmd, ct);
         var response = new CreateRoleResponse(result, req.Name, req.Description);
         await Send.OkAsync(response.AsResponseData(), cancellation: ct);

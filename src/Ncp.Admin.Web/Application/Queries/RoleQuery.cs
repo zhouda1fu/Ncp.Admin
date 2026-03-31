@@ -1,10 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
-public record RoleQueryDto(RoleId RoleId, string Name, string Description, DataScope DataScope, bool IsActive, DateTimeOffset CreatedAt, IEnumerable<string> PermissionCodes);
+public record RoleQueryDto(
+    RoleId RoleId,
+    string Name,
+    string Description,
+    DataScope DataScope,
+    bool IsActive,
+    DateTimeOffset CreatedAt,
+    IEnumerable<string> PermissionCodes,
+    IEnumerable<DeptId> CustomDeptIds);
 
 public class RoleQueryInput : PageRequest
 {
@@ -15,7 +24,12 @@ public class RoleQueryInput : PageRequest
     public DateTimeOffset? EndTime { get; set; }
 }
 
-public record AssignAdminUserRoleQueryDto(RoleId RoleId, string RoleName, DataScope DataScope, IEnumerable<string> PermissionCodes);
+public record AssignAdminUserRoleQueryDto(
+    RoleId RoleId,
+    string RoleName,
+    DataScope DataScope,
+    IEnumerable<string> PermissionCodes,
+    IEnumerable<DeptId> CustomDeptIds);
 
 public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache memoryCache) : IQuery
 {
@@ -37,8 +51,40 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
                 r.Id,
                 r.Name,
                 r.DataScope,
-                r.Permissions.Select(rp => rp.PermissionCode)))
+                r.Permissions.Select(rp => rp.PermissionCode),
+                r.DataDepts.Select(d => d.DeptId)))
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// 按角色名称精确匹配批量加载可分配角色；返回未匹配到的名称列表（用于导入校验）。
+    /// </summary>
+    public async Task<(List<AssignAdminUserRoleQueryDto> Roles, List<string> MissingNames)> GetAdminRolesForAssignmentByNamesAsync(
+        IEnumerable<string> roleNames,
+        CancellationToken cancellationToken)
+    {
+        var names = roleNames
+            .Select(n => n.Trim())
+            .Where(n => n.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (names.Count == 0)
+        {
+            return ([], []);
+        }
+
+        var found = await RoleSet.AsNoTracking()
+            .Where(r => names.Contains(r.Name))
+            .Select(r => new AssignAdminUserRoleQueryDto(
+                r.Id,
+                r.Name,
+                r.DataScope,
+                r.Permissions.Select(rp => rp.PermissionCode),
+                r.DataDepts.Select(d => d.DeptId)))
+            .ToListAsync(cancellationToken);
+        var foundNameSet = found.Select(r => r.RoleName).ToHashSet(StringComparer.Ordinal);
+        var missing = names.Where(n => !foundNameSet.Contains(n)).ToList();
+        return (found, missing);
     }
 
     public async Task<IEnumerable<string>> GetAssignedPermissionCodesAsync(IEnumerable<RoleId> ids, CancellationToken cancellationToken)
@@ -70,7 +116,15 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
             
             return await RoleSet.AsNoTracking()
                 .Where(r => r.Id == id)
-                .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.DataScope, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
+                .Select(r => new RoleQueryDto(
+                    r.Id,
+                    r.Name,
+                    r.Description,
+                    r.DataScope,
+                    r.IsActive,
+                    r.CreatedAt,
+                    r.Permissions.Select(rp => rp.PermissionCode),
+                    r.DataDepts.Select(d => d.DeptId)))
                 .FirstOrDefaultAsync(cancellationToken);
         });
     }
@@ -84,7 +138,15 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
             .WhereIf(query.StartTime.HasValue, r => r.CreatedAt >= query.StartTime!.Value)
             .WhereIf(query.EndTime.HasValue, r => r.CreatedAt <= query.EndTime!.Value)
             .OrderBy(r => r.Id)
-            .Select(r => new RoleQueryDto(r.Id, r.Name, r.Description, r.DataScope, r.IsActive, r.CreatedAt, r.Permissions.Select(rp => rp.PermissionCode)))
+            .Select(r => new RoleQueryDto(
+                r.Id,
+                r.Name,
+                r.Description,
+                r.DataScope,
+                r.IsActive,
+                r.CreatedAt,
+                r.Permissions.Select(rp => rp.PermissionCode),
+                r.DataDepts.Select(d => d.DeptId)))
             .ToPagedDataAsync(query, cancellationToken);
     }
 }

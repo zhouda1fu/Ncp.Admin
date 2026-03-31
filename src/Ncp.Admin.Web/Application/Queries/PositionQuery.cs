@@ -61,12 +61,20 @@ public class PositionQuery(ApplicationDbContext applicationDbContext) : IQuery
     /// </summary>
     public async Task<PositionQueryDto?> GetPositionByIdAsync(PositionId id, CancellationToken cancellationToken = default)
     {
-        return await PositionSet.AsNoTracking()
+        var position = await PositionSet.AsNoTracking()
             .Where(p => p.Id == id)
-            .Join(applicationDbContext.Depts.AsNoTracking(),
-                p => p.DeptId, d => d.Id,
-                (p, d) => new PositionQueryDto(p.Id, p.Name, p.Code, p.Description, p.DeptId, d.Name, p.SortOrder, p.Status, p.CreatedAt))
+            .Select(p => new { p.Id, p.Name, p.Code, p.Description, p.DeptId, p.SortOrder, p.Status, p.CreatedAt })
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (position == null)
+            return null;
+
+        var deptName = await applicationDbContext.Depts.AsNoTracking()
+            .Where(d => d.Id == position.DeptId)
+            .Select(d => d.Name)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return new PositionQueryDto(position.Id, position.Name, position.Code, position.Description, position.DeptId, deptName, position.SortOrder, position.Status, position.CreatedAt);
     }
 
     /// <summary>
@@ -82,15 +90,26 @@ public class PositionQuery(ApplicationDbContext applicationDbContext) : IQuery
 
         var total = await queryable.CountAsync(cancellationToken);
 
-        var items = await queryable
+        var positions = await queryable
             .OrderBy(p => p.SortOrder)
             .ThenByDescending(p => p.CreatedAt)
             .Skip((query.PageIndex - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Join(applicationDbContext.Depts.AsNoTracking(),
-                p => p.DeptId, d => d.Id,
-                (p, d) => new PositionQueryDto(p.Id, p.Name, p.Code, p.Description, p.DeptId, d.Name, p.SortOrder, p.Status, p.CreatedAt))
+            .Select(p => new { p.Id, p.Name, p.Code, p.Description, p.DeptId, p.SortOrder, p.Status, p.CreatedAt })
             .ToListAsync(cancellationToken);
+
+        if (positions.Count == 0)
+            return ([], total);
+
+        var deptIds = positions.Select(p => p.DeptId).Distinct().ToList();
+        var deptNames = await applicationDbContext.Depts.AsNoTracking()
+            .Where(d => deptIds.Contains(d.Id))
+            .Select(d => new { d.Id, d.Name })
+            .ToListAsync(cancellationToken);
+        var deptNameMap = deptNames.ToDictionary(d => d.Id, d => d.Name);
+
+        var items = positions
+            .Select(p => new PositionQueryDto(p.Id, p.Name, p.Code, p.Description, p.DeptId, deptNameMap.GetValueOrDefault(p.DeptId), p.SortOrder, p.Status, p.CreatedAt));
 
         return (items, total);
     }
@@ -98,14 +117,63 @@ public class PositionQuery(ApplicationDbContext applicationDbContext) : IQuery
     /// <summary>
     /// 获取所有岗位
     /// </summary>
+    /// <summary>
+    /// 按岗位名称解析；若指定 <paramref name="deptId"/> 则限定部门，否则仅在全库唯一匹配时返回。
+    /// </summary>
+    public async Task<PositionQueryDto?> GetPositionByNameForImportAsync(string name, DeptId? deptId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return null;
+        }
+
+        var trimmed = name.Trim();
+        var queryable = PositionSet.AsNoTracking().Where(p => p.Name == trimmed);
+        if (deptId != null)
+        {
+            queryable = queryable.Where(p => p.DeptId == deptId);
+        }
+
+        var positions = await queryable
+            .Select(p => new { p.Id, p.Name, p.Code, p.Description, p.DeptId, p.SortOrder, p.Status, p.CreatedAt })
+            .ToListAsync(cancellationToken);
+        if (positions.Count == 0)
+        {
+            return null;
+        }
+
+        if (positions.Count > 1)
+        {
+            return null;
+        }
+
+        var p = positions[0];
+        var deptName = await applicationDbContext.Depts.AsNoTracking()
+            .Where(d => d.Id == p.DeptId)
+            .Select(d => d.Name)
+            .FirstOrDefaultAsync(cancellationToken);
+        return new PositionQueryDto(p.Id, p.Name, p.Code, p.Description, p.DeptId, deptName, p.SortOrder, p.Status, p.CreatedAt);
+    }
+
     public async Task<IEnumerable<PositionQueryDto>> GetAllPositionsAsync(CancellationToken cancellationToken)
     {
-        return await PositionSet.AsNoTracking()
+        var positions = await PositionSet.AsNoTracking()
             .Where(p => p.Status == 1)
             .OrderBy(p => p.SortOrder)
-            .Join(applicationDbContext.Depts.AsNoTracking(),
-                p => p.DeptId, d => d.Id,
-                (p, d) => new PositionQueryDto(p.Id, p.Name, p.Code, p.Description, p.DeptId, d.Name, p.SortOrder, p.Status, p.CreatedAt))
+            .Select(p => new { p.Id, p.Name, p.Code, p.Description, p.DeptId, p.SortOrder, p.Status, p.CreatedAt })
             .ToListAsync(cancellationToken);
+
+        if (positions.Count == 0)
+            return [];
+
+        var deptIds = positions.Select(p => p.DeptId).Distinct().ToList();
+        var deptNames = await applicationDbContext.Depts.AsNoTracking()
+            .Where(d => deptIds.Contains(d.Id))
+            .Select(d => new { d.Id, d.Name })
+            .ToListAsync(cancellationToken);
+        var deptNameMap = deptNames.ToDictionary(d => d.Id, d => d.Name);
+
+        return positions
+            .Select(p => new PositionQueryDto(p.Id, p.Name, p.Code, p.Description, p.DeptId, deptNameMap.GetValueOrDefault(p.DeptId), p.SortOrder, p.Status, p.CreatedAt));
     }
 }

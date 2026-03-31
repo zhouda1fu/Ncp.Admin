@@ -1,5 +1,6 @@
 using FluentValidation;
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
@@ -14,7 +15,13 @@ namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 /// <param name="Name">角色名称</param>
 /// <param name="Description">角色描述</param>
 /// <param name="PermissionCodes">权限代码列表</param>
-public record UpdateRoleInfoCommand(RoleId RoleId, string Name, string Description, DataScope? DataScope, IEnumerable<string> PermissionCodes) : ICommand;
+public record UpdateRoleInfoCommand(
+    RoleId RoleId,
+    string Name,
+    string Description,
+    DataScope? DataScope,
+    IEnumerable<string> PermissionCodes,
+    IEnumerable<DeptId>? CustomDeptIds = null) : ICommand;
 
 /// <summary>
 /// 更新角色信息命令验证器
@@ -25,6 +32,11 @@ public class UpdateRoleInfoCommandValidator : AbstractValidator<UpdateRoleInfoCo
     {
         RuleFor(x => x.RoleId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty();
+
+        RuleFor(r => r.CustomDeptIds)
+            .NotEmpty()
+            .When(r => r.DataScope == DataScope.CustomDeptAndSub)
+            .WithMessage("自定义部门数据范围必须至少选择一个部门");
     }
 }
 
@@ -38,6 +50,10 @@ public class UpdateRoleInfoCommandHandler(IRoleRepository roleRepository) : ICom
         var role = await roleRepository.GetAsync(request.RoleId, cancellationToken) ??
                    throw new KnownException($"未找到角色，RoleId = {request.RoleId}", ErrorCodes.RoleNotFound);
         role.UpdateRoleInfo(request.Name, request.Description, request.DataScope);
+        if (request.DataScope == DataScope.CustomDeptAndSub)
+            role.SetCustomDataDepts(request.CustomDeptIds ?? []);
+        else if (request.DataScope.HasValue)
+            role.ClearCustomDataDepts();
 
         var permissions = request.PermissionCodes.Select(perm =>
         {

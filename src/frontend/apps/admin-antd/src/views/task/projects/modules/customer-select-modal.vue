@@ -41,6 +41,7 @@ const total = ref(0);
 const pageSize = 10;
 const currentPage = ref(1);
 const searchKeyword = ref('');
+const ownerId = ref<string>('');
 
 const columns: TableColumnType<CustomerApi.CustomerItem>[] = [
   {
@@ -65,6 +66,14 @@ const columns: TableColumnType<CustomerApi.CustomerItem>[] = [
     key: 'ownerName',
     width: 100,
     ellipsis: true,
+  },
+  {
+    title: () => $t('customer.ownerDept'),
+    dataIndex: 'ownerDeptName',
+    key: 'ownerDeptName',
+    width: 120,
+    ellipsis: true,
+    customRender: ({ record }) => (record.ownerDeptName ? String(record.ownerDeptName) : '-'),
   },
   {
     title: () => $t('customer.status'),
@@ -96,6 +105,7 @@ async function fetchList() {
       pageIndex: currentPage.value,
       pageSize,
       fullName: searchKeyword.value.trim() || undefined,
+      ownerId: ownerId.value || undefined,
     });
     list.value = res?.items ?? [];
     total.value = res?.total ?? 0;
@@ -117,12 +127,13 @@ function onTableChange(pag: { current?: number }) {
 }
 
 function handleSelect(record: CustomerApi.CustomerItem) {
-  const data = modalApi.getData<{ onSelect?: (row: CustomerApi.CustomerItem) => void }>();
+  const data = modalApi.getData<{ onSelect?: (row: CustomerApi.CustomerItem) => void; ownerId?: string }>();
   data?.onSelect?.(record);
   modalApi.close();
 }
 
-function open(payload?: { onSelect: (row: CustomerApi.CustomerItem) => void }) {
+function open(payload?: { onSelect: (row: CustomerApi.CustomerItem) => void; ownerId?: string }) {
+  ownerId.value = payload?.ownerId ?? '';
   modalApi.setData(payload ?? {}).open();
 }
 

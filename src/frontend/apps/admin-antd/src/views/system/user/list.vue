@@ -4,23 +4,35 @@ import type { Recordable } from '@vben/types';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { SystemUserApi } from '#/api/system/user';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
-import { Plus } from '@vben/icons';
+import { Page } from '@vben/common-ui';
+import { IconifyIcon, Plus } from '@vben/icons';
+
+import { useAccessStore } from '@vben/stores';
 
 import { Button, message, Modal } from 'ant-design-vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { deleteUser, getUserList, updateUser } from '#/api/system/user';
+import {
+  deleteUser,
+  downloadUserImportTemplate,
+  exportUsersExcel,
+  getUserList,
+  importUsersExcel,
+  updateUser,
+} from '#/api/system/user';
+import { PermissionCodes } from '#/constants/permission-codes';
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
-import Form from './modules/form.vue';
 
-const [FormDrawer, formDrawerApi] = useVbenDrawer({
-  connectedComponent: Form,
-  destroyOnClose: true,
-});
+const router = useRouter();
+const accessStore = useAccessStore();
+const canExportUsers = () => accessStore.accessCodes?.includes(PermissionCodes.UserExport) ?? false;
+const canImportUsers = () => accessStore.accessCodes?.includes(PermissionCodes.UserImport) ?? false;
 
+const importFileInputRef = ref<HTMLInputElement | null>(null);
 const [Grid, gridApi] = useVbenVxeGrid<SystemUserApi.SystemUser>({
   formOptions: {
     schema: useGridFormSchema(),
@@ -113,7 +125,7 @@ async function onStatusChange(
       `你要将${row.name}的状态切换为 【${status[newStatus.toString()]}】 吗？`,
       `切换状态`,
     );
-    // 通过更新用户信息来切换状态
+    // 通过更新用户信息来切换状态，保留离职状态
     await updateUser(row.userId, {
       name: row.name,
       email: row.email,
@@ -126,6 +138,8 @@ async function onStatusChange(
       deptId: row.deptId || '0',
       deptName: row.deptName || '',
       password: '', // 不更新密码
+      isResigned: row.isResigned ?? false,
+      resignedTime: row.resignedTime || undefined,
     });
     // 刷新列表以获取最新状态
     onRefresh();
@@ -136,7 +150,7 @@ async function onStatusChange(
 }
 
 function onEdit(row: SystemUserApi.SystemUser) {
-  formDrawerApi.setData(row).open();
+  router.push(`/system/user/${row.userId}/edit`);
 }
 
 function onDelete(row: SystemUserApi.SystemUser) {
@@ -163,14 +177,97 @@ function onRefresh() {
 }
 
 function onCreate() {
-  formDrawerApi.setData({}).open();
+  router.push('/system/user/create');
+}
+
+async function onExportExcel() {
+  try {
+    const formValues = (await gridApi.formApi?.getValues?.()) ?? {};
+    await exportUsersExcel({
+      keyword: formValues.keyword,
+      status: formValues.status,
+      isResigned: formValues.isResigned,
+    });
+    message.success($t('system.user.exportSuccess'));
+  } catch {
+    /* 错误已由拦截器提示 */
+  }
+}
+
+async function onDownloadTemplate() {
+  try {
+    await downloadUserImportTemplate();
+    message.success($t('system.user.exportSuccess'));
+  } catch {
+    /* 错误已由拦截器提示 */
+  }
+}
+
+function onPickImportFile() {
+  importFileInputRef.value?.click();
+}
+
+async function onImportFileChange(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file) return;
+  try {
+    const result = await importUsersExcel(file);
+    const failCount = result.errors?.length ?? 0;
+    if (failCount === 0) {
+      message.success($t('system.user.importSuccess', [String(result.successCount)]));
+    } else {
+      const detail = (result.errors ?? [])
+        .map((x) => `第 ${x.rowNumber} 行：${x.message}`)
+        .join('\n');
+      Modal.warning({
+        title: $t('system.user.importPartial', [String(result.successCount), String(failCount)]),
+        content: `${$t('system.user.importErrorsTitle')}\n${detail}`,
+        width: 560,
+      });
+    }
+    gridApi.query();
+  } catch {
+    /* 错误已由拦截器提示 */
+  }
 }
 </script>
 <template>
   <Page auto-content-height>
-    <FormDrawer @success="onRefresh" />
     <Grid :table-title="$t('system.user.list')">
       <template #toolbar-tools>
+        <Button
+          v-if="canExportUsers()"
+          class="inline-flex items-center gap-1"
+          @click="onExportExcel"
+        >
+          <IconifyIcon icon="mdi:tray-arrow-down" class="size-5 shrink-0" />
+          {{ $t('system.user.exportExcel') }}
+        </Button>
+        <Button
+          v-if="canImportUsers()"
+          class="inline-flex items-center gap-1"
+          @click="onDownloadTemplate"
+        >
+          <IconifyIcon icon="mdi:file-download-outline" class="size-5 shrink-0" />
+          {{ $t('system.user.downloadImportTemplate') }}
+        </Button>
+        <Button
+          v-if="canImportUsers()"
+          class="inline-flex items-center gap-1"
+          @click="onPickImportFile"
+        >
+          <IconifyIcon icon="mdi:upload" class="size-5 shrink-0" />
+          {{ $t('system.user.importExcel') }}
+        </Button>
+        <input
+          ref="importFileInputRef"
+          type="file"
+          accept=".xlsx,.xlsm"
+          class="hidden"
+          @change="onImportFileChange"
+        />
         <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">
           <Plus class="size-5 shrink-0" />
           {{ $t('ui.actionTitle.create', [$t('system.user.name')]) }}

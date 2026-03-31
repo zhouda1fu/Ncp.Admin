@@ -49,7 +49,7 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         foreach (var user in testUsers)
         {
-            user.SoftDelete();
+            user.SoftDelete(new UserId(0));
         }
         
         await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -81,7 +81,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                new[] { roleId }
+                false,
+                null,
+                null,
+                new[] { roleId },
+                "110101199001010000",
+                "地址",
+                "本科",
+                "毕业院校",
+                "https://example.com/avatar.png",
+                false,
+                0,
+                "wechat-guid",
+                false,
+                DateTimeOffset.UtcNow
             );
             var (response, result) = await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(request);
             
@@ -124,7 +137,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                new[] { roleId }
+                false,
+                null,
+                null,
+                new[] { roleId },
+                "110101199001010000",
+                "地址",
+                "本科",
+                "毕业院校",
+                "https://example.com/avatar.png",
+                false,
+                0,
+                "wechat-guid",
+                false,
+                DateTimeOffset.UtcNow
             );
             await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(request1);
             
@@ -140,7 +166,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                new[] { roleId }
+                false,
+                null,
+                null,
+                new[] { roleId },
+                "110101199001010000",
+                "地址",
+                "本科",
+                "毕业院校",
+                "https://example.com/avatar.png",
+                false,
+                0,
+                "wechat-guid",
+                false,
+                DateTimeOffset.UtcNow
             );
             var (response, result) = await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(request2);
             
@@ -174,7 +213,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             DateTimeOffset.UtcNow.AddYears(-25),
             deptId,
             "研发",
-            new[] { roleId }
+            false,
+            null,
+            null,
+            new[] { roleId },
+            "110101199001010000",
+            "地址",
+            "本科",
+            "毕业院校",
+            "https://example.com/avatar.png",
+            false,
+            0,
+            "wechat-guid",
+            false,
+            DateTimeOffset.UtcNow
         );
         var (response, result) = await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(request);
         
@@ -212,7 +264,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                new[] { roleId }
+                false,
+                null,
+                null,
+                new[] { roleId },
+                "110101199001010000",
+                "地址",
+                "本科",
+                "毕业院校",
+                "https://example.com/avatar.png",
+                false,
+                0,
+                "wechat-guid",
+                false,
+                DateTimeOffset.UtcNow
             );
             var (createResponse, createResult) = await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(createRequest);
             userId = createResult!.Data!.UserId;
@@ -281,7 +346,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                new[] { roleId }
+                false,
+                null,
+                null,
+                new[] { roleId },
+                "110101199001010000",
+                "地址",
+                "本科",
+                "毕业院校",
+                "https://example.com/avatar.png",
+                false,
+                0,
+                "wechat-guid",
+                false,
+                DateTimeOffset.UtcNow
             );
             var (_, createResult) = await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(createRequest);
             userId = createResult!.Data!.UserId;
@@ -299,7 +377,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-30),
                 deptId,
                 "研发",
-                "" // 不更新密码
+                false,
+                null,
+                null,
+                "", // 不更新密码
+                "110101199001010000",
+                "地址",
+                "本科",
+                "毕业院校",
+                "https://example.com/avatar.png",
+                false,
+                0,
+                "wechat-guid",
+                false,
+                DateTimeOffset.UtcNow
             );
             var (response, result) = await client.PUTAsync<UpdateUserEndpoint, UpdateUserRequest, ResponseData<UpdateUserResponse>>(request);
             
@@ -344,7 +435,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             DateTimeOffset.UtcNow.AddYears(-25),
             deptId,
             "研发",
-            ""
+            false,
+            null,
+            null,
+            "",
+            "110101199001010000",
+            "地址",
+            "本科",
+            "毕业院校",
+            "https://example.com/avatar.png",
+            false,
+            0,
+            "wechat-guid",
+            false,
+            DateTimeOffset.UtcNow
         );
         var (response, result) = await client.PUTAsync<UpdateUserEndpoint, UpdateUserRequest, ResponseData<UpdateUserResponse>>(request);
         
@@ -382,7 +486,20 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                new[] { roleId }
+                false,
+                null,
+                null,
+                new[] { roleId },
+                "110101199001010000",
+                "地址",
+                "本科",
+                "毕业院校",
+                "https://example.com/avatar.png",
+                false,
+                0,
+                "wechat-guid",
+                false,
+                DateTimeOffset.UtcNow
             );
             var (_, createResult) = await client.POSTAsync<CreateUserEndpoint, CreateUserRequest, ResponseData<CreateUserResponse>>(createRequest);
             userId = createResult!.Data!.UserId;

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure;
 
 namespace Ncp.Admin.Web.Application.Queries;
@@ -19,7 +20,7 @@ public record ExpenseClaimQueryDto(
     string ApplicantName,
     decimal TotalAmount,
     ExpenseClaimStatus Status,
-    Guid? WorkflowInstanceId,
+    WorkflowInstanceId WorkflowInstanceId,
     DateTimeOffset CreatedAt,
     List<ExpenseItemQueryDto> Items);
 
@@ -59,7 +60,7 @@ public class ExpenseClaimQuery(ApplicationDbContext dbContext) : IQuery
             claim.ApplicantName,
             claim.TotalAmount,
             claim.Status,
-            claim.WorkflowInstanceId?.Id,
+            claim.WorkflowInstanceId,
             claim.CreatedAt,
             claim.Items.Select(i => new ExpenseItemQueryDto(i.Id, i.Type, i.Amount, i.Description, i.InvoiceUrl)).ToList());
     }
@@ -83,7 +84,7 @@ public class ExpenseClaimQuery(ApplicationDbContext dbContext) : IQuery
                 c.ApplicantName,
                 c.TotalAmount,
                 c.Status,
-                c.WorkflowInstanceId != null ? c.WorkflowInstanceId.Id : (Guid?)null,
+                c.WorkflowInstanceId,
                 c.CreatedAt,
                 c.Items.Select(i => new ExpenseItemQueryDto(i.Id, i.Type, i.Amount, i.Description, i.InvoiceUrl)).ToList()))
             .ToPagedDataAsync(input, cancellationToken);

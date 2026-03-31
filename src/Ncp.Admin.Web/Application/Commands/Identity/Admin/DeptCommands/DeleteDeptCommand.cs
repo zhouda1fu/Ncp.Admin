@@ -30,6 +30,24 @@ public class DeleteDeptCommandHandler(IDeptRepository deptRepository, Applicatio
             throw new KnownException("该部门下存在子部门，无法删除", ErrorCodes.DeptHasChildrenCannotDelete);
         }
 
+        // 检查是否有用户属于该部门
+        var hasUsers = await dbContext.UserDepts
+            .AnyAsync(ud => ud.DeptId == request.Id, cancellationToken);
+
+        if (hasUsers)
+        {
+            throw new KnownException("该部门下存在用户，无法删除", ErrorCodes.DeptHasUsersCannotDelete);
+        }
+
+        // 检查是否有岗位属于该部门
+        var hasPositions = await dbContext.Positions
+            .AnyAsync(p => p.DeptId == request.Id && !p.IsDeleted, cancellationToken);
+
+        if (hasPositions)
+        {
+            throw new KnownException("该部门下存在岗位，无法删除", ErrorCodes.DeptHasPositionsCannotDelete);
+        }
+
         dept.SoftDelete();
     }
 }

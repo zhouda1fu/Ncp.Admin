@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptions;
 using Ncp.Admin.Infrastructure;
 
 namespace Ncp.Admin.Web.Application.Queries;

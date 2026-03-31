@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
-using Ncp.Admin.Web.Application.Commands.Region;
+using Ncp.Admin.Web.Application.Commands.RegionModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Region;

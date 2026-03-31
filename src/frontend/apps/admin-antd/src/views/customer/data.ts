@@ -88,7 +88,7 @@ export function useSchema(
       fieldName: 'fullName',
       label: $t('customer.fullName'),
       rules: z.string().min(1, $t('ui.formRules.required', [$t('customer.fullName')])),
-      formItemClass: 'md:col-span-1',
+      formItemClass: 'sm:col-span-1',
     },
     {
       component: 'Cascader',
@@ -105,9 +105,9 @@ export function useSchema(
       },
       fieldName: 'regionCodes',
       label: $t('customer.locationRegion'),
-      formItemClass: 'md:col-span-2',
+      formItemClass: 'sm:col-span-2',
     },
-    // 第 3 行：仅两列 - 客户覆盖区域、公司注册地址（公司注册地址占 2 列以占满行，避免公司性质挤到同一行）
+    // 第 3 行：仅两列 - 客户覆盖区域、公司注册地址（公司注册地址占 2 列以占满行）
     {
       component: 'Input',
       componentProps: { class: 'w-full' },
@@ -119,7 +119,7 @@ export function useSchema(
       componentProps: { class: 'w-full' },
       fieldName: 'registerAddress',
       label: $t('customer.registerAddress'),
-      formItemClass: 'md:col-span-2',
+      formItemClass: 'sm:col-span-2',
     },
     // 第 4 行：公司性质、员工数量
     {
@@ -168,7 +168,7 @@ export function useSchema(
       },
       fieldName: 'businessLicenseFileList',
       label: $t('customer.businessLicense'),
-      formItemClass: 'md:col-span-3',
+      formItemClass: 'sm:col-span-2',
     },
     // 备注（简称、负责人、联系人等不在前端展示，提交时用默认值或编辑时用接口返回值）
     {
@@ -181,7 +181,7 @@ export function useSchema(
       },
       fieldName: 'remark',
       label: $t('customer.remark'),
-      formItemClass: 'md:col-span-3',
+      formItemClass: 'sm:col-span-2',
     },
   ];
 }
@@ -224,6 +224,7 @@ export function useColumns(
     { field: 'fullName', title: $t('customer.fullName'), minWidth: 140 },
     { field: 'shortName', title: $t('customer.shortName'), width: 120 },
     { field: 'customerSourceName', title: $t('customer.customerSource'), width: 100 },
+    { field: 'ownerDeptName', title: $t('customer.ownerDept'), width: 120 },
     {
       field: 'status',
       title: $t('customer.status'),
@@ -289,6 +290,7 @@ export function useColumns(
         name: 'CellOperation',
         options: [
           { code: 'edit', text: $t('customer.edit') },
+          { code: 'share', text: $t('customer.share') },
           { code: 'releaseToSea', text: $t('customer.releaseToSea'), show: (row: CustomerApi.CustomerItem) => !row.isInSea },
         ],
       },

@@ -26,7 +26,13 @@ public class UserTests
             1,
             "email@test.com",
             "male",
-            DateTimeOffset.UtcNow.AddYears(-20));
+            DateTimeOffset.UtcNow.AddYears(-20),
+            new UserId(0),
+            "110101199001010000",
+            "地址",
+            "本科",
+            "毕业院校",
+            "https://example.com/avatar.png");
 
         var newRoles = new[] { new UserRole(roleId2, "User") };
         user.UpdateRoles(newRoles);
@@ -53,7 +59,13 @@ public class UserTests
             1,
             "email@test.com",
             "male",
-            DateTimeOffset.UtcNow.AddYears(-20));
+            DateTimeOffset.UtcNow.AddYears(-20),
+            new UserId(0),
+            "110101199001010000",
+            "地址",
+            "本科",
+            "毕业院校",
+            "https://example.com/avatar.png");
 
         user.UpdateRoles(Enumerable.Empty<UserRole>());
 
@@ -77,7 +89,13 @@ public class UserTests
             1,
             "email@test.com",
             "male",
-            DateTimeOffset.UtcNow.AddYears(-20));
+            DateTimeOffset.UtcNow.AddYears(-20),
+            new UserId(0),
+            "110101199001010000",
+            "地址",
+            "本科",
+            "毕业院校",
+            "https://example.com/avatar.png");
 
         user.UpdateRoles(
         [
@@ -131,7 +149,13 @@ public class UserTests
             1,
             "email@test.com",
             "male",
-            DateTimeOffset.UtcNow.AddYears(-20));
+            DateTimeOffset.UtcNow.AddYears(-20),
+            new UserId(0),
+            "110101199001010000",
+            "地址",
+            "本科",
+            "毕业院校",
+            "https://example.com/avatar.png");
 
         user.UpdateRoleInfo(roleId, "Administrator");
 
@@ -153,9 +177,15 @@ public class UserTests
             1,
             "email@test.com",
             "male",
-            DateTimeOffset.UtcNow.AddYears(-20));
+            DateTimeOffset.UtcNow.AddYears(-20),
+            new UserId(0),
+            "110101199001010000",
+            "地址",
+            "本科",
+            "毕业院校",
+            "https://example.com/avatar.png");
 
-        user.SoftDelete();
+        user.SoftDelete(new UserId(0));
 
         Assert.True(user.IsDeleted);
     }

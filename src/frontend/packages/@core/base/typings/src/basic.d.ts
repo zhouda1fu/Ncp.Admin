@@ -28,6 +28,10 @@ interface BasicUserInfo {
    * 用户名
    */
   username: string;
+  /**
+   * 部门名称
+   */
+  deptName?: string;
 }
 
 type ClassType = Array<object | string> | object | string;

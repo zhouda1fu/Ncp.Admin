@@ -3,6 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.DeptCommands;
 using Ncp.Admin.Web.AppPermissions;
 
@@ -16,7 +17,8 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.DeptEndpoints;
 /// <param name="Remark">备注</param>
 /// <param name="ParentId">父级部门ID，可为空表示顶级部门</param>
 /// <param name="Status">状态（0=禁用，1=启用）</param>
-public record UpdateDeptRequest(DeptId Id, string Name, string Remark, DeptId? ParentId, int Status);
+/// <param name="ManagerId">部门主管用户ID</param>
+public record UpdateDeptRequest(DeptId Id, string Name, string Remark, DeptId? ParentId, int Status, UserId ManagerId);
 
 /// <summary>
 /// 更新部门
@@ -41,7 +43,8 @@ public class UpdateDeptEndpoint(IMediator mediator) : Endpoint<UpdateDeptRequest
             req.Name,
             req.Remark,
             req.ParentId ?? new DeptId(0),
-            req.Status
+            req.Status,
+            req.ManagerId
         );
         await mediator.Send(command, ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);

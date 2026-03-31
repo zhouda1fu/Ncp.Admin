@@ -22,7 +22,12 @@ import { defineRule } from 'vee-validate';
 
 const DEFAULT_MODEL_PROP_NAME = 'modelValue';
 
-export const DEFAULT_FORM_COMMON_CONFIG: FormCommonConfig = {};
+/** 基础表单风格：默认控件占满可用宽度，与 Ant Design 基础表单一致 */
+export const DEFAULT_FORM_COMMON_CONFIG: FormCommonConfig = {
+  componentProps: {
+    class: 'w-full',
+  },
+};
 
 export const COMPONENT_MAP: Record<BaseFormComponentType, Component> = {
   DefaultButton: h(VbenButton, { size: 'sm', variant: 'outline' }),

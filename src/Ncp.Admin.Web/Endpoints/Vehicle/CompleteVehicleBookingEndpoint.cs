@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.VehicleAggregate;
-using Ncp.Admin.Web.Application.Commands.Vehicle;
+using Ncp.Admin.Web.Application.Commands.VehicleModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Vehicle;

@@ -29,7 +29,7 @@ public static class DataPermissionContextExtensions
         var scope = DataScope.All;
         var dataScopeClaim = user.FindFirstValue("data_scope");
         if (!string.IsNullOrEmpty(dataScopeClaim) && int.TryParse(dataScopeClaim, out var scopeValue) &&
-            scopeValue >= (int)DataScope.All && scopeValue <= (int)DataScope.Self)
+            scopeValue >= (int)DataScope.All && scopeValue <= (int)DataScope.CustomDeptAndSub)
             scope = (DataScope)scopeValue;
 
         DeptId? deptId = null;

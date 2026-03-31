@@ -67,7 +67,12 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     public WorkflowInstanceStatus Status { get; private set; } = WorkflowInstanceStatus.Running;
 
     /// <summary>
-    /// 当前节点名称
+    /// 当前节点 key（设计器 nodeKey，引擎追踪用）
+    /// </summary>
+    public string CurrentNodeKey { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 当前节点名称（展示用）
     /// </summary>
     public string CurrentNodeName { get; private set; } = string.Empty;
 
@@ -136,14 +141,16 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// 创建审批任务（指定用户）
     /// </summary>
     public WorkflowTask CreateTask(
+        string nodeKey,
         string nodeName,
         WorkflowTaskType taskType,
         UserId assigneeId,
         string assigneeName)
     {
-        var task = new WorkflowTask(nodeName, taskType, assigneeId, assigneeName);
+        var task = new WorkflowTask(nodeKey, nodeName, taskType, assigneeId, assigneeName);
         Tasks.Add(task);
-        CurrentNodeName = nodeName;
+        CurrentNodeKey = nodeKey ?? string.Empty;
+        CurrentNodeName = nodeName ?? string.Empty;
 
         AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, task));
         return task;
@@ -153,14 +160,16 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// 创建审批任务（指定角色，一条记录，待办按角色 ID 查）
     /// </summary>
     public WorkflowTask CreateTaskForRole(
+        string nodeKey,
         string nodeName,
         WorkflowTaskType taskType,
         RoleId assigneeRoleId,
         string assigneeName)
     {
-        var task = new WorkflowTask(nodeName, taskType, assigneeRoleId, assigneeName);
+        var task = new WorkflowTask(nodeKey, nodeName, taskType, assigneeRoleId, assigneeName);
         Tasks.Add(task);
-        CurrentNodeName = nodeName;
+        CurrentNodeKey = nodeKey ?? string.Empty;
+        CurrentNodeName = nodeName ?? string.Empty;
 
         AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, task));
         return task;
@@ -171,6 +180,11 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// </summary>
     public void ApproveTask(WorkflowTaskId taskId, UserId operatorId, string comment)
     {
+        if (Status != WorkflowInstanceStatus.Running)
+        {
+            throw new KnownException("流程未在运行中", ErrorCodes.WorkflowInstanceNotRunning);
+        }
+
         var task = Tasks.FirstOrDefault(t => t.Id == taskId)
             ?? throw new KnownException("未找到该任务", ErrorCodes.WorkflowTaskNotFound);
 
@@ -189,6 +203,11 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// </summary>
     public void RejectTask(WorkflowTaskId taskId, UserId operatorId, string comment)
     {
+        if (Status != WorkflowInstanceStatus.Running)
+        {
+            throw new KnownException("流程未在运行中", ErrorCodes.WorkflowInstanceNotRunning);
+        }
+
         var task = Tasks.FirstOrDefault(t => t.Id == taskId)
             ?? throw new KnownException("未找到该任务", ErrorCodes.WorkflowTaskNotFound);
 
@@ -198,6 +217,12 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         }
 
         task.Reject(comment);
+
+        foreach (var t in Tasks.Where(t => t.Status == WorkflowTaskStatus.Pending))
+        {
+            t.Cancel();
+        }
+
         Status = WorkflowInstanceStatus.Rejected;
         CompletedAt = DateTimeOffset.UtcNow;
 
@@ -221,7 +246,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         task.Transfer(comment);
 
         // 创建新任务分配给新的处理人
-        var newTask = new WorkflowTask(task.NodeName, task.TaskType, newAssigneeId, newAssigneeName);
+        var newTask = new WorkflowTask(task.NodeKey, task.NodeName, task.TaskType, newAssigneeId, newAssigneeName);
         Tasks.Add(newTask);
 
         AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, newTask));
@@ -244,7 +269,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         task.Delegate(comment, delegateToUserName);
 
         // 创建新任务给被委托人
-        var newTask = new WorkflowTask(task.NodeName, task.TaskType, delegateToUserId, delegateToUserName);
+        var newTask = new WorkflowTask(task.NodeKey, task.NodeName, task.TaskType, delegateToUserId, delegateToUserName);
         Tasks.Add(newTask);
 
         AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, newTask));
@@ -254,18 +279,18 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// <summary>
     /// 检查当前节点的会签任务是否全部完成
     /// </summary>
-    public bool AreAllCounterSignTasksApproved(string nodeName)
+    public bool AreAllCounterSignTasksApproved(string nodeKey)
     {
-        var nodeTasks = Tasks.Where(t => t.NodeName == nodeName).ToList();
+        var nodeTasks = Tasks.Where(t => t.NodeKey == nodeKey).ToList();
         return nodeTasks.Count > 0 && nodeTasks.All(t => t.Status == WorkflowTaskStatus.Approved);
     }
 
     /// <summary>
     /// 检查当前节点是否有任一或签任务已审批通过
     /// </summary>
-    public bool IsAnyOrSignTaskApproved(string nodeName)
+    public bool IsAnyOrSignTaskApproved(string nodeKey)
     {
-        return Tasks.Any(t => t.NodeName == nodeName && t.Status == WorkflowTaskStatus.Approved);
+        return Tasks.Any(t => t.NodeKey == nodeKey && t.Status == WorkflowTaskStatus.Approved);
     }
 
     /// <summary>
@@ -278,10 +303,31 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
             throw new KnownException("流程未在运行中", ErrorCodes.WorkflowInstanceNotRunning);
         }
 
+        foreach (var t in Tasks.Where(t =>
+                     t.Status == WorkflowTaskStatus.Pending
+                     && (t.TaskType == WorkflowTaskType.CarbonCopy || t.TaskType == WorkflowTaskType.Notification)))
+        {
+            t.Cancel();
+        }
+
         Status = WorkflowInstanceStatus.Completed;
         CompletedAt = DateTimeOffset.UtcNow;
 
         AddDomainEvent(new WorkflowInstanceCompletedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// 或签等场景：取消同一节点上除指定任务外的其余待办。
+    /// </summary>
+    public void CancelPendingTasksForSameNodeExcept(string nodeKey, WorkflowTaskId exceptTaskId)
+    {
+        foreach (var t in Tasks.Where(t =>
+                     t.Status == WorkflowTaskStatus.Pending
+                     && t.NodeKey == nodeKey
+                     && t.Id != exceptTaskId))
+        {
+            t.Cancel();
+        }
     }
 
     /// <summary>

@@ -25,6 +25,11 @@ public class UserDept
     public string DeptName { get; private set; } = string.Empty;
 
     /// <summary>
+    /// 是否为该部门主管
+    /// </summary>
+    public bool IsDeptManager { get; private set; }
+
+    /// <summary>
     /// 分配时间
     /// </summary>
     public DateTimeOffset AssignedAt { get; init; }
@@ -39,12 +44,14 @@ public class UserDept
     /// <param name="userId">用户ID</param>
     /// <param name="deptId">部门ID</param>
     /// <param name="deptName">部门名称</param>
-    public UserDept(UserId userId, DeptId deptId, string deptName)
+    /// <param name="isDeptManager">是否为该部门主管</param>
+    public UserDept(UserId userId, DeptId deptId, string deptName, bool isDeptManager = false)
     {
         UserId = userId;
         DeptId = deptId;
         AssignedAt = DateTimeOffset.UtcNow;
         DeptName = deptName;
+        IsDeptManager = isDeptManager;
     }
 
     /// <summary>

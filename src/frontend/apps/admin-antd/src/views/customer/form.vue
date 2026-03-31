@@ -5,9 +5,8 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
-import { ArrowLeft } from '@vben/icons';
 
-import { Button, message, Modal, Space, Table, Tag } from 'ant-design-vue';
+import { Button, Card, message, Modal, Space, Table, Tag } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
 import {
@@ -33,7 +32,6 @@ const route = useRoute();
 const router = useRouter();
 
 const id = computed(() => route.params.id as string | undefined);
-const isNew = computed(() => !id.value);
 
 const industryTreeOptions = ref<IndustryTreeOption[]>([]);
 const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
@@ -45,6 +43,17 @@ const licenseBlobUrl = ref<string | null>(null);
 const submitting = ref(false);
 /** 新建客户幂等键：同一表单提交（含重复点击）使用同一 key，后端返回缓存响应防重复创建 */
 const createIdempotencyKey = ref<string | null>(null);
+/** 生成幂等键：优先使用 crypto.randomUUID（仅 HTTPS/localhost 可用），IIS 下 HTTP 时回退到兼容实现 */
+function getRandomIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 /** 规范化联系人 isPrimary（兼容 API 返回 isPrimary / IsPrimary 或 0/1） */
 function normalizeContactPrimary(contact: Record<string, unknown>) {
   const v = contact?.isPrimary ?? contact?.IsPrimary;
@@ -156,7 +165,11 @@ onMounted(() => {
 });
 
 const [Form, formApi] = useVbenForm({
-  layout: 'vertical',
+  layout: 'horizontal',
+  labelWidth: 120,
+  commonConfig: {
+    colon: true,
+  },
   schema: computed(() =>
     useSchema(
       industryTreeOptions.value,
@@ -166,7 +179,7 @@ const [Form, formApi] = useVbenForm({
     ),
   ),
   showDefaultActions: false,
-  wrapperClass: 'grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4',
+  wrapperClass: 'grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4',
 });
 
 async function loadCustomer() {
@@ -324,7 +337,10 @@ function formatRecordAt(recordAt: string) {
 async function onSubmit() {
   if (submitting.value) return;
   const { valid } = await formApi.validate();
-  if (!valid) return;
+  if (!valid) {
+    message.warning($t('customer.pleaseCompleteRequired'));
+    return;
+  }
   submitting.value = true;
   const data = await formApi.getValues();
   const selectedSource = customerSourceOptions.value.find((o) => o.value === data.customerSourceId);
@@ -375,7 +391,7 @@ async function onSubmit() {
       await updateCustomer(id.value, payload);
       message.success($t('ui.actionMessage.updateSuccess'));
     } else {
-      createIdempotencyKey.value = createIdempotencyKey.value ?? crypto.randomUUID();
+      createIdempotencyKey.value = createIdempotencyKey.value ?? getRandomIdempotencyKey();
       await createCustomer(payload, { idempotencyKey: createIdempotencyKey.value });
       message.success($t('ui.actionMessage.createSuccess'));
     }
@@ -390,17 +406,31 @@ async function onSubmit() {
 
 <template>
   <Page auto-content-height content-class="flex flex-col">
-    <div class="mb-4 flex items-center gap-2">
-      <Button type="text" @click="goBack">
-        <ArrowLeft class="size-4" />
-      </Button>
-      <span class="text-lg font-medium">
-        {{ isNew ? $t('customer.create') : $t('customer.edit') }}
-      </span>
-    </div>
-
     <div class="w-full flex-1 min-w-0">
-      <Form />
+      <!-- 表单区块：标题 + 说明，与下方表单卡片明确区分 -->
+      <div class="border-border border-b pb-5">
+        <h2 class="mb-1.5 text-lg font-semibold text-foreground">
+          {{ $t('customer.formSectionTitle') }}
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          {{ $t('customer.formSectionDesc') }}
+        </p>
+      </div>
+      <!-- 基础表单风格：卡片容器，与上方文字区有明显区分 -->
+      <Card :bordered="true" class="border-border bg-card mt-5">
+        <template #title>
+          <span class="text-base font-medium">{{ $t('customer.formCardTitle') }}</span>
+        </template>
+        <div class="pb-2">
+          <Form />
+        </div>
+        <div class="flex justify-end gap-3 border-t border-border pt-4">
+          <Button @click="resetForm">{{ $t('common.reset') }}</Button>
+          <Button type="primary" :loading="submitting" :disabled="submitting" @click="onSubmit">
+            {{ $t('common.confirm') }}
+          </Button>
+        </div>
+      </Card>
       <!-- 客户联系人（仅编辑页展示） -->
       <template v-if="id">
         <div class="mt-8 border-t border-gray-200 pt-6">
@@ -488,10 +518,6 @@ async function onSubmit() {
           />
         </div>
       </template>
-      <div class="mt-6 flex gap-2">
-        <Button type="primary" :loading="submitting" :disabled="submitting" @click="onSubmit">{{ $t('common.confirm') }}</Button>
-        <Button @click="goBack">{{ $t('common.cancel') }}</Button>
-      </div>
     </div>
   </Page>
 </template>

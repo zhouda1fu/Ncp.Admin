@@ -17,8 +17,7 @@ public record CreateDefinitionRequest(
     string Name,
     string Description,
     string Category,
-    string DefinitionJson,
-    IEnumerable<WorkflowNodeData> Nodes);
+    string DefinitionJson);
 
 /// <summary>
 /// 创建流程定义响应
@@ -51,9 +50,8 @@ public class CreateDefinitionEndpoint(IMediator mediator) : Endpoint<CreateDefin
             req.Name,
             req.Description,
             req.Category,
-            req.DefinitionJson,
-            new UserId(userIdValue),
-            req.Nodes);
+            req.DefinitionJson ?? string.Empty,
+            new UserId(userIdValue));
 
         var id = await mediator.Send(cmd, ct);
         var response = new CreateDefinitionResponse(id, req.Name);

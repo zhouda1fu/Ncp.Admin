@@ -46,7 +46,10 @@ const wrapperClass = computed(() => {
   if (props.layout === 'inline') {
     cls.push('flex-wrap gap-x-2');
   } else {
-    cls.push(props.compact ? 'gap-x-2' : 'gap-x-4', 'flex-col grid');
+    // 基础表单风格：栅格间距与 Ant Design 基础表单一致
+    const gapX = props.compact ? 'gap-x-2' : 'gap-x-6';
+    const gapY = props.compact ? 'gap-y-2' : 'gap-y-4';
+    cls.push(gapX, gapY, 'flex-col grid');
   }
   return cn(...cls, props.wrapperClass);
 });

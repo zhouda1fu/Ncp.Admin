@@ -38,9 +38,9 @@ public class CustomerContactRecord : Entity<CustomerContactRecordId>
     public string Content { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 记录人用户 ID
+    /// 记录人用户 ID（无记录人时为 <see cref="UserId"/> 哨兵 0）
     /// </summary>
-    public UserId? RecorderId { get; private set; }
+    public UserId RecorderId { get; private set; } = new UserId(0);
 
     /// <summary>
     /// 记录人姓名（冗余）
@@ -55,7 +55,7 @@ public class CustomerContactRecord : Entity<CustomerContactRecordId>
         DateTimeOffset recordAt,
         string recordType,
         string content,
-        UserId? recorderId,
+        UserId recorderId,
         string recorderName)
     {
         return new CustomerContactRecord

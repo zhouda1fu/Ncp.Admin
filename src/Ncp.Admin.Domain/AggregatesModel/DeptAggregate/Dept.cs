@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.DomainEvents.DeptEvents;
 using Ncp.Admin.Domain;
 
@@ -29,6 +30,11 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     /// 上级部门ID
     /// </summary>
     public DeptId ParentId { get; private set; } = default!;
+
+    /// <summary>
+    /// 部门主管用户ID
+    /// </summary>
+    public UserId ManagerId { get; private set; } = default!;
 
     /// <summary>
     /// 状态（0=禁用，1=启用）
@@ -72,12 +78,14 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     /// <param name="remark">备注</param>
     /// <param name="parentId">上级部门ID</param>
     /// <param name="status">状态（0=禁用，1=启用）</param>
-    public Dept(string name, string remark, DeptId parentId, int status)
+    /// <param name="managerId">部门主管用户ID</param>
+    public Dept(string name, string remark, DeptId parentId, int status, UserId managerId)
     {
         CreatedAt = DateTimeOffset.UtcNow;
         Name = name;
         Remark = remark;
         ParentId = parentId;
+        ManagerId = managerId;
         Status = status;
     }
 
@@ -88,15 +96,27 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     /// <param name="remark">备注</param>
     /// <param name="parentId">上级部门ID</param>
     /// <param name="status">状态（0=禁用，1=启用）</param>
-    public void UpdateInfo(string name, string remark, DeptId parentId, int status)
+    /// <param name="managerId">部门主管用户ID</param>
+    public void UpdateInfo(string name, string remark, DeptId parentId, int status, UserId managerId)
     {
         Name = name;
         Remark = remark;
         ParentId = parentId;
+        ManagerId = managerId;
         Status = status;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
 
         AddDomainEvent(new DeptInfoChangedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// 设置部门主管（由用户部门主管标识变更领域事件触发）
+    /// </summary>
+    /// <param name="managerId">部门主管用户ID，UserId(0) 表示无主管</param>
+    public void SetManagerId(UserId managerId)
+    {
+        ManagerId = managerId;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
     /// <summary>

@@ -16,15 +16,47 @@ export namespace SystemUserApi {
     birthDate: string;
     deptId?: string;
     deptName?: string;
+    isDeptManager?: boolean;
     roles: string[];
     createdAt: string;
+    idCardNumber?: string;
+    address?: string;
+    education?: string;
+    graduateSchool?: string;
+    avatarUrl?: string;
+    notOrderMeal?: boolean;
+    orderMealSort?: number | null;
+    wechatGuid?: string;
+    isResigned?: boolean;
+    resignedTime?: string | null;
+    creatorId?: string;
+    modifierId?: string | null;
+    deleterId?: string | null;
+    lastLoginTime?: string | null;
+    lastLoginIp?: string | null;
   }
+}
+
+/**
+ * 用户列表查询参数
+ */
+export interface GetUserListParams extends Recordable<any> {
+  pageIndex?: number;
+  pageSize?: number;
+  countTotal?: boolean;
+  keyword?: string;
+  status?: number;
+  isResigned?: boolean;
+  /** 按部门筛选（与 positionId 二选一，后端优先 positionId） */
+  deptId?: string;
+  /** 按岗位筛选（与 deptId 二选一） */
+  positionId?: string;
 }
 
 /**
  * 获取用户列表数据
  */
-async function getUserList(params: Recordable<any>) {
+async function getUserList(params: GetUserListParams) {
   const result = await requestClient.get<{
     items: Array<{
       userId: string;
@@ -38,8 +70,24 @@ async function getUserList(params: Recordable<any>) {
       birthDate: string;
       deptId?: string;
       deptName?: string;
+      isDeptManager?: boolean;
       roles: string[];
       createdAt: string;
+      idCardNumber?: string;
+      address?: string;
+      education?: string;
+      graduateSchool?: string;
+      avatarUrl?: string;
+      notOrderMeal?: boolean;
+      orderMealSort?: number | null;
+      wechatGuid?: string;
+      isResigned?: boolean;
+      resignedTime?: string | null;
+      creatorId?: string;
+      modifierId?: string | null;
+      deleterId?: string | null;
+      lastLoginTime?: string | null;
+      lastLoginIp?: string | null;
     }>;
     total: number;
     page: number;
@@ -71,7 +119,17 @@ async function createUser(data: {
   birthDate: string;
   deptId?: string;
   deptName?: string;
+  isDeptManager?: boolean;
   roleIds: string[];
+  idCardNumber?: string;
+  address?: string;
+  education?: string;
+  graduateSchool?: string;
+  avatarUrl?: string;
+  notOrderMeal?: boolean;
+  wechatGuid?: string;
+  isResigned?: boolean;
+  resignedTime?: string;
 }) {
   return requestClient.post('/users', data);
 }
@@ -95,7 +153,17 @@ async function updateUser(
     birthDate: string;
     deptId: string;
     deptName: string;
+    isDeptManager?: boolean;
     password?: string;
+    idCardNumber?: string;
+    address?: string;
+    education?: string;
+    graduateSchool?: string;
+    avatarUrl?: string;
+    notOrderMeal?: boolean;
+    wechatGuid?: string;
+    isResigned?: boolean;
+    resignedTime?: string;
   },
 ) {
   return requestClient.put('/user/update', {
@@ -124,11 +192,59 @@ async function updateUserRoles(userId: string, roleIds: string[]) {
   });
 }
 
+export interface UserImportResult {
+  successCount: number;
+  errors: Array<{ rowNumber: number; message: string }>;
+}
+
+function triggerBlobDownload(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * 按当前列表筛选条件导出用户 Excel（不含密码）
+ */
+async function exportUsersExcel(params: Omit<GetUserListParams, 'pageIndex' | 'pageSize' | 'countTotal'>) {
+  const blob = (await requestClient.get<Blob>('/users/excel/export', {
+    params,
+    responseType: 'blob',
+    responseReturn: 'body',
+  })) as Blob;
+  const stamp = new Date().toISOString().slice(0, 19).replace(/:/g, '').replace('T', '-');
+  triggerBlobDownload(blob, `users-${stamp}.xlsx`);
+}
+
+/** 下载用户导入模板 */
+async function downloadUserImportTemplate() {
+  const blob = (await requestClient.get<Blob>('/users/excel/import-template', {
+    responseType: 'blob',
+    responseReturn: 'body',
+  })) as Blob;
+  triggerBlobDownload(blob, 'user-import-template.xlsx');
+}
+
+/** 上传 Excel 批量创建用户 */
+async function importUsersExcel(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return requestClient.post<UserImportResult>('/users/excel/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+}
+
 export {
   createUser,
   deleteUser,
+  downloadUserImportTemplate,
+  exportUsersExcel,
   getUser,
   getUserList,
+  importUsersExcel,
   updateUser,
   updateUserRoles,
 };

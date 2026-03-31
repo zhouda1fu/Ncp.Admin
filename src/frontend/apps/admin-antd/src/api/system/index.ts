@@ -9,6 +9,7 @@ export * from './dept';
 export * from './expense';
 export * from './leave';
 export * from './meeting';
+export * from './operation-log';
 export * from './position';
 export * from './project';
 export * from './role';

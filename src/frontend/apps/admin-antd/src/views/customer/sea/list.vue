@@ -3,6 +3,8 @@ import type { Recordable } from '@vben/types';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { CustomerApi } from '#/api/system/customer';
 
+import { ref } from 'vue';
+
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
@@ -20,6 +22,7 @@ import { $t } from '#/locales';
 
 import SeaForm from './modules/form.vue';
 import SeaDetail from './modules/detail.vue';
+import ShareModal from '../modules/share-modal.vue';
 
 const [FormDrawer, formDrawerApi] = useVbenDrawer({
   connectedComponent: SeaForm,
@@ -30,6 +33,8 @@ const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
   connectedComponent: SeaDetail,
   destroyOnClose: true,
 });
+
+const shareModalRef = ref<InstanceType<typeof ShareModal> | null>(null);
 
 const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
   gridOptions: {
@@ -63,6 +68,7 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
       },
       { field: 'creatorName', title: $t('customer.creatorName'), width: 100 },
       { field: 'ownerName', title: $t('customer.claimUserName'), width: 100 },
+      { field: 'ownerDeptName', title: $t('customer.ownerDept'), width: 120 },
       {
         field: 'claimedAt',
         title: $t('customer.claimTime'),
@@ -90,6 +96,7 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
             { code: 'view', text: $t('customer.view') },
             { code: 'claim', text: $t('customer.claim'), show: (row: CustomerApi.CustomerItem) => row.isInSea },
             { code: 'edit', text: $t('customer.edit'), show: (row: CustomerApi.CustomerItem) => row.isInSea },
+            { code: 'share', text: $t('customer.share') },
             { code: 'void', text: $t('customer.void'), show: (row: CustomerApi.CustomerItem) => row.isInSea },
             { code: 'delete', text: $t('customer.delete'), danger: true, show: (row: CustomerApi.CustomerItem) => row.isInSea },
           ],
@@ -130,6 +137,7 @@ function onActionClick(e: OnActionClickParams<CustomerApi.CustomerItem>) {
   if (e.code === 'view') onView(e.row);
   else if (e.code === 'claim') onClaim(e.row);
   else if (e.code === 'edit') onEdit(e.row);
+  else if (e.code === 'share') onShare(e.row);
   else if (e.code === 'void') onVoid(e.row);
   else if (e.code === 'delete') onDelete(e.row);
 }
@@ -150,6 +158,10 @@ async function onView(row: CustomerApi.CustomerItem) {
 async function onEdit(row: CustomerApi.CustomerItem) {
   const detail = await getCustomer(row.id);
   formDrawerApi.setData(detail).open();
+}
+
+function onShare(row: CustomerApi.CustomerItem) {
+  shareModalRef.value?.open({ customerId: row.id, customerName: row.mainContactName ?? row.fullName });
 }
 
 async function onClaim(row: CustomerApi.CustomerItem) {
@@ -201,6 +213,7 @@ async function onDelete(row: CustomerApi.CustomerItem) {
   <Page auto-content-height>
     <FormDrawer @success="onRefresh" />
     <DetailDrawer />
+    <ShareModal ref="shareModalRef" @success="onRefresh" />
     <Grid :table-title="$t('customer.sea')">
       <template #claimStatus="{ row }">
         <Tag :color="row.isInSea ? 'warning' : 'success'">

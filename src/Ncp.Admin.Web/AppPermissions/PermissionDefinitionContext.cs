@@ -23,7 +23,9 @@ public static class PermissionDefinitionContext
         adminUserManagement.AddChild(PermissionCodes.UserView, "查看用户");
         adminUserManagement.AddChild(PermissionCodes.UserRoleAssign, "分配用户角色");
         adminUserManagement.AddChild(PermissionCodes.UserResetPassword, "重置用户密码");
-        
+        adminUserManagement.AddChild(PermissionCodes.UserExport, "导出用户");
+        adminUserManagement.AddChild(PermissionCodes.UserImport, "导入用户");
+
         // 角色管理权限
         var roleManagement = systemAccess.AddPermission(PermissionCodes.RoleManagement, "角色管理");
         roleManagement.AddChild(PermissionCodes.RoleCreate, "创建角色");
@@ -186,6 +188,7 @@ public static class PermissionDefinitionContext
         customerManagement.AddChild(PermissionCodes.CustomerContactEdit, "编辑客户联系人");
         customerManagement.AddChild(PermissionCodes.CustomerReleaseToSea, "释放到公海");
         customerManagement.AddChild(PermissionCodes.CustomerClaimFromSea, "公海领用");
+        customerManagement.AddChild(PermissionCodes.CustomerShare, "共享客户");
         customerManagement.AddChild(PermissionCodes.IndustryView, "查看行业");
         customerManagement.AddChild(PermissionCodes.IndustryCreate, "创建行业");
         customerManagement.AddChild(PermissionCodes.IndustryEdit, "编辑行业");
@@ -203,6 +206,15 @@ public static class PermissionDefinitionContext
         orderManagement.AddChild(PermissionCodes.OrderCreate, "创建订单");
         orderManagement.AddChild(PermissionCodes.OrderEdit, "编辑订单");
         orderManagement.AddChild(PermissionCodes.OrderDelete, "删除订单");
+        orderManagement.AddChild(PermissionCodes.OrderSubmit, "提交订单审批");
+        
+        var orderSpecialDataDisplay = orderManagement.AddChild(PermissionCodes.OrderSpecialDataDisplay, "特殊数据展示");
+        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderContractUpload, "合同上传");
+        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderContractSelect, "选择合同");
+        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderContractNotCompanyTemplate, "合同非公司模版");
+        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderNeedInvoice, "是否需要发票");
+        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderContractAmount, "合同金额");
+        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderTechnicalStatus, "技术状态");
 
         // 产品管理权限
         var productManagement = systemAccess.AddPermission(PermissionCodes.ProductManagement, "产品管理");
@@ -210,6 +222,10 @@ public static class PermissionDefinitionContext
         productManagement.AddChild(PermissionCodes.ProductCreate, "创建产品");
         productManagement.AddChild(PermissionCodes.ProductEdit, "编辑产品");
         productManagement.AddChild(PermissionCodes.ProductDelete, "删除产品");
+
+        // 操作日志权限
+        var operationLogManagement = systemAccess.AddPermission(PermissionCodes.OperationLogManagement, "操作日志");
+        operationLogManagement.AddChild(PermissionCodes.OperationLogView, "查看操作日志");
 
         // 所有接口访问权限
         var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");

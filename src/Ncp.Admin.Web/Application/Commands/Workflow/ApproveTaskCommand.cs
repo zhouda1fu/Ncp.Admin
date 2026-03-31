@@ -1,3 +1,4 @@
+using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
@@ -31,12 +32,12 @@ public class ApproveTaskCommandValidator : AbstractValidator<ApproveTaskCommand>
 
 /// <summary>
 /// 审批通过命令处理器
-/// Handler 负责编排，流程流转逻辑（获取下一节点）下沉到 WorkflowDefinition 聚合根，审批人由 WorkflowAssigneeResolverQuery 解析
 /// </summary>
 public class ApproveTaskCommandHandler(
     IWorkflowInstanceRepository instanceRepository,
     IWorkflowDefinitionRepository definitionRepository,
-    WorkflowAssigneeResolverQuery assigneeResolverQuery)
+    UserQuery userQuery,
+    WorkflowOutgoingTaskService outgoingTaskService)
     : ICommandHandler<ApproveTaskCommand>
 {
     public async Task Handle(ApproveTaskCommand request, CancellationToken cancellationToken)
@@ -44,47 +45,39 @@ public class ApproveTaskCommandHandler(
         var instance = await instanceRepository.GetAsync(request.WorkflowInstanceId, cancellationToken)
             ?? throw new KnownException("未找到流程实例", ErrorCodes.WorkflowInstanceNotFound);
 
-        instance.ApproveTask(request.TaskId, request.OperatorId, request.Comment);
-
-        var definition = await definitionRepository.GetAsync(instance.WorkflowDefinitionId, cancellationToken);
-        if (definition == null) return;
-
-        var approvedTask = instance.Tasks.First(t => t.Id == request.TaskId);
-        var currentNode = definition.GetOrderedApprovalNodes().FirstOrDefault(n => n.NodeName == approvedTask.NodeName);
-
-        // 会签：仅当当前节点所有任务均已通过时才进入下一节点或完成
-        if (currentNode?.ApprovalMode == ApprovalMode.CounterSign && !instance.AreAllCounterSignTasksApproved(approvedTask.NodeName))
-            return;
-
-        var evaluator = WorkflowConditionEvaluator.CreateEvaluator(instance.Variables);
-        var nextNode = definition.GetNextReachableApprovalNode(approvedTask.NodeName, evaluator);
-
-        if (nextNode != null)
+        if (instance.Status != WorkflowInstanceStatus.Running)
         {
-            if (nextNode.ApprovalMode == ApprovalMode.CounterSign)
+            throw new KnownException("流程未在运行中", ErrorCodes.WorkflowInstanceNotRunning);
+        }
+
+        var task = instance.Tasks.FirstOrDefault(t => t.Id == request.TaskId)
+            ?? throw new KnownException("未找到该任务", ErrorCodes.WorkflowTaskNotFound);
+
+        if (task.AssigneeId != new UserId(0))
+        {
+            if (task.AssigneeId != request.OperatorId)
             {
-                var assignees = await assigneeResolverQuery.ResolveAssigneesAsync(nextNode, instance, cancellationToken);
-                foreach (var a in assignees)
-                {
-                    if (a.AssigneeId != null)
-                        instance.CreateTask(nextNode.NodeName, WorkflowTaskType.Approval, a.AssigneeId, a.DisplayName);
-                }
+                throw new KnownException("无权限操作该任务", ErrorCodes.WorkflowTaskNotAssignedToOperator);
             }
-            else
+        }
+        else if (task.AssigneeRoleId != new RoleId(Guid.Empty))
+        {
+            var userRoleIds = await userQuery.GetRoleIdsByUserIdAsync(request.OperatorId, cancellationToken);
+            if (!userRoleIds.Contains(task.AssigneeRoleId))
             {
-                var assignee = await assigneeResolverQuery.ResolveAssigneeAsync(nextNode, instance, cancellationToken);
-                if (assignee != null)
-                {
-                    if (assignee.AssigneeId != null)
-                        instance.CreateTask(nextNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeId!, assignee.DisplayName);
-                    else
-                        instance.CreateTaskForRole(nextNode.NodeName, WorkflowTaskType.Approval, assignee.AssigneeRoleId!, assignee.DisplayName);
-                }
+                throw new KnownException("无权限操作该任务", ErrorCodes.WorkflowTaskNotAssignedToOperator);
             }
         }
         else
         {
-            instance.Complete();
+            throw new KnownException("无权限操作该任务", ErrorCodes.WorkflowTaskNotAssignedToOperator);
         }
+
+        instance.ApproveTask(request.TaskId, request.OperatorId, request.Comment);
+
+        var definition = await definitionRepository.GetAsync(instance.WorkflowDefinitionId, cancellationToken)
+            ?? throw new KnownException("未找到流程定义，无法继续审批流转", ErrorCodes.WorkflowDefinitionNotFound);
+
+        await outgoingTaskService.AdvanceAfterTaskApprovedAsync(instance, request.TaskId, definition, cancellationToken);
     }
 }

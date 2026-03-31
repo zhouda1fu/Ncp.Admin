@@ -1,5 +1,6 @@
 using Ncp.Admin.Domain.DomainEvents.RoleEvents;
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 
@@ -24,6 +25,10 @@ public enum DataScope
     /// 仅本人
     /// </summary>
     Self = 3,
+    /// <summary>
+    /// 自定义部门及下级部门（按角色配置部门集合）
+    /// </summary>
+    CustomDeptAndSub = 4,
 }
 
 public partial record RoleId : IGuidStronglyTypedId;
@@ -46,6 +51,10 @@ public class Role : Entity<RoleId>, IAggregateRoot
     public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
 
     public virtual ICollection<RolePermission> Permissions { get; init; } = [];
+    /// <summary>
+    /// 自定义数据权限部门列表（当 DataScope 为 <see cref="DataScope.CustomDeptAndSub"/> 时生效）
+    /// </summary>
+    public virtual ICollection<RoleDataDept> DataDepts { get; init; } = [];
 
     public Role(string name, string description, IEnumerable<RolePermission> permissions, DataScope dataScope = DataScope.All)
     {
@@ -83,7 +92,22 @@ public class Role : Entity<RoleId>, IAggregateRoot
             Permissions.Add(newPermissionMap[permissionCode]);
         }
 
-        AddDomainEvent(new RolePermissionChangedDomainEvent(this));
+        // RolePermissionChangedDomainEvent 已定义于 RoleEvents.cs，当前无处理器；若将来需同步权限缓存可在此发布并添加处理器
+    }
+
+    public void SetCustomDataDepts(IEnumerable<DeptId> deptIds)
+    {
+        var distinct = (deptIds ?? Enumerable.Empty<DeptId>()).Distinct().ToList();
+        DataDepts.Clear();
+        foreach (var deptId in distinct)
+        {
+            DataDepts.Add(new RoleDataDept(Id, deptId));
+        }
+    }
+
+    public void ClearCustomDataDepts()
+    {
+        DataDepts.Clear();
     }
 
     public void Deactivate()
@@ -116,4 +140,3 @@ public class Role : Entity<RoleId>, IAggregateRoot
         return Permissions.Any(p => p.PermissionCode == permissionCode);
     }
 }
-

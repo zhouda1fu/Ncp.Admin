@@ -11,7 +11,9 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
         builder.ToTable("customer");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("客户标识");
-        builder.Property(x => x.OwnerId).HasComment("负责人用户ID");
+        builder.Property(x => x.OwnerId).IsRequired().HasComment("负责人用户ID（公海为 0）");
+        builder.Property(x => x.OwnerDeptId).IsRequired().HasComment("负责人部门ID（冗余，无部门为 0）");
+        builder.Property(x => x.OwnerDeptName).IsRequired(false).HasMaxLength(100).HasComment("负责人部门名称（冗余）");
         builder.Property(x => x.CustomerSourceId).IsRequired().HasComment("客户来源ID");
         builder.Property(x => x.CustomerSourceName).IsRequired().HasMaxLength(100).HasComment("客户来源名称");
         builder.Property(x => x.IsVoided).IsRequired().HasComment("是否作废");
@@ -75,6 +77,25 @@ internal class CustomerEntityTypeConfiguration : IEntityTypeConfiguration<Custom
             .HasForeignKey(i => i.CustomerId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(c => c.Industries).AutoInclude();
+
+        builder.HasMany(c => c.Shares)
+            .WithOne()
+            .HasForeignKey(s => s.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal class CustomerShareEntityTypeConfiguration : IEntityTypeConfiguration<CustomerShare>
+{
+    public void Configure(EntityTypeBuilder<CustomerShare> builder)
+    {
+        builder.ToTable("customer_share");
+        builder.HasKey(x => new { x.CustomerId, x.SharedToUserId });
+        builder.Property(x => x.CustomerId).IsRequired();
+        builder.Property(x => x.SharedToUserId).IsRequired();
+        builder.Property(x => x.SharedByUserId).IsRequired();
+        builder.Property(x => x.SharedAt).IsRequired();
+        builder.HasIndex(x => x.SharedToUserId);
     }
 }
 
@@ -109,7 +130,7 @@ internal class CustomerContactRecordEntityTypeConfiguration : IEntityTypeConfigu
         builder.Property(x => x.RecordAt).IsRequired();
         builder.Property(x => x.RecordType).IsRequired().HasMaxLength(50);
         builder.Property(x => x.Content).IsRequired(false).HasMaxLength(2000);
-        builder.Property(x => x.RecorderId).IsRequired(false);
+        builder.Property(x => x.RecorderId).IsRequired().HasComment("记录人用户ID（无则为 0）");
         builder.Property(x => x.RecorderName).IsRequired(false).HasMaxLength(100);
         builder.HasIndex(x => x.CustomerId);
         builder.HasIndex(x => x.RecordAt);

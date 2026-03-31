@@ -2,6 +2,7 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.MeetingAggregate;
 using Ncp.Admin.Web.Application.Commands.Meeting;
 using Ncp.Admin.Web.AppPermissions;
 
@@ -54,4 +55,4 @@ public class CreateMeetingRoomEndpoint(IMediator mediator) : Endpoint<CreateMeet
 /// <summary>
 /// 创建会议室响应（新建的会议室 ID）
 /// </summary>
-public record CreateMeetingRoomResponse(Ncp.Admin.Domain.AggregatesModel.MeetingAggregate.MeetingRoomId Id);
+public record CreateMeetingRoomResponse(MeetingRoomId Id);

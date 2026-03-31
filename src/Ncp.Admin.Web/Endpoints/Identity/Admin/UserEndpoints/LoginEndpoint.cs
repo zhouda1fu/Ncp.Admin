@@ -82,11 +82,11 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
             : [];
         var assignedPermissionCodes = adminRoles.SelectMany(r => r.PermissionCodes).Distinct();
         var dataScope = adminRoles.Count > 0
-            ? (DataScope)adminRoles.Min(r => (int)r.DataScope)
+            ? GetMostPermissiveScope(adminRoles.Select(r => r.DataScope))
             : DataScope.All;
         var userInfo = await userQuery.GetUserByIdAsync(loginInfo.UserId, ct);
         var deptId = userInfo?.DeptId;
-        var authorizedDeptIds = await GetAuthorizedDeptIdsAsync(dataScope, deptId, ct);
+        var authorizedDeptIds = await GetAuthorizedDeptIdsAsync(dataScope, deptId, adminRoles, ct);
         var claims = BuildClaims(loginInfo, assignedPermissionCodes, dataScope, deptId, authorizedDeptIds);
         var config = appConfiguration.Value;
         var token = await jwtProvider.GenerateJwtToken(
@@ -111,7 +111,8 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
         );
 
         // 更新用户登录时间和刷新令牌
-        var updateCmd = new UpdateUserLoginTimeCommand(loginInfo.UserId, nowTime, refreshToken);
+        var loginIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var updateCmd = new UpdateUserLoginTimeCommand(loginInfo.UserId, nowTime, refreshToken, loginIp);
         await mediator.Send(updateCmd, ct);
 
         Log.Information("用户登录成功: UserId={UserId}, Username={Username}, Email={Email}, RoleCount={RoleCount}, PermissionCount={PermissionCount}", 
@@ -123,12 +124,67 @@ public class LoginEndpoint(IMediator mediator, UserQuery userQuery, IJwtProvider
     /// <summary>
     /// 登录时计算有权访问的部门 ID 列表（DeptAndSub 含本部门及子部门，供 JWT 写入 authorized_dept_ids）
     /// </summary>
-    private async Task<IReadOnlyList<DeptId>> GetAuthorizedDeptIdsAsync(DataScope dataScope, DeptId? deptId, CancellationToken ct)
+    private async Task<IReadOnlyList<DeptId>> GetAuthorizedDeptIdsAsync(
+        DataScope dataScope,
+        DeptId? deptId,
+        IReadOnlyList<AssignAdminUserRoleQueryDto> adminRoles,
+        CancellationToken ct)
     {
-        if (deptId == null) return [];
+        if (dataScope == DataScope.All)
+            return [];
+
+        if (dataScope == DataScope.Self)
+            return deptId != null ? [deptId] : [];
+
+        if (dataScope == DataScope.Dept)
+            return deptId != null ? [deptId] : [];
+
         if (dataScope == DataScope.DeptAndSub)
+        {
+            if (deptId == null) return [];
             return await deptQuery.GetAllChildDeptIdsAsync(deptId, ct);
-        return [deptId];
+        }
+
+        if (dataScope == DataScope.CustomDeptAndSub)
+        {
+            var deptIds = adminRoles
+                .Where(r => r.DataScope == DataScope.CustomDeptAndSub)
+                .SelectMany(r => r.CustomDeptIds)
+                .Distinct()
+                .ToList();
+            if (deptIds.Count == 0) return [];
+
+            var expanded = new HashSet<DeptId>();
+            foreach (var d in deptIds)
+            {
+                var ids = await deptQuery.GetAllChildDeptIdsAsync(d, ct);
+                foreach (var id in ids)
+                    expanded.Add(id);
+            }
+            return expanded.ToList();
+        }
+
+        return deptId != null ? [deptId] : [];
+    }
+
+    private static DataScope GetMostPermissiveScope(IEnumerable<DataScope> scopes)
+    {
+        return scopes
+            .OrderBy(GetPermissiveRank)
+            .FirstOrDefault();
+    }
+
+    private static int GetPermissiveRank(DataScope scope)
+    {
+        return scope switch
+        {
+            DataScope.All => 0,
+            DataScope.CustomDeptAndSub => 1,
+            DataScope.DeptAndSub => 2,
+            DataScope.Dept => 3,
+            DataScope.Self => 4,
+            _ => 99
+        };
     }
 
     /// <summary>

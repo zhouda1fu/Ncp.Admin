@@ -7,7 +7,7 @@ using Ncp.Admin.Domain.AggregatesModel.ProjectIndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectTypeAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
-using Ncp.Admin.Web.Application.Commands.Project;
+using Ncp.Admin.Web.Application.Commands.ProjectModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Project;

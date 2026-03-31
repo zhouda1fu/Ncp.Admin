@@ -1,25 +1,22 @@
 using System.Globalization;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace Ncp.Admin.Web.Application.Services.Workflow;
 
 /// <summary>
-/// 根据流程变量 JSON 解析条件表达式，得到用于分支判断的委托。
-/// 表达式格式：key op value，如 amount &gt; 1000、status == "approved"
-/// 支持运算符：&gt;, &lt;, &gt;=, &lt;=, ==, !=
+/// 根据流程变量 JSON 与设计器条件列表进行分支判断。
+/// 支持运算符：&gt;, &lt;, &gt;=, &lt;=, ==, !=, include, notinclude。
+/// 支持类型：数值、字符串、布尔值。
 /// </summary>
 public static class WorkflowConditionEvaluator
 {
-    private static readonly Regex ExpressionRegex = new(
-        @"^\s*(\w+)\s*(>=|<=|==|!=|>|<)\s*(.+)\s*$",
-        RegexOptions.Compiled);
-
     /// <summary>
-    /// 根据变量 JSON 构建条件求值函数。表达式为空时返回 false。
+    /// 评估设计器条件列表：组间 OR，组内 AND。空列表或空组视为不命中。
     /// </summary>
-    public static Func<string, bool> CreateEvaluator(string? variablesJson)
+    public static bool EvaluateDesignerConditionList(string? variablesJson, List<List<DesignerConditionRule>>? conditionList)
     {
+        if (conditionList == null || conditionList.Count == 0) return false;
+
         JsonElement? root = null;
         if (!string.IsNullOrWhiteSpace(variablesJson))
         {
@@ -34,37 +31,72 @@ public static class WorkflowConditionEvaluator
             }
         }
 
-        return expression => Evaluate(root, expression);
+        foreach (var group in conditionList)
+        {
+            if (group == null || group.Count == 0) continue;
+            var allTrue = true;
+            foreach (var rule in group)
+            {
+                if (rule == null || !EvaluateDesignerRule(root, rule))
+                {
+                    allTrue = false;
+                    break;
+                }
+            }
+            if (allTrue) return true;
+        }
+        return false;
     }
 
-    private static bool Evaluate(JsonElement? variables, string expression)
+    private static bool EvaluateDesignerRule(JsonElement? variables, DesignerConditionRule rule)
     {
-        if (string.IsNullOrWhiteSpace(expression))
+        if (string.IsNullOrWhiteSpace(rule.Field)) return false;
+        if (!variables.HasValue) return false;
+        if (!TryGetPropertyByPath(variables.Value, rule.Field, out var prop))
             return false;
+        var valueStr = (rule.Value ?? string.Empty).Trim().Trim('"');
 
-        var match = ExpressionRegex.Match(expression.Trim());
-        if (!match.Success)
-            return false;
-
-        var key = match.Groups[1].Value;
-        var op = match.Groups[2].Value;
-        var valueStr = match.Groups[3].Value.Trim();
-
-        if (!variables.HasValue || !variables.Value.TryGetProperty(key, out var prop))
-            return false;
-
-        // 解析比较值：数字或带引号的字符串
-        valueStr = valueStr.Trim('"');
+        if (prop.ValueKind is JsonValueKind.True or JsonValueKind.False)
+        {
+            var leftBool = prop.ValueKind == JsonValueKind.True;
+            if (!bool.TryParse(valueStr, out var rightBool)) return false;
+            return rule.Operator switch
+            {
+                "==" => leftBool == rightBool,
+                "!=" => leftBool != rightBool,
+                _ => false
+            };
+        }
         if (prop.ValueKind == JsonValueKind.Number)
         {
             if (!double.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var numRight))
                 return false;
-            double left = prop.GetDouble();
-            return CompareNumeric(left, numRight, op);
+            return CompareNumeric(prop.GetDouble(), numRight, rule.Operator);
+        }
+        var leftStr = prop.ValueKind == JsonValueKind.String ? prop.GetString() ?? "" : prop.GetRawText();
+        return CompareString(leftStr, valueStr, rule.Operator);
+    }
+
+    private static bool TryGetPropertyByPath(JsonElement root, string field, out JsonElement value)
+    {
+        value = default;
+        if (string.IsNullOrWhiteSpace(field)) return false;
+
+        // Support nested properties like: CategoryDiscountPoints.<ProductCategoryIdGuid>
+        // Only JSON objects are supported; arrays are not.
+        var current = root;
+        var parts = field.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 0) return false;
+
+        foreach (var part in parts)
+        {
+            if (current.ValueKind != JsonValueKind.Object) return false;
+            if (!current.TryGetProperty(part, out var next)) return false;
+            current = next;
         }
 
-        var leftStr = prop.ValueKind == JsonValueKind.String ? prop.GetString() ?? "" : prop.GetRawText();
-        return CompareString(leftStr, valueStr, op);
+        value = current;
+        return true;
     }
 
     private static bool CompareNumeric(double left, double right, string op)
@@ -83,7 +115,7 @@ public static class WorkflowConditionEvaluator
 
     private static bool CompareString(string left, string right, string op)
     {
-        var cmp = string.Compare(left, right, StringComparison.Ordinal);
+        var cmp = string.Compare(left, right, StringComparison.OrdinalIgnoreCase);
         return op switch
         {
             "==" => cmp == 0,
@@ -92,6 +124,8 @@ public static class WorkflowConditionEvaluator
             "<" => cmp < 0,
             ">=" => cmp >= 0,
             "<=" => cmp <= 0,
+            "include" => left.Contains(right, StringComparison.OrdinalIgnoreCase),
+            "notinclude" => !left.Contains(right, StringComparison.OrdinalIgnoreCase),
             _ => false
         };
     }

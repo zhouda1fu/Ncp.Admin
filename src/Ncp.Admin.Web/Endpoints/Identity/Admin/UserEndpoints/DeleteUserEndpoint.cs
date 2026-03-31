@@ -2,6 +2,7 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Security.Claims;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.AppPermissions;
@@ -31,7 +32,11 @@ public class DeleteUserEndpoint(IMediator mediator) : Endpoint<DeleteUserRequest
 
     public override async Task HandleAsync(DeleteUserRequest request, CancellationToken ct)
     {
-        await mediator.Send(new DeleteUserCommand(request.UserId), ct);
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var deleterId = !string.IsNullOrWhiteSpace(userIdString) && long.TryParse(userIdString, out var userIdValue)
+            ? new UserId(userIdValue)
+            : new UserId(0);
+        await mediator.Send(new DeleteUserCommand(request.UserId, deleterId), ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }

@@ -22,8 +22,25 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
         builder.Property(b => b.BirthDate).HasComment("出生日期");
         builder.Property(b => b.IsActive).HasComment("是否启用");
         builder.Property(b => b.CreatedAt).HasComment("创建时间");
+        builder.Property(b => b.CreatorId).HasComment("创建人用户ID");
+        builder.Property(b => b.ModifierId).HasComment("修改人用户ID");
+        builder.Property(b => b.DeleterId).HasComment("删除人用户ID");
         builder.Property(b => b.LastLoginTime).HasComment("最后登录时间");
+        builder.Property(b => b.LastLoginIp).HasMaxLength(64).HasComment("最后登录IP");
         builder.Property(b => b.UpdateTime).HasComment("更新时间");
+        builder.Property(b => b.IsDeleted).HasComment("是否已删除");
+        builder.Property(b => b.DeletedAt).HasComment("删除时间");
+
+        builder.Property(b => b.IdCardNumber).HasMaxLength(50).IsRequired().HasComment("身份证号");
+        builder.Property(b => b.Address).HasMaxLength(500).IsRequired().HasComment("地址");
+        builder.Property(b => b.Education).HasMaxLength(50).IsRequired().HasComment("学历");
+        builder.Property(b => b.GraduateSchool).HasMaxLength(100).IsRequired().HasComment("毕业院校");
+        builder.Property(b => b.AvatarUrl).HasMaxLength(500).IsRequired().HasComment("头像地址");
+        builder.Property(b => b.NotOrderMeal).HasComment("是否不订餐");
+        builder.Property(b => b.OrderMealSort).HasComment("订餐排序");
+        builder.Property(b => b.WechatGuid).HasMaxLength(64).IsRequired().HasComment("唯一码");
+        builder.Property(b => b.IsResigned).HasComment("是否离职");
+        builder.Property(b => b.ResignedTime).HasComment("离职时间");
 
         builder.HasIndex(b => b.Name);
         builder.HasIndex(b => b.Email);
@@ -45,6 +62,13 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey<UserDept>(ud => ud.UserId)
             .OnDelete(DeleteBehavior.ClientCascade);
         builder.Navigation(au => au.Dept).AutoInclude();
+
+        // 配置 User 与 UserPosition 的一对一关系（可选）
+        builder.HasOne(au => au.Position)
+            .WithOne()
+            .HasForeignKey<UserPosition>(up => up.UserId)
+            .OnDelete(DeleteBehavior.ClientCascade);
+        builder.Navigation(au => au.Position).AutoInclude();
     }
 }
 
@@ -59,12 +83,31 @@ internal class UserDeptEntityTypeConfiguration : IEntityTypeConfiguration<UserDe
         builder.Property(ud => ud.UserId);
         builder.Property(ud => ud.DeptId);
         builder.Property(ud => ud.DeptName).HasMaxLength(100);
+        builder.Property(ud => ud.IsDeptManager).HasComment("是否为该部门主管");
         builder.Property(ud => ud.AssignedAt)
             .IsRequired();
 
         // 索引
         builder.HasIndex(ud => ud.UserId);
         builder.HasIndex(ud => ud.DeptId);
+    }
+}
+
+internal class UserPositionEntityTypeConfiguration : IEntityTypeConfiguration<UserPosition>
+{
+    public void Configure(EntityTypeBuilder<UserPosition> builder)
+    {
+        builder.ToTable("user_position");
+
+        builder.HasKey(up => up.UserId);
+
+        builder.Property(up => up.UserId);
+        builder.Property(up => up.PositionId);
+        builder.Property(up => up.PositionName).HasMaxLength(100);
+        builder.Property(up => up.AssignedAt).IsRequired();
+
+        builder.HasIndex(up => up.UserId);
+        builder.HasIndex(up => up.PositionId);
     }
 }
 

@@ -23,6 +23,8 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.UserDelete, "删除用户" },
         { PermissionCodes.UserRoleAssign, "分配用户角色权限" },
         { PermissionCodes.UserResetPassword, "重置用户密码" },
+        { PermissionCodes.UserExport, "导出用户 Excel" },
+        { PermissionCodes.UserImport, "导入用户 Excel" },
 
         // 角色管理权限
         { PermissionCodes.RoleCreate, "创建新角色" },
@@ -184,6 +186,7 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.CustomerContactEdit, "编辑客户联系人" },
         { PermissionCodes.CustomerReleaseToSea, "释放到公海" },
         { PermissionCodes.CustomerClaimFromSea, "公海领用" },
+        { PermissionCodes.CustomerShare, "共享客户" },
         { PermissionCodes.IndustryView, "查看行业" },
         { PermissionCodes.IndustryCreate, "创建行业" },
         { PermissionCodes.IndustryEdit, "编辑行业" },
@@ -199,6 +202,14 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.OrderCreate, "创建订单" },
         { PermissionCodes.OrderEdit, "编辑订单" },
         { PermissionCodes.OrderDelete, "删除订单" },
+        { PermissionCodes.OrderSubmit, "提交订单审批" },
+        { PermissionCodes.OrderSpecialDataDisplay, "特殊数据展示" },
+        { PermissionCodes.OrderContractUpload, "合同上传" },
+        { PermissionCodes.OrderContractSelect, "选择合同" },
+        { PermissionCodes.OrderContractNotCompanyTemplate, "合同非公司模版" },
+        { PermissionCodes.OrderNeedInvoice, "是否需要发票" },
+        { PermissionCodes.OrderContractAmount, "合同金额" },
+        { PermissionCodes.OrderTechnicalStatus, "技术状态" },
         { PermissionCodes.ProductManagement, "产品管理" },
         { PermissionCodes.ProductView, "查看产品" },
         { PermissionCodes.ProductCreate, "创建产品" },
@@ -206,6 +217,10 @@ namespace Ncp.Admin.Web.AppPermissions
         { PermissionCodes.ProductDelete, "删除产品" },
 
         // 所有接口访问权限
+        // 操作日志权限
+        { PermissionCodes.OperationLogManagement, "操作日志" },
+        { PermissionCodes.OperationLogView, "查看操作日志" },
+
         { PermissionCodes.AllApiAccess, "所有接口访问权限" },
     };
 

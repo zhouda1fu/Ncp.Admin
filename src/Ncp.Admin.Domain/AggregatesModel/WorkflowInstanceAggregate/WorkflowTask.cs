@@ -1,6 +1,5 @@
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 
@@ -25,7 +24,12 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     public WorkflowInstanceId WorkflowInstanceId { get; private set; } = default!;
 
     /// <summary>
-    /// 节点名称
+    /// 节点唯一标识（设计器 nodeKey，引擎追踪用）
+    /// </summary>
+    public string NodeKey { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 节点名称（展示用）
     /// </summary>
     public string NodeName { get; private set; } = string.Empty;
 
@@ -40,14 +44,14 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     public AssigneeType AssigneeType { get; private set; }
 
     /// <summary>
-    /// 处理人用户ID（指定用户时有值）
+    /// 处理人用户ID（按角色分配任务时为哨兵 <c>new UserId(0)</c>）
     /// </summary>
-    public UserId? AssigneeId { get; private set; }
+    public UserId AssigneeId { get; private set; } = new UserId(0);
 
     /// <summary>
-    /// 处理人角色ID（指定角色时有值）
+    /// 处理人角色ID（按用户分配任务时为哨兵 <c>Guid.Empty</c>）
     /// </summary>
-    public RoleId? AssigneeRoleId { get; private set; }
+    public RoleId AssigneeRoleId { get; private set; } = new RoleId(Guid.Empty);
 
     /// <summary>
     /// 处理人姓名/角色名（冗余存储，用于展示）
@@ -82,14 +86,15 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// <summary>
     /// 创建工作流任务（指定用户）
     /// </summary>
-    public WorkflowTask(string nodeName, WorkflowTaskType taskType, UserId assigneeId, string assigneeName)
+    public WorkflowTask(string nodeKey, string nodeName, WorkflowTaskType taskType, UserId assigneeId, string assigneeName)
     {
         CreatedAt = DateTimeOffset.UtcNow;
-        NodeName = nodeName;
+        NodeKey = nodeKey ?? string.Empty;
+        NodeName = nodeName ?? string.Empty;
         TaskType = taskType;
         AssigneeType = AssigneeType.User;
         AssigneeId = assigneeId;
-        AssigneeRoleId = null;
+        AssigneeRoleId = new RoleId(Guid.Empty);
         AssigneeName = assigneeName;
         Status = WorkflowTaskStatus.Pending;
     }
@@ -97,13 +102,14 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// <summary>
     /// 创建工作流任务（指定角色，一条记录，待办按角色查）
     /// </summary>
-    public WorkflowTask(string nodeName, WorkflowTaskType taskType, RoleId assigneeRoleId, string assigneeName)
+    public WorkflowTask(string nodeKey, string nodeName, WorkflowTaskType taskType, RoleId assigneeRoleId, string assigneeName)
     {
         CreatedAt = DateTimeOffset.UtcNow;
-        NodeName = nodeName;
+        NodeKey = nodeKey ?? string.Empty;
+        NodeName = nodeName ?? string.Empty;
         TaskType = taskType;
         AssigneeType = AssigneeType.Role;
-        AssigneeId = null;
+        AssigneeId = new UserId(0);
         AssigneeRoleId = assigneeRoleId;
         AssigneeName = assigneeName;
         Status = WorkflowTaskStatus.Pending;
@@ -214,4 +220,20 @@ public enum WorkflowTaskStatus
     /// 已委托
     /// </summary>
     Delegated = 5
+}
+
+/// <summary>
+/// 处理人类型（指定用户 / 指定角色）
+/// </summary>
+public enum AssigneeType
+{
+    /// <summary>
+    /// 指定用户
+    /// </summary>
+    User = 0,
+
+    /// <summary>
+    /// 指定角色
+    /// </summary>
+    Role = 1
 }

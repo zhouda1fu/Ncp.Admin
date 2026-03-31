@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="IOrderLogisticsCompanyRepository.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NetCorePal.Extensions.CodeAnalysis" />
     <PackageReference Include="NetCorePal.Extensions.Domain.Abstractions" />

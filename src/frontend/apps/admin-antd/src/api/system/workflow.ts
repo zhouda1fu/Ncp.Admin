@@ -2,25 +2,23 @@ import type { Recordable } from '@vben/types';
 
 import { requestClient } from '#/api/request';
 
-export namespace WorkflowApi {
-  export interface WorkflowNode {
-    id?: string;
-    nodeName: string;
-    nodeType: number;
-    assigneeType: number;
-    assigneeValue: string;
-    sortOrder: number;
-    description: string;
-    /** 审批方式：0=或签 1=会签 2=依次审批 */
-    approvalMode?: number;
-    /** 条件表达式（仅条件分支），如 amount > 1000 */
-    conditionExpression?: string;
-    /** 条件为真时跳转的节点名称 */
-    trueNextNodeName?: string;
-    /** 条件为假时跳转的节点名称 */
-    falseNextNodeName?: string;
-  }
+/** 条件字段可选值（有 options 时前端用下拉框选值） */
+export interface ConditionFieldOption {
+  value: string;
+  label: string;
+}
 
+/** 条件字段定义（按分类从后端获取，供条件分支下拉选择） */
+export interface ConditionFieldDef {
+  key: string;
+  label: string;
+  type: 'number' | 'string' | 'boolean' | 'enum';
+  /** 有值时「条件值」用下拉框，value 须与流程 Variables JSON 一致 */
+  options?: ConditionFieldOption[];
+}
+
+export namespace WorkflowApi {
+  /** 流程定义：节点树存于 definitionJson，前端按需解析 */
   export interface WorkflowDefinition {
     [key: string]: any;
     id: string;
@@ -31,7 +29,7 @@ export namespace WorkflowApi {
     status: number;
     createdBy: string;
     createdAt: string;
-    nodes: WorkflowNode[];
+    definitionJson: string;
   }
 
   export interface WorkflowInstance {
@@ -51,19 +49,33 @@ export namespace WorkflowApi {
     remark: string;
   }
 
+  /** 后端按实例变量解析条件后的进度步骤（与引擎分支一致） */
+  export interface WorkflowProgressStep {
+    title: string;
+    nodeKey?: string;
+  }
+
   export interface WorkflowInstanceDetail extends WorkflowInstance {
     variables: string;
+    /** 当前节点 nodeKey，与流程定义一致，用于进度条精确匹配 */
+    currentNodeKey?: string;
+    /** 条件分支仅展示命中路径上的节点（新接口；缺省则前端回退解析 definitionJson） */
+    progressSteps?: WorkflowProgressStep[];
     tasks: WorkflowTask[];
   }
 
   export interface WorkflowTask {
     id: string;
     workflowInstanceId: string;
+    nodeKey: string;
     nodeName: string;
     taskType: number;
+    assigneeType: number;
     assigneeId: string;
+    assigneeRoleId?: string;
     assigneeName: string;
     status: number;
+    canOperate: boolean;
     comment: string;
     createdAt: string;
     completedAt?: string;
@@ -133,7 +145,6 @@ async function createDefinition(data: {
   description: string;
   category: string;
   definitionJson: string;
-  nodes: WorkflowApi.WorkflowNode[];
 }) {
   return requestClient.post('/workflow/definitions', data);
 }
@@ -147,7 +158,6 @@ async function updateDefinition(data: {
   description: string;
   category: string;
   definitionJson: string;
-  nodes: WorkflowApi.WorkflowNode[];
 }) {
   return requestClient.put('/workflow/definitions', data);
 }
@@ -160,10 +170,30 @@ async function publishDefinition(id: string) {
 }
 
 /**
+ * 基于已有流程定义创建新版本
+ */
+async function createDefinitionNewVersion(id: string) {
+  const data = await requestClient.post<{ id: string }>(
+    `/workflow/definitions/${id}/new-version`,
+    { id },
+  );
+  return data.id;
+}
+
+/**
  * 删除流程定义
  */
 async function deleteDefinition(id: string) {
   return requestClient.delete(`/workflow/definitions/${id}`);
+}
+
+/**
+ * 按流程分类获取条件分支可用字段（供结构化条件表单使用）
+ */
+async function getConditionFields(category: string) {
+  return requestClient.get<ConditionFieldDef[]>(
+    `/workflow/condition-fields/${encodeURIComponent(category)}`,
+  );
 }
 
 // ==================== 流程实例 API ====================
@@ -303,6 +333,7 @@ export {
   createDefinition,
   delegateTask,
   deleteDefinition,
+  getConditionFields,
   getDefinition,
   getDefinitionList,
   getInstance,
@@ -315,5 +346,6 @@ export {
   rejectTask,
   startWorkflow,
   transferTask,
+  createDefinitionNewVersion,
   updateDefinition,
 };

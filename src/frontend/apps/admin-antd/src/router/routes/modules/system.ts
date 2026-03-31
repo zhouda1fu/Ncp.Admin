@@ -10,7 +10,7 @@ const routes: RouteRecordRaw[] = [
       order: 9997,
       title: $t('system.title'),
       // 父路由需要任一权限即可显示
-      authority: [PermissionCodes.RoleManagement, PermissionCodes.DeptManagement, PermissionCodes.UserManagement, PermissionCodes.PositionManagement],
+      authority: [PermissionCodes.RoleManagement, PermissionCodes.DeptManagement, PermissionCodes.UserManagement, PermissionCodes.UserView, PermissionCodes.UserExport, PermissionCodes.UserImport, PermissionCodes.PositionManagement, PermissionCodes.OperationLogManagement, PermissionCodes.OperationLogView],
     },
     name: 'System',
     path: '/system',
@@ -46,6 +46,26 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/system/user/list.vue'),
       },
       {
+        path: '/system/user/create',
+        name: 'SystemUserCreate',
+        meta: {
+          activePath: '/system/user',
+          hideInMenu: true,
+          title: $t('common.create', [$t('system.user.name')]),
+        },
+        component: () => import('#/views/system/user/form.vue'),
+      },
+      {
+        path: '/system/user/:id/edit',
+        name: 'SystemUserEdit',
+        meta: {
+          activePath: '/system/user',
+          hideInMenu: true,
+          title: $t('common.edit', [$t('system.user.name')]),
+        },
+        component: () => import('#/views/system/user/form.vue'),
+      },
+      {
         path: '/system/position',
         name: 'SystemPosition',
         meta: {
@@ -54,6 +74,26 @@ const routes: RouteRecordRaw[] = [
           authority: [PermissionCodes.PositionManagement],
         },
         component: () => import('#/views/system/position/list.vue'),
+      },
+      {
+        path: '/system/org-users',
+        name: 'SystemOrgUsers',
+        meta: {
+          icon: 'charm:people',
+          title: $t('system.orgUsers.title'),
+          authority: [PermissionCodes.UserView],
+        },
+        component: () => import('#/views/system/org-users/index.vue'),
+      },
+      {
+        path: '/system/operation-log',
+        name: 'SystemOperationLog',
+        meta: {
+          icon: 'mdi:history',
+          title: $t('system.operationLog.title'),
+          authority: [PermissionCodes.OperationLogView],
+        },
+        component: () => import('#/views/system/operation-log/list.vue'),
       },
     ],
   },

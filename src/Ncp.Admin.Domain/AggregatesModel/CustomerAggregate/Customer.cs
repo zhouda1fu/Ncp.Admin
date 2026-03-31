@@ -1,5 +1,6 @@
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.DomainEvents.CustomerEvents;
@@ -37,9 +38,19 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public virtual ICollection<CustomerIndustry> Industries { get; } = [];
 
     /// <summary>
-    /// 负责人用户 ID
+    /// 负责人用户 ID（公海/无负责人时为哨兵 <c>new UserId(0)</c>）
     /// </summary>
-    public UserId? OwnerId { get; private set; }
+    public UserId OwnerId { get; private set; } = new UserId(0);
+
+    /// <summary>
+    /// 负责人所属部门 ID（冗余，便于列表/展示与数据权限过滤；无部门时为哨兵 <c>new DeptId(0)</c>）
+    /// </summary>
+    public DeptId OwnerDeptId { get; private set; } = new DeptId(0);
+
+    /// <summary>
+    /// 负责人所属部门名称（冗余，便于列表/展示）
+    /// </summary>
+    public string OwnerDeptName { get; private set; } = string.Empty;
 
     /// <summary>
     /// 客户来源 ID（主数据，必填）
@@ -231,6 +242,11 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public DateTimeOffset? ClaimedAt { get; private set; }
 
     /// <summary>
+    /// 共享给用户列表（子实体集合；共享用户可绕过数据范围直接可见该客户）
+    /// </summary>
+    public virtual ICollection<CustomerShare> Shares { get; } = [];
+
+    /// <summary>
     /// 创建时间
     /// </summary>
     public DateTimeOffset CreatedAt { get; init; }
@@ -245,6 +261,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// </summary>
     public Customer(
         UserId ownerId,
+        DeptId ownerDeptId,
+        string? ownerDeptName,
         CustomerSourceId customerSourceId,
         string customerSourceName,
         string fullName,
@@ -279,6 +297,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string creatorName)
     {
         OwnerId = ownerId;
+        OwnerDeptId = ownerDeptId;
+        OwnerDeptName = ownerDeptName ?? string.Empty;
         CustomerSourceId = customerSourceId;
         CustomerSourceName = customerSourceName;
         IsVoided = false;
@@ -345,7 +365,9 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         UserId creatorId,
         string creatorName)
     {
-        OwnerId = null;
+        OwnerId = new UserId(0);
+        OwnerDeptId = new DeptId(0);
+        OwnerDeptName = string.Empty;
         CustomerSourceId = customerSourceId;
         CustomerSourceName = customerSourceName;
         IsVoided = false;
@@ -400,7 +422,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// 更新客户档案；公海客户需先领用后再改
     /// </summary>
     public void Update(
-        UserId? ownerId,
+        UserId ownerId,
         CustomerSourceId customerSourceId,
         string customerSourceName,
         string fullName,
@@ -572,8 +594,10 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     {
         if (IsInSea)
             return;
-        OwnerId = null;
+        OwnerId = new UserId(0);
         OwnerName = string.Empty;
+        OwnerDeptId = new DeptId(0);
+        OwnerDeptName = string.Empty;
         ClaimedAt = null;
         IsInSea = true;
         ReleasedToSeaAt = DateTimeOffset.UtcNow;
@@ -595,6 +619,39 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ReleasedToSeaAt = null;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
         AddDomainEvent(new CustomerClaimedFromSeaDomainEvent(this));
+    }
+
+    /// <summary>
+    /// 设置负责人部门信息（冗余字段）
+    /// </summary>
+    public void SetOwnerDept(DeptId deptId, string? deptName)
+    {
+        OwnerDeptId = deptId;
+        OwnerDeptName = deptName ?? string.Empty;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    public void ShareToUsers(UserId sharedByUserId, IEnumerable<UserId> sharedToUserIds)
+    {
+        var ids = (sharedToUserIds ?? Enumerable.Empty<UserId>()).Distinct().ToList();
+        Shares.Clear();
+        var now = DateTimeOffset.UtcNow;
+        foreach (var uid in ids)
+        {
+            Shares.Add(new CustomerShare(Id, uid, sharedByUserId, now));
+        }
+        UpdateTime = new UpdateTime(now);
+    }
+
+    public void UnshareUsers(IEnumerable<UserId> sharedToUserIds)
+    {
+        var ids = (sharedToUserIds ?? Enumerable.Empty<UserId>()).Distinct().ToHashSet();
+        if (ids.Count == 0) return;
+
+        var toRemove = Shares.Where(s => ids.Contains(s.SharedToUserId)).ToList();
+        foreach (var s in toRemove)
+            Shares.Remove(s);
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
     /// <summary>
@@ -678,7 +735,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         DateTimeOffset recordAt,
         string recordType,
         string content,
-        UserId? recorderId,
+        UserId recorderId,
         string recorderName)
     {
         var record = CustomerContactRecord.Create(Id, recordAt, recordType, content, recorderId, recorderName);

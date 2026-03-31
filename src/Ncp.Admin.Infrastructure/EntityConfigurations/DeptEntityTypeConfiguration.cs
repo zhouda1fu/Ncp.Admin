@@ -23,6 +23,10 @@ internal class DeptEntityTypeConfiguration : IEntityTypeConfiguration<Dept>
         builder.Property(d => d.Remark)
             .HasMaxLength(500);
 
+        builder.Property(d => d.ManagerId)
+            .IsRequired()
+            .HasComment("部门主管用户ID");
+
         builder.Property(d => d.Status)
             .IsRequired();
 
@@ -38,6 +42,7 @@ internal class DeptEntityTypeConfiguration : IEntityTypeConfiguration<Dept>
 
         // 索引
         builder.HasIndex(d => d.ParentId);
+        builder.HasIndex(d => d.ManagerId);
         builder.HasIndex(d => d.Status);
         builder.HasIndex(d => d.IsDeleted);
 

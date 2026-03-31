@@ -13,6 +13,8 @@ import {
   DescriptionsItem,
   message,
   Modal,
+  Step,
+  Steps,
   Tag,
   Timeline,
   TimelineItem,
@@ -21,10 +23,16 @@ import {
 import {
   approveTask,
   cancelWorkflow,
+  getDefinition,
   getInstance,
   rejectTask,
 } from '#/api/system/workflow';
 import { $t } from '#/locales';
+import {
+  definitionJsonToStepList,
+  findCurrentStepIndex,
+  type StepItem,
+} from './definitionToSteps';
 
 const route = useRoute();
 const router = useRouter();
@@ -32,6 +40,8 @@ const router = useRouter();
 const instanceId = computed(() => route.params.id as string);
 const detail = ref<WorkflowApi.WorkflowInstanceDetail>();
 const loading = ref(false);
+const definitionLoading = ref(false);
+const stepList = ref<StepItem[]>([]);
 
 const instanceStatusLabels: Record<
   number,
@@ -92,14 +102,73 @@ const taskTypeLabels: Record<number, string> = {
   2: $t('system.workflow.task.taskTypeCarbonCopy'),
 };
 
+function applyProgressStepsFromDetail() {
+  const steps = detail.value?.progressSteps;
+  if (steps && steps.length > 0) {
+    stepList.value = steps.map((s) => ({
+      title: s.title,
+      nodeKey: s.nodeKey?.trim() || undefined,
+    }));
+    return true;
+  }
+  return false;
+}
+
 async function loadDetail() {
   loading.value = true;
   try {
     detail.value = await getInstance(instanceId.value);
+    if (!applyProgressStepsFromDetail()) {
+      await loadDefinitionStepsFallback();
+    }
   } finally {
     loading.value = false;
   }
 }
+
+/** 旧接口或未返回 progressSteps 时：仅用定义 JSON 展平（无条件变量，条件路由取第一条分支） */
+async function loadDefinitionStepsFallback() {
+  const defId = detail.value?.workflowDefinitionId;
+  if (!defId) {
+    stepList.value = [];
+    return;
+  }
+  definitionLoading.value = true;
+  try {
+    const def = await getDefinition(defId);
+    stepList.value = definitionJsonToStepList(def?.definitionJson ?? '');
+  } catch {
+    stepList.value = [];
+  } finally {
+    definitionLoading.value = false;
+  }
+}
+
+/** 展示用步骤列表：在解析出的节点后追加「结束」一步 */
+const displayStepList = computed(() => {
+  if (stepList.value.length === 0) return [];
+  return [
+    ...stepList.value,
+    { title: $t('system.workflow.instance.progressEnd') },
+  ];
+});
+
+const currentStepIndex = computed(() => {
+  if (!detail.value || displayStepList.value.length === 0) return 0;
+  const status = detail.value.status;
+  const isEnded =
+    status === 2 ||
+    status === 3 ||
+    status === 4 ||
+    status === 5; /* 已完成/已驳回/已取消/异常 */
+  if (isEnded) return displayStepList.value.length - 1;
+  const idx = findCurrentStepIndex(
+    stepList.value,
+    detail.value.currentNodeName,
+    detail.value.currentNodeKey,
+  );
+  return idx;
+});
 
 function getTimelineColor(status: number): string {
   const colors: Record<number, string> = {
@@ -164,6 +233,22 @@ function onCancel() {
 
 function onBack() {
   router.back();
+}
+
+function onEditTask(task: WorkflowApi.WorkflowTask) {
+  if (!detail.value) return;
+  
+  const businessType = detail.value.businessType;
+  const businessKey = detail.value.businessKey;
+  const workflowId = instanceId.value;
+  
+  console.log('编辑按钮点击:', { businessType, businessKey, workflowId });
+  
+  if (businessType === 'Order' && businessKey) {
+    router.push(`/order/${businessKey}/edit?workflowId=${workflowId}`);
+  } else {
+    message.warning('暂不支持该类型的编辑操作');
+  }
 }
 
 onMounted(() => {
@@ -238,6 +323,21 @@ onMounted(() => {
         </div>
       </Card>
 
+      <!-- 流程进度 -->
+      <Card
+        v-if="detail && displayStepList.length > 0"
+        :loading="definitionLoading"
+        :title="$t('system.workflow.instance.progressTitle')"
+      >
+        <Steps :current="currentStepIndex" size="small">
+          <Step
+            v-for="(step, index) in displayStepList"
+            :key="index"
+            :title="step.title"
+          />
+        </Steps>
+      </Card>
+
       <!-- 审批时间线 -->
       <Card
         v-if="detail && detail.tasks?.length > 0"
@@ -280,7 +380,13 @@ onMounted(() => {
                 </div>
               </div>
               <!-- 当前待办任务的操作按钮 -->
-              <div v-if="task.status === 0" class="ml-4 flex gap-2">
+              <div v-if="task.status === 0 && task.canOperate" class="ml-4 flex gap-2">
+                <Button
+                  size="small"
+                  @click="onEditTask(task)"
+                >
+                  编辑
+                </Button>
                 <Button
                   size="small"
                   type="primary"

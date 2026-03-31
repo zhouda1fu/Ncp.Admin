@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Ncp.Admin.Domain.AggregatesModel.DocumentAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure.Services;
-using Ncp.Admin.Web.Application.Commands.Document;
+using Ncp.Admin.Web.Application.Commands.DocumentModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Document;

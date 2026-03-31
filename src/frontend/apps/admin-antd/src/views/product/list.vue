@@ -4,30 +4,23 @@ import type { VbenFormSchema } from '#/adapter/form';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { ProductApi } from '#/api/system/product';
 
-import { ref } from 'vue';
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { Page } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
+import { useRouter } from 'vue-router';
 
 import { Button, message, Modal } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import {
-  deleteProduct,
-  getProductList,
-} from '#/api/system/product';
+import { deleteProduct, getProductList } from '#/api/system/product';
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
-import Form from './modules/form.vue';
 
-const [FormDrawer, formDrawerApi] = useVbenDrawer({
-  connectedComponent: Form,
-  destroyOnClose: true,
-});
+const router = useRouter();
 
 function onActionClick(e: OnActionClickParams<ProductApi.ProductItem>) {
   if (e.code === 'edit') {
-    formDrawerApi.setData(e.row).open();
+    router.push(`/product/form/${e.row.id}`);
   } else if (e.code === 'delete') {
     Modal.confirm({
       title: $t('product.confirmDelete'),
@@ -81,13 +74,12 @@ function onRefresh() {
 }
 
 function onCreate() {
-  formDrawerApi.setData({}).open();
+  router.push('/product/form');
 }
 </script>
 
 <template>
   <Page auto-content-height>
-    <FormDrawer @success="onRefresh" />
     <Grid :table-title="$t('product.list')">
       <template #toolbar-tools>
         <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.DocumentAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ShareLinkAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Web.Application.Commands.ShareLink;
+using Ncp.Admin.Web.Application.Commands.ShareLinkModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.ShareLink;

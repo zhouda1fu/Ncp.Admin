@@ -36,17 +36,27 @@ const [Drawer, drawerApi] = useVbenDrawer({
     drawerApi.lock();
     try {
       if (id.value) {
+        if ((values.dataScope ?? 0) !== 4) {
+          await formApi.setValues({ customDeptIds: [] });
+        }
         await updateRole(id.value, {
           name: values.name,
           description: values.description || '',
           dataScope: values.dataScope ?? 0,
+          customDeptIds:
+            (values.dataScope ?? 0) === 4 ? (values.customDeptIds ?? []) : [],
           permissionCodes: values.permissionCodes || [],
         });
       } else {
+        if ((values.dataScope ?? 0) !== 4) {
+          await formApi.setValues({ customDeptIds: [] });
+        }
         await createRole({
           name: values.name,
           description: values.description || '',
           dataScope: values.dataScope ?? 0,
+          customDeptIds:
+            (values.dataScope ?? 0) === 4 ? (values.customDeptIds ?? []) : [],
           permissionCodes: values.permissionCodes || [],
         });
       }
@@ -83,6 +93,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           description: data.description || '',
           isActive: data.isActive,
           dataScope: data.dataScope ?? 0,
+          customDeptIds: data.customDeptIds ?? [],
           permissionCodes: data.permissionCodes || [],
         });
       }

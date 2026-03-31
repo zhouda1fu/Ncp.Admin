@@ -19,6 +19,8 @@ export const PermissionCodes = {
   UserView: 'UserView',
   UserRoleAssign: 'UserRoleAssign',
   UserResetPassword: 'UserResetPassword',
+  UserExport: 'UserExport',
+  UserImport: 'UserImport',
 
   // 部门管理权限
   DeptManagement: 'DeptManagement',
@@ -111,6 +113,7 @@ export const PermissionCodes = {
   CustomerContactEdit: 'CustomerContactEdit',
   CustomerReleaseToSea: 'CustomerReleaseToSea',
   CustomerClaimFromSea: 'CustomerClaimFromSea',
+  CustomerShare: 'CustomerShare',
   IndustryView: 'IndustryView',
   IndustryCreate: 'IndustryCreate',
   IndustryEdit: 'IndustryEdit',
@@ -177,6 +180,14 @@ export const PermissionCodes = {
   OrderCreate: 'OrderCreate',
   OrderEdit: 'OrderEdit',
   OrderDelete: 'OrderDelete',
+  OrderSubmit: 'OrderSubmit',
+  OrderSpecialDataDisplay: 'OrderSpecialDataDisplay',
+  OrderContractUpload: 'OrderContractUpload',
+  OrderContractSelect: 'OrderContractSelect',
+  OrderContractNotCompanyTemplate: 'OrderContractNotCompanyTemplate',
+  OrderNeedInvoice: 'OrderNeedInvoice',
+  OrderContractAmount: 'OrderContractAmount',
+  OrderTechnicalStatus: 'OrderTechnicalStatus',
 
   // 产品管理权限
   ProductManagement: 'ProductManagement',
@@ -194,6 +205,10 @@ export const PermissionCodes = {
   LeaveRequestCancel: 'LeaveRequestCancel',
   LeaveBalanceView: 'LeaveBalanceView',
   LeaveBalanceEdit: 'LeaveBalanceEdit',
+
+  // 操作日志权限
+  OperationLogManagement: 'OperationLogManagement',
+  OperationLogView: 'OperationLogView',
 
   // 所有接口访问权限
   AllApiAccess: 'AllApiAccess',

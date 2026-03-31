@@ -9,9 +9,33 @@ import { getDeptTree } from '#/api/system/dept';
 import { $t } from '#/locales';
 
 /**
- * 获取编辑表单的字段配置。如果没有使用多语言，可以直接export一个数组常量
+ * 从部门树中排除指定节点及其所有子节点（编辑时禁止选自己或下级为上级）
  */
-export function useSchema(): VbenFormSchema[] {
+function filterDeptTreeExcluding(
+  nodes: SystemDeptApi.SystemDept[],
+  excludeId?: string,
+): SystemDeptApi.SystemDept[] {
+  if (!excludeId) return nodes;
+  return nodes
+    .map((node) => {
+      if (String(node.id) === String(excludeId)) return null;
+      return {
+        ...node,
+        children: node.children?.length
+          ? filterDeptTreeExcluding(node.children, excludeId)
+          : undefined,
+      };
+    })
+    .filter((n): n is SystemDeptApi.SystemDept => n != null);
+}
+
+/**
+ * 获取编辑表单的字段配置。如果没有使用多语言，可以直接export一个数组常量
+ * @param getExcludeDeptId 编辑时传入当前部门 id 的 getter，用于从上级部门选项中排除自身及其子部门
+ */
+export function useSchema(
+  getExcludeDeptId?: () => string | undefined,
+): VbenFormSchema[] {
   return [
     {
       component: 'Input',
@@ -29,7 +53,10 @@ export function useSchema(): VbenFormSchema[] {
       component: 'ApiTreeSelect',
       componentProps: {
         allowClear: true,
-        api: getDeptTree,
+        api: async () => {
+          const tree = await getDeptTree();
+          return filterDeptTreeExcluding(tree, getExcludeDeptId?.());
+        },
         class: 'w-full',
         labelField: 'name',
         valueField: 'id',
@@ -91,6 +118,11 @@ export function useColumns(
       field: 'status',
       title: $t('system.dept.status'),
       width: 100,
+    },
+    {
+      field: 'managerId',
+      title: $t('system.dept.manager'),
+      width: 120,
     },
     {
       formatter: 'formatDateTime',

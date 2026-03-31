@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
 /// <summary>
 /// 部门查询DTO
 /// </summary>
-public record DeptQueryDto(DeptId Id, string Name, string Remark, DeptId ParentId, int Status, DateTimeOffset CreatedAt, DeletedTime? DeletedAt);
+public record DeptQueryDto(DeptId Id, string Name, string Remark, DeptId ParentId, UserId ManagerId, int Status, DateTimeOffset CreatedAt, DeletedTime? DeletedAt);
 
 /// <summary>
 /// 部门查询输入参数
@@ -27,6 +28,7 @@ public record DeptTreeDto(
     string Name,
     string Remark,
     DeptId ParentId,
+    UserId ManagerId,
     int Status,
     DateTimeOffset CreatedAt,
     IEnumerable<DeptTreeDto> Children);
@@ -63,8 +65,31 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
     {
         return await DeptSet.AsNoTracking()
             .Where(d => d.Id == id)
-            .Select(d => new DeptQueryDto(d.Id, d.Name, d.Remark, d.ParentId, d.Status, d.CreatedAt, d.DeletedAt))
+            .Select(d => new DeptQueryDto(d.Id, d.Name, d.Remark, d.ParentId, d.ManagerId, d.Status, d.CreatedAt, d.DeletedAt))
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// 按部门名称精确匹配；若存在多条同名部门返回 null（由调用方提示不唯一）。
+    /// </summary>
+    public async Task<DeptQueryDto?> GetDeptByExactNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return null;
+        }
+
+        var trimmed = name.Trim();
+        var matches = await DeptSet.AsNoTracking()
+            .Where(d => d.Name == trimmed)
+            .Select(d => new DeptQueryDto(d.Id, d.Name, d.Remark, d.ParentId, d.ManagerId, d.Status, d.CreatedAt, d.DeletedAt))
+            .ToListAsync(cancellationToken);
+        if (matches.Count != 1)
+        {
+            return null;
+        }
+
+        return matches[0];
     }
 
     /// <summary>
@@ -78,7 +103,7 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
             .WhereIf(query.Status.HasValue, d => d.Status == query.Status)
             .WhereIf(query.ParentId != null, d => d.ParentId == query.ParentId)
             .OrderBy(d => d.CreatedAt)
-            .Select(d => new DeptQueryDto(d.Id, d.Name, d.Remark, d.ParentId, d.Status, d.CreatedAt, d.DeletedAt))
+            .Select(d => new DeptQueryDto(d.Id, d.Name, d.Remark, d.ParentId, d.ManagerId, d.Status, d.CreatedAt, d.DeletedAt))
             .ToListAsync(cancellationToken);
     }
 
@@ -97,6 +122,7 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
                 Name = d.Name,
                 Remark = d.Remark,
                 ParentId = d.ParentId,
+                ManagerId = d.ManagerId,
                 Status = d.Status,
                 CreatedAt = d.CreatedAt
             })
@@ -155,6 +181,7 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
             Name = dept.Name,
             Remark = dept.Remark,
             ParentId = dept.ParentId,
+            ManagerId = dept.ManagerId,
             Status = dept.Status,
             CreatedAt = dept.CreatedAt,
             Children = children
@@ -200,6 +227,7 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
             node.Name,
             node.Remark,
             node.ParentId,
+            node.ManagerId,
             node.Status,
             node.CreatedAt,
             children
@@ -211,10 +239,11 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
     /// </summary>
     private sealed class DeptTreeNode
     {
-        public DeptId Id { get; set; }=default!;
+        public DeptId Id { get; set; } = default!;
         public string Name { get; set; } = string.Empty;
         public string Remark { get; set; } = string.Empty;
-        public DeptId ParentId { get; set; }=default!;
+        public DeptId ParentId { get; set; } = default!;
+        public UserId ManagerId { get; set; } = default!;
         public int Status { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public List<DeptTreeNode> Children { get; set; } = new();

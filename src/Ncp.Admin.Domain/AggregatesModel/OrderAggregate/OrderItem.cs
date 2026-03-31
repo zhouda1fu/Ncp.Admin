@@ -1,5 +1,7 @@
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.ProductAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProductCategoryAggregate;
+using Ncp.Admin.Domain.AggregatesModel.ProductTypeAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 
@@ -22,8 +24,46 @@ public class OrderItem : Entity<OrderItemId>
     /// <summary>产品 ID（必填）</summary>
     public ProductId ProductId { get; private set; } = default!;
 
+    /// <summary>
+    /// 产品分类
+    /// </summary>
+    public ProductCategoryId ProductCategoryId { get; private set; } = default!;
+
+    /// <summary>
+    /// 产品类型
+    /// </summary>
+
+    public ProductTypeId ProductTypeId { get; private set; } = default!;
+    /// <summary>
+    /// 图片地址
+    /// </summary>
+    public string ImagePath { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 安装完成情况
+    /// </summary>
+    public string InstallNotes { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 培训时长
+    /// </summary>
+    public string TrainingDuration { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 配货状态 0：未配货 1：已配货
+    /// </summary>
+    public int PackingStatus { get; private set; }
+
+    /// <summary>
+    /// 复核状态 0未复核 1：已复核
+    /// </summary>
+    public int ReviewStatus { get; private set; }
+
+
+
     /// <summary>产品名称（冗余）</summary>
     public string ProductName { get; private set; } = string.Empty;
+   
 
     /// <summary>型号</summary>
     public string Model { get; private set; } = string.Empty;
@@ -54,6 +94,13 @@ public class OrderItem : Entity<OrderItemId>
         return new OrderItem
         {
             ProductId = data.ProductId,
+            ProductCategoryId = data.ProductCategoryId,
+            ProductTypeId = data.ProductTypeId,
+            ImagePath = data.ImagePath ?? string.Empty,
+            InstallNotes = data.InstallNotes ?? string.Empty,
+            TrainingDuration = data.TrainingDuration ?? string.Empty,
+            PackingStatus = data.PackingStatus,
+            ReviewStatus = data.ReviewStatus,
             ProductName = data.ProductName ?? string.Empty,
             Model = data.Model ?? string.Empty,
             Number = data.Number ?? string.Empty,

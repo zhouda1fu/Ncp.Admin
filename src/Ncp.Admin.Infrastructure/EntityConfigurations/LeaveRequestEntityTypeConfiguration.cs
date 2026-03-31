@@ -24,7 +24,7 @@ internal class LeaveRequestEntityTypeConfiguration : IEntityTypeConfiguration<Le
         builder.Property(r => r.Days).IsRequired();
         builder.Property(r => r.Reason).HasMaxLength(500);
         builder.Property(r => r.Status).IsRequired();
-        builder.Property(r => r.WorkflowInstanceId);
+        builder.Property(r => r.WorkflowInstanceId).IsRequired().HasComment("工作流实例ID（未提交为 Guid.Empty）");
         builder.Property(r => r.CreatedAt).IsRequired();
         builder.Property(r => r.UpdateTime);
 

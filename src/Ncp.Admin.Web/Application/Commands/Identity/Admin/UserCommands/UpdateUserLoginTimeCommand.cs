@@ -4,7 +4,7 @@ using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 
-public record UpdateUserLoginTimeCommand(UserId UserId, DateTimeOffset LoginTime, string RefreshToken) : ICommand;
+public record UpdateUserLoginTimeCommand(UserId UserId, DateTimeOffset LoginTime, string RefreshToken, string? LoginIp) : ICommand;
 
 public class UpdateUserLoginTimeCommandHandler(IUserRepository userRepository) : ICommandHandler<UpdateUserLoginTimeCommand>
 {
@@ -13,7 +13,7 @@ public class UpdateUserLoginTimeCommandHandler(IUserRepository userRepository) :
         var user = await userRepository.GetAsync(request.UserId, cancellationToken)
                    ?? throw new KnownException($"未找到用户，UserId = {request.UserId}", ErrorCodes.UserNotFound);
 
-        user.UpdateLastLoginTime(request.LoginTime);
+        user.UpdateLastLoginTime(request.LoginTime, request.LoginIp);
         user.SetUserRefreshToken(request.RefreshToken);
     }
 }

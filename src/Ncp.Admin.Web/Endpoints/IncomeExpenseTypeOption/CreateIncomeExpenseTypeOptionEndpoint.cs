@@ -3,7 +3,7 @@ using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain.AggregatesModel.IncomeExpenseTypeOptionAggregate;
-using Ncp.Admin.Web.Application.Commands.IncomeExpenseTypeOption;
+using Ncp.Admin.Web.Application.Commands.IncomeExpenseTypeOptionModule;
 using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.IncomeExpenseTypeOption;
