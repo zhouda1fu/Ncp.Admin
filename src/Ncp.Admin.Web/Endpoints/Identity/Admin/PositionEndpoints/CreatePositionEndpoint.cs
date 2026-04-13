@@ -27,7 +27,7 @@ public class CreatePositionEndpoint(IMediator mediator) : Endpoint<CreatePositio
     public override void Configure()
     {
         Tags("Positions");
-        Description(b => b.AutoTagOverride("Positions"));
+        Description(b => b.AutoTagOverride("Positions").WithSummary("创建岗位"));
         Post("/api/admin/position");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionCreate);

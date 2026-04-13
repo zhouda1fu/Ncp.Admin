@@ -15,6 +15,9 @@ public record AddCustomerContactCommand(
     string Mobile,
     string Phone,
     string Email,
+    string Qq,
+    string Wechat,
+    bool IsWechatAdded,
     bool IsPrimary) : ICommand<CustomerContactId>;
 
 public class AddCustomerContactCommandValidator : AbstractValidator<AddCustomerContactCommand>
@@ -23,6 +26,13 @@ public class AddCustomerContactCommandValidator : AbstractValidator<AddCustomerC
     {
         RuleFor(c => c.CustomerId).NotEmpty();
         RuleFor(c => c.Name).NotEmpty().MaximumLength(50);
+        RuleFor(c => c).Must(c => CustomerContactCommandValidation.HasAtLeastOneContactChannel(
+                c.Mobile, c.Phone, c.Qq, c.Wechat))
+            .WithMessage(CustomerContactCommandValidation.AtLeastOneChannelMessage);
+        RuleFor(c => c.Mobile).Must(CustomerContactCommandValidation.IsValidMobileIfPresent)
+            .WithMessage(CustomerContactCommandValidation.MobileFormatMessage);
+        RuleFor(c => c.Qq).Must(CustomerContactCommandValidation.IsValidQqIfPresent)
+            .WithMessage(CustomerContactCommandValidation.QqFormatMessage);
     }
 }
 
@@ -30,11 +40,13 @@ public class AddCustomerContactCommandHandler(ICustomerRepository repository) : 
 {
     public async Task<CustomerContactId> Handle(AddCustomerContactCommand request, CancellationToken cancellationToken)
     {
-        var customer = await repository.GetAsync(request.CustomerId, cancellationToken)
+        var customer = await repository.GetWithContactsAsync(request.CustomerId, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
         var id = customer.AddContact(
             request.Name, request.ContactType , request.Gender, request.Birthday,
-            request.Position , request.Mobile , request.Phone , request.Email , request.IsPrimary);
+            request.Position , request.Mobile , request.Phone , request.Email,
+            request.Qq, request.Wechat, request.IsWechatAdded,
+            request.IsPrimary);
         return id;
     }
 }

@@ -4,7 +4,7 @@ import type { Recordable } from '@vben/types';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { Icon as IconifyIcon } from '@iconify/vue';
+import { IconifyIcon } from '@vben/icons';
 import { Button, Input, message, Select } from 'ant-design-vue';
 
 import {

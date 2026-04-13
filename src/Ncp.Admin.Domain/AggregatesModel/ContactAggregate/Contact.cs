@@ -1,3 +1,4 @@
+using System;
 using Ncp.Admin.Domain.AggregatesModel.ContactGroupAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
@@ -13,6 +14,9 @@ public partial record ContactId : IGuidStronglyTypedId;
 /// </summary>
 public class Contact : Entity<ContactId>, IAggregateRoot
 {
+    /// <summary>未分组占位（<see cref="Guid.Empty"/>）</summary>
+    public static ContactGroupId UnassignedGroupId { get; } = new(Guid.Empty);
+
     protected Contact() { }
 
     /// <summary>
@@ -36,9 +40,9 @@ public class Contact : Entity<ContactId>, IAggregateRoot
     public string? Company { get; private set; }
 
     /// <summary>
-    /// 所属分组ID（可选）
+    /// 所属分组 ID（未分组为 <see cref="UnassignedGroupId"/>）
     /// </summary>
-    public ContactGroupId? GroupId { get; private set; }
+    public ContactGroupId GroupId { get; private set; } = UnassignedGroupId;
 
     /// <summary>
     /// 创建人用户ID
@@ -65,14 +69,14 @@ public class Contact : Entity<ContactId>, IAggregateRoot
         Phone = phone;
         Email = email;
         Company = company;
-        GroupId = groupId;
+        GroupId = groupId ?? UnassignedGroupId;
         CreatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
     /// 更新联系人信息
     /// </summary>
-    public void Update(string name, string? phone, string? email, string? company, ContactGroupId? groupId)
+    public void Update(string name, string? phone, string? email, string? company, ContactGroupId groupId)
     {
         Name = name ;
         Phone = phone;

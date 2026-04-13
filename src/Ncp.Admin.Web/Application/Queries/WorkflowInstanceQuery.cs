@@ -3,7 +3,9 @@ using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
+using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Services.Workflow;
+using NetCorePal.Context;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
@@ -126,7 +128,10 @@ public class CompletedTaskQueryInput : PageRequest
 /// <summary>
 /// 流程实例查询
 /// </summary>
-public class WorkflowInstanceQuery(ApplicationDbContext applicationDbContext, UserQuery userQuery) : IQuery
+public class WorkflowInstanceQuery(
+    ApplicationDbContext applicationDbContext,
+    UserQuery userQuery,
+    IContextAccessor contextAccessor) : IQuery
 {
     private DbSet<WorkflowInstance> InstanceSet { get; } = applicationDbContext.WorkflowInstances;
     private DbSet<WorkflowTask> TaskSet { get; } = applicationDbContext.WorkflowTasks;
@@ -282,15 +287,59 @@ public class WorkflowInstanceQuery(ApplicationDbContext applicationDbContext, Us
     {
         var userRoleIds = await userQuery.GetRoleIdsByUserIdAsync(assigneeId, cancellationToken);
 
-        // “我的待办”应按任务归属（Assignee/Role）过滤，不应受流程实例发起人部门数据权限误伤。
+        // “我的待办”按任务归属 + 数据权限交集过滤。
         var baseQuery = from t in TaskSet.AsNoTracking()
-                        join i in InstanceSet.AsNoTracking().IgnoreQueryFilters()
+                        join i in InstanceSet.AsNoTracking()
                             on t.WorkflowInstanceId equals i.Id
                         where i.Status == WorkflowInstanceStatus.Running
                               && t.Status == WorkflowTaskStatus.Pending
                               && ((t.AssigneeId != new UserId(0) && t.AssigneeId == assigneeId)
                                   || (t.AssigneeRoleId != new RoleId(Guid.Empty) && userRoleIds.Contains(t.AssigneeRoleId)))
                         select new { Instance = i, Task = t };
+        var dataPermission = contextAccessor.GetContext<DataPermissionContext>();
+        if (dataPermission is { Scope: not DataScope.All })
+        {
+            switch (dataPermission.Scope)
+            {
+                case DataScope.Self:
+                {
+                    if (dataPermission.UserId == null)
+                    {
+                        baseQuery = baseQuery.Where(_ => false);
+                    }
+                    else
+                    {
+                        var currentUserId = dataPermission.UserId;
+                        baseQuery = baseQuery.Where(x => x.Instance.InitiatorId == currentUserId);
+                    }
+
+                    break;
+                }
+                case DataScope.Dept:
+                {
+                    if (dataPermission.DeptId == null)
+                    {
+                        baseQuery = baseQuery.Where(_ => false);
+                    }
+                    else
+                    {
+                        var currentDeptId = dataPermission.DeptId;
+                        baseQuery = baseQuery.Where(x => x.Instance.InitiatorDeptId == currentDeptId);
+                    }
+
+                    break;
+                }
+                case DataScope.DeptAndSub:
+                case DataScope.CustomDeptAndSub:
+                {
+                    var deptIds = dataPermission.AuthorizedDeptIds ?? [];
+                    baseQuery = deptIds.Count == 0
+                        ? baseQuery.Where(_ => false)
+                        : baseQuery.Where(x => deptIds.Contains(x.Instance.InitiatorDeptId));
+                    break;
+                }
+            }
+        }
         if (!string.IsNullOrWhiteSpace(query.Title))
         {
             baseQuery = baseQuery.Where(x => x.Instance.Title.Contains(query.Title));
@@ -319,14 +368,58 @@ public class WorkflowInstanceQuery(ApplicationDbContext applicationDbContext, Us
     {
         var userRoleIds = await userQuery.GetRoleIdsByUserIdAsync(assigneeId, cancellationToken);
 
-        // “我的已办”同理按任务归属过滤，避免被实例发起人部门过滤。
+        // “我的已办”同理按任务归属 + 数据权限交集过滤。
         var baseQuery = from t in TaskSet.AsNoTracking()
-                        join i in InstanceSet.AsNoTracking().IgnoreQueryFilters()
+                        join i in InstanceSet.AsNoTracking()
                             on t.WorkflowInstanceId equals i.Id
                         where t.Status != WorkflowTaskStatus.Pending
                               && ((t.AssigneeId != new UserId(0) && t.AssigneeId == assigneeId)
                                   || (t.AssigneeRoleId != new RoleId(Guid.Empty) && userRoleIds.Contains(t.AssigneeRoleId)))
                         select new { Instance = i, Task = t };
+        var dataPermission = contextAccessor.GetContext<DataPermissionContext>();
+        if (dataPermission is { Scope: not DataScope.All })
+        {
+            switch (dataPermission.Scope)
+            {
+                case DataScope.Self:
+                {
+                    if (dataPermission.UserId == null)
+                    {
+                        baseQuery = baseQuery.Where(_ => false);
+                    }
+                    else
+                    {
+                        var currentUserId = dataPermission.UserId;
+                        baseQuery = baseQuery.Where(x => x.Instance.InitiatorId == currentUserId);
+                    }
+
+                    break;
+                }
+                case DataScope.Dept:
+                {
+                    if (dataPermission.DeptId == null)
+                    {
+                        baseQuery = baseQuery.Where(_ => false);
+                    }
+                    else
+                    {
+                        var currentDeptId = dataPermission.DeptId;
+                        baseQuery = baseQuery.Where(x => x.Instance.InitiatorDeptId == currentDeptId);
+                    }
+
+                    break;
+                }
+                case DataScope.DeptAndSub:
+                case DataScope.CustomDeptAndSub:
+                {
+                    var deptIds = dataPermission.AuthorizedDeptIds ?? [];
+                    baseQuery = deptIds.Count == 0
+                        ? baseQuery.Where(_ => false)
+                        : baseQuery.Where(x => deptIds.Contains(x.Instance.InitiatorDeptId));
+                    break;
+                }
+            }
+        }
         if (!string.IsNullOrWhiteSpace(query.Title))
         {
             baseQuery = baseQuery.Where(x => x.Instance.Title.Contains(query.Title));

@@ -3,15 +3,26 @@ name: ncp-admin-frontend
 description: Follows Vben Admin patterns when developing Ncp.Admin frontend (Vue 3 + Vite + TypeScript + Ant Design Vue). Use when adding or modifying views, API modules, routes, locales, or components in src/frontend/apps/admin-antd.
 ---
 
-# Ncp.Admin 前端开发规范（补充）
+# Ncp.Admin 前端开发规范（详细）
 
-路径、文件结构、常用约定见 **.cursor/rules/frontend-vben.mdc**。本技能仅保留易错点与**权限/菜单检查清单**。
+路径与常用约定摘要见 **`.cursor/rules/frontend-vben.mdc`**。下文为易错点、**权限/菜单检查清单**、表单抽屉与路由高亮的完整说明（以本技能为准）。
 
 ---
 
 ## API 层
 
 - `namespace` 定义类型；`requestClient` 发请求；函数命名：`getXxxList`、`getXxx`、`createXxx`、`updateXxx`、`deleteXxx`；文件末尾集中 `export { ... }`。
+
+---
+
+## 表单抽屉（Drawer）
+
+**带表单的抽屉必须与主题一致**，统一使用 **useVbenDrawer + useVbenForm**，不要使用 Ant Design Vue 的 `Drawer` 组件 + 手写表单项。
+
+- **抽屉壳**：`useVbenDrawer`（来自 `@vben/common-ui`），提供标题、关闭、底部取消/确定、提交中 lock 等，与其它抽屉样式一致。
+- **表单内容**：`useVbenForm` + 在 `data.ts` 中定义的 **表单 schema**（与主表单一样用 `VbenFormSchema`、`z` 校验、`formItemClass` 等），保证标签、间距、栅格与主题表单一致。
+- **流程**：打开时 `drawerApi.setData({ ... }).open()`，在 `onOpenChange(isOpen)` 里根据 `drawerApi.getData()` 给 `formApi.setValues(...)`；确定时在 `onConfirm` 里 `formApi.validate()` → `formApi.getValues()` → 调接口或写本地状态，成功后 `drawerApi.close()`，提交中用 `drawerApi.lock(true/false)`。
+- **参考**：`src/views/contract/form-page.vue` 中的新增/编辑发票抽屉、`src/views/customer/modules/contact-drawer.vue`、`src/views/leave/balances/modules/form.vue`。
 
 ---
 
@@ -51,7 +62,7 @@ meta: {
 1. **权限码**：`src/constants/permission-codes.ts`，与后端 `PermissionCodes.cs` 一致。
 2. **权限树**：`src/utils/permission-tree.ts` 的 `buildPermissionTree()` 中增加与后端层级一致的节点；**不加则角色管理里无法勾选、菜单可能不显示**。
 3. **父级菜单**：父路由 `authority` 写成数组，包含父权限码和所有子权限码，这样拥有任一子权限即可看到父菜单。
-4. **新菜单项**：若新功能是独立菜单页，除 1–3 外，必须在父路由 `children` 中增加一条路由（path、name、meta、component），并配套 views/api/locales；**只加权限不加子路由，侧边栏不会出现该菜单**。后端需同步：PermissionCodes、PermissionDefinitionContext、PermissionMapper、端点 `Permissions()`、必要时 Seed（见后端 skill 检查清单）。
+4. **新菜单项**：若新功能是独立菜单页，除 1–3 外，必须在父路由 `children` 中增加一条路由（path、name、meta、component），并配套 views/api/locales；**只加权限不加子路由，侧边栏不会出现该菜单**。后端需同步：PermissionCodes、PermissionDefinitionContext、PermissionMapper、端点 `Permissions()`、必要时 Seed（见 **`.cursor/rules/project-conventions.mdc`** 中「新增需权限的接口时（后端 5 处）」表格）。
 
 ---
 

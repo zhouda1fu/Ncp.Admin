@@ -1,0 +1,39 @@
+using FastEndpoints;
+using FastEndpoints.Swagger;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.ProjectIndustryAggregate;
+using Ncp.Admin.Web.Application.Commands.ProjectIndustries;
+using Ncp.Admin.Web.AppPermissions;
+
+namespace Ncp.Admin.Web.Endpoints.ProjectsIndustries;
+
+/// <summary>
+/// 更新项目行业请求
+/// </summary>
+/// <param name="Id">项目行业 ID</param>
+/// <param name="Name">名称</param>
+/// <param name="SortOrder">排序</param>
+public record UpdateProjectIndustryRequest(ProjectIndustryId Id, string Name, int SortOrder);
+
+/// <summary>
+/// 更新项目行业
+/// </summary>
+public class UpdateProjectIndustryEndpoint(IMediator mediator) : Endpoint<UpdateProjectIndustryRequest, ResponseData<bool>>
+{
+    public override void Configure()
+    {
+        Tags("ProjectIndustry");
+        Description(b => b.AutoTagOverride("ProjectIndustry").WithSummary("更新项目行业"));
+        Put("/api/admin/project-industries/{id}");
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.ProjectIndustryEdit);
+    }
+
+    public override async Task HandleAsync(UpdateProjectIndustryRequest req, CancellationToken ct)
+    {
+        var cmd = new UpdateProjectIndustryCommand(req.Id, req.Name, req.SortOrder);
+        await mediator.Send(cmd, ct);
+        await Send.OkAsync(true.AsResponseData(), cancellation: ct);
+    }
+}

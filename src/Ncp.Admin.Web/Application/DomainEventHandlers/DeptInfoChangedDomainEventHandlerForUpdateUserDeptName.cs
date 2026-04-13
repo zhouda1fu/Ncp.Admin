@@ -1,4 +1,4 @@
-using Ncp.Admin.Domain.DomainEvents.DeptEvents;
+using Ncp.Admin.Domain.DomainEvents;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;

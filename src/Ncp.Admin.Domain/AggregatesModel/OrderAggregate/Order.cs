@@ -7,9 +7,11 @@ using Ncp.Admin.Domain.AggregatesModel.ProductAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProductCategoryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProductTypeAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderLogisticsCompanyAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderLogisticsMethodAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
-using Ncp.Admin.Domain.DomainEvents.OrderEvents;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 
@@ -136,7 +138,7 @@ public class Order : Entity<OrderId>, IAggregateRoot
 
 
     #region 营销 
-    /// <summary>订单明细列表</summary>
+    /// <summary>订单明细列表（EF 用 virtual ICollection；业务上仅通过聚合方法修改）</summary>
     public virtual ICollection<OrderItem> Items { get; } = [];
 
     /// <summary>按产品分类维度的合同优惠（表 order_band）</summary>
@@ -315,8 +317,18 @@ public class Order : Entity<OrderId>, IAggregateRoot
     #endregion
 
     #region 仓库
+    /// <summary>配货人用户ID</summary>
+    public UserId WarehousePickerId { get; private set; } = new UserId(0);
+
+    /// <summary>仓库技术用户ID</summary>
+    public UserId WarehouseTechId { get; private set; } = new UserId(0);
+
+    /// <summary>复核人用户ID</summary>
+    public UserId WarehouseReviewerId { get; private set; } = new UserId(0);
+
     /// <summary>仓库状态warehouse status</summary>
     public WarehouseStatus WarehouseStatus { get; private set; }
+
     #endregion
 
 
@@ -326,6 +338,9 @@ public class Order : Entity<OrderId>, IAggregateRoot
 
     /// <summary>删除时间</summary>
     public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
+
+    /// <summary>并发版本</summary>
+    public RowVersion RowVersion { get; private set; } = new RowVersion(0);
 
     /// <summary>创建人用户 ID</summary>
     public UserId CreatorId { get; private set; } = default!;
@@ -340,9 +355,9 @@ public class Order : Entity<OrderId>, IAggregateRoot
     public WorkflowInstanceId WorkflowInstanceId { get; private set; } = new WorkflowInstanceId(Guid.Empty);
 
     /// <summary>
-    /// 创建订单（初始为草稿，提交审批后进入审核中，由工作流控制后续流转）
+    /// 新建订单（初始为草稿，提交审批后进入审核中，由工作流控制后续流转）；EF 使用无参 <see cref="Order" />。
     /// </summary>
-    public static Order Create(
+    public Order(
         CustomerId customerId,
         string customerName,
         ProjectId projectId,
@@ -397,79 +412,81 @@ public class Order : Entity<OrderId>, IAggregateRoot
         string delayReason,
         string feedback,
         string scontent,
+        UserId warehousePickerId,
+        UserId warehouseTechId,
+        UserId warehouseReviewerId,
         WarehouseStatus warehouseStatus,
         UserId creatorId,
         IEnumerable<OrderItemData> items)
     {
-        var order = new Order
-        {
-            CustomerId = customerId,
-            CustomerName = customerName ?? string.Empty,
-            ProjectId = projectId,
-            OrderNumber = orderNumber ?? string.Empty,
-            Type = type,
-            Status = OrderStatus.Draft,
-            Amount = amount,
-            Remark = remark ?? string.Empty,
-            OwnerId = ownerId,
-            OwnerName = ownerName ?? string.Empty,
-            DeptId = deptId,
-            DeptName = deptName ?? string.Empty,
-            ProjectContactName = projectContactName ?? string.Empty,
-            ProjectContactPhone = projectContactPhone ?? string.Empty,
-            Warranty = warranty ?? string.Empty,
-            ContractSigningCompany = contractSigningCompany ?? string.Empty,
-            ContractTrustee = contractTrustee ?? string.Empty,
-            NeedInvoice = needInvoice,
-            InvoiceTypeId = invoiceTypeId,
-            InstallationFee = installationFee,
-            EstimatedFreight = estimatedFreight,
-            ContractFilesJson = contractFilesJson ?? "[]",
-            StockFilesJson = stockFilesJson ?? "[]",
-            SelectedContractFileId = selectedContractFileId,
-            IsShipped = isShipped,
-            PaymentStatus = paymentStatus,
-            ContractNotCompanyTemplate = contractNotCompanyTemplate,
-            ContractAmount = contractAmount,
-            ReceiverName = receiverName ?? string.Empty,
-            ReceiverPhone = receiverPhone ?? string.Empty,
-            ReceiverAddress = receiverAddress ?? string.Empty,
-            PayDate = payDate,
-            DeliveryDate = deliveryDate,
-            OrderLogisticsCompanyId = orderLogisticsCompanyId,
-            OrderLogisticsMethodId = orderLogisticsMethodId,
-            LogisticsPaymentMethodId = logisticsPaymentMethodId,
-            WaybillNumber = waybillNumber ?? string.Empty,
-            ShippingFee = shippingFee,
-            ShippingFeeIsPay = shippingFeeIsPay,
-            Surcharge = surcharge,
-            IsNoLogo = isNoLogo,
-            AfterSalesServiceId = afterSalesServiceId ?? string.Empty,
-            IsAssess = isAssess,
-            Comments = comments ?? string.Empty,
-            StartDate = startDate,
-            EndDate = endDate,
-            IsRed = isRed,
-            IsFree = isFree,
-            IsRepay = isRepay,
-            RepayDate = repayDate,
-            FRepayDate = fRepayDate,
-            DelayDate = delayDate,
-            DelayReason = delayReason ?? string.Empty,
-            Feedback = feedback ?? string.Empty,
-            Scontent = scontent ?? string.Empty,
-            WarehouseStatus = warehouseStatus,
-            IsDeleted = new Deleted(false),
-            DeletedAt = new DeletedTime(DateTimeOffset.UtcNow),
-            CreatorId = creatorId,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = default,
-            WorkflowInstanceId = new WorkflowInstanceId(Guid.Empty),
-        };
-        order.AddDomainEvent(new OrderCreatedDomainEvent(order));
+        CustomerId = customerId;
+        CustomerName = customerName ?? string.Empty;
+        ProjectId = projectId;
+        OrderNumber = orderNumber ?? string.Empty;
+        Type = type;
+        Status = OrderStatus.Draft;
+        Amount = amount;
+        Remark = remark ?? string.Empty;
+        OwnerId = ownerId;
+        OwnerName = ownerName ?? string.Empty;
+        DeptId = deptId;
+        DeptName = deptName ?? string.Empty;
+        ProjectContactName = projectContactName ?? string.Empty;
+        ProjectContactPhone = projectContactPhone ?? string.Empty;
+        Warranty = warranty ?? string.Empty;
+        ContractSigningCompany = contractSigningCompany ?? string.Empty;
+        ContractTrustee = contractTrustee ?? string.Empty;
+        NeedInvoice = needInvoice;
+        InvoiceTypeId = invoiceTypeId;
+        InstallationFee = installationFee;
+        EstimatedFreight = estimatedFreight;
+        ContractFilesJson = contractFilesJson ?? "[]";
+        StockFilesJson = stockFilesJson ?? "[]";
+        SelectedContractFileId = selectedContractFileId;
+        IsShipped = isShipped;
+        PaymentStatus = paymentStatus;
+        ContractNotCompanyTemplate = contractNotCompanyTemplate;
+        ContractAmount = contractAmount;
+        ReceiverName = receiverName ?? string.Empty;
+        ReceiverPhone = receiverPhone ?? string.Empty;
+        ReceiverAddress = receiverAddress ?? string.Empty;
+        PayDate = payDate;
+        DeliveryDate = deliveryDate;
+        OrderLogisticsCompanyId = orderLogisticsCompanyId;
+        OrderLogisticsMethodId = orderLogisticsMethodId;
+        LogisticsPaymentMethodId = logisticsPaymentMethodId;
+        WaybillNumber = waybillNumber ?? string.Empty;
+        ShippingFee = shippingFee;
+        ShippingFeeIsPay = shippingFeeIsPay;
+        Surcharge = surcharge;
+        IsNoLogo = isNoLogo;
+        AfterSalesServiceId = afterSalesServiceId ?? string.Empty;
+        IsAssess = isAssess;
+        Comments = comments ?? string.Empty;
+        StartDate = startDate;
+        EndDate = endDate;
+        IsRed = isRed;
+        IsFree = isFree;
+        IsRepay = isRepay;
+        RepayDate = repayDate;
+        FRepayDate = fRepayDate;
+        DelayDate = delayDate;
+        DelayReason = delayReason ?? string.Empty;
+        Feedback = feedback ?? string.Empty;
+        Scontent = scontent ?? string.Empty;
+        WarehousePickerId = warehousePickerId;
+        WarehouseTechId = warehouseTechId;
+        WarehouseReviewerId = warehouseReviewerId;
+        WarehouseStatus = warehouseStatus;
+        IsDeleted = new Deleted(false);
+        DeletedAt = new DeletedTime(DateTimeOffset.UtcNow);
+        CreatorId = creatorId;
+        CreatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = default;
+        WorkflowInstanceId = new WorkflowInstanceId(Guid.Empty);
+        AddDomainEvent(new OrderCreatedDomainEvent(this));
         foreach (var item in items)
-            order.Items.Add(OrderItem.Create(item));
-        return order;
+            Items.Add(new OrderItem(item));
     }
 
     /// <summary>
@@ -529,13 +546,16 @@ public class Order : Entity<OrderId>, IAggregateRoot
         string delayReason,
         string feedback,
         string scontent,
+        UserId warehousePickerId,
+        UserId warehouseTechId,
+        UserId warehouseReviewerId,
         WarehouseStatus warehouseStatus,
         IEnumerable<OrderItemData> items)
     {
-        //if (Status != OrderStatus.Draft && Status != OrderStatus.Rejected)
-        //{
-        //    throw new KnownException("只有草稿或已驳回的订单可以修改", ErrorCodes.OrderNotRejected);
-        //}
+        if (Status != OrderStatus.Draft && Status != OrderStatus.Rejected)
+        {
+            throw new KnownException("只有草稿或已驳回的订单可以修改", ErrorCodes.OrderNotRejected);
+        }
 
         CustomerName = customerName ?? string.Empty;
         ProjectId = projectId;
@@ -590,11 +610,14 @@ public class Order : Entity<OrderId>, IAggregateRoot
         DelayReason = delayReason ?? string.Empty;
         Feedback = feedback ?? string.Empty;
         Scontent = scontent ?? string.Empty;
+        WarehousePickerId = warehousePickerId;
+        WarehouseTechId = warehouseTechId;
+        WarehouseReviewerId = warehouseReviewerId;
         WarehouseStatus = warehouseStatus;
         UpdatedAt = DateTimeOffset.UtcNow;
         Items.Clear();
         foreach (var item in items)
-            Items.Add(OrderItem.Create(item));
+            Items.Add(new OrderItem(item));
     }
 
     /// <summary>
@@ -602,7 +625,7 @@ public class Order : Entity<OrderId>, IAggregateRoot
     /// </summary>
     public void AddRemark(string content, UserId userId, int typeId)
     {
-        Remarks.Add(OrderRemark.Create(content, userId, typeId));
+        Remarks.Add(new OrderRemark(content, userId, typeId));
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
@@ -649,7 +672,7 @@ public class Order : Entity<OrderId>, IAggregateRoot
             {
                 if (line.CategoryId == emptyCategoryId)
                     continue;
-                Categories.Add(OrderCategory.Create(
+                Categories.Add(new OrderCategory(
                     Id,
                     line.CategoryId,
                     line.CategoryName ?? string.Empty,

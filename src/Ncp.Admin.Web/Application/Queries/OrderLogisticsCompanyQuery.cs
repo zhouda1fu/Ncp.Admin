@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderLogisticsCompanyAggregate;
 using Ncp.Admin.Infrastructure;
 
 namespace Ncp.Admin.Web.Application.Queries;

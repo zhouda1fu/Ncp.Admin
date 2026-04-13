@@ -21,7 +21,7 @@ public class DeletePositionEndpoint(IMediator mediator) : Endpoint<DeletePositio
     public override void Configure()
     {
         Tags("Positions");
-        Description(b => b.AutoTagOverride("Positions"));
+        Description(b => b.AutoTagOverride("Positions").WithSummary("删除岗位"));
         Delete("/api/admin/position/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionDelete);

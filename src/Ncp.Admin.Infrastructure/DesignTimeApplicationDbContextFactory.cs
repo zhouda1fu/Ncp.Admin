@@ -14,10 +14,11 @@ public class DesignTimeApplicationDbContextFactory: IDesignTimeDbContextFactory<
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             // change connectionstring if you want to run command "dotnet ef database update"
-            options.UseNpgsql("Host=.;Database=dev;Username=postgres;Password=123456",
+            options.UseNpgsql("Host=localhost;Database=test_oa;Username=postgres;Password=123456",
                 b =>
                 {
                     b.MigrationsAssembly(typeof(DesignTimeApplicationDbContextFactory).Assembly.FullName);
+                    b.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                 });
         });
         var provider = services.BuildServiceProvider();

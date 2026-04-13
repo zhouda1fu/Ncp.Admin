@@ -60,7 +60,7 @@ public class ContractInvoice : Entity<ContractInvoiceId>
     /// <summary>附件存储 Key（单文件或 JSON 多文件，5MB 以内）</summary>
     public string AttachmentStorageKey { get; private set; } = string.Empty;
 
-    internal static ContractInvoice Create(
+    internal ContractInvoice(
         ContractId contractId,
         InvoiceType type,
         string invoiceNumber,
@@ -76,23 +76,20 @@ public class ContractInvoice : Entity<ContractInvoiceId>
         string remarks,
         string attachmentStorageKey)
     {
-        return new ContractInvoice
-        {
-            ContractId = contractId,
-            Type = type,
-            InvoiceNumber = invoiceNumber ?? string.Empty,
-            TaxRate = taxRate,
-            AmountExclTax = amountExclTax,
-            Source = source ?? string.Empty,
-            Status = status,
-            Title = title ?? string.Empty,
-            TaxAmount = taxAmount,
-            InvoicedAmount = invoicedAmount,
-            Handler = handler ?? string.Empty,
-            BillingDate = billingDate,
-            Remarks = remarks ?? string.Empty,
-            AttachmentStorageKey = attachmentStorageKey ?? string.Empty,
-        };
+        ContractId = contractId;
+        Type = type;
+        InvoiceNumber = invoiceNumber ?? string.Empty;
+        TaxRate = taxRate;
+        AmountExclTax = amountExclTax;
+        Source = source ?? string.Empty;
+        Status = status;
+        Title = title ?? string.Empty;
+        TaxAmount = taxAmount;
+        InvoicedAmount = invoicedAmount;
+        Handler = handler ?? string.Empty;
+        BillingDate = billingDate;
+        Remarks = remarks ?? string.Empty;
+        AttachmentStorageKey = attachmentStorageKey ?? string.Empty;
     }
 
     internal void Update(

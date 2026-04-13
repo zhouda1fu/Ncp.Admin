@@ -1,7 +1,9 @@
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
 
@@ -120,7 +122,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     /// <summary>
     /// 部门 ID
     /// </summary>
-    public Guid DepartmentId { get; private set; }
+    public DeptId DepartmentId { get; private set; } = default!;
     /// <summary>
     /// 业务经理
     /// </summary>
@@ -181,10 +183,16 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     /// 审批时间（未审批为 default）
     /// </summary>
     public DateTimeOffset ApprovedAt { get; private set; }
+
+    /// <summary>
+    /// 并发版本
+    /// </summary>
+    public RowVersion RowVersion { get; private set; } = new RowVersion(0);
+
     /// <summary>
     /// 软删标记
     /// </summary>
-    public bool IsDeleted { get; private set; }
+    public Deleted IsDeleted { get; private set; } = new Deleted(false);
 
     /// <summary>
     /// 发票列表（一对多子实体）
@@ -213,7 +221,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         DateTimeOffset signDate,
         string note,
         string description,
-        Guid departmentId,
+        DeptId departmentId,
         string businessManager,
         string responsibleProject,
         string inputCustomer,
@@ -258,6 +266,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         AccumulatedAmount = accumulatedAmount;
         Status = ContractStatus.Draft;
         CreatedAt = DateTimeOffset.UtcNow;
+        AddDomainEvent(new ContractCreatedDomainEvent(this));
     }
 
     /// <summary>
@@ -281,7 +290,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         DateTimeOffset signDate,
         string note,
         string description,
-        Guid departmentId,
+        DeptId departmentId,
         string businessManager,
         string responsibleProject,
         string inputCustomer,
@@ -326,6 +335,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         IsInstallmentPayment = isInstallmentPayment;
         AccumulatedAmount = accumulatedAmount;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ContractUpdatedDomainEvent(this));
     }
 
     /// <summary>
@@ -337,6 +347,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
             throw new KnownException("仅草稿可提交审批", ErrorCodes.ContractNotDraft);
         Status = ContractStatus.PendingApproval;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ContractSubmitForApprovalDomainEvent(this));
     }
 
     /// <summary>
@@ -350,6 +361,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         ApprovedBy = approvedBy;
         ApprovedAt = DateTimeOffset.UtcNow;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ContractApprovedDomainEvent(this));
     }
 
     /// <summary>
@@ -359,8 +371,9 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     {
         if (Status != ContractStatus.Draft)
             throw new KnownException("仅草稿状态可删除", ErrorCodes.ContractNotDraft);
-        IsDeleted = true;
+        IsDeleted = new Deleted(true);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ContractDeletedDomainEvent(this));
     }
 
     /// <summary>
@@ -383,11 +396,12 @@ public class Contract : Entity<ContractId>, IAggregateRoot
     {
         if (Status != ContractStatus.Draft)
             throw new KnownException("仅草稿状态可新增发票", ErrorCodes.ContractNotDraft);
-        var invoice = ContractInvoice.Create(
+        var invoice = new ContractInvoice(
             Id, type, invoiceNumber, taxRate, amountExclTax, source, status,
             title, taxAmount, invoicedAmount, handler, billingDate, remarks, attachmentStorageKey);
         Invoices.Add(invoice);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ContractUpdatedDomainEvent(this));
         return invoice;
     }
 
@@ -417,6 +431,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
         invoice.Update(type, invoiceNumber, taxRate, amountExclTax, source, status,
             title, taxAmount, invoicedAmount, handler, billingDate, remarks, attachmentStorageKey);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ContractUpdatedDomainEvent(this));
     }
 
     /// <summary>
@@ -430,6 +445,7 @@ public class Contract : Entity<ContractId>, IAggregateRoot
             ?? throw new KnownException("未找到该发票", ErrorCodes.ContractInvoiceNotFound);
         Invoices.Remove(invoice);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ContractUpdatedDomainEvent(this));
     }
 
     /// <summary>
@@ -441,5 +457,6 @@ public class Contract : Entity<ContractId>, IAggregateRoot
             throw new KnownException("仅已生效合同可归档", ErrorCodes.ContractNotApproved);
         Status = ContractStatus.Archived;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ContractArchivedDomainEvent(this));
     }
 }

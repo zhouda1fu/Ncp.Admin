@@ -86,29 +86,24 @@ public class OrderItem : Entity<OrderItemId>
     /// <summary>备注</summary>
     public string Remark { get; private set; } = string.Empty;
 
-    /// <summary>
-    /// 创建明细行（由聚合根调用）；OrderId 由 EF 在保存时通过关联设置
-    /// </summary>
-    internal static OrderItem Create(OrderItemData data)
+    /// <summary>新建明细行（由 <see cref="Order"/> 调用）；OrderId 由 EF 在保存时通过关联设置</summary>
+    internal OrderItem(OrderItemData data)
     {
-        return new OrderItem
-        {
-            ProductId = data.ProductId,
-            ProductCategoryId = data.ProductCategoryId,
-            ProductTypeId = data.ProductTypeId,
-            ImagePath = data.ImagePath ?? string.Empty,
-            InstallNotes = data.InstallNotes ?? string.Empty,
-            TrainingDuration = data.TrainingDuration ?? string.Empty,
-            PackingStatus = data.PackingStatus,
-            ReviewStatus = data.ReviewStatus,
-            ProductName = data.ProductName ?? string.Empty,
-            Model = data.Model ?? string.Empty,
-            Number = data.Number ?? string.Empty,
-            Qty = data.Qty,
-            Unit = data.Unit ?? string.Empty,
-            Price = data.Price,
-            Amount = data.Amount,
-            Remark = data.Remark ?? string.Empty,
-        };
+        ProductId = data.ProductId;
+        ProductCategoryId = data.ProductCategoryId;
+        ProductTypeId = data.ProductTypeId;
+        ImagePath = data.ImagePath ?? string.Empty;
+        InstallNotes = data.InstallNotes ?? string.Empty;
+        TrainingDuration = data.TrainingDuration ?? string.Empty;
+        PackingStatus = data.PackingStatus;
+        ReviewStatus = data.ReviewStatus;
+        ProductName = data.ProductName ?? string.Empty;
+        Model = data.Model ?? string.Empty;
+        Number = data.Number ?? string.Empty;
+        Qty = data.Qty;
+        Unit = data.Unit ?? string.Empty;
+        Price = data.Price;
+        Amount = data.Amount;
+        Remark = data.Remark ?? string.Empty;
     }
 }

@@ -4,6 +4,7 @@ using Ncp.Admin.Domain.AggregatesModel.ProjectStatusOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProjectTypeAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RegionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
 
@@ -197,6 +198,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
         ProjectContent = projectContent ?? string.Empty;
         Status = ProjectStatus.Active;
         CreatedAt = DateTimeOffset.UtcNow;
+        AddDomainEvent(new ProjectCreatedDomainEvent(this));
     }
 
     /// <summary>
@@ -241,6 +243,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
         PurchaseAmount = purchaseAmount;
         ProjectContent = projectContent ?? string.Empty;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectUpdatedDomainEvent(this));
     }
 
     /// <summary>
@@ -252,6 +255,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
             return;
         Status = ProjectStatus.Archived;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectArchivedDomainEvent(this));
     }
 
     /// <summary>
@@ -263,6 +267,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
             return;
         Status = ProjectStatus.Active;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectActivatedDomainEvent(this));
     }
 
     /// <summary>
@@ -280,7 +285,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
         bool isPrimary,
         string remark)
     {
-        var contact = ProjectContact.Create(Id, customerContactId, name, position, mobile, officePhone, qq, wechat, email, isPrimary, remark);
+        var contact = new ProjectContact(Id, customerContactId, name, position, mobile, officePhone, qq, wechat, email, isPrimary, remark);
         Contacts.Add(contact);
         if (isPrimary)
         {
@@ -288,6 +293,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
                 c.Update(c.CustomerContactId, c.Name, c.Position, c.Mobile, c.OfficePhone, c.QQ, c.Wechat, c.Email, false, c.Remark);
         }
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectContactAddedDomainEvent(this, contact));
         return contact.Id;
     }
 
@@ -316,6 +322,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
                 c.Update(c.CustomerContactId, c.Name, c.Position, c.Mobile, c.OfficePhone, c.QQ, c.Wechat, c.Email, false, c.Remark);
         }
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectContactUpdatedDomainEvent(this, contact));
     }
 
     /// <summary>
@@ -327,6 +334,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
             ?? throw new KnownException("未找到项目联系人", ErrorCodes.ProjectContactNotFound);
         Contacts.Remove(contact);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectContactRemovedDomainEvent(this, contact));
     }
 
     /// <summary>
@@ -339,9 +347,10 @@ public class Project : Entity<ProjectId>, IAggregateRoot
         string content,
         UserId? creatorId)
     {
-        var record = ProjectFollowUpRecord.Create(Id, title, visitDate, reminderIntervalDays, content, creatorId);
+        var record = new ProjectFollowUpRecord(Id, title, visitDate, reminderIntervalDays, content, creatorId);
         FollowUpRecords.Add(record);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectFollowUpRecordAddedDomainEvent(this, record));
         return record.Id;
     }
 
@@ -359,6 +368,7 @@ public class Project : Entity<ProjectId>, IAggregateRoot
             ?? throw new KnownException("未找到项目跟进记录", ErrorCodes.ProjectFollowUpRecordNotFound);
         record.Update(title, visitDate, reminderIntervalDays, content);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectFollowUpRecordUpdatedDomainEvent(this, record));
     }
 
     /// <summary>
@@ -370,5 +380,6 @@ public class Project : Entity<ProjectId>, IAggregateRoot
             ?? throw new KnownException("未找到项目跟进记录", ErrorCodes.ProjectFollowUpRecordNotFound);
         FollowUpRecords.Remove(record);
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new ProjectFollowUpRecordRemovedDomainEvent(this, record));
     }
 }

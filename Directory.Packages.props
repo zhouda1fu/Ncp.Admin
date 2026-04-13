@@ -13,7 +13,7 @@
     <NetCorePalAspireVersion>1.1.0</NetCorePalAspireVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.2.1" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.2.0" />
     <PackageVersion Include="IGeekFan.AspNetCore.Knife4jUI" Version="0.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="10.0.5" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.5" />
@@ -21,6 +21,9 @@
     <PackageVersion Include="AspNet.Security.OAuth.Feishu" Version="10.0.0" />
     <PackageVersion Include="AspNet.Security.OAuth.Weixin" Version="10.0.0" />
     <!-- Database providers - framework specific versions -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
@@ -61,30 +64,30 @@
     <PackageVersion Include="prometheus-net.AspNetCore.HealthChecks" Version="8.2.1" />
     <PackageVersion Include="Refit.HttpClientFactory" Version="10.1.6" />
     <PackageVersion Include="Refit.Newtonsoft.Json" Version="10.1.6" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.17" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.15" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Enrichers.ClientInfo" Version="2.9.0" />
     <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
     <PackageVersion Include="StackExchange.Redis" Version="2.12.8" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <!-- Aspire packages -->
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.2.1" />
-    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.2.1" />
-    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.2.1" />
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.2.0" />
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.2.0" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.2.0" />
     <PackageVersion Include="Aspire.Hosting.MySql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.2.1" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Redis" Version="13.2.1" />
-    <PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="13.2.1" />
+    <PackageVersion Include="Aspire.Hosting.Redis" Version="13.2.0" />
+    <PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="13.2.0" />
     <PackageVersion Include="Aspire.Hosting.Kafka" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.NATS" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.StackExchange.Redis" Version="13.2.1" />
+    <PackageVersion Include="Aspire.StackExchange.Redis" Version="13.2.0" />
     <PackageVersion Include="Aspire.Pomelo.EntityFrameworkCore.MySql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="$(AspireVersion)" />
     <PackageVersion Include="CommunityToolkit.Aspire.Hosting.MongoDB.Extensions" Version="13.0.0" />
-    <PackageVersion Include="Aspire.RabbitMQ.Client" Version="13.2.1" />
+    <PackageVersion Include="Aspire.RabbitMQ.Client" Version="13.2.0" />
     <PackageVersion Include="Aspire.Confluent.Kafka" Version="$(AspireVersion)" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.4.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.1" />
@@ -140,7 +143,7 @@
     <PackageVersion Include="coverlet.collector" Version="8.0.1" />
     <PackageVersion Include="FastEndpoints.Testing" Version="8.1.0" />
     <!-- Code analysis -->
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.22.0.136894" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.21.0.135717" />
     <PackageVersion Include="ClosedXML" Version="0.105.0" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 using Ncp.Admin.Domain.AggregatesModel.NotificationAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
-using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
-using Ncp.Admin.Web.Application.Commands.Notification;
+using Ncp.Admin.Domain.DomainEvents;
+using Ncp.Admin.Web.Application.Commands.Notifications;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;
 

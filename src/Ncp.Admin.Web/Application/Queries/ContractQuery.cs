@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure;
@@ -52,7 +53,7 @@ public record ContractQueryDto(
     UserId? ApprovedBy,
     DateTimeOffset? ApprovedAt,
     bool HasAttachment,
-    Guid? DepartmentId,
+    DeptId? DepartmentId,
     string? BusinessManager,
     string? ResponsibleProject,
     string? InputCustomer,

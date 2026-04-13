@@ -39,13 +39,13 @@ internal class DocumentVersionEntityTypeConfiguration : IEntityTypeConfiguration
     {
         builder.ToTable("document_version");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property<DocumentId>("DocumentId").IsRequired();
-        builder.Property(x => x.VersionNumber).IsRequired();
-        builder.Property(x => x.FileStorageKey).IsRequired().HasMaxLength(500);
-        builder.Property(x => x.FileName).IsRequired().HasMaxLength(500);
-        builder.Property(x => x.FileSize).IsRequired();
-        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("文档版本标识");
+        builder.Property<DocumentId>("DocumentId").IsRequired().HasComment("文档ID");
+        builder.Property(x => x.VersionNumber).IsRequired().HasComment("版本号（从 1 递增）");
+        builder.Property(x => x.FileStorageKey).IsRequired().HasMaxLength(500).HasComment("文件存储 Key");
+        builder.Property(x => x.FileName).IsRequired().HasMaxLength(500).HasComment("原始文件名");
+        builder.Property(x => x.FileSize).IsRequired().HasComment("文件大小（字节）");
+        builder.Property(x => x.CreatedAt).IsRequired().HasComment("创建时间");
         builder.HasIndex("DocumentId");
     }
 }

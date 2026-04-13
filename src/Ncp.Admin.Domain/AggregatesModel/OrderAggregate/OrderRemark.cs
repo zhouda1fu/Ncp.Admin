@@ -39,21 +39,12 @@ public class OrderRemark : Entity<OrderRemarkId>
         Content = content ?? string.Empty;
     }
 
-    /// <summary>
-    /// 创建备注行（由聚合根调用）；OrderId 由 EF 在保存时通过关联设置
-    /// </summary>
-    internal static OrderRemark Create(
-        string content,
-        UserId userId,
-        int typeId,
-        DateTimeOffset? addedAt = null)
+    /// <summary>新建备注行（由 <see cref="Order"/> 调用）；OrderId 由 EF 在保存时通过关联设置</summary>
+    internal OrderRemark(string content, UserId userId, int typeId, DateTimeOffset? addedAt = null)
     {
-        return new OrderRemark
-        {
-            Content = content ?? string.Empty,
-            UserId = userId,
-            TypeId = typeId,
-            AddedAt = addedAt ?? DateTimeOffset.UtcNow,
-        };
+        Content = content ?? string.Empty;
+        UserId = userId;
+        TypeId = typeId;
+        AddedAt = addedAt ?? DateTimeOffset.UtcNow;
     }
 }

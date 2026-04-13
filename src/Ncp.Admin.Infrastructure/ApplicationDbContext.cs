@@ -5,8 +5,9 @@ using Ncp.Admin.Domain.AggregatesModel.AssetAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ContractAggregate;
-using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptions;
+using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.CustomerContactRecordAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IncomeExpenseTypeOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ExpenseAggregate;
@@ -21,6 +22,8 @@ using Ncp.Admin.Domain.AggregatesModel.ContactGroupAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DocumentAggregate;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
 using Ncp.Admin.Domain.AggregatesModel.OrderInvoiceTypeOptionAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderLogisticsCompanyAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderLogisticsMethodAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProductAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProductCategoryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ProductTypeAggregate;
@@ -150,12 +153,12 @@ public partial class ApplicationDbContext(
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<VehicleBooking> VehicleBookings => Set<VehicleBooking>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerContactRecord> CustomerContactRecords => Set<CustomerContactRecord>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderCategory> OrderCategories => Set<OrderCategory>();
     public DbSet<OrderRemark> OrderRemarks => Set<OrderRemark>();
     public DbSet<OrderLogisticsCompany> OrderLogisticsCompanies => Set<OrderLogisticsCompany>();
     public DbSet<OrderLogisticsMethod> OrderLogisticsMethods => Set<OrderLogisticsMethod>();
-    public DbSet<OrderPush> OrderPushes => Set<OrderPush>();
     public DbSet<OrderInvoiceTypeOption> OrderInvoiceTypeOptions => Set<OrderInvoiceTypeOption>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
@@ -171,4 +174,16 @@ public partial class ApplicationDbContext(
     public DbSet<ContractTypeOption> ContractTypeOptions => Set<ContractTypeOption>();
     public DbSet<IncomeExpenseTypeOption> IncomeExpenseTypeOptions => Set<IncomeExpenseTypeOption>();
     public DbSet<OperationLog> OperationLogs => Set<OperationLog>();
+    public DbSet<Ncp.Admin.Domain.AggregatesModel.CustomerSeaRegionAssignmentAggregate.CustomerSeaRegionAssignment>
+        CustomerSeaRegionAssignments
+        => Set<Ncp.Admin.Domain.AggregatesModel.CustomerSeaRegionAssignmentAggregate.CustomerSeaRegionAssignment>();
+    public DbSet<Ncp.Admin.Domain.AggregatesModel.CustomerSeaRegionAssignmentAggregate.CustomerSeaRegionAssignmentAudit>
+        CustomerSeaRegionAssignmentAudits
+        => Set<Ncp.Admin.Domain.AggregatesModel.CustomerSeaRegionAssignmentAggregate.CustomerSeaRegionAssignmentAudit>();
+
+    public DbSet<Ncp.Admin.Domain.AggregatesModel.CustomerSeaVisibilityAggregate.CustomerSeaVisibilityBoard> CustomerSeaVisibilityBoards
+        => Set<Ncp.Admin.Domain.AggregatesModel.CustomerSeaVisibilityAggregate.CustomerSeaVisibilityBoard>();
+
+    public DbSet<Ncp.Admin.Domain.AggregatesModel.CustomerSeaVisibilityAggregate.CustomerSeaVisibilityEntry> CustomerSeaVisibilityEntries
+        => Set<Ncp.Admin.Domain.AggregatesModel.CustomerSeaVisibilityAggregate.CustomerSeaVisibilityEntry>();
 }

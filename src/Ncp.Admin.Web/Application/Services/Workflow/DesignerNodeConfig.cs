@@ -21,7 +21,7 @@ public record DesignerConditionRule(
 /// <summary>
 /// 与前端流程设计器 JSON 结构对应的节点配置。
 /// type: 0=发起人, 1=审批人, 2=抄送人, 3=条件分支项, 4=条件路由
-/// setType (审批人): 1=指定成员, 2=主管, 3=角色, 4=发起人自选, 5=发起人自己, 7=连续多级主管
+/// setType (审批/抄送): 1=指定成员, 2=主管, 3=角色, 4=发起人自选, 5=发起人自己, 7=连续多级主管
 /// examineMode (审批人): 1=依次审批, 2=会签, 3=或签
 /// </summary>
 public class DesignerNodeConfig

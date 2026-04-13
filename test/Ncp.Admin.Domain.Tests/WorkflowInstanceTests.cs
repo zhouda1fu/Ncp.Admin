@@ -67,12 +67,35 @@ public class WorkflowInstanceTests
     }
 
     [Fact]
+    public void ApproveTask_WhenRoleAssignedAndOperatorInRole_ShouldApprove()
+    {
+        var instance = CreateRunningInstance();
+        var task = instance.CreateTaskForRole("node1", "角色审批", WorkflowTaskType.Approval, TestRoleId, "财务");
+
+        instance.ApproveTask(task.Id, new UserId(999), new[] { TestRoleId }, "同意");
+
+        Assert.Equal(WorkflowTaskStatus.Approved, task.Status);
+    }
+
+    [Fact]
+    public void ApproveTask_WhenRoleAssignedAndOperatorNotInRole_ShouldThrow()
+    {
+        var instance = CreateRunningInstance();
+        var task = instance.CreateTaskForRole("node1", "角色审批", WorkflowTaskType.Approval, TestRoleId, "财务");
+
+        var ex = Assert.Throws<KnownException>(() =>
+            instance.ApproveTask(task.Id, new UserId(999), new[] { new RoleId(Guid.NewGuid()) }, "同意"));
+
+        Assert.Equal(ErrorCodes.WorkflowTaskNotAssignedToOperator, ex.ErrorCode);
+    }
+
+    [Fact]
     public void ApproveTask_WhenPending_ShouldMarkTaskApproved()
     {
         var instance = CreateRunningInstance();
         var task = instance.CreateTask("node1", "审批", WorkflowTaskType.Approval, AssigneeId, "李四");
 
-        instance.ApproveTask(task.Id, AssigneeId, "同意");
+        instance.ApproveTask(task.Id, AssigneeId, operatorRoleIds: null, "同意");
 
         Assert.Equal(WorkflowTaskStatus.Approved, task.Status);
         Assert.Equal("同意", task.Comment);
@@ -84,7 +107,7 @@ public class WorkflowInstanceTests
         var instance = CreateRunningInstance();
         var unknownId = new WorkflowTaskId(Guid.NewGuid());
 
-        var ex = Assert.Throws<KnownException>(() => instance.ApproveTask(unknownId, AssigneeId, "同意"));
+        var ex = Assert.Throws<KnownException>(() => instance.ApproveTask(unknownId, AssigneeId, operatorRoleIds: null, "同意"));
 
         Assert.Equal(ErrorCodes.WorkflowTaskNotFound, ex.ErrorCode);
     }
@@ -95,7 +118,7 @@ public class WorkflowInstanceTests
         var instance = CreateRunningInstance();
         var task = instance.CreateTask("node1", "审批", WorkflowTaskType.Approval, AssigneeId, "李四");
 
-        instance.RejectTask(task.Id, AssigneeId, "不同意");
+        instance.RejectTask(task.Id, AssigneeId, operatorRoleIds: null, "不同意");
 
         Assert.Equal(WorkflowInstanceStatus.Rejected, instance.Status);
         Assert.NotNull(instance.CompletedAt);
@@ -109,7 +132,7 @@ public class WorkflowInstanceTests
         var t1 = instance.CreateTask("node1", "或签A", WorkflowTaskType.Approval, AssigneeId, "A");
         var t2 = instance.CreateTask("node1", "或签B", WorkflowTaskType.Approval, new UserId(3), "B");
 
-        instance.RejectTask(t1.Id, AssigneeId, "不同意");
+        instance.RejectTask(t1.Id, AssigneeId, operatorRoleIds: null, "不同意");
 
         Assert.Equal(WorkflowTaskStatus.Rejected, t1.Status);
         Assert.Equal(WorkflowTaskStatus.Cancelled, t2.Status);
@@ -133,7 +156,7 @@ public class WorkflowInstanceTests
     {
         var instance = CreateRunningInstance();
         var task = instance.CreateTask("node1", "会签", WorkflowTaskType.Approval, AssigneeId, "A");
-        instance.ApproveTask(task.Id, AssigneeId, "同意");
+        instance.ApproveTask(task.Id, AssigneeId, operatorRoleIds: null, "同意");
 
         Assert.True(instance.AreAllCounterSignTasksApproved("node1"));
     }
@@ -145,7 +168,7 @@ public class WorkflowInstanceTests
         instance.CreateTask("node1", "会签", WorkflowTaskType.Approval, AssigneeId, "A");
         instance.CreateTask("node1", "会签", WorkflowTaskType.Approval, new UserId(3), "B");
         var firstTask = instance.Tasks.First(t => t.AssigneeId == AssigneeId);
-        instance.ApproveTask(firstTask.Id, AssigneeId, "同意");
+        instance.ApproveTask(firstTask.Id, AssigneeId, operatorRoleIds: null, "同意");
 
         Assert.False(instance.AreAllCounterSignTasksApproved("node1"));
     }
@@ -156,7 +179,7 @@ public class WorkflowInstanceTests
         var instance = CreateRunningInstance();
         instance.CreateTask("node1", "或签", WorkflowTaskType.Approval, AssigneeId, "A");
         var task = instance.Tasks.Single();
-        instance.ApproveTask(task.Id, AssigneeId, "同意");
+        instance.ApproveTask(task.Id, AssigneeId, operatorRoleIds: null, "同意");
 
         Assert.True(instance.IsAnyOrSignTaskApproved("node1"));
     }

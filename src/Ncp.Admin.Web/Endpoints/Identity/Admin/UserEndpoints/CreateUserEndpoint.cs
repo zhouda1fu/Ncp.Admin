@@ -2,7 +2,6 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Security.Claims;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
@@ -85,7 +84,7 @@ public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpo
     public override void Configure()
     {
         Tags("Users");
-        Description(b => b.AutoTagOverride("Users"));
+        Description(b => b.AutoTagOverride("Users").WithSummary("创建用户"));
         Post("/api/admin/users");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserCreate);
@@ -93,10 +92,7 @@ public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpo
 
     public override async Task HandleAsync(CreateUserRequest request, CancellationToken ct)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var creatorId = !string.IsNullOrWhiteSpace(userIdString) && long.TryParse(userIdString, out var userIdValue)
-            ? new UserId(userIdValue)
-            : new UserId(0);
+        var creatorId = User.GetUserIdOrNull() ?? new UserId(0);
         var rolesToBeAssigned = await roleQuery.GetAdminRolesForAssignmentAsync(request.RoleIds, ct);
         var cmd = new CreateUserCommand(
             request.Name,

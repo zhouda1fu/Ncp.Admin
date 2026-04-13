@@ -46,6 +46,7 @@ public record UserInfoQueryDto(
     string? LastLoginIp);
 
 public record UserLoginInfoQueryDto(UserId UserId, string Name, string Email, string PasswordHash, IEnumerable<UserRole> UserRoles);
+public record UserDataPermissionSnapshot(UserId UserId, DeptId DeptId, IReadOnlyList<RoleId> RoleIds);
 
 public class UserQueryInput : PageRequest
 {
@@ -184,6 +185,35 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
     }
 
     /// <summary>
+    /// 批量获取用户的数据权限判定快照（部门 + 角色），用于减少审批可见性判定时的N+1查询。
+    /// </summary>
+    public async Task<List<UserDataPermissionSnapshot>> GetDataPermissionSnapshotsByUserIdsAsync(
+        IEnumerable<UserId> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        var ids = (userIds ?? Enumerable.Empty<UserId>()).Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var rows = await UserSet.AsNoTracking()
+            .Where(u => ids.Contains(u.Id))
+            .Where(u => !u.IsResigned)
+            .Select(u => new
+            {
+                u.Id,
+                DeptId = u.Dept != null ? u.Dept.DeptId : new DeptId(0),
+                RoleIds = u.Roles.Select(r => r.RoleId).Distinct().ToList(),
+            })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(r => new UserDataPermissionSnapshot(r.Id, r.DeptId, r.RoleIds))
+            .ToList();
+    }
+
+    /// <summary>
     /// 根据部门ID获取所有用户ID列表
     /// </summary>
     /// <param name="deptId">部门ID</param>
@@ -218,6 +248,7 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
     {
         return await UserSet
             .Where(u => u.Name == name)
+            .Where(u => !u.IsResigned)
             .Select(u => new UserLoginInfoQueryDto(u.Id, u.Name, u.Email, u.PasswordHash, u.Roles))
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -226,6 +257,7 @@ public class UserQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
     {
         return await UserSet
             .Where(u => u.Id == userId)
+            .Where(u => !u.IsResigned)
             .Select(u => new UserLoginInfoQueryDto(u.Id, u.Name, u.Email, u.PasswordHash, u.Roles))
             .FirstOrDefaultAsync(cancellationToken);
     }

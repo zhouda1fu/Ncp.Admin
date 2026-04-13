@@ -1,0 +1,50 @@
+using System.Security.Claims;
+using FastEndpoints;
+using FastEndpoints.Swagger;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.AttendanceAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Web.Application.Commands.Attendances;
+using Ncp.Admin.Web.AppPermissions;
+
+namespace Ncp.Admin.Web.Endpoints.Attendances;
+
+/// <summary>
+/// 考勤签到请求（打卡来源与地点）
+/// </summary>
+/// <param name="Source">打卡来源：0 GPS 1 WiFi 2 手动</param>
+/// <param name="Location">打卡地点（可选）</param>
+public record CheckInRequest(int Source = (int)AttendanceSource.Manual, string? Location = null);
+
+/// <summary>
+/// 考勤签到（当前用户，防重复打卡）
+/// </summary>
+public class CheckInEndpoint(IMediator mediator) : Endpoint<CheckInRequest, ResponseData<CheckInResponse>>
+{
+    public override void Configure()
+    {
+        Tags("Attendance");
+        Description(b => b.AutoTagOverride("Attendance").WithSummary("考勤签到（当前用户，防重复打卡）"));
+        Post("/api/admin/attendance/check-in");
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.AttendanceCheckIn);
+    }
+
+    public override async Task HandleAsync(CheckInRequest req, CancellationToken ct)
+    {
+        if (!User.TryGetUserId(out var uid))
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+        var cmd = new CheckInCommand(uid, (AttendanceSource)req.Source, req.Location);
+        var id = await mediator.Send(cmd, ct);
+        await Send.OkAsync(new CheckInResponse(id).AsResponseData(), cancellation: ct);
+    }
+}
+
+/// <summary>
+/// 考勤签到响应（新建的考勤记录 ID）
+/// </summary>
+public record CheckInResponse(AttendanceRecordId Id);

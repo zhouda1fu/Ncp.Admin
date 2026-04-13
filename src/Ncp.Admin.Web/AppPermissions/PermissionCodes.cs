@@ -93,14 +93,11 @@ public static class PermissionCodes
     public const string ScheduleEdit = nameof(ScheduleEdit);
     #endregion
 
-    #region 任务/项目管理权限
-    public const string TaskManagement = nameof(TaskManagement);
+    #region 项目管理权限
+    public const string ProjectManagement = nameof(ProjectManagement);
     public const string ProjectView = nameof(ProjectView);
     public const string ProjectCreate = nameof(ProjectCreate);
     public const string ProjectEdit = nameof(ProjectEdit);
-    public const string TaskView = nameof(TaskView);
-    public const string TaskCreate = nameof(TaskCreate);
-    public const string TaskEdit = nameof(TaskEdit);
     public const string ProjectTypeView = nameof(ProjectTypeView);
     public const string ProjectTypeCreate = nameof(ProjectTypeCreate);
     public const string ProjectTypeEdit = nameof(ProjectTypeEdit);
@@ -110,6 +107,13 @@ public static class PermissionCodes
     public const string ProjectIndustryView = nameof(ProjectIndustryView);
     public const string ProjectIndustryCreate = nameof(ProjectIndustryCreate);
     public const string ProjectIndustryEdit = nameof(ProjectIndustryEdit);
+    #endregion
+
+    #region 任务管理权限
+    public const string TaskManagement = nameof(TaskManagement);
+    public const string TaskView = nameof(TaskView);
+    public const string TaskCreate = nameof(TaskCreate);
+    public const string TaskEdit = nameof(TaskEdit);
     #endregion
 
     #region 文档管理权限
@@ -183,9 +187,16 @@ public static class PermissionCodes
     public const string CustomerEdit = nameof(CustomerEdit);
     public const string CustomerDelete = nameof(CustomerDelete);
     public const string CustomerContactEdit = nameof(CustomerContactEdit);
+    public const string CustomerContactRecordView = nameof(CustomerContactRecordView);
+    public const string CustomerContactRecordCreate = nameof(CustomerContactRecordCreate);
+    public const string CustomerContactRecordEdit = nameof(CustomerContactRecordEdit);
     public const string CustomerReleaseToSea = nameof(CustomerReleaseToSea);
     public const string CustomerClaimFromSea = nameof(CustomerClaimFromSea);
+    public const string CustomerSeaVoid = nameof(CustomerSeaVoid);
+    public const string CustomerSeaConsultationEdit = nameof(CustomerSeaConsultationEdit);
     public const string CustomerShare = nameof(CustomerShare);
+    public const string CustomerSeaRegionAssignView = nameof(CustomerSeaRegionAssignView);
+    public const string CustomerSeaRegionAssignEdit = nameof(CustomerSeaRegionAssignEdit);
     public const string IndustryView = nameof(IndustryView);
     /// <summary>创建行业</summary>
     public const string IndustryCreate = nameof(IndustryCreate);
@@ -221,6 +232,8 @@ public static class PermissionCodes
     public const string OrderNeedInvoice = nameof(OrderNeedInvoice);
     public const string OrderContractAmount = nameof(OrderContractAmount);
     public const string OrderTechnicalStatus = nameof(OrderTechnicalStatus);
+    public const string OrderDiscountPointsDescriptionView = nameof(OrderDiscountPointsDescriptionView);
+    public const string OrderDiscountPointsCreate = nameof(OrderDiscountPointsCreate);
     #endregion
 
     #region 产品管理权限

@@ -9,6 +9,7 @@ export function useCategoryOptions() {
   return [
     { label: $t('system.workflow.category.userManagement'), value: 'CreateUser' },
     { label: $t('system.workflow.category.order'), value: 'Order' },
+    { label: $t('system.workflow.category.customerSeaVoid'), value: 'CustomerSeaVoid' },
   ];
 }
 

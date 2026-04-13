@@ -3,7 +3,7 @@ using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.DomainEvents.CustomerEvents;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 
@@ -26,11 +26,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// 联系人列表
     /// </summary>
     public virtual ICollection<CustomerContact> Contacts { get; } = [];
-
-    /// <summary>
-    /// 联系记录列表
-    /// </summary>
-    public virtual ICollection<CustomerContactRecord> ContactRecords { get; } = [];
 
     /// <summary>
     /// 所属行业关联列表
@@ -257,7 +252,23 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     public UpdateTime UpdateTime { get; private set; } = new UpdateTime(DateTimeOffset.UtcNow);
 
     /// <summary>
-    /// 创建客户；未传负责人则视为公海客户
+    /// 是否软删
+    /// </summary>
+    public Deleted IsDeleted { get; private set; } = new Deleted(false);
+
+    /// <summary>
+    /// 并发版本
+    /// </summary>
+    public RowVersion RowVersion { get; private set; } = new RowVersion(0);
+
+    private void EnsureNotVoided()
+    {
+        if (IsVoided)
+            throw new KnownException("已作废客户不可进行此操作", ErrorCodes.CustomerIsVoided);
+    }
+
+    /// <summary>
+    /// 创建客户（默认 <see cref="IsInSea"/> 为 <c>false</c>）。可通过 <paramref name="initialIndustryIds"/> 指定初始行业：子实体可不填 <see cref="CustomerIndustry.CustomerId"/>，由 EF 在持久化时根据父子关系修复外键。
     /// </summary>
     public Customer(
         UserId ownerId,
@@ -294,7 +305,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string remark,
         bool isKeyAccount,
         UserId creatorId,
-        string creatorName)
+        string creatorName,
+        IEnumerable<IndustryId>? initialIndustryIds = null)
     {
         OwnerId = ownerId;
         OwnerDeptId = ownerDeptId;
@@ -336,6 +348,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ClaimedAt = null;
         IsInSea = false;
         CreatedAt = DateTimeOffset.UtcNow;
+        foreach (var industryId in (initialIndustryIds ?? []).Distinct())
+            Industries.Add(CustomerIndustry.CreatePending(industryId));
         AddDomainEvent(new CustomerCreatedDomainEvent(this));
     }
 
@@ -413,9 +427,10 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// </summary>
     public void SetIndustries(IEnumerable<IndustryId> industryIds)
     {
+        EnsureNotVoided();
         Industries.Clear();
         foreach (var id in industryIds)
-            Industries.Add(CustomerIndustry.Create(Id, id));
+            Industries.Add(CustomerIndustry.CreatePending(id));
     }
 
     /// <summary>
@@ -456,6 +471,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         bool isHidden,
         IEnumerable<IndustryId>? industryIds = null)
     {
+        EnsureNotVoided();
         if (IsInSea)
             throw new KnownException("公海客户需先领用后再修改", ErrorCodes.CustomerNotInSea);
         OwnerId = ownerId;
@@ -495,7 +511,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         {
             Industries.Clear();
             foreach (var id in industryIds)
-                Industries.Add(CustomerIndustry.Create(Id, id));
+                Industries.Add(CustomerIndustry.CreatePending(id));
         }
         AddDomainEvent(new CustomerUpdatedDomainEvent(this));
     }
@@ -535,6 +551,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         bool isKeyAccount,
         IEnumerable<IndustryId>? industryIds = null)
     {
+        EnsureNotVoided();
         if (!IsInSea)
             throw new KnownException("仅公海客户可在此处修改", ErrorCodes.CustomerNotInSea);
         CustomerSourceId = customerSourceId;
@@ -571,18 +588,50 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         {
             Industries.Clear();
             foreach (var id in industryIds)
-                Industries.Add(CustomerIndustry.Create(Id, id));
+                Industries.Add(CustomerIndustry.CreatePending(id));
         }
         AddDomainEvent(new CustomerUpdatedDomainEvent(this));
     }
 
     /// <summary>
-    /// 作废（仅公海客户可作废）
+    /// 公海客户仅更新咨询内容（未领用时）
     /// </summary>
-    public void Void()
+    public void UpdateConsultationWhenInSea(string consultationContent)
+    {
+        EnsureNotVoided();
+        if (!IsInSea)
+            throw new KnownException("仅公海客户可修改咨询内容", ErrorCodes.CustomerNotInSea);
+        ConsultationContent = consultationContent;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new CustomerUpdatedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// 作废仍在公海且未领用的客户
+    /// </summary>
+    public void VoidUnclaimedSeaCustomer()
     {
         if (!IsInSea)
-            throw new KnownException("仅公海客户可作废", ErrorCodes.CustomerNotInSea);
+            throw new KnownException("该客户已领用，请由领用人作废", ErrorCodes.CustomerNotInSea);
+        if (IsVoided)
+            return;
+        IsVoided = true;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 公海领用后的客户，由当前领用人作废
+    /// </summary>
+    public void VoidAfterSeaClaimByOwner(UserId operatorId)
+    {
+        if (IsInSea)
+            throw new KnownException("未领用的公海客户请使用公海作废流程", ErrorCodes.CustomerNotInSea);
+        if (IsVoided)
+            return;
+        if (OwnerId != operatorId)
+            throw new KnownException("仅领用人可作废该客户", ErrorCodes.CustomerNotInSea);
+        if (!ClaimedAt.HasValue)
+            throw new KnownException("仅曾从公海领用的客户可由领用人作废", ErrorCodes.CustomerNotInSea);
         IsVoided = true;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
@@ -592,6 +641,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// </summary>
     public void ReleaseToSea()
     {
+        EnsureNotVoided();
         if (IsInSea)
             return;
         OwnerId = new UserId(0);
@@ -610,6 +660,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// </summary>
     public void ClaimFromSea(UserId ownerId, string? ownerName)
     {
+        EnsureNotVoided();
         if (!IsInSea)
             throw new KnownException("仅公海客户可领用", ErrorCodes.CustomerNotInSea);
         OwnerId = ownerId;
@@ -617,6 +668,8 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         ClaimedAt = DateTimeOffset.UtcNow;
         IsInSea = false;
         ReleasedToSeaAt = null;
+        // 公海录入的“咨询内容”在客户编辑页以“客户备注”展示（领用后同步）。
+        Remark = ConsultationContent;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
         AddDomainEvent(new CustomerClaimedFromSeaDomainEvent(this));
     }
@@ -626,21 +679,59 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// </summary>
     public void SetOwnerDept(DeptId deptId, string? deptName)
     {
+        EnsureNotVoided();
         OwnerDeptId = deptId;
         OwnerDeptName = deptName ?? string.Empty;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
+    /// <summary>
+    /// 校验当前客户是否允许维护联络记录。
+    /// </summary>
+    public void EnsureCanMaintainContactRecords()
+    {
+        if (IsVoided)
+            throw new KnownException("已作废客户不允许维护联络记录", ErrorCodes.CustomerIsVoided);
+        if (IsInSea)
+            throw new KnownException("公海客户需先领用后再维护联络记录", ErrorCodes.CustomerNotInSea);
+    }
+
+    /// <summary>
+    /// 校验联络记录中引用的联系人均属于当前客户。
+    /// </summary>
+    public void EnsureContactIdsBelongToThisCustomer(IEnumerable<CustomerContactId>? customerContactIds)
+    {
+        if (customerContactIds == null)
+            return;
+        var ids = (customerContactIds ?? Enumerable.Empty<CustomerContactId>()).Distinct().ToList();
+        if (ids.Count == 0) return;
+
+        var ownedIds = Contacts.Select(x => x.Id).ToHashSet();
+        if (ids.Any(id => !ownedIds.Contains(id)))
+            throw new KnownException("存在不属于当前客户的联系人", ErrorCodes.CustomerContactNotFound);
+    }
+
     public void ShareToUsers(UserId sharedByUserId, IEnumerable<UserId> sharedToUserIds)
     {
-        var ids = (sharedToUserIds ?? Enumerable.Empty<UserId>()).Distinct().ToList();
-        Shares.Clear();
+        EnsureNotVoided();
+        var desired = (sharedToUserIds ?? Enumerable.Empty<UserId>()).Distinct().ToList();
+        var desiredSet = desired.ToHashSet();
         var now = DateTimeOffset.UtcNow;
-        foreach (var uid in ids)
+
+        var removed = Shares.Where(s => !desiredSet.Contains(s.SharedToUserId)).ToList();
+        foreach (var link in removed)
+            Shares.Remove(link);
+
+        var existing = Shares.Select(s => s.SharedToUserId).ToHashSet();
+        var addedAny = false;
+        foreach (var uid in desired.Where(uid => !existing.Contains(uid)))
         {
-            Shares.Add(new CustomerShare(Id, uid, sharedByUserId, now));
+            Shares.Add(new CustomerShare(uid, sharedByUserId, now));
+            addedAny = true;
         }
-        UpdateTime = new UpdateTime(now);
+
+        if (removed.Count > 0 || addedAny)
+            UpdateTime = new UpdateTime(now);
     }
 
     public void UnshareUsers(IEnumerable<UserId> sharedToUserIds)
@@ -648,10 +739,13 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         var ids = (sharedToUserIds ?? Enumerable.Empty<UserId>()).Distinct().ToHashSet();
         if (ids.Count == 0) return;
 
+        EnsureNotVoided();
+
         var toRemove = Shares.Where(s => ids.Contains(s.SharedToUserId)).ToList();
         foreach (var s in toRemove)
             Shares.Remove(s);
-        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        if (toRemove.Count > 0)
+            UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
     /// <summary>
@@ -666,14 +760,18 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string mobile,
         string phone,
         string email,
+        string qq,
+        string wechat,
+        bool isWechatAdded,
         bool isPrimary)
     {
-        var contact = CustomerContact.Create(Id, name, contactType, gender, birthday, position, mobile, phone, email, isPrimary);
+        EnsureNotVoided();
+        var contact = new CustomerContact(name, contactType, gender, birthday, position, mobile, phone, email, qq, wechat, isWechatAdded, isPrimary);
         Contacts.Add(contact);
         if (isPrimary)
         {
             foreach (var c in Contacts.Where(c => c != contact))
-                c.Update(c.Name, c.ContactType, c.Gender, c.Birthday, c.Position, c.Mobile, c.Phone, c.Email, false);
+                c.Update(c.Name, c.ContactType, c.Gender, c.Birthday, c.Position, c.Mobile, c.Phone, c.Email, c.Qq, c.Wechat, c.IsWechatAdded, false);
             MainContactName = name ?? string.Empty;
             MainContactPhone = !string.IsNullOrEmpty(mobile) ? mobile : (phone ?? string.Empty);
         }
@@ -694,15 +792,18 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         string mobile,
         string phone,
         string email,
+        string qq,
+        string wechat,
+        bool isWechatAdded,
         bool isPrimary)
     {
         var contact = Contacts.FirstOrDefault(c => c.Id == contactId)
             ?? throw new KnownException("未找到客户联系人", ErrorCodes.CustomerContactNotFound);
-        contact.Update(name, contactType, gender, birthday, position, mobile, phone, email, isPrimary);
+        contact.Update(name, contactType, gender, birthday, position, mobile, phone, email, qq, wechat, isWechatAdded, isPrimary);
         if (isPrimary)
         {
             foreach (var c in Contacts.Where(c => c != contact))
-                c.Update(c.Name, c.ContactType, c.Gender, c.Birthday, c.Position, c.Mobile, c.Phone, c.Email, false);
+                c.Update(c.Name, c.ContactType, c.Gender, c.Birthday, c.Position, c.Mobile, c.Phone, c.Email, c.Qq, c.Wechat, c.IsWechatAdded, false);
             MainContactName = name ?? string.Empty;
             MainContactPhone = !string.IsNullOrEmpty(mobile) ? mobile : (phone ?? string.Empty);
         }
@@ -715,6 +816,7 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
     /// </summary>
     public void RemoveContact(CustomerContactId contactId)
     {
+        EnsureNotVoided();
         var contact = Contacts.FirstOrDefault(c => c.Id == contactId)
             ?? throw new KnownException("未找到客户联系人", ErrorCodes.CustomerContactNotFound);
         var wasPrimary = contact.IsPrimary;
@@ -728,32 +830,6 @@ public class Customer : Entity<CustomerId>, IAggregateRoot
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
-    /// <summary>
-    /// 添加联系记录
-    /// </summary>
-    public CustomerContactRecordId AddContactRecord(
-        DateTimeOffset recordAt,
-        string recordType,
-        string content,
-        UserId recorderId,
-        string recorderName)
-    {
-        var record = CustomerContactRecord.Create(Id, recordAt, recordType, content, recorderId, recorderName);
-        ContactRecords.Add(record);
-        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
-        return record.Id;
-    }
-
-    /// <summary>
-    /// 移除指定联系记录
-    /// </summary>
-    public void RemoveContactRecord(CustomerContactRecordId recordId)
-    {
-        var record = ContactRecords.FirstOrDefault(r => r.Id == recordId)
-            ?? throw new KnownException("未找到客户联系记录", ErrorCodes.CustomerContactRecordNotFound);
-        ContactRecords.Remove(record);
-        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
-    }
 }
 
 /// <summary>

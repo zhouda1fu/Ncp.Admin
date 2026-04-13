@@ -25,6 +25,7 @@ using Serilog.Formatting.Json;
 using StackExchange.Redis;
 using System.Reflection;
 using System.Text.Json;
+using Ncp.Admin.Web.Application.Services;
 using Ncp.Admin.Web.Application.Services.Workflow;
 
 // Create a minimal logger for startup
@@ -179,7 +180,9 @@ try
     builder.Services.AddQueries(Assembly.GetExecutingAssembly());
     builder.Services.AddScoped<WorkflowTreeTraverser>();
     builder.Services.AddScoped<WorkflowOutgoingTaskService>();
+    builder.Services.AddScoped<WorkflowTaskVisibilityPolicy>();
     builder.Services.AddScoped<WorkflowDefinitionAssigneeConfigValidator>();
+    builder.Services.AddScoped<ICustomerSeaVisibilityTargetResolver, CustomerSeaVisibilityTargetResolver>();
     #endregion
 
     #region 基础设施
@@ -190,7 +193,11 @@ try
     // to avoid ExecutionStrategy issues with user-initiated transactions
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
-        options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"));
+        options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"), npgsql =>
+        {
+            // 同一查询加载多个集合导航时避免笛卡尔积与 MultipleCollectionInclude 警告，拆成多条 SQL
+            npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        });
         // 仅在开发环境启用敏感数据日志，防止生产环境泄露敏感信息
         if (builder.Environment.IsDevelopment())
         {
@@ -199,9 +206,23 @@ try
         options.EnableDetailedErrors();
     });
     var fileStorageProvider = builder.Configuration.GetValue<string>("FileStorage:Provider") ?? "Local";
-    if (string.Equals(fileStorageProvider, "MinIO", StringComparison.OrdinalIgnoreCase))
+    var minioSection = builder.Configuration.GetSection(MinioFileStorageOptions.SectionName);
+    var minioEndpoint = minioSection.GetValue<string>("Endpoint");
+    var minioBucket = minioSection.GetValue<string>("Bucket");
+
+    var useMinio =
+        string.Equals(fileStorageProvider, "MinIO", StringComparison.OrdinalIgnoreCase)
+        && !string.IsNullOrWhiteSpace(minioEndpoint)
+        && !string.IsNullOrWhiteSpace(minioBucket);
+
+    if (string.Equals(fileStorageProvider, "MinIO", StringComparison.OrdinalIgnoreCase) && !useMinio)
     {
-        builder.Services.Configure<MinioFileStorageOptions>(builder.Configuration.GetSection(MinioFileStorageOptions.SectionName));
+        Log.Warning("FileStorage provider is MinIO, but configuration is incomplete (Endpoint/Bucket missing). Falling back to Local storage.");
+    }
+
+    if (useMinio)
+    {
+        builder.Services.Configure<MinioFileStorageOptions>(minioSection);
         builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
     }
     else
@@ -314,11 +335,11 @@ try
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await dbContext.Database.MigrateAsync();
 
-        // 添加种子数据
+        // 添加种子数据（包含部门/角色等主数据）
         app.SeedDatabase();
+
+        // 已移除业务角色同步种子（SeedDatabaseExtension.BusinessRoles.cs）
     }
-
-
     app.UseKnownExceptionHandler();
     // Configure the HTTP request pipeline.
     //if (app.Environment.IsDevelopment())

@@ -9,3 +9,7 @@ global using MediatR;
 global using NetCorePal.Extensions.Domain;
 global using NetCorePal.Extensions.Dto;
 global using NetCorePal.Extensions.DistributedTransactions;
+global using Ncp.Admin.Domain.AggregatesModel.OrderLogisticsCompanyAggregate;
+global using Ncp.Admin.Domain.AggregatesModel.OrderLogisticsMethodAggregate;
+global using Ncp.Admin.Domain.AggregatesModel.CustomerContactRecordAggregate;
+global using Ncp.Admin.Web.Extensions;

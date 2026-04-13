@@ -52,7 +52,7 @@ public class UpdateCustomerCommandHandler(
 {
     public async Task<bool> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
     {
-        var customer = await repository.GetAsync(request.Id, cancellationToken)
+        var customer = await repository.GetWithIndustriesAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
         var (provinceName, cityName, districtName) = await ResolveRegionNamesAsync(
             request.ProvinceCode, request.CityCode, request.DistrictCode, cancellationToken);

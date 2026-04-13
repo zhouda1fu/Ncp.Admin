@@ -1,5 +1,5 @@
-using Ncp.Admin.Domain.DomainEvents.OrderEvents;
-using Ncp.Admin.Web.Application.Commands.Order;
+using Ncp.Admin.Domain.DomainEvents;
+using Ncp.Admin.Web.Application.Commands.Orders;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;
 

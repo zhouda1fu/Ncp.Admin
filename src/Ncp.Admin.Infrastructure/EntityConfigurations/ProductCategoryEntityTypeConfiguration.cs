@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Ncp.Admin.Domain.AggregatesModel.ProductCategoryAggregate;
 
 namespace Ncp.Admin.Infrastructure.EntityConfigurations;
@@ -15,12 +14,8 @@ internal class ProductCategoryEntityTypeConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.Name).IsRequired().HasMaxLength(100).HasComment("分类名称");
         builder.Property(x => x.Remark).IsRequired().HasMaxLength(500).HasComment("备注");
         builder.Property(x => x.ParentId)
-            .IsRequired(false)
-            .HasConversion(
-                new ValueConverter<ProductCategoryId, Guid?>(
-                    v => v == new ProductCategoryId(Guid.Empty) ? Guid.Empty : Guid.Parse(v.ToString()!),
-                    v => v == null || v == Guid.Empty ? new ProductCategoryId(Guid.Empty) : new ProductCategoryId(v.Value)))
-            .HasComment("上级分类ID（00000000-0000-0000-0000-000000000000 或 null 为根）");
+            .IsRequired()
+            .HasComment("上级分类ID（Guid.Empty 表示根节点）");
         builder.Property(x => x.SortOrder).HasComment("排序");
         builder.Property(x => x.Visible).HasComment("是否可见");
         builder.Property(x => x.IsDiscount).IsRequired().HasComment("是否优惠");

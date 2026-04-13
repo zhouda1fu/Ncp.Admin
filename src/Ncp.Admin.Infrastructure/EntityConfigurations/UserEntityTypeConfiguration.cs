@@ -4,6 +4,9 @@ using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 namespace Ncp.Admin.Infrastructure.EntityConfigurations;
 
+/// <summary>
+/// 用户聚合根及同聚合子实体（部门、岗位、角色、刷新令牌）的 EF 配置，集中于一文件便于维护。
+/// </summary>
 internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
@@ -56,17 +59,15 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey("UserId")
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 配置 User 与 UserDept 的一对一关系
         builder.HasOne(au => au.Dept)
             .WithOne()
-            .HasForeignKey<UserDept>(ud => ud.UserId)
+            .HasForeignKey<UserDept>(ud => ud.Id)
             .OnDelete(DeleteBehavior.ClientCascade);
         builder.Navigation(au => au.Dept).AutoInclude();
 
-        // 配置 User 与 UserPosition 的一对一关系（可选）
         builder.HasOne(au => au.Position)
             .WithOne()
-            .HasForeignKey<UserPosition>(up => up.UserId)
+            .HasForeignKey<UserPosition>(up => up.Id)
             .OnDelete(DeleteBehavior.ClientCascade);
         builder.Navigation(au => au.Position).AutoInclude();
     }
@@ -78,17 +79,16 @@ internal class UserDeptEntityTypeConfiguration : IEntityTypeConfiguration<UserDe
     {
         builder.ToTable("user_dept");
 
-        builder.HasKey(ud => ud.UserId);
+        builder.HasKey(ud => ud.Id);
+        builder.Property(ud => ud.Id).HasColumnName("UserId");
 
-        builder.Property(ud => ud.UserId);
         builder.Property(ud => ud.DeptId);
         builder.Property(ud => ud.DeptName).HasMaxLength(100);
         builder.Property(ud => ud.IsDeptManager).HasComment("是否为该部门主管");
         builder.Property(ud => ud.AssignedAt)
             .IsRequired();
 
-        // 索引
-        builder.HasIndex(ud => ud.UserId);
+        builder.HasIndex(ud => ud.Id);
         builder.HasIndex(ud => ud.DeptId);
     }
 }
@@ -99,14 +99,14 @@ internal class UserPositionEntityTypeConfiguration : IEntityTypeConfiguration<Us
     {
         builder.ToTable("user_position");
 
-        builder.HasKey(up => up.UserId);
+        builder.HasKey(up => up.Id);
+        builder.Property(up => up.Id).HasColumnName("UserId");
 
-        builder.Property(up => up.UserId);
         builder.Property(up => up.PositionId);
         builder.Property(up => up.PositionName).HasMaxLength(100);
         builder.Property(up => up.AssignedAt).IsRequired();
 
-        builder.HasIndex(up => up.UserId);
+        builder.HasIndex(up => up.Id);
         builder.HasIndex(up => up.PositionId);
     }
 }
@@ -130,7 +130,7 @@ internal class UserRoleEntityTypeConfiguration : IEntityTypeConfiguration<UserRo
     }
 }
 
-internal class UserRefreshTokenConfiguration : IEntityTypeConfiguration<UserRefreshToken>
+internal class UserRefreshTokenEntityTypeConfiguration : IEntityTypeConfiguration<UserRefreshToken>
 {
     public void Configure(EntityTypeBuilder<UserRefreshToken> builder)
     {
@@ -142,4 +142,3 @@ internal class UserRefreshTokenConfiguration : IEntityTypeConfiguration<UserRefr
         builder.Property(x => x.ExpiresTime).IsRequired();
     }
 }
-

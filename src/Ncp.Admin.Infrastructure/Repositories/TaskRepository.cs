@@ -10,7 +10,7 @@ public interface IProjectTaskRepository : IRepository<ProjectTask, ProjectTaskId
     /// <summary>
     /// 删除项目任务
     /// </summary>
-    Task RemoveAsync(ProjectTaskId id, CancellationToken cancellationToken = default);
+    System.Threading.Tasks.Task RemoveAsync(ProjectTaskId id, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -20,12 +20,10 @@ public class ProjectTaskRepository(ApplicationDbContext context)
     : RepositoryBase<ProjectTask, ProjectTaskId, ApplicationDbContext>(context), IProjectTaskRepository
 {
     /// <inheritdoc />
-    public async Task RemoveAsync(ProjectTaskId id, CancellationToken cancellationToken = default)
+    public async System.Threading.Tasks.Task RemoveAsync(ProjectTaskId id, CancellationToken cancellationToken = default)
     {
         var entity = await context.ProjectTasks.FindAsync([id], cancellationToken);
         if (entity != null)
-        {
             context.ProjectTasks.Remove(entity);
-        }
     }
 }

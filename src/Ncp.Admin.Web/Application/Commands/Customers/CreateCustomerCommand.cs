@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
@@ -76,10 +76,9 @@ public class CreateCustomerCommandHandler(ICustomerRepository repository, UserQu
             request.ConsultationContent,
             request.CoverRegion, request.RegisterAddress, request.EmployeeCount, request.BusinessLicense ?? string.Empty, request.MainContactName, request.MainContactPhone,
             request.ContactQq, request.ContactWechat,
-            request.WechatStatus, request.Remark, request.IsKeyAccount, request.CreatorId, request.CreatorName);
+            request.WechatStatus, request.Remark, request.IsKeyAccount, request.CreatorId, request.CreatorName,
+            request.IndustryIds);
         await repository.AddAsync(customer, cancellationToken);
-        if (request.IndustryIds is { Count: > 0 })
-            customer.SetIndustries(request.IndustryIds);
         return customer.Id;
     }
 }

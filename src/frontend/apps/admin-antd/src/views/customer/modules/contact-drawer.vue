@@ -5,20 +5,19 @@ import { computed, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 
-import { Button } from 'ant-design-vue';
+import { Button, message } from 'ant-design-vue';
 
 import { useVbenForm, z } from '#/adapter/form';
 import { addCustomerContact, updateCustomerContact } from '#/api/system/customer';
 import { $t } from '#/locales';
+import {
+  hasAtLeastOneContactChannel,
+  isValidMobileIfPresent,
+  isValidQqIfPresent,
+} from '#/utils/customer-contact-validation';
 
 const props = defineProps<{ customerId: string }>();
 const emit = defineEmits(['success']);
-
-const genderOptions = () => [
-  { label: $t('customer.genderMale'), value: 1 },
-  { label: $t('customer.genderFemale'), value: 2 },
-  { label: $t('customer.genderUnknown'), value: 0 },
-];
 
 const contactFormSchema = computed(() => [
   {
@@ -27,39 +26,6 @@ const contactFormSchema = computed(() => [
     fieldName: 'name',
     label: $t('customer.contactName'),
     rules: z.string().min(1, $t('ui.formRules.required', [$t('customer.contactName')])),
-  },
-  {
-    component: 'Input',
-    componentProps: { class: 'w-full', placeholder: $t('customer.contactTypePlaceholder') },
-    fieldName: 'contactType',
-    label: $t('customer.contactType'),
-  },
-  {
-    component: 'Select',
-    componentProps: {
-      class: 'w-full',
-      options: genderOptions(),
-      placeholder: $t('customer.contactGenderPlaceholder'),
-    },
-    fieldName: 'gender',
-    label: $t('customer.contactGender'),
-    rules: z.number({
-      required_error: $t('ui.formRules.required', [$t('customer.contactGender')]),
-    }),
-  },
-  {
-    component: 'DatePicker',
-    componentProps: {
-      class: 'w-full',
-      placeholder: $t('customer.contactBirthdayPlaceholder'),
-      valueFormat: 'YYYY-MM-DD',
-    },
-    fieldName: 'birthday',
-    label: $t('customer.contactBirthday'),
-    rules: z.any().refine(
-      (val) => val != null && String(val).trim() !== '',
-      $t('ui.formRules.required', [$t('customer.contactBirthday')]),
-    ),
   },
   {
     component: 'Input',
@@ -72,6 +38,7 @@ const contactFormSchema = computed(() => [
     componentProps: { class: 'w-full', placeholder: $t('customer.contactMobilePlaceholder') },
     fieldName: 'mobile',
     label: $t('customer.contactMobile'),
+    rules: z.any().refine(isValidMobileIfPresent, $t('customer.contactMobileInvalid')),
   },
   {
     component: 'Input',
@@ -84,6 +51,28 @@ const contactFormSchema = computed(() => [
     componentProps: { class: 'w-full', placeholder: $t('customer.contactEmailPlaceholder') },
     fieldName: 'email',
     label: $t('customer.contactEmail'),
+  },
+  {
+    component: 'Input',
+    componentProps: { class: 'w-full', placeholder: 'QQ' },
+    fieldName: 'qq',
+    label: 'QQ',
+    rules: z.any().refine(isValidQqIfPresent, $t('customer.contactQqInvalid')),
+  },
+  {
+    component: 'Input',
+    componentProps: { class: 'w-full', placeholder: '微信' },
+    fieldName: 'wechat',
+    label: '微信',
+  },
+  {
+    component: 'Switch',
+    componentProps: {
+      checkedChildren: $t('common.yes'),
+      unCheckedChildren: $t('common.no'),
+    },
+    fieldName: 'isWechatAdded',
+    label: '微信添加',
   },
   {
     component: 'Switch',
@@ -118,21 +107,31 @@ const [Drawer, drawerApi] = useVbenDrawer({
   async onConfirm() {
     const { valid } = await formApi.validate();
     if (!valid) return;
+    const data = await formApi.getValues();
+    if (
+      !hasAtLeastOneContactChannel(data.mobile, data.phone, data.qq, data.wechat)
+    ) {
+      message.warning($t('customer.contactChannelAtLeastOne'));
+      return;
+    }
     drawerApi.lock();
     try {
-      const data = await formApi.getValues();
-      const b = Array.isArray(data.birthday) ? data.birthday[0] : data.birthday;
-      const birthdayVal =
-        typeof b === 'string' ? b : (b as { format?: (f: string) => string })?.format?.('YYYY-MM-DD') ?? String(b ?? '');
+      const existing = formData.value;
+      const birthdayVal = isEdit.value && existing?.birthday
+        ? String(existing.birthday)
+        : new Date().toISOString();
       const payload = {
         name: String(data.name ?? ''),
-        contactType: data.contactType != null ? String(data.contactType) : '',
-        gender: Number(data.gender) as number,
+        contactType: isEdit.value ? String(existing?.contactType ?? '') : '',
+        gender: isEdit.value ? Number(existing?.gender ?? 0) : 0,
         birthday: birthdayVal,
         position: String(data.position ?? ''),
         mobile: String(data.mobile ?? ''),
         phone: String(data.phone ?? ''),
         email: String(data.email ?? ''),
+        qq: String(data.qq ?? ''),
+        wechat: String(data.wechat ?? ''),
+        isWechatAdded: Boolean(data.isWechatAdded),
         isPrimary: Boolean(data.isPrimary),
       };
       if (isEdit.value && formData.value?.id) {
@@ -155,13 +154,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
       const primaryBool = isPrimary === true || isPrimary === 1 || isPrimary === 'true' || isPrimary === '1';
       formApi.setValues({
         name: contact.name ?? '',
-        contactType: contact.contactType ?? '',
-        gender: contact.gender ?? 0,
-        birthday: contact.birthday ?? undefined,
         position: contact.position ?? '',
         mobile: contact.mobile ?? '',
         phone: contact.phone ?? '',
         email: contact.email ?? '',
+        qq: (contact as any).qq ?? '',
+        wechat: (contact as any).wechat ?? '',
+        isWechatAdded: Boolean((contact as any).isWechatAdded ?? false),
         isPrimary: primaryBool,
       });
     }

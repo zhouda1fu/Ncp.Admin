@@ -15,7 +15,7 @@ public sealed class AppPermissionGroup
     /// <summary>
     /// 权限组内的所有权限，权限是只读的。
     /// </summary>
-    public IReadOnlyList<AppPermission> Permissions => _permissions.ToImmutableList();
+    public IReadOnlyList<AppPermission> Permissions => _permissions;
 
     private readonly List<AppPermission> _permissions = [];
 
@@ -34,11 +34,12 @@ public sealed class AppPermissionGroup
     /// </summary>
     /// <param name="code">权限的唯一代码。</param>
     /// <param name="name">权限的名称。</param>
+    /// <param name="description">权限的描述信息，默认等于显示名称。</param>
     /// <param name="isEnabled">是否启用该权限，默认为 true。</param>
     /// <returns>返回创建的权限对象。</returns>
-    public AppPermission AddPermission(string code, string name, bool isEnabled = true)
+    public AppPermission AddPermission(string code, string name, string? description = null, bool isEnabled = true)
     {
-        var permission = new AppPermission(code, name, isEnabled);
+        var permission = new AppPermission(code, name, description, isEnabled);
         _permissions.Add(permission); // 将权限添加到权限组中
         return permission;
     }

@@ -14,10 +14,18 @@ internal class AnnouncementReadRecordEntityTypeConfiguration : IEntityTypeConfig
     {
         builder.ToTable("announcement_read_record");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseGuidVersion7ValueGenerator();
-        builder.Property(x => x.AnnouncementId).IsRequired();
-        builder.Property(x => x.UserId).IsRequired();
-        builder.Property(x => x.ReadAt).IsRequired();
+        builder.Property(x => x.Id)
+            .UseGuidVersion7ValueGenerator()
+            .HasComment("已读记录标识");
+        builder.Property(x => x.AnnouncementId)
+            .IsRequired()
+            .HasComment("公告ID");
+        builder.Property(x => x.UserId)
+            .IsRequired()
+            .HasComment("用户ID");
+        builder.Property(x => x.ReadAt)
+            .IsRequired()
+            .HasComment("已读时间");
         builder.HasIndex(x => new { x.AnnouncementId, x.UserId }).IsUnique();
         builder.HasIndex(x => x.UserId);
     }

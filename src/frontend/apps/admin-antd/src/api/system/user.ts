@@ -228,6 +228,16 @@ async function downloadUserImportTemplate() {
   triggerBlobDownload(blob, 'user-import-template.xlsx');
 }
 
+/** 当前用户工作流路由角色（作废审批等多角色弹窗） */
+export interface WorkflowRoutingRoleItem {
+  roleId: string;
+  roleName: string;
+}
+
+async function getCurrentUserWorkflowRoutingRoles() {
+  return requestClient.get<WorkflowRoutingRoleItem[]>('/user/current/workflow-routing-roles');
+}
+
 /** 上传 Excel 批量创建用户 */
 async function importUsersExcel(file: File) {
   const formData = new FormData();
@@ -242,6 +252,7 @@ export {
   deleteUser,
   downloadUserImportTemplate,
   exportUsersExcel,
+  getCurrentUserWorkflowRoutingRoles,
   getUser,
   getUserList,
   importUsersExcel,

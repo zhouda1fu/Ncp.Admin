@@ -23,7 +23,7 @@ public class ActivatePositionEndpoint(IMediator mediator) : Endpoint<ActivatePos
     public override void Configure()
     {
         Tags("Positions");
-        Description(b => b.AutoTagOverride("Positions"));
+        Description(b => b.AutoTagOverride("Positions").WithSummary("激活岗位"));
         Put("/api/admin/position/activate");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionEdit);

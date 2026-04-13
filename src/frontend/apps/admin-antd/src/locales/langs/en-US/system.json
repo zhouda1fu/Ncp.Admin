@@ -36,6 +36,7 @@
       "purchaseOrder": "Purchase Order",
       "reimbursement": "Reimbursement",
       "order": "Order Approval",
+      "customerSeaVoid": "Customer Void",
       "general": "General"
     },
     "node": {

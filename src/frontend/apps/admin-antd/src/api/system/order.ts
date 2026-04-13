@@ -72,6 +72,8 @@ export namespace OrderApi {
     isShipped: boolean;
     paymentStatus: number;
     contractNotCompanyTemplate: boolean;
+    /** 是否无 logo（工作流条件字段 IsNoLogo 同源） */
+    isNoLogo: boolean;
     contractAmount: number;
     logisticsPaymentMethodId: number;
     waybillNumber: string;
@@ -79,6 +81,9 @@ export namespace OrderApi {
     shippingFeeIsPay: boolean;
     surcharge: number;
     warehouseStatus: number;
+    warehousePickerId: string;
+    warehouseTechId: string;
+    warehouseReviewerId: string;
     workflowInstanceId: string | null;
     createdAt: string;
   }
@@ -172,19 +177,23 @@ async function deleteOrderRemark(orderId: string, remarkId: string) {
   return requestClient.delete<boolean>(`/orders/${orderId}/remarks/${remarkId}`);
 }
 
-interface OrderPushRecordResponse {
-  pushId: string;
-  deptName?: string;
-  pusherName: string;
-  pushTime: string;
-  processName: string;
-  reason: string;
+async function getOrderDiscountPointsRemarks(orderId: string) {
+  return requestClient.get<OrderApi.OrderRemarkDto[]>(`/orders/${orderId}/discount-points-remarks`);
 }
 
-async function getOrderPushRecords(orderId: string) {
-  return requestClient.get<OrderPushRecordResponse[]>(
-    `/orders/${orderId}/push-records`,
+async function createOrderDiscountPointsRemark(orderId: string, content: string) {
+  return requestClient.post<boolean>(`/orders/${orderId}/discount-points-remarks`, { content });
+}
+
+async function updateOrderDiscountPointsRemark(orderId: string, remarkId: string, content: string) {
+  return requestClient.put<boolean>(
+    `/orders/${orderId}/discount-points-remarks/${remarkId}`,
+    { content },
   );
+}
+
+async function deleteOrderDiscountPointsRemark(orderId: string, remarkId: string) {
+  return requestClient.delete<boolean>(`/orders/${orderId}/discount-points-remarks/${remarkId}`);
 }
 
 export {
@@ -198,5 +207,8 @@ export {
   createOrderRemark,
   updateOrderRemark,
   deleteOrderRemark,
-  getOrderPushRecords,
+  getOrderDiscountPointsRemarks,
+  createOrderDiscountPointsRemark,
+  updateOrderDiscountPointsRemark,
+  deleteOrderDiscountPointsRemark,
 };

@@ -1,0 +1,116 @@
+using System.Security.Claims;
+using FastEndpoints;
+using FastEndpoints.Swagger;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
+using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
+using Ncp.Admin.Web.Application.Commands.Customers;
+using Ncp.Admin.Web.AppPermissions;
+
+namespace Ncp.Admin.Web.Endpoints.Customers;
+
+/// <summary>
+/// 创建客户请求
+/// </summary>
+/// <param name="OwnerId">负责人用户 ID，null 表示公海客户</param>
+/// <param name="CustomerSourceId">客户来源 ID</param>
+/// <param name="CustomerSourceName">客户来源名称（前端传入）</param>
+/// <param name="FullName">客户全称</param>
+/// <param name="Status">客户状态（枚举值，必填）</param>
+/// <param name="Nature">公司性质（枚举值，必填）</param>
+/// <param name="ProvinceCode">省区域码</param>
+/// <param name="CityCode">市区域码</param>
+/// <param name="DistrictCode">区/县区域码</param>
+/// <param name="ProvinceName">省名称（前端传入）</param>
+/// <param name="CityName">市名称（前端传入）</param>
+/// <param name="DistrictName">区/县名称（前端传入）</param>
+/// <param name="PhoneProvinceCode">电话省区域码</param>
+/// <param name="PhoneCityCode">电话市区域码</param>
+/// <param name="PhoneDistrictCode">电话区/县区域码</param>
+/// <param name="PhoneProvinceName">电话省名称（前端传入）</param>
+/// <param name="PhoneCityName">电话市名称（前端传入）</param>
+/// <param name="PhoneDistrictName">电话区/县名称（前端传入）</param>
+/// <param name="ConsultationContent">咨询内容</param>
+/// <param name="CoverRegion">覆盖区域</param>
+/// <param name="RegisterAddress">注册地址</param>
+/// <param name="EmployeeCount">员工数量</param>
+/// <param name="BusinessLicense">营业执照（路径或 URL）</param>
+/// <param name="ContactQq">QQ</param>
+/// <param name="ContactWechat">微信</param>
+/// <param name="Remark">备注</param>
+/// <param name="IndustryIds">所属行业 ID 列表</param>
+/// <remarks>简称、主联系人、微信状态、是否重点客户不在本接口接收，由后端默认值写入，防止篡改。OwnerId 为 null 表示公海客户。</remarks>
+public record CreateCustomerRequest(
+    CustomerSourceId CustomerSourceId,
+    string CustomerSourceName,
+    string FullName,
+    CustomerStatus Status,
+    CompanyNature Nature,
+    string ProvinceCode,
+    string CityCode,
+    string DistrictCode,
+    string ProvinceName,
+    string CityName,
+    string DistrictName,
+    string PhoneProvinceCode,
+    string PhoneCityCode,
+    string PhoneDistrictCode,
+    string PhoneProvinceName,
+    string PhoneCityName,
+    string PhoneDistrictName,
+    string ConsultationContent,
+    string CoverRegion,
+    string RegisterAddress,
+    int EmployeeCount,
+    string? BusinessLicense,
+    string ContactQq,
+    string ContactWechat,
+    string Remark,
+    IReadOnlyList<IndustryId> IndustryIds);
+
+/// <summary>
+/// 创建客户响应
+/// </summary>
+/// <param name="Id">新创建的客户 ID</param>
+public record CreateCustomerResponse(CustomerId Id);
+
+/// <summary>
+/// 创建客户
+/// </summary>
+/// <param name="mediator">MediatR 中介者</param>
+public class CreateCustomerEndpoint(IMediator mediator) : Endpoint<CreateCustomerRequest, ResponseData<CreateCustomerResponse>>
+{
+    /// <inheritdoc />
+    public override void Configure()
+    {
+        Tags("Customer");
+        Post("/api/admin/customers");
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.CustomerCreate);
+        Description(b => b.AutoTagOverride("Customer").WithSummary("创建客户"));
+        Idempotency(); // 防重复提交：客户端需传 Idempotency-Key 请求头，相同 key 在有效期内返回缓存响应
+    }
+
+    /// <inheritdoc />
+    public override async Task HandleAsync(CreateCustomerRequest req, CancellationToken ct)
+    {
+        if (!User.TryGetUserId(out var uid))
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+        var creatorName = User.GetUserDisplayName();
+        var ownerId = uid;
+        var cmd = new CreateCustomerCommand(
+            ownerId, req.CustomerSourceId, req.CustomerSourceName, req.FullName,
+            string.Empty, req.Status, req.Nature, req.ProvinceCode, req.CityCode, req.DistrictCode, req.ProvinceName, req.CityName, req.DistrictName,
+            req.PhoneProvinceCode, req.PhoneCityCode, req.PhoneDistrictCode, req.PhoneProvinceName, req.PhoneCityName, req.PhoneDistrictName,
+            req.ConsultationContent, req.CoverRegion, req.RegisterAddress, req.EmployeeCount, req.BusinessLicense ?? string.Empty,
+            string.Empty, string.Empty, req.ContactQq, req.ContactWechat, string.Empty, req.Remark, false, uid, creatorName, req.IndustryIds);
+        var id = await mediator.Send(cmd, ct);
+        await Send.OkAsync(new CreateCustomerResponse(id).AsResponseData(), cancellation: ct);
+    }
+}

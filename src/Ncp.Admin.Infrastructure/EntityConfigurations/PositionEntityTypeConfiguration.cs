@@ -14,34 +14,41 @@ internal class PositionEntityTypeConfiguration : IEntityTypeConfiguration<Positi
         builder.ToTable("position");
 
         builder.HasKey(p => p.Id);
-        builder.Property(p => p.Id).UseSnowFlakeValueGenerator();
+        builder.Property(p => p.Id).UseSnowFlakeValueGenerator().HasComment("岗位标识");
 
         builder.Property(p => p.Name)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .HasComment("岗位名称");
 
         builder.Property(p => p.Code)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(50)
+            .HasComment("岗位编码");
 
         builder.Property(p => p.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(500)
+            .HasComment("岗位描述");
 
         builder.Property(p => p.SortOrder)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("排序号");
 
         builder.Property(p => p.Status)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("状态（0=禁用，1=启用）");
 
         builder.Property(p => p.CreatedAt)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("创建时间");
 
         builder.Property(p => p.IsDeleted)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("是否软删");
 
-        builder.Property(p => p.DeletedAt);
+        builder.Property(p => p.DeletedAt).HasComment("删除时间");
 
-        builder.Property(p => p.UpdateTime);
+        builder.Property(p => p.UpdateTime).HasComment("更新时间");
 
         // 索引
         builder.HasIndex(p => p.Code).IsUnique();

@@ -288,18 +288,14 @@ export function useColumns(
       cellRender: {
         attrs: { nameField: 'fullName', nameTitle: $t('customer.fullName'), onClick: onActionClick },
         name: 'CellOperation',
-        options: [
-          { code: 'edit', text: $t('customer.edit') },
-          { code: 'share', text: $t('customer.share') },
-          { code: 'releaseToSea', text: $t('customer.releaseToSea'), show: (row: CustomerApi.CustomerItem) => !row.isInSea },
-        ],
+        options: [{ code: 'edit', text: $t('customer.edit') }],
       },
       field: 'operation',
       fixed: 'right',
       headerAlign: 'center',
       showOverflow: false,
       title: $t('customer.operation'),
-      width: 200,
+      width: 120,
     },
   ];
 }

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
-using Ncp.Admin.Web.Application.Commands.Order;
+using Ncp.Admin.Web.Application.Commands.Orders;
 
 namespace Ncp.Admin.Web.Application.Services.Workflow;
 
@@ -24,6 +24,7 @@ public static class OrderWorkflowVariablesBuilder
             CategoryDiscountPoints = BuildCategoryDiscountPoints(order),
             ContractAmount = order.ContractAmount,
             ContractNotCompanyTemplate = order.ContractNotCompanyTemplate,
+            IsNoLogo = order.IsNoLogo,
             NeedInvoice = order.NeedInvoice,
             IsShipped = order.IsShipped,
             LogisticsPaymentMethodId = order.LogisticsPaymentMethodId,

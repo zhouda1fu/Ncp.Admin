@@ -1,3 +1,4 @@
+using System;
 using Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
@@ -13,6 +14,9 @@ public partial record ChatMessageId : IGuidStronglyTypedId;
 /// </summary>
 public class ChatMessage : Entity<ChatMessageId>, IAggregateRoot
 {
+    /// <summary>非回复消息的占位引用（<see cref="Guid.Empty"/>）</summary>
+    public static ChatMessageId NoReplyToMessageId { get; } = new(Guid.Empty);
+
     protected ChatMessage() { }
 
     /// <summary>
@@ -31,9 +35,9 @@ public class ChatMessage : Entity<ChatMessageId>, IAggregateRoot
     public string Content { get; private set; } = string.Empty;
 
     /// <summary>
-    /// 回复的消息ID（可选，用于 @ 或引用回复）
+    /// 回复的消息 ID（非回复时为 <see cref="NoReplyToMessageId"/>）
     /// </summary>
-    public ChatMessageId? ReplyToMessageId { get; private set; }
+    public ChatMessageId ReplyToMessageId { get; private set; } = NoReplyToMessageId;
 
     /// <summary>
     /// 发送时间
@@ -48,7 +52,7 @@ public class ChatMessage : Entity<ChatMessageId>, IAggregateRoot
         ChatGroupId = chatGroupId;
         SenderId = senderId;
         Content = content ;
-        ReplyToMessageId = replyToMessageId;
+        ReplyToMessageId = replyToMessageId ?? NoReplyToMessageId;
         CreatedAt = DateTimeOffset.UtcNow;
     }
 }

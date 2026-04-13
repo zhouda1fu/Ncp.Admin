@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 
@@ -21,6 +22,7 @@ public class GetUserAccessCodesEndpoint(RoleQuery roleQuery, UserQuery userQuery
         Description(b => b.AutoTagOverride("Users"));
         Get("/api/admin/auth/codes");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserView);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

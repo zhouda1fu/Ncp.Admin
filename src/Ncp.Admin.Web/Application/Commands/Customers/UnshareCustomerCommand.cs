@@ -22,7 +22,7 @@ public class UnshareCustomerCommandHandler(ICustomerRepository repository)
 {
     public async Task<bool> Handle(UnshareCustomerCommand request, CancellationToken cancellationToken)
     {
-        var customer = await repository.GetAsync(request.CustomerId, cancellationToken)
+        var customer = await repository.GetWithSharesAsync(request.CustomerId, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
         customer.UnshareUsers(request.SharedToUserIds);
         return true;

@@ -29,7 +29,7 @@ public class UpdateDeptEndpoint(IMediator mediator) : Endpoint<UpdateDeptRequest
     public override void Configure()
     {
         Tags("Depts");
-        Description(b => b.AutoTagOverride("Depts"));
+        Description(b => b.AutoTagOverride("Depts").WithSummary("更新部门"));
         Put("/api/admin/dept");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptEdit);

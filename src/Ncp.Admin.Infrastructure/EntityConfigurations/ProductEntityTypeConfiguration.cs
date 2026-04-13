@@ -1,10 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Ncp.Admin.Domain.AggregatesModel.ProductAggregate;
-using Ncp.Admin.Domain.AggregatesModel.ProductCategoryAggregate;
-using Ncp.Admin.Domain.AggregatesModel.ProductTypeAggregate;
-using Ncp.Admin.Domain.AggregatesModel.SupplierAggregate;
 
 namespace Ncp.Admin.Infrastructure.EntityConfigurations;
 
@@ -15,12 +11,7 @@ internal class ProductEntityTypeConfiguration : IEntityTypeConfiguration<Product
         builder.ToTable("product");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("产品标识");
-        builder.Property(x => x.ProductTypeId)
-            .HasConversion(
-                new ValueConverter<ProductTypeId, Guid>(
-                    v => Guid.Parse(v.ToString()!),
-                    v => new ProductTypeId(v)))
-            .HasComment("产品类型ID");
+        builder.Property(x => x.ProductTypeId).IsRequired().HasComment("产品类型ID");
         builder.Property(x => x.Status).HasComment("状态（是否有效）");
         builder.Property(x => x.Name).IsRequired().HasMaxLength(200).HasComment("产品名称");
         builder.Property(x => x.Code).IsRequired().HasMaxLength(100).HasComment("产品编码");
@@ -43,18 +34,8 @@ internal class ProductEntityTypeConfiguration : IEntityTypeConfiguration<Product
         builder.Property(x => x.Introduction).IsRequired().HasMaxLength(4000).HasComment("产品介绍");
         builder.Property(x => x.IntroductionResources).IsRequired().HasMaxLength(2000).HasComment("产品介绍资源JSON");
         builder.Property(x => x.ImagePath).IsRequired().HasMaxLength(500).HasComment("图片路径");
-        builder.Property(x => x.CategoryId)
-            .HasConversion(
-                new ValueConverter<ProductCategoryId, Guid?>(
-                    v => v == new ProductCategoryId(Guid.Empty) ? null : Guid.Parse(v.ToString()!),
-                    v => v == null || v == Guid.Empty ? new ProductCategoryId(Guid.Empty) : new ProductCategoryId(v.Value)))
-            .HasComment("产品分类ID");
-        builder.Property(x => x.SupplierId)
-            .HasConversion(
-                new ValueConverter<SupplierId, Guid?>(
-                    v => v == new SupplierId(Guid.Empty) ? null : Guid.Parse(v.ToString()!),
-                    v => v == null || v == Guid.Empty ? new SupplierId(Guid.Empty) : new SupplierId(v.Value)))
-            .HasComment("供应商ID");
+        builder.Property(x => x.CategoryId).IsRequired().HasComment("产品分类ID（无分类为 Guid.Empty）");
+        builder.Property(x => x.SupplierId).IsRequired().HasComment("供应商ID（无供应商为 Guid.Empty）");
         builder.HasIndex(x => x.Code);
         builder.HasIndex(x => x.Barcode);
         builder.HasIndex(x => x.CategoryId);

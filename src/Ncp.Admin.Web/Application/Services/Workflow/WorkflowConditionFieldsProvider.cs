@@ -1,5 +1,5 @@
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
-using Ncp.Admin.Web.Application.Commands.Workflow;
+using Ncp.Admin.Web.Application.Commands.Workflows;
 
 namespace Ncp.Admin.Web.Application.Services.Workflow;
 
@@ -27,7 +27,7 @@ public record ConditionFieldDto(
 public static class WorkflowConditionFieldsProvider
 {
     /// <summary>
-    /// 根据流程分类返回条件字段列表。仅支持用户管理、订单审批。
+    /// 根据流程分类返回条件字段列表。客户作废（CustomerSeaVoid）的 RoutingRoleId 枚举选项由获取条件字段接口按角色表注入。
     /// </summary>
     public static List<ConditionFieldDto> GetFields(string category)
     {
@@ -35,12 +35,13 @@ public static class WorkflowConditionFieldsProvider
         {
             WorkflowBusinessTypes.Order => GetOrderFields(),
             WorkflowBusinessTypes.CreateUser => GetCreateUserFields(),
+            WorkflowBusinessTypes.CustomerSeaVoid => [],
             _ => []
         };
     }
 
     /// <summary>
-    /// 订单审批条件分支：到款情况、布尔项提供下拉选项（与 JSON 中枚举数值、布尔字符串一致）
+    /// 订单审批条件分支：到款情况、布尔项提供下拉选项（与 Variables JSON 中类型一致；布尔条件比较值为 true/false 字符串）
     /// </summary>
     private static List<ConditionFieldDto> GetOrderFields()
     {
@@ -59,6 +60,14 @@ public static class WorkflowConditionFieldsProvider
             new ConditionFieldDto(
                 "ContractNotCompanyTemplate",
                 "合同非公司模板",
+                "boolean",
+                [
+                    new ConditionFieldOptionDto("true", "是"),
+                    new ConditionFieldOptionDto("false", "否"),
+                ]),
+            new ConditionFieldDto(
+                "IsNoLogo",
+                "是否无 logo",
                 "boolean",
                 [
                     new ConditionFieldOptionDto("true", "是"),

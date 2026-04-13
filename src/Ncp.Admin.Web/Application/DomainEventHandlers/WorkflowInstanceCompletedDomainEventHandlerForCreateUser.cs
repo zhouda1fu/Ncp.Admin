@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
-using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
+using Ncp.Admin.Domain.DomainEvents;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
-using Ncp.Admin.Web.Application.Commands.Workflow;
+using Ncp.Admin.Web.Application.Commands.Workflows;
 using Ncp.Admin.Web.Application.Queries;
 using Serilog;
 

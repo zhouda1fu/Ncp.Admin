@@ -15,7 +15,7 @@ public class GetAllRolesEndpoint(RoleQuery roleQuery) : Endpoint<RoleQueryInput,
     public override void Configure()
     {
         Tags("Roles");
-        Description(b => b.AutoTagOverride("Roles"));
+        Description(b => b.AutoTagOverride("Roles").WithSummary("获取角色列表"));
         Get("/api/admin/roles");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleView);

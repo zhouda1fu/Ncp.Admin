@@ -30,6 +30,10 @@ import {
   createOrderRemark,
   updateOrderRemark,
   deleteOrderRemark,
+  getOrderDiscountPointsRemarks,
+  createOrderDiscountPointsRemark,
+  updateOrderDiscountPointsRemark,
+  deleteOrderDiscountPointsRemark,
   OrderTypeEnum,
   OrderStatusEnum,
 } from '#/api/system/order';
@@ -106,6 +110,14 @@ const logisticsPaymentMethodOptions = [
   { label: $t('order.logisticsPaymentMethodShipped'), value: 1 },
 ];
 
+const warehouseStatusOptions = [
+  { label: $t('order.warehouseStatusNotPushed'), value: 0 },
+  { label: $t('order.warehouseStatusUnseen'), value: 1 },
+  { label: $t('order.warehouseStatusSeen'), value: 2 },
+  { label: $t('order.warehouseStatusAssigned'), value: 3 },
+  { label: $t('order.warehouseStatusShipped'), value: 4 },
+];
+
 const form = ref({
   customerId: '',
   customerName: '',
@@ -128,6 +140,7 @@ const form = ref({
   invoiceTypeId: 0 as number,
   installationFee: 0,
   estimatedFreight: 0,
+  isNoLogo: false,
   contractFiles: [] as OrderApi.OrderContractFileItem[],
   stockFiles: [] as OrderApi.OrderContractFileItem[],
   selectedContractFileId: 0 as number,
@@ -148,6 +161,10 @@ const form = ref({
   shippingFee: 0,
   surcharge: 0,
   shippingFeeIsPay: false,
+  warehouseStatus: 0 as number,
+  warehousePickerId: '',
+  warehouseTechId: '',
+  warehouseReviewerId: '',
   items: [] as {
     productId: string;
     productCategoryId: string;
@@ -179,6 +196,16 @@ const remarkEditContent = ref('');
 const editingOrderRemarkId = ref('');
 const updatingOrderRemark = ref(false);
 const INSTALLMENT_URGENT_PAYMENT_STATUS = 2;
+
+/** 优惠点数说明备注列表（仅 TypeId=1） */
+const discountPointsRemarks = ref<OrderApi.OrderRemarkDto[]>([]);
+const discountPointsRemarkModalOpen = ref(false);
+const discountPointsRemarkContent = ref('');
+const addingDiscountPointsRemark = ref(false);
+const discountPointsRemarkEditModalOpen = ref(false);
+const discountPointsRemarkEditContent = ref('');
+const editingDiscountPointsRemarkId = ref('');
+const updatingDiscountPointsRemark = ref(false);
 
 const orderRemarkColumns = [
   {
@@ -547,6 +574,7 @@ async function loadDetail() {
       invoiceTypeId: normalizeOptionId((data as any).invoiceTypeId),
       installationFee: Number(data.installationFee ?? 0),
       estimatedFreight: Number(data.estimatedFreight ?? 0),
+      isNoLogo: Boolean((data as OrderApi.OrderDetail).isNoLogo ?? false),
       contractFiles: (data.contractFiles ?? []).map((f: OrderApi.OrderContractFileItem) => ({
         path: f.path,
         fileName: f.fileName,
@@ -578,6 +606,10 @@ async function loadDetail() {
       shippingFee: Number((data as any).shippingFee ?? 0),
       surcharge: Number((data as any).surcharge ?? 0),
       shippingFeeIsPay: Boolean((data as any).shippingFeeIsPay ?? false),
+      warehouseStatus: Number((data as any).warehouseStatus ?? 0),
+      warehousePickerId: String((data as any).warehousePickerId ?? ''),
+      warehouseTechId: String((data as any).warehouseTechId ?? ''),
+      warehouseReviewerId: String((data as any).warehouseReviewerId ?? ''),
       items: (data.items ?? []).map((i) => {
         const product = productOptions.value.find((p) => p.value === i.productId);
         const cid = String((i as any).productCategoryId || '');
@@ -605,10 +637,11 @@ async function loadDetail() {
     orderStatus.value = data.status ?? null;
   } finally {
     suppressOrderCategoriesRebuild.value = false;
-      if (!isNew.value) {
-        // 非新建模式下加载备注（仅 TypeId=0）
-        await loadOrderRemarks();
-      }
+    if (!isNew.value) {
+      // 非新建模式下加载备注
+      await loadOrderRemarks();
+      await loadDiscountPointsRemarks();
+    }
     loading.value = false;
   }
 }
@@ -625,6 +658,26 @@ async function loadOrderRemarks() {
   } catch (e) {
     // 列表用于展示，失败时不影响订单表单本身
     orderRemarks.value = [];
+    message.error(String(e));
+  }
+}
+
+async function loadDiscountPointsRemarks() {
+  if (!id.value) {
+    discountPointsRemarks.value = [];
+    return;
+  }
+  if (!canViewDiscountPointsRemarks.value) {
+    discountPointsRemarks.value = [];
+    return;
+  }
+
+  try {
+    const res = await getOrderDiscountPointsRemarks(id.value);
+    discountPointsRemarks.value = res ?? [];
+  } catch (e) {
+    // 列表用于展示，失败时不影响订单表单本身
+    discountPointsRemarks.value = [];
     message.error(String(e));
   }
 }
@@ -700,6 +753,77 @@ function confirmDeleteOrderRemark(record: OrderApi.OrderRemarkDto) {
   });
 }
 
+function openAddDiscountPointsRemarkModal() {
+  discountPointsRemarkContent.value = '';
+  discountPointsRemarkModalOpen.value = true;
+}
+
+async function confirmAddDiscountPointsRemark() {
+  const content = (discountPointsRemarkContent.value ?? '').trim();
+  if (!content) {
+    message.warning($t('ui.formRules.required', [$t('order.remarkContent')]));
+    return;
+  }
+  if (!id.value) return;
+
+  try {
+    addingDiscountPointsRemark.value = true;
+    await createOrderDiscountPointsRemark(id.value, content);
+    message.success($t('common.success'));
+    discountPointsRemarkModalOpen.value = false;
+    await loadDiscountPointsRemarks();
+  } catch (e) {
+    message.error(String(e));
+  } finally {
+    addingDiscountPointsRemark.value = false;
+  }
+}
+
+function openEditDiscountPointsRemarkModal(record: OrderApi.OrderRemarkDto) {
+  editingDiscountPointsRemarkId.value = record.id;
+  discountPointsRemarkEditContent.value = record.content ?? '';
+  discountPointsRemarkEditModalOpen.value = true;
+}
+
+async function confirmEditDiscountPointsRemark() {
+  const content = (discountPointsRemarkEditContent.value ?? '').trim();
+  if (!content) {
+    message.warning($t('ui.formRules.required', [$t('order.remarkContent')]));
+    return;
+  }
+  if (!id.value || !editingDiscountPointsRemarkId.value) return;
+
+  try {
+    updatingDiscountPointsRemark.value = true;
+    await updateOrderDiscountPointsRemark(id.value, editingDiscountPointsRemarkId.value, content);
+    message.success($t('common.success'));
+    discountPointsRemarkEditModalOpen.value = false;
+    await loadDiscountPointsRemarks();
+  } catch (e) {
+    message.error(String(e));
+  } finally {
+    updatingDiscountPointsRemark.value = false;
+  }
+}
+
+function confirmDeleteDiscountPointsRemark(record: OrderApi.OrderRemarkDto) {
+  if (!id.value) return;
+
+  Modal.confirm({
+    title: $t('order.deleteOrderRemarkConfirmTitle'),
+    content: $t('order.deleteOrderRemarkConfirmContent'),
+    async onOk() {
+      try {
+        await deleteOrderDiscountPointsRemark(id.value, record.id);
+        message.success($t('common.success'));
+        await loadDiscountPointsRemarks();
+      } catch (e) {
+        message.error(String(e));
+      }
+    },
+  });
+}
+
 const statusText = computed(() => {
   if (isNew.value) {
     return $t('order.statusDraft');
@@ -750,6 +874,12 @@ const canSubmitOrder = computed(
 const hasPermission = (code: string) =>
   accessStore.accessCodes?.includes(code) ?? false;
 
+// 优惠点数说明权限控制
+const canViewDiscountPointsRemarks = computed(
+  () => hasPermission(PermissionCodes.OrderDiscountPointsDescriptionView) || hasPermission(PermissionCodes.OrderDiscountPointsCreate),
+);
+const canAddDiscountPointsRemarks = computed(() => hasPermission(PermissionCodes.OrderDiscountPointsCreate));
+
 // 获取当前用户角色和部门信息
 const userRole = computed(() => {
   // 从userStore的userRoles获取角色
@@ -774,8 +904,17 @@ const canEditFinance = computed(() => {
 const canEditLogistics = computed(() => {
   // 物流与收货模块：物流/事务部门或管理员可编辑
   // 说明：审核流程到“事务部”节点时，该部门需要能够编辑物流与收货模块。
-  return userDept.value?.includes('物流') || userDept.value?.includes('事务') || userRole.value === '管理员';
+  return (
+    userDept.value?.includes('物流') ||
+    userDept.value?.includes('事务') ||
+    userDept.value?.includes('仓储') ||
+    userRole.value === '管理员'
+  );
 });
+
+const canEditDiscountPoints = computed(() =>
+  canEditFinance.value && hasPermission(PermissionCodes.OrderDiscountPointsCreate),
+);
 
 const canEditProducts = computed(() => {
   // 产品明细：营销中心或管理员可编辑
@@ -913,6 +1052,13 @@ function toIsoDate(v: string): string {
   return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
 }
 
+/** 后端 UserId 为 long 强类型，空字符串会导致反序列化失败；未选时传 "0" */
+function normalizeUserIdPayload(v: unknown): string {
+  const s = v == null ? '' : String(v).trim();
+  if (s === '' || s === 'undefined' || s === 'null') return '0';
+  return /^\d+$/.test(s) ? s : '0';
+}
+
 function normalizeOptionId(value: unknown): number {
   if (value == null) return 0;
   if (typeof value === 'number') return value;
@@ -958,6 +1104,7 @@ async function onSubmit() {
     message.warning($t('ui.formRules.required', [$t('order.items')]));
     return;
   }
+  if (!(await ensureInstallmentUrgentHasRemarkBeforeSubmit('save'))) return;
   submitting.value = true;
   try {
     const payload = buildOrderPayload();
@@ -1000,6 +1147,7 @@ function buildOrderPayload() {
     invoiceTypeId: Number(form.value.invoiceTypeId ?? 0),
     installationFee: form.value.installationFee,
     estimatedFreight: form.value.estimatedFreight,
+    isNoLogo: form.value.isNoLogo,
     contractFiles: form.value.contractFiles,
     stockFiles: form.value.stockFiles,
     selectedContractFileId: Number(form.value.selectedContractFileId ?? 0),
@@ -1028,6 +1176,10 @@ function buildOrderPayload() {
     shippingFee: form.value.shippingFee,
     shippingFeeIsPay: form.value.shippingFeeIsPay,
     surcharge: form.value.surcharge,
+    warehouseStatus: Number(form.value.warehouseStatus ?? 0),
+    warehousePickerId: normalizeUserIdPayload(form.value.warehousePickerId),
+    warehouseTechId: normalizeUserIdPayload(form.value.warehouseTechId),
+    warehouseReviewerId: normalizeUserIdPayload(form.value.warehouseReviewerId),
     items: form.value.items.map((i) => ({
       productId: i.productId,
       productCategoryId: i.productCategoryId,
@@ -1073,8 +1225,37 @@ function validateOrderForm(): boolean {
   return true;
 }
 
+async function ensureInstallmentUrgentHasRemarkBeforeSubmit(action: 'save' | 'push'): Promise<boolean> {
+  if (Number(form.value.paymentStatus) !== INSTALLMENT_URGENT_PAYMENT_STATUS) return true;
+  // 仅限制财务部在“保存/推送”时必须提供说明
+  if (!canEditFinance.value) return true;
+
+  if (!id.value) {
+    message.warning(
+      action === 'push'
+        ? '到款情况为“有分期未到全款加急发货”时，请先保存订单，再添加备注说明后再推送。'
+        : '到款情况为“有分期未到全款加急发货”时，请先保存订单，再添加备注说明后再保存。',
+    );
+    return false;
+  }
+
+  // 推送前刷新备注，确保判断基于最新数据
+  await loadOrderRemarks();
+  const hasRemark = (orderRemarks.value || []).some((r) => String(r?.content ?? '').trim().length > 0);
+  if (hasRemark) return true;
+
+  message.warning(
+    action === 'push'
+      ? '到款情况为“有分期未到全款加急发货”时，必须先添加备注说明后才能推送。'
+      : '到款情况为“有分期未到全款加急发货”时，必须先添加备注说明后才能保存。',
+  );
+  openAddOrderRemarkModal();
+  return false;
+}
+
 async function onSubmitForApproval() {
   if (!validateOrderForm()) return;
+  if (!(await ensureInstallmentUrgentHasRemarkBeforeSubmit('push'))) return;
 
   Modal.confirm({
     title: $t('order.submitApprovalConfirmTitle'),
@@ -1519,6 +1700,17 @@ async function onStockFileSelected(e: Event) {
             <label class="mb-1 block text-sm font-medium text-foreground"><span class="mr-[2px] text-destructive">*</span>{{ $t('order.estimatedFreight') }}</label>
             <InputNumber v-model:value="form.estimatedFreight" class="w-full" :min="0" :precision="2" :disabled="!canEditMarketing" />
           </div>
+          <div class="flex items-center">
+            <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
+              <input
+                v-model="form.isNoLogo"
+                type="checkbox"
+                class="h-4 w-4 rounded border-input"
+                :disabled="!canEditMarketing"
+              />
+              {{ $t('order.isNoLogo') }}
+            </label>
+          </div>
           <!-- 合同上传与列表 -->
           <div v-if="hasPermission(PermissionCodes.OrderContractUpload)" class="md:col-span-4">
             <div class="mb-2 flex flex-wrap items-center gap-2">
@@ -1648,7 +1840,7 @@ async function onStockFileSelected(e: Event) {
                 class="w-full"
                 :min="0"
                 :precision="2"
-                :disabled="!canEditFinance"
+                :disabled="!canEditDiscountPoints"
               />
             </div>
           </template>
@@ -1656,6 +1848,75 @@ async function onStockFileSelected(e: Event) {
             <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.contractAmount') }}</label>
             <InputNumber v-model:value="form.contractAmount" class="w-full" :min="0" :precision="2" :disabled="!canEditFinance" />
           </div>
+        </div>
+
+        <!-- 优惠点数说明 -->
+        <div v-if="canViewDiscountPointsRemarks" class="mt-4">
+          <div class="mb-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+            {{ $t('order.discountPointsDescription') }}
+          </div>
+
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <span class="text-sm font-medium text-foreground">优惠点数说明</span>
+            <Button
+              v-if="!isNew && canAddDiscountPointsRemarks"
+              type="primary"
+              size="small"
+              @click="openAddDiscountPointsRemarkModal"
+            >
+              + {{ $t('order.addDiscountPointsDescription') }}
+            </Button>
+          </div>
+
+          <Table
+            v-if="discountPointsRemarks.length > 0"
+            :columns="orderRemarkColumns"
+            :data-source="discountPointsRemarks"
+            :pagination="false"
+            size="small"
+            bordered
+            row-key="id"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'action'">
+                <div class="flex flex-wrap gap-x-1 gap-y-0.5">
+                  <Button
+                    v-if="!isNew && canAddDiscountPointsRemarks && (record as OrderApi.OrderRemarkDto).userId === currentUserId"
+                    type="link"
+                    size="small"
+                    class="p-0 min-w-0 h-auto leading-normal"
+                    @click="openEditDiscountPointsRemarkModal(record as OrderApi.OrderRemarkDto)"
+                  >
+                    {{ $t('order.editOrderRemark') }}
+                  </Button>
+                  <Button
+                    v-if="!isNew && canAddDiscountPointsRemarks && (record as OrderApi.OrderRemarkDto).userId === currentUserId"
+                    type="link"
+                    size="small"
+                    danger
+                    class="p-0 min-w-0 h-auto leading-normal"
+                    @click="confirmDeleteDiscountPointsRemark(record as OrderApi.OrderRemarkDto)"
+                  >
+                    {{ $t('order.deleteOrderRemark') }}
+                  </Button>
+                </div>
+              </template>
+              <template v-else-if="column.key === 'userName'">
+                {{ (record as OrderApi.OrderRemarkDto).userName || '-' }}
+              </template>
+              <template v-else-if="column.key === 'addedAt'">
+                {{
+                  (record as OrderApi.OrderRemarkDto).addedAt
+                    ? new Date((record as OrderApi.OrderRemarkDto).addedAt).toLocaleString()
+                    : ''
+                }}
+              </template>
+              <template v-else-if="column.key === 'content'">
+                <span class="whitespace-pre-wrap">{{ (record as OrderApi.OrderRemarkDto).content }}</span>
+              </template>
+            </template>
+          </Table>
+          <div v-else class="text-sm text-muted-foreground">暂无优惠点数说明</div>
         </div>
 
         <!-- 订单备注（财务可新增） -->
@@ -1829,6 +2090,36 @@ async function onStockFileSelected(e: Event) {
             </label>
           </div>
 
+        </div>
+      </div>
+
+      <!-- 仓储部 -->
+      <div class="border-border mt-4 border-t pt-4">
+        <h4 class="order-section-title">{{ $t('order.sectionWarehouse') }}</h4>
+        <div class="grid gap-4 md:grid-cols-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.warehouseStatus') }}</label>
+            <Select
+              v-model:value="form.warehouseStatus"
+              class="w-full"
+              :disabled="!canEditLogistics"
+              :options="warehouseStatusOptions"
+              :field-names="{ label: 'label', value: 'value' }"
+              placeholder="--请选择--"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.warehousePicker') }}</label>
+            <Input v-model:value="form.warehousePickerId" :disabled="!canEditLogistics" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.warehouseTech') }}</label>
+            <Input v-model:value="form.warehouseTechId" :disabled="!canEditLogistics" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-foreground">{{ $t('order.warehouseReviewer') }}</label>
+            <Input v-model:value="form.warehouseReviewerId" :disabled="!canEditLogistics" />
+          </div>
         </div>
       </div>
 
@@ -2024,6 +2315,38 @@ async function onStockFileSelected(e: Event) {
     >
       <Input.TextArea
         v-model:value="remarkEditContent"
+        :rows="6"
+        :placeholder="$t('order.remarkContent')"
+      />
+    </Modal>
+
+    <Modal
+      v-model:open="discountPointsRemarkModalOpen"
+      title="新增优惠点数说明"
+      :confirm-loading="addingDiscountPointsRemark"
+      :ok-text="$t('common.confirm')"
+      :cancel-text="$t('common.cancel')"
+      @ok="confirmAddDiscountPointsRemark"
+      @cancel="discountPointsRemarkModalOpen = false"
+    >
+      <Input.TextArea
+        v-model:value="discountPointsRemarkContent"
+        :rows="6"
+        :placeholder="$t('order.remarkContent')"
+      />
+    </Modal>
+
+    <Modal
+      v-model:open="discountPointsRemarkEditModalOpen"
+      title="编辑优惠点数说明"
+      :confirm-loading="updatingDiscountPointsRemark"
+      :ok-text="$t('common.confirm')"
+      :cancel-text="$t('common.cancel')"
+      @ok="confirmEditDiscountPointsRemark"
+      @cancel="discountPointsRemarkEditModalOpen = false"
+    >
+      <Input.TextArea
+        v-model:value="discountPointsRemarkEditContent"
         :rows="6"
         :placeholder="$t('order.remarkContent')"
       />

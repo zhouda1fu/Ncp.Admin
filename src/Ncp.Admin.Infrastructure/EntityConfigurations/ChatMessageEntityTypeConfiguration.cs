@@ -18,7 +18,7 @@ internal class ChatMessageEntityTypeConfiguration : IEntityTypeConfiguration<Cha
         builder.Property(x => x.ChatGroupId).IsRequired();
         builder.Property(x => x.SenderId).IsRequired();
         builder.Property(x => x.Content).IsRequired().HasMaxLength(4000);
-        builder.Property(x => x.ReplyToMessageId);
+        builder.Property(x => x.ReplyToMessageId).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.HasIndex(x => x.ChatGroupId);
         builder.HasIndex(x => x.SenderId);

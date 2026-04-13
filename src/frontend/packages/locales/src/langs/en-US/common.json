@@ -6,6 +6,8 @@
   "prompt": "Prompt",
   "cancel": "Cancel",
   "confirm": "Confirm",
+  "save": "Save",
+  "saveSuccess": "Saved successfully",
   "reset": "Reset",
   "noData": "No Data",
   "refresh": "Refresh",

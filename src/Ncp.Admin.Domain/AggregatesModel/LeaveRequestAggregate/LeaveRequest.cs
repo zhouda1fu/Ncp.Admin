@@ -1,6 +1,6 @@
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
-using Ncp.Admin.Domain.DomainEvents.LeaveEvents;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.LeaveRequestAggregate;
 

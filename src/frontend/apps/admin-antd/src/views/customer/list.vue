@@ -10,15 +10,14 @@ import { useRouter } from 'vue-router';
 import { Page } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
-import { Button, message } from 'ant-design-vue';
+import { Button } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { getCustomerList, releaseCustomerToSea } from '#/api/system/customer';
+import { getCustomerList } from '#/api/system/customer';
 import { getCustomerSourceList } from '#/api/system/customerSource';
 import { $t } from '#/locales';
 
 import { useColumns, useGridFormSchema } from './data';
-import ShareModal from './modules/share-modal.vue';
 
 const router = useRouter();
 const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
@@ -28,8 +27,6 @@ onMounted(() => {
     customerSourceOptions.value = list.map((x) => ({ label: x.name, value: x.id }));
   });
 });
-
-const shareModalRef = ref<InstanceType<typeof ShareModal> | null>(null);
 
 const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
   formOptions: {
@@ -65,8 +62,6 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
 
 function onActionClick(e: OnActionClickParams<CustomerApi.CustomerItem>) {
   if (e.code === 'edit') onEdit(e.row);
-  else if (e.code === 'share') onShare(e.row);
-  else if (e.code === 'releaseToSea') onReleaseToSea(e.row);
 }
 
 function onRefresh() {
@@ -80,27 +75,10 @@ function onCreate() {
 function onEdit(row: CustomerApi.CustomerItem) {
   router.push(`/customer/${row.id}/edit`);
 }
-
-function onShare(row: CustomerApi.CustomerItem) {
-  shareModalRef.value?.open({ customerId: row.id, customerName: row.fullName });
-}
-
-async function onReleaseToSea(row: CustomerApi.CustomerItem) {
-  const key = 'customer_release';
-  const hide = message.loading({ content: $t('common.loading'), duration: 0, key });
-  try {
-    await releaseCustomerToSea(row.id);
-    message.success({ content: $t('common.success'), key });
-    onRefresh();
-  } finally {
-    hide();
-  }
-}
 </script>
 
 <template>
   <Page auto-content-height>
-    <ShareModal ref="shareModalRef" @success="onRefresh" />
     <Grid :table-title="$t('customer.list')">
       <template #toolbar-tools>
         <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">

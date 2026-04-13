@@ -6,36 +6,27 @@ using Ncp.Admin.Infrastructure;
 namespace Ncp.Admin.Web.Application.Queries;
 
 /// <summary>
-/// 获取订单备注列表（财务使用：TypeId=0）
+/// 订单备注项（财务备注 / 优惠点数说明等共用）
 /// </summary>
-public class GetOrderRemarksQuery(OrderId orderId) : IRequest<List<OrderRemarkDto>>
-{
-    public OrderId OrderId { get; } = orderId;
-}
+/// <param name="Id">备注记录 ID</param>
+/// <param name="TypeId">备注类型（0 表示财务备注）</param>
+/// <param name="Content">备注正文</param>
+/// <param name="UserId">添加人用户 ID</param>
+/// <param name="UserName">添加人显示名称</param>
+/// <param name="AddedAt">添加时间</param>
+public record OrderRemarkDto(
+    string Id,
+    int TypeId,
+    string Content,
+    string UserId,
+    string UserName,
+    DateTimeOffset AddedAt);
 
 /// <summary>
-/// 订单备注响应
+/// 获取订单备注列表（财务使用：TypeId=0）
 /// </summary>
-public class OrderRemarkDto
-{
-    /// <summary>备注ID</summary>
-    public string Id { get; set; } = string.Empty;
-
-    /// <summary>备注类型ID（当前固定为 0）</summary>
-    public int TypeId { get; set; }
-
-    /// <summary>备注内容</summary>
-    public string Content { get; set; } = string.Empty;
-
-    /// <summary>创建备注人用户ID</summary>
-    public string UserId { get; set; } = string.Empty;
-
-    /// <summary>添加人名称</summary>
-    public string UserName { get; set; } = string.Empty;
-
-    /// <summary>添加时间</summary>
-    public DateTimeOffset AddedAt { get; set; }
-}
+/// <param name="OrderId">订单 ID</param>
+public record GetOrderRemarksQuery(OrderId OrderId) : IRequest<List<OrderRemarkDto>>;
 
 /// <summary>
 /// 获取订单备注列表查询处理器
@@ -71,16 +62,13 @@ public class GetOrderRemarksQueryHandler(ApplicationDbContext dbContext)
             .ToDictionaryAsync(k => k.Id, v => v.RealName, cancellationToken);
 
         return rawRemarks
-            .Select(r => new OrderRemarkDto
-            {
-                Id = r.Id,
-                TypeId = r.TypeId,
-                Content = r.Content,
-                UserId = r.UserId.ToString(),
-                UserName = userNameMap.TryGetValue(r.UserId, out var name) ? name : string.Empty,
-                AddedAt = r.AddedAt
-            })
+            .Select(r => new OrderRemarkDto(
+                r.Id,
+                r.TypeId,
+                r.Content,
+                r.UserId.ToString(),
+                userNameMap.TryGetValue(r.UserId, out var name) ? name : string.Empty,
+                r.AddedAt))
             .ToList();
     }
 }
-

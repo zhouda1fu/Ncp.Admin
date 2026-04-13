@@ -23,7 +23,7 @@ public class DeactivatePositionEndpoint(IMediator mediator) : Endpoint<Deactivat
     public override void Configure()
     {
         Tags("Positions");
-        Description(b => b.AutoTagOverride("Positions"));
+        Description(b => b.AutoTagOverride("Positions").WithSummary("停用岗位"));
         Put("/api/admin/position/deactivate");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionEdit);

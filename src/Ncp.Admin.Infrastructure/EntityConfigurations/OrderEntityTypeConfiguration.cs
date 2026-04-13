@@ -52,6 +52,9 @@ internal class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.ShippingFeeIsPay).IsRequired().HasComment("是否付运费");
         builder.Property(x => x.Surcharge).IsRequired().HasPrecision(18, 4).HasComment("附加费");
         builder.Property(x => x.WarehouseStatus).IsRequired().HasComment("仓库状态");
+        builder.Property(x => x.WarehousePickerId).IsRequired().HasComment("配货人用户ID");
+        builder.Property(x => x.WarehouseTechId).IsRequired().HasComment("仓库技术用户ID");
+        builder.Property(x => x.WarehouseReviewerId).IsRequired().HasComment("复核人用户ID");
         builder.Property(x => x.IsDeleted).IsRequired().HasComment("是否软删");
         builder.Property(x => x.DeletedAt).IsRequired().HasComment("删除时间");
         builder.Property(x => x.CreatorId).IsRequired();

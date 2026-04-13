@@ -29,8 +29,7 @@
 </template>
 
 <script>
-import { Plus } from '@vben/icons';
-import { Icon as IconifyIcon } from '@iconify/vue';
+import { IconifyIcon, Plus } from '@vben/icons';
 import { Button, Popover } from 'ant-design-vue';
 
 export default {
@@ -63,6 +62,7 @@ export default {
           nodeName: '抄送人',
           nodeKey: this.getNodeKey(),
           type: 2,
+          setType: 1,
           userSelectFlag: true,
           nodeAssigneeList: [],
           childNode: this.modelValue,

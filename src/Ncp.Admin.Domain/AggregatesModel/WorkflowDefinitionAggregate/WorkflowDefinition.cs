@@ -1,5 +1,6 @@
+using System;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 
@@ -79,10 +80,18 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
 
     /// <summary>
+    /// 创建流程定义（非基于已有定义复制）
+    /// </summary>
+    public WorkflowDefinition(string name, string description, string category, string definitionJson, UserId createdBy)
+        : this(name, description, category, definitionJson, createdBy, new WorkflowDefinitionId(Guid.Empty))
+    {
+    }
+
+    /// <summary>
     /// 创建流程定义
     /// </summary>
     /// <param name="basedOnId">基于哪条流程定义创建，仅「基于此创建新版本」时传入</param>
-    public WorkflowDefinition(string name, string description, string category, string definitionJson, UserId createdBy, WorkflowDefinitionId? basedOnId = null)
+    public WorkflowDefinition(string name, string description, string category, string definitionJson, UserId createdBy, WorkflowDefinitionId basedOnId)
     {
         CreatedAt = DateTimeOffset.UtcNow;
         Name = name;
@@ -90,7 +99,7 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
         Category = category;
         DefinitionJson = definitionJson ?? string.Empty;
         CreatedBy = createdBy;
-        BasedOnId = basedOnId ?? new WorkflowDefinitionId(Guid.Empty);
+        BasedOnId = basedOnId;
         Status = WorkflowDefinitionStatus.Draft;
     }
 

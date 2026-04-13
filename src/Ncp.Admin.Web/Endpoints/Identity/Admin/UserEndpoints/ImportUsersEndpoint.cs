@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
@@ -26,7 +25,7 @@ public class ImportUsersEndpoint(IMediator mediator) : Endpoint<ImportUsersReque
     public override void Configure()
     {
         Tags("Users");
-        Description(b => b.AutoTagOverride("Users"));
+        Description(b => b.AutoTagOverride("Users").WithSummary("从 Excel 批量导入用户（逐行创建，部分失败时返回明细）"));
         Post("/api/admin/users/excel/import");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserImport);
@@ -74,10 +73,7 @@ public class ImportUsersEndpoint(IMediator mediator) : Endpoint<ImportUsersReque
             throw new KnownException("Excel 中没有有效数据行", ErrorCodes.InvalidExcelFile);
         }
 
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var creatorId = !string.IsNullOrWhiteSpace(userIdString) && long.TryParse(userIdString, out var userIdValue)
-            ? new UserId(userIdValue)
-            : new UserId(0);
+        var creatorId = User.GetUserIdOrNull() ?? new UserId(0);
 
         var result = await mediator.Send(new ImportUsersCommand(rows, creatorId), ct);
         await Send.OkAsync(result.AsResponseData(), cancellation: ct);

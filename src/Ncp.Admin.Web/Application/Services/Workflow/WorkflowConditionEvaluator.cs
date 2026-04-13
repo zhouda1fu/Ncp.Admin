@@ -55,12 +55,13 @@ public static class WorkflowConditionEvaluator
         if (!TryGetPropertyByPath(variables.Value, rule.Field, out var prop))
             return false;
         var valueStr = (rule.Value ?? string.Empty).Trim().Trim('"');
+        var op = (rule.Operator ?? string.Empty).Trim();
 
         if (prop.ValueKind is JsonValueKind.True or JsonValueKind.False)
         {
             var leftBool = prop.ValueKind == JsonValueKind.True;
             if (!bool.TryParse(valueStr, out var rightBool)) return false;
-            return rule.Operator switch
+            return op switch
             {
                 "==" => leftBool == rightBool,
                 "!=" => leftBool != rightBool,
@@ -71,10 +72,10 @@ public static class WorkflowConditionEvaluator
         {
             if (!double.TryParse(valueStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var numRight))
                 return false;
-            return CompareNumeric(prop.GetDouble(), numRight, rule.Operator);
+            return CompareNumeric(prop.GetDouble(), numRight, op);
         }
         var leftStr = prop.ValueKind == JsonValueKind.String ? prop.GetString() ?? "" : prop.GetRawText();
-        return CompareString(leftStr, valueStr, rule.Operator);
+        return CompareString(leftStr, valueStr, op);
     }
 
     private static bool TryGetPropertyByPath(JsonElement root, string field, out JsonElement value)

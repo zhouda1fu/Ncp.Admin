@@ -1,3 +1,4 @@
+using System;
 using Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.ProjectAggregate;
@@ -12,6 +13,9 @@ public partial record ProjectContactId : IGuidStronglyTypedId;
 /// </summary>
 public class ProjectContact : Entity<ProjectContactId>
 {
+    /// <summary>未关联客户联系人时的占位 ID（<see cref="Guid.Empty"/>）</summary>
+    public static CustomerContactId NoLinkedCustomerContactId { get; } = new(Guid.Empty);
+
     protected ProjectContact() { }
 
     /// <summary>
@@ -20,9 +24,9 @@ public class ProjectContact : Entity<ProjectContactId>
     public ProjectId ProjectId { get; private set; } = default!;
 
     /// <summary>
-    /// 关联的客户联系人 ID（可选，从客户联系人选择时带入）
+    /// 关联的客户联系人 ID（未关联为 <see cref="NoLinkedCustomerContactId"/>）
     /// </summary>
-    public CustomerContactId? CustomerContactId { get; private set; }
+    public CustomerContactId CustomerContactId { get; private set; } = NoLinkedCustomerContactId;
 
     /// <summary>
     /// 姓名
@@ -69,7 +73,7 @@ public class ProjectContact : Entity<ProjectContactId>
     /// </summary>
     public string Remark { get; private set; } = string.Empty;
 
-    internal static ProjectContact Create(
+    internal ProjectContact(
         ProjectId projectId,
         CustomerContactId? customerContactId,
         string name,
@@ -82,20 +86,17 @@ public class ProjectContact : Entity<ProjectContactId>
         bool isPrimary,
         string remark)
     {
-        return new ProjectContact
-        {
-            ProjectId = projectId,
-            CustomerContactId = customerContactId,
-            Name = name ?? string.Empty,
-            Position = position ?? string.Empty,
-            Mobile = mobile ?? string.Empty,
-            OfficePhone = officePhone ?? string.Empty,
-            QQ = qq ?? string.Empty,
-            Wechat = wechat ?? string.Empty,
-            Email = email ?? string.Empty,
-            IsPrimary = isPrimary,
-            Remark = remark ?? string.Empty,
-        };
+        ProjectId = projectId;
+        CustomerContactId = customerContactId ?? NoLinkedCustomerContactId;
+        Name = name ?? string.Empty;
+        Position = position ?? string.Empty;
+        Mobile = mobile ?? string.Empty;
+        OfficePhone = officePhone ?? string.Empty;
+        QQ = qq ?? string.Empty;
+        Wechat = wechat ?? string.Empty;
+        Email = email ?? string.Empty;
+        IsPrimary = isPrimary;
+        Remark = remark ?? string.Empty;
     }
 
     internal void Update(
@@ -110,7 +111,7 @@ public class ProjectContact : Entity<ProjectContactId>
         bool isPrimary,
         string remark)
     {
-        CustomerContactId = customerContactId;
+        CustomerContactId = customerContactId ?? NoLinkedCustomerContactId;
         Name = name ?? string.Empty;
         Position = position ?? string.Empty;
         Mobile = mobile ?? string.Empty;

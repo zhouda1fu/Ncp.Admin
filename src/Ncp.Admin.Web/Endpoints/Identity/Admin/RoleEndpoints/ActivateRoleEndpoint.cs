@@ -23,7 +23,7 @@ public class ActivateRoleEndpoint(IMediator mediator) : Endpoint<ActivateRoleReq
     public override void Configure()
     {
         Tags("Roles");
-        Description(b => b.AutoTagOverride("Roles"));
+        Description(b => b.AutoTagOverride("Roles").WithSummary("激活角色"));
         Put("/api/admin/roles/activate");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleEdit);

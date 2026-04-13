@@ -21,7 +21,7 @@ public class OrderRepository(ApplicationDbContext context)
     : RepositoryBase<Order, OrderId, ApplicationDbContext>(context), IOrderRepository
 {
     public Task<Order?> GetAggregateForEditAsync(OrderId id, CancellationToken cancellationToken = default) =>
-        context.Orders
+        DbContext.Orders
             .Include(o => o.Items)
             .Include(o => o.Categories)
             .Include(o => o.Remarks)

@@ -1,4 +1,4 @@
-using Ncp.Admin.Domain.DomainEvents.RoleEvents;
+using Ncp.Admin.Domain.DomainEvents;
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 
@@ -49,6 +49,7 @@ public class Role : Entity<RoleId>, IAggregateRoot
     public bool IsActive { get; private set; } = true;
     public Deleted IsDeleted { get; private set; } = new Deleted(false);
     public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
+    public RowVersion RowVersion { get; private set; } = new RowVersion(0);
 
     public virtual ICollection<RolePermission> Permissions { get; init; } = [];
     /// <summary>

@@ -1,8 +1,8 @@
 using Ncp.Admin.Domain.AggregatesModel.LeaveRequestAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
-using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
-using Ncp.Admin.Web.Application.Commands.Leave;
-using Ncp.Admin.Web.Application.Commands.Workflow;
+using Ncp.Admin.Domain.DomainEvents;
+using Ncp.Admin.Web.Application.Commands.Leaves;
+using Ncp.Admin.Web.Application.Commands.Workflows;
 using Serilog;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;

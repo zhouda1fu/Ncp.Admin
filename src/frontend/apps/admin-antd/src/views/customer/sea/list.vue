@@ -3,12 +3,13 @@ import type { Recordable } from '@vben/types';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 import type { CustomerApi } from '#/api/system/customer';
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
+import { useUserStore } from '@vben/stores';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
 
-import { Button, message, Modal, Tag } from 'ant-design-vue';
+import { Button, message, Modal, Select, Tag } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -18,11 +19,11 @@ import {
   voidCustomer,
   deleteCustomer,
 } from '#/api/system/customer';
+import { getCurrentUserWorkflowRoutingRoles } from '#/api/system/user';
 import { $t } from '#/locales';
 
 import SeaForm from './modules/form.vue';
 import SeaDetail from './modules/detail.vue';
-import ShareModal from '../modules/share-modal.vue';
 
 const [FormDrawer, formDrawerApi] = useVbenDrawer({
   connectedComponent: SeaForm,
@@ -34,10 +35,28 @@ const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
   destroyOnClose: true,
 });
 
-const shareModalRef = ref<InstanceType<typeof ShareModal> | null>(null);
+const userStore = useUserStore();
+
+const voidRolePickOpen = ref(false);
+const voidRoleSubmitLoading = ref(false);
+const voidRoles = ref<{ roleId: string; roleName: string }[]>([]);
+const selectedVoidRoleId = ref<string | undefined>(undefined);
+const pendingVoidRow = ref<CustomerApi.CustomerItem | null>(null);
+
+const voidRoleSelectOptions = computed(() =>
+  voidRoles.value.map((r) => ({ label: r.roleName, value: r.roleId })),
+);
+
+function isCurrentOwner(row: CustomerApi.CustomerItem) {
+  const uid = userStore.userInfo?.userId;
+  if (uid == null || row.ownerId == null) return false;
+  return String(row.ownerId) === String(uid);
+}
 
 const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
   gridOptions: {
+    rowClassName: ({ row }: { row: CustomerApi.CustomerItem }) =>
+      row.isVoided ? 'customer-sea-row-voided' : '',
     columns: [
       { field: 'customerSourceName', title: $t('customer.customerSource'), width: 100 },
       { field: 'mainContactName', title: $t('customer.mainContactName'), width: 100 },
@@ -94,11 +113,28 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
           name: 'CellOperation',
           options: [
             { code: 'view', text: $t('customer.view') },
-            { code: 'claim', text: $t('customer.claim'), show: (row: CustomerApi.CustomerItem) => row.isInSea },
-            { code: 'edit', text: $t('customer.edit'), show: (row: CustomerApi.CustomerItem) => row.isInSea },
-            { code: 'share', text: $t('customer.share') },
-            { code: 'void', text: $t('customer.void'), show: (row: CustomerApi.CustomerItem) => row.isInSea },
-            { code: 'delete', text: $t('customer.delete'), danger: true, show: (row: CustomerApi.CustomerItem) => row.isInSea },
+            {
+              code: 'claim',
+              text: $t('customer.claim'),
+              show: (row: CustomerApi.CustomerItem) => row.isInSea && !row.isVoided,
+            },
+            {
+              code: 'edit',
+              text: $t('customer.edit'),
+              show: (row: CustomerApi.CustomerItem) => row.isInSea && !row.isVoided,
+            },
+            {
+              code: 'void',
+              text: $t('customer.void'),
+              show: (row: CustomerApi.CustomerItem) =>
+                !row.isVoided && (row.isInSea || isCurrentOwner(row)),
+            },
+            {
+              code: 'delete',
+              text: $t('customer.delete'),
+              danger: true,
+              show: (row: CustomerApi.CustomerItem) => row.isInSea && !row.isVoided,
+            },
           ],
         },
         field: 'operation',
@@ -106,7 +142,7 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
         headerAlign: 'center',
         showOverflow: false,
         title: $t('customer.operation'),
-        width: 220,
+        width: 200,
       },
     ],
     height: 'auto',
@@ -122,6 +158,7 @@ const [Grid, gridApi] = useVbenVxeGrid<CustomerApi.CustomerItem>({
             pageIndex: page.currentPage,
             pageSize: page.pageSize,
             isInSea: true,
+            includeClaimedSeaCustomers: true,
           };
           const result = await getCustomerList(params);
           return { items: result.items ?? [], total: result.total ?? 0 };
@@ -137,7 +174,6 @@ function onActionClick(e: OnActionClickParams<CustomerApi.CustomerItem>) {
   if (e.code === 'view') onView(e.row);
   else if (e.code === 'claim') onClaim(e.row);
   else if (e.code === 'edit') onEdit(e.row);
-  else if (e.code === 'share') onShare(e.row);
   else if (e.code === 'void') onVoid(e.row);
   else if (e.code === 'delete') onDelete(e.row);
 }
@@ -160,10 +196,6 @@ async function onEdit(row: CustomerApi.CustomerItem) {
   formDrawerApi.setData(detail).open();
 }
 
-function onShare(row: CustomerApi.CustomerItem) {
-  shareModalRef.value?.open({ customerId: row.id, customerName: row.mainContactName ?? row.fullName });
-}
-
 async function onClaim(row: CustomerApi.CustomerItem) {
   const key = 'customer_claim';
   const hide = message.loading({ content: $t('common.loading'), duration: 0, key });
@@ -179,21 +211,59 @@ async function onClaim(row: CustomerApi.CustomerItem) {
 function onVoid(row: CustomerApi.CustomerItem) {
   Modal.confirm({
     title: $t('customer.void'),
-    content: `确定要作废客户「${row.mainContactName ?? '该客户'}」吗？`,
+    content: `确定要作废客户「${row.mainContactName ?? '该客户'}」吗？将提交作废审批流程。`,
     okText: $t('common.confirm'),
     cancelText: $t('common.cancel'),
     onOk: async () => {
-      const key = 'customer_void';
-      const hide = message.loading({ content: $t('common.loading'), duration: 0, key });
-      try {
-        await voidCustomer(row.id);
-        message.success({ content: $t('common.success'), key });
-        onRefresh();
-      } finally {
-        hide();
-      }
+      await startVoidWorkflow(row);
     },
   });
+}
+
+async function startVoidWorkflow(row: CustomerApi.CustomerItem) {
+  const key = 'customer_void';
+  const hide = message.loading({ content: $t('common.loading'), duration: 0, key });
+  try {
+    const roles = await getCurrentUserWorkflowRoutingRoles();
+    if (!roles || roles.length === 0) {
+      message.error({ content: $t('customer.voidNoRoles'), key });
+      return;
+    }
+    if (roles.length === 1) {
+      await voidCustomer(row.id);
+      message.success({ content: $t('customer.voidWorkflowSubmitted'), key });
+      onRefresh();
+      return;
+    }
+    pendingVoidRow.value = row;
+    voidRoles.value = roles;
+    selectedVoidRoleId.value = roles[0]!.roleId;
+    voidRolePickOpen.value = true;
+  } finally {
+    hide();
+  }
+}
+
+function onVoidRolePickCancel() {
+  voidRolePickOpen.value = false;
+  pendingVoidRow.value = null;
+  voidRoles.value = [];
+  selectedVoidRoleId.value = undefined;
+}
+
+async function onVoidRolePickOk() {
+  const row = pendingVoidRow.value;
+  const roleId = selectedVoidRoleId.value;
+  if (!row || !roleId) return;
+  voidRoleSubmitLoading.value = true;
+  try {
+    await voidCustomer(row.id, roleId);
+    message.success($t('customer.voidWorkflowSubmitted'));
+    onVoidRolePickCancel();
+    onRefresh();
+  } finally {
+    voidRoleSubmitLoading.value = false;
+  }
 }
 
 async function onDelete(row: CustomerApi.CustomerItem) {
@@ -213,7 +283,26 @@ async function onDelete(row: CustomerApi.CustomerItem) {
   <Page auto-content-height>
     <FormDrawer @success="onRefresh" />
     <DetailDrawer />
-    <ShareModal ref="shareModalRef" @success="onRefresh" />
+    <Modal
+      v-model:open="voidRolePickOpen"
+      :confirm-loading="voidRoleSubmitLoading"
+      :title="$t('customer.voidPickRoutingRoleTitle')"
+      :ok-text="$t('common.confirm')"
+      :cancel-text="$t('common.cancel')"
+      destroy-on-close
+      @cancel="onVoidRolePickCancel"
+      @ok="onVoidRolePickOk"
+    >
+      <div class="mb-2 text-muted-foreground text-sm">
+        {{ $t('customer.voidPickRoutingRole') }}
+      </div>
+      <Select
+        v-model:value="selectedVoidRoleId"
+        class="w-full"
+        :options="voidRoleSelectOptions"
+        :placeholder="$t('customer.voidPickRoutingRole')"
+      />
+    </Modal>
     <Grid :table-title="$t('customer.sea')">
       <template #claimStatus="{ row }">
         <Tag :color="row.isInSea ? 'warning' : 'success'">
@@ -229,3 +318,9 @@ async function onDelete(row: CustomerApi.CustomerItem) {
     </Grid>
   </Page>
 </template>
+
+<style scoped>
+:deep(.customer-sea-row-voided) {
+  color: rgb(156 163 175);
+}
+</style>

@@ -1,7 +1,7 @@
 using Ncp.Admin.Domain;
-using Ncp.Admin.Domain.DomainEvents.OrderEvents;
-using Ncp.Admin.Web.Application.Commands.Order;
-using Ncp.Admin.Web.Application.Commands.Workflow;
+using Ncp.Admin.Domain.DomainEvents;
+using Ncp.Admin.Web.Application.Commands.Orders;
+using Ncp.Admin.Web.Application.Commands.Workflows;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Application.Services.Workflow;
 

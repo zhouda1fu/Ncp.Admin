@@ -151,8 +151,7 @@
 </template>
 
 <script>
-import { ChevronLeft, ChevronRight, X } from '@vben/icons';
-import { Icon as IconifyIcon } from '@iconify/vue';
+import { ChevronLeft, ChevronRight, IconifyIcon, X } from '@vben/icons';
 import { Button, Drawer, Form, Input, Select } from 'ant-design-vue';
 
 import { getConditionFields } from '#/api/system/workflow';
@@ -195,14 +194,65 @@ export default {
   watch: {
     modelValue() {
       this.nodeConfig = this.modelValue
-    }
+    },
+    category: {
+      immediate: true,
+      handler() {
+        this.loadConditionFieldDefs()
+      },
+    },
   },
   mounted() {
     this.nodeConfig = this.modelValue
   },
   methods: {
+    normalizeOperator(op) {
+      // 将历史数据中的 "=" / "<>" 统一为后端支持的 "==" / "!="
+      if (op === '=') return '=='
+      if (op === '<>') return '!='
+      return op
+    },
     getFieldDef(fieldKey) {
       return (this.conditionFieldDefs || []).find((d) => d.key === fieldKey)
+    },
+    /** 兼容后端 PascalCase 与 camelCase */
+    normalizeConditionFieldDefs(list) {
+      return (list || []).map((raw) => ({
+        key: raw.key ?? raw.Key ?? '',
+        label: raw.label ?? raw.Label ?? '',
+        type: raw.type ?? raw.Type ?? 'string',
+        options: (raw.options ?? raw.Options ?? []).map((o) => ({
+          value: String(o.value ?? o.Value ?? ''),
+          label: String(o.label ?? o.Label ?? ''),
+        })),
+      }))
+    },
+    async loadConditionFieldDefs() {
+      if (!this.category) {
+        this.conditionFieldDefs = []
+        return
+      }
+      this.conditionFieldsLoading = true
+      try {
+        const list = await getConditionFields(this.category)
+        this.conditionFieldDefs = this.normalizeConditionFieldDefs(list)
+      } catch {
+        this.conditionFieldDefs = []
+      } finally {
+        this.conditionFieldsLoading = false
+      }
+    },
+    /** 分支摘要、枚举字段显示选项标签而非原始 value（如角色 Guid） */
+    getConditionValueDisplay(condition) {
+      if (condition == null) return ''
+      const raw = condition.value
+      if (raw === '' || raw == null) return ''
+      const def = this.getFieldDef(condition.field)
+      const opts = def?.options
+      if (!opts?.length) return String(raw)
+      const v = String(raw).trim().toLowerCase()
+      const found = opts.find((o) => String(o.value).trim().toLowerCase() === v)
+      return found ? found.label : String(raw)
     },
     getValueSelectOptions(condition) {
       const def = this.getFieldDef(condition?.field)
@@ -214,21 +264,21 @@ export default {
       this.index = index
       this.form = {}
       this.form = JSON.parse(JSON.stringify(this.nodeConfig.conditionNodes[index]))
-      this.drawer = true
-      this.conditionFieldOptions = []
-      if (this.category) {
-        this.conditionFieldsLoading = true
-        try {
-          const list = await getConditionFields(this.category)
-          this.conditionFieldDefs = list || []
-          this.conditionFieldOptions = (list || []).map((item) => ({
-            value: item.key,
-            label: item.label,
-          }))
-        } finally {
-          this.conditionFieldsLoading = false
+
+      // 兼容旧流程：把已保存的 "=" / "<>" 运算符转换为 "==" / "!="，避免后端不再兼容后条件永远不命中
+      const list = this.form?.conditionList || []
+      for (const group of list) {
+        for (const c of group || []) {
+          c.operator = this.normalizeOperator(c.operator)
         }
       }
+
+      this.drawer = true
+      await this.loadConditionFieldDefs()
+      this.conditionFieldOptions = (this.conditionFieldDefs || []).map((item) => ({
+        value: item.key,
+        label: item.label,
+      }))
     },
     editTitle() {
       this.isEditTitle = true
@@ -238,6 +288,14 @@ export default {
       this.isEditTitle = false
     },
     save() {
+      // 保存前再做一次归一化，确保落库/发给后端的运算符合法
+      const list = this.form?.conditionList || []
+      for (const group of list) {
+        for (const c of group || []) {
+          c.operator = this.normalizeOperator(c.operator)
+        }
+      }
+
       this.nodeConfig.conditionNodes[this.index] = this.form
       this.$emit('update:modelValue', this.nodeConfig)
       this.drawer = false
@@ -283,7 +341,7 @@ export default {
       conditionList.push({
         label: '',
         field: '',
-        operator: '=',
+        operator: '==',
         value: ''
       })
     },
@@ -299,7 +357,16 @@ export default {
     toText(nodeConfig, index) {
       var { conditionList } = nodeConfig.conditionNodes[index]
       if (conditionList && conditionList.length == 1) {
-        const text = conditionList.map((conditionGroup) => conditionGroup.map((item) => `${item.label}${item.operator}${item.value}`)).join(' 和 ')
+        const text = conditionList
+          .map((conditionGroup) =>
+            conditionGroup
+              .map(
+                (item) =>
+                  `${item.label ?? ''}${item.operator}${this.getConditionValueDisplay(item)}`,
+              )
+              .join(' 且 '),
+          )
+          .join(' 和 ')
         return text
       } else if (conditionList && conditionList.length > 1) {
         return conditionList.length + '个条件，或满足'

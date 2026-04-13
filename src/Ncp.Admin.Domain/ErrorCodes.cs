@@ -540,10 +540,6 @@ public sealed class ErrorCodes
     /// 未找到客户联系记录
     /// </summary>
     public const int CustomerContactRecordNotFound = 280005;
-    /// <summary>
-    /// 未找到行业
-    /// </summary>
-    public const int IndustryNotFound = 280005;
 
     /// <summary>
     /// 未找到客户来源
@@ -554,6 +550,49 @@ public sealed class ErrorCodes
     /// 未找到区域
     /// </summary>
     public const int RegionNotFound = 280007;
+
+    /// <summary>
+    /// 所选联系人不属于该客户（联系记录关联校验）
+    /// </summary>
+    public const int CustomerContactNotBelongsToCustomer = 280014;
+
+    /// <summary>
+    /// 客户已作废，不允许执行该操作
+    /// </summary>
+    public const int CustomerIsVoided = 280015;
+
+    /// <summary>
+    /// 未找到营销中心部门（用于客户公海片区分配范围校验）
+    /// </summary>
+    public const int CustomerSeaRegionAssignMarketingCenterDeptNotFound = 280017;
+
+    /// <summary>
+    /// 目标用户不在营销中心及其下级部门范围内（用于客户公海片区分配越权校验）
+    /// </summary>
+    public const int CustomerSeaRegionAssignUserOutOfMarketingCenter = 280018;
+
+    /// <summary>
+    /// 目标用户不在当前登录人的数据权限范围内（用于客户公海片区分配越权校验）
+    /// </summary>
+    public const int CustomerSeaRegionAssignUserOutOfDataPermission = 280019;
+
+    /// <summary>
+    /// 未配置客户作废审批流程（需发布分类为 CustomerSeaVoid、展示名「客户作废」的流程定义）
+    /// </summary>
+    public const int CustomerSeaVoidWorkflowNotConfigured = 280020;
+
+    /// <summary>发起客户作废审批时当前用户无任何角色</summary>
+    public const int CustomerSeaVoidOperatorHasNoRoles = 280021;
+
+    /// <summary>多角色用户未选择本次作废审批使用的路由角色</summary>
+    public const int CustomerSeaVoidRoutingRoleRequired = 280022;
+
+    /// <summary>所选路由角色不属于当前用户</summary>
+    public const int CustomerSeaVoidRoutingRoleNotAssignedToUser = 280023;
+
+    #endregion
+
+    #region 主数据与选项 (280xxx，编号沿用存量；与上方「客户域」逻辑分区分离)
 
     /// <summary>
     /// 未找到项目类型
@@ -585,6 +624,11 @@ public sealed class ErrorCodes
     /// </summary>
     public const int ContractInvoiceNotFound = 280013;
 
+    /// <summary>
+    /// 未找到行业（主数据）
+    /// </summary>
+    public const int IndustryNotFound = 280016;
+
     #endregion
 
     #region 订单相关错误 (290xxx)
@@ -614,11 +658,30 @@ public sealed class ErrorCodes
     /// </summary>
     public const int OrderCannotSubmitForApproval = 290013;
 
+    /// <summary>
+    /// 未找到订单发票类型选项
+    /// </summary>
     public const int OrderInvoiceTypeOptionNotFound = 290014;
 
+    /// <summary>
+    /// 订单物流公司 ID 无效
+    /// </summary>
     public const int OrderLogisticsCompanyIdInvalid = 290015;
 
+    /// <summary>
+    /// 订单物流方式 ID 无效
+    /// </summary>
     public const int OrderLogisticsMethodIdInvalid = 290016;
+
+    /// <summary>
+    /// 未找到物流公司
+    /// </summary>
+    public const int OrderLogisticsCompanyNotFound = 290019;
+
+    /// <summary>
+    /// 未找到物流方式
+    /// </summary>
+    public const int OrderLogisticsMethodNotFound = 290020;
 
     /// <summary>
     /// 未找到订单备注

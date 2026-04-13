@@ -24,8 +24,6 @@ public class ProjectRepository(ApplicationDbContext context)
     {
         var entity = await context.Projects.FindAsync([id], cancellationToken);
         if (entity != null)
-        {
             context.Projects.Remove(entity);
-        }
     }
 }

@@ -20,7 +20,7 @@ public class RemoveCustomerContactCommandHandler(ICustomerRepository repository)
 {
     public async Task<bool> Handle(RemoveCustomerContactCommand request, CancellationToken cancellationToken)
     {
-        var customer = await repository.GetAsync(request.CustomerId, cancellationToken)
+        var customer = await repository.GetWithContactsAsync(request.CustomerId, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
         customer.RemoveContact(request.ContactId);
         return true;

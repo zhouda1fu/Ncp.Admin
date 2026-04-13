@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
-using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptions;
+using Microsoft.EntityFrameworkCore;
+using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.CustomerSourceAggregate;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
@@ -28,7 +29,7 @@ namespace Ncp.Admin.Web.Utils;
 /// 数据库种子数据扩展方法
 /// 用于在开发环境中初始化基础数据（角色、权限、组织架构、用户等）
 /// </summary>
-public static class SeedDatabaseExtension
+public static partial class SeedDatabaseExtension
 {
     /// <summary>
     /// 初始化数据库种子数据
@@ -113,7 +114,11 @@ public static class SeedDatabaseExtension
                 PermissionCodes.CustomerContactEdit,
                 PermissionCodes.CustomerReleaseToSea,
                 PermissionCodes.CustomerClaimFromSea,
+                PermissionCodes.CustomerSeaVoid,
+                PermissionCodes.CustomerSeaConsultationEdit,
                 PermissionCodes.CustomerShare,
+                PermissionCodes.CustomerSeaRegionAssignView,
+                PermissionCodes.CustomerSeaRegionAssignEdit,
                 PermissionCodes.IndustryView,
                 PermissionCodes.IndustryCreate,
                 PermissionCodes.IndustryEdit,
@@ -131,6 +136,15 @@ public static class SeedDatabaseExtension
                 PermissionCodes.OrderEdit,
                 PermissionCodes.OrderDelete,
                 PermissionCodes.OrderSubmit,
+                PermissionCodes.OrderSpecialDataDisplay,
+                PermissionCodes.OrderContractUpload,
+                PermissionCodes.OrderContractSelect,
+                PermissionCodes.OrderContractNotCompanyTemplate,
+                PermissionCodes.OrderNeedInvoice,
+                PermissionCodes.OrderContractAmount,
+                PermissionCodes.OrderTechnicalStatus,
+                PermissionCodes.OrderDiscountPointsDescriptionView,
+                PermissionCodes.OrderDiscountPointsCreate,
 
                 // 产品管理权限
                 PermissionCodes.ProductManagement,
@@ -293,13 +307,13 @@ public static class SeedDatabaseExtension
                     return new RolePermission(code, name, description);
                 }).ToList();
 
-                var adminRole = new Role("管理员", "系统管理员，拥有全部权限", adminPermissions);
-                var userRole = new Role("普通用户", "普通用户，可查看和编辑自己的信息", userPermissions);
-                var deptManagerRole = new Role("部门经理", "部门经理，可查看本部门人员、考勤、审批请假与报销等", deptManagerPermissions);
-                var hrRole = new Role("人事专员", "人事专员，负责用户、部门、岗位的维护", hrPermissions);
-                var financeRole = new Role("财务", "财务人员，负责报销与订单相关", financePermissions);
-                var adminStaffRole = new Role("行政", "行政人员，负责公告、会议、资产、用车、文档等", adminStaffPermissions);
-                var approverRole = new Role("审批人", "审批人，可处理工作流待办任务", approverPermissions);
+                var adminRole = new Role("管理员", "系统管理员，拥有全部权限", adminPermissions, DataScope.All);
+                var userRole = new Role("普通用户", "普通用户，可查看和编辑自己的信息", userPermissions, DataScope.Self);
+                var deptManagerRole = new Role("部门经理", "部门经理，可查看本部门人员、考勤、审批请假与报销等", deptManagerPermissions, DataScope.DeptAndSub);
+                var hrRole = new Role("人事专员", "人事专员，负责用户、部门、岗位的维护", hrPermissions, DataScope.DeptAndSub);
+                var financeRole = new Role("财务", "财务人员，负责报销与订单相关", financePermissions, DataScope.Dept);
+                var adminStaffRole = new Role("行政", "行政人员，负责公告、会议、资产、用车、文档等", adminStaffPermissions, DataScope.Dept);
+                var approverRole = new Role("审批人", "审批人，可处理工作流待办任务", approverPermissions, DataScope.Self);
 
                 dbContext.Roles.Add(adminRole);
                 dbContext.Roles.Add(userRole);
@@ -309,6 +323,7 @@ public static class SeedDatabaseExtension
                 dbContext.Roles.Add(adminStaffRole);
                 dbContext.Roles.Add(approverRole);
                 dbContext.SaveChanges();
+
             }
 
             // 初始化部门（OA 标准：公司根 -> 一级部门 -> 二级部门；主管ID占位为0，后续可在部门管理中维护）
@@ -324,12 +339,7 @@ public static class SeedDatabaseExtension
 
                 var level1Depts = new[]
                 {
-                    ("总经办", "总经理办公室"),
-                    ("研发中心", "技术研发部门"),
-                    ("市场部", "市场与销售"),
-                    ("人力资源部", "人事与招聘"),
                     ("财务部", "财务与核算"),
-                    ("行政部", "行政与后勤"),
                 };
                 foreach (var (name, remark) in level1Depts)
                 {
@@ -337,12 +347,78 @@ public static class SeedDatabaseExtension
                 }
                 dbContext.SaveChanges();
 
-                var rdDeptId = dbContext.Depts.FirstOrDefault(r => r.Name == "研发中心")?.Id
-                    ?? throw new InvalidOperationException("无法找到部门'研发中心'");
-                dbContext.Depts.Add(new Dept("前端组", "前端开发组", rdDeptId, 1, managerIdPlaceholder));
-                dbContext.Depts.Add(new Dept("后端组", "后端开发组", rdDeptId, 1, managerIdPlaceholder));
+                // 新增组织结构：营销中心 / 产品研发中心 / 综合行政部
+                dbContext.Depts.Add(new Dept("营销中心", "营销与市场中心", companyId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("产品研发中心", "产品研发中心", companyId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("综合行政部", "综合行政与采购", companyId, 1, managerIdPlaceholder));
+                dbContext.SaveChanges();
+
+                var marketingCenterId = dbContext.Depts.FirstOrDefault(r => r.Name == "营销中心")?.Id
+                    ?? throw new InvalidOperationException("无法找到部门'营销中心'");
+                var productResearchCenterId = dbContext.Depts.FirstOrDefault(r => r.Name == "产品研发中心")?.Id
+                    ?? throw new InvalidOperationException("无法找到部门'产品研发中心'");
+                var compositeAdminDeptId = dbContext.Depts.FirstOrDefault(r => r.Name == "综合行政部")?.Id
+                    ?? throw new InvalidOperationException("无法找到部门'综合行政部'");
+
+                // 你要求的“营销中心 -> 市场部”，这里复用已存在的一级“市场部”并把其挂到营销中心下
+                var marketDept = dbContext.Depts.FirstOrDefault(d => d.Name == "市场部");
+                if (marketDept != null)
+                {
+                    marketDept.UpdateInfo(
+                        marketDept.Name,
+                        marketDept.Remark,
+                        marketingCenterId,
+                        marketDept.Status,
+                        marketDept.ManagerId
+                    );
+                }
+                else
+                {
+                    dbContext.Depts.Add(new Dept("市场部", "市场与销售", marketingCenterId, 1, managerIdPlaceholder));
+                }
+
+                // 营销中心（二级部门）
+                dbContext.Depts.Add(new Dept("营销一部", "营销一部", marketingCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("营销二部", "营销二部", marketingCenterId, 1, managerIdPlaceholder));
+                var marketingDept3 = new Dept("营销三部", "营销三部", marketingCenterId, 1, managerIdPlaceholder);
+                dbContext.Depts.Add(marketingDept3);
+                dbContext.Depts.Add(new Dept("营销四部", "营销四部", marketingCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("仓储物流部", "仓储与物流", marketingCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("技术部", "技术支持", marketingCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("事务部", "事务管理", marketingCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("适用组", "适用组", marketingCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("社会心理服务组", "社会心理服务组", marketingCenterId, 1, managerIdPlaceholder));
+                dbContext.SaveChanges();
+
+                // 营销三部下属小组（使用已持久化实体的 Id；勿在 SaveChanges 前对 DbSet 按名查询刚 Add 的部门）
+                var marketingDept3Id = marketingDept3.Id;
+                dbContext.Depts.Add(new Dept("3DMax组", "3DMax组", marketingDept3Id, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("终端销售一部", "终端销售一部", marketingDept3Id, 1, managerIdPlaceholder));
+
+                // 产品研发中心（二级研发组）
+                dbContext.Depts.Add(new Dept(".Net组", ".NET研发组", productResearchCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("Java组", "Jav研发组", productResearchCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("产品组", "产品研发组", productResearchCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("安卓组", "安卓研发组", productResearchCenterId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("u3D组", "u3D研发组", productResearchCenterId, 1, managerIdPlaceholder));
+
+                // 综合行政部（二级组）
+                dbContext.Depts.Add(new Dept("咨询、行政组", "咨询与行政组", compositeAdminDeptId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("培训组", "培训组", compositeAdminDeptId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("人事组", "人事组", compositeAdminDeptId, 1, managerIdPlaceholder));
+                dbContext.Depts.Add(new Dept("行政采购组", "行政采购组", compositeAdminDeptId, 1, managerIdPlaceholder));
+
+                dbContext.SaveChanges();
+
+                // 公司一级 -> 新媒体运营部 -> 网络推广组
+                var newMediaDept = new Dept("新媒体运营部", "新媒体运营部", companyId, 1, managerIdPlaceholder);
+                dbContext.Depts.Add(newMediaDept);
+                dbContext.SaveChanges();
+                dbContext.Depts.Add(new Dept("网络推广组", "网络推广组", newMediaDept.Id, 1, managerIdPlaceholder));
                 dbContext.SaveChanges();
             }
+
+            // 已移除业务角色同步种子（SeedDatabaseExtension.BusinessRoles.cs）
 
             // 初始化岗位（按部门挂载，OA 常见岗位）
             if (!dbContext.Positions.Any())
@@ -351,26 +427,17 @@ public static class SeedDatabaseExtension
                     dbContext.Depts.FirstOrDefault(d => d.Name == name)?.Id
                     ?? throw new InvalidOperationException($"无法找到部门'{name}'");
 
-                var jb = GetDeptId("总经办");
-                dbContext.Positions.Add(new Position("总经理", "GM", "公司总经理", jb, 0, 1));
-                dbContext.Positions.Add(new Position("总经理助理", "GMA", "总经理助理", jb, 1, 1));
-
-                var rd = GetDeptId("研发中心");
+                var rd = GetDeptId("产品研发中心");
                 dbContext.Positions.Add(new Position("技术总监", "CTO", "技术负责人", rd, 0, 1));
                 dbContext.Positions.Add(new Position("高级工程师", "SE", "高级开发工程师", rd, 1, 1));
                 dbContext.Positions.Add(new Position("工程师", "ENG", "开发工程师", rd, 2, 1));
                 dbContext.Positions.Add(new Position("实习生", "INTERN", "实习岗位", rd, 3, 1));
 
-                var fe = GetDeptId("前端组");
-                dbContext.Positions.Add(new Position("前端工程师", "FE", "前端开发", fe, 0, 1));
-                var be = GetDeptId("后端组");
-                dbContext.Positions.Add(new Position("后端工程师", "BE", "后端开发", be, 0, 1));
-
                 var mkt = GetDeptId("市场部");
                 dbContext.Positions.Add(new Position("市场经理", "MM", "市场部负责人", mkt, 0, 1));
                 dbContext.Positions.Add(new Position("市场专员", "MS", "市场专员", mkt, 1, 1));
 
-                var hr = GetDeptId("人力资源部");
+                var hr = GetDeptId("人事组");
                 dbContext.Positions.Add(new Position("HR经理", "HRM", "人力资源经理", hr, 0, 1));
                 dbContext.Positions.Add(new Position("HR专员", "HRS", "人力资源专员", hr, 1, 1));
                 dbContext.Positions.Add(new Position("招聘专员", "REC", "招聘岗位", hr, 2, 1));
@@ -380,7 +447,7 @@ public static class SeedDatabaseExtension
                 dbContext.Positions.Add(new Position("会计", "ACC", "会计", fin, 1, 1));
                 dbContext.Positions.Add(new Position("出纳", "CASH", "出纳", fin, 2, 1));
 
-                var adminDept = GetDeptId("行政部");
+                var adminDept = GetDeptId("综合行政部");
                 dbContext.Positions.Add(new Position("行政经理", "AM", "行政负责人", adminDept, 0, 1));
                 dbContext.Positions.Add(new Position("行政专员", "AS", "行政专员", adminDept, 1, 1));
 
@@ -392,15 +459,9 @@ public static class SeedDatabaseExtension
             {
                 var contractTypeOptions = new[]
                 {
-                    new ContractTypeOption("示例签约主体A有限公司", 1, true, 0),
-                    new ContractTypeOption("示例签约主体B有限公司", 2, true, 1),
-                    new ContractTypeOption("示例签约主体C有限公司", 3, true, 2),
-                    new ContractTypeOption("示例签约主体D有限公司", 4, true, 3),
-                    new ContractTypeOption("示例签约主体E有限公司", 5, true, 4),
-                    new ContractTypeOption("示例签约主体F有限公司", 6, true, 5),
-                    new ContractTypeOption("示例签约主体G有限公司", 7, true, 6),
-                    new ContractTypeOption("示例签约主体H有限公司", 8, true, 7),
-                    new ContractTypeOption("示例签约主体I有限公司", 9, true, 8),
+                    new ContractTypeOption("示例科技发展有限公司第三分公司", 1, true, 0),
+                    new ContractTypeOption("示例科技发展有限公司第五分公司", 2, true, 1),
+                    new ContractTypeOption("示例科技发展有限公司", 3, true, 2),
                 };
                 foreach (var opt in contractTypeOptions)
                     dbContext.ContractTypeOptions.Add(opt);
@@ -524,18 +585,18 @@ public static class SeedDatabaseExtension
                     var parentList = parentRows.OrderBy(x => x.SortOrder).ToList();
                     foreach (var p in parentList)
                     {
-                        var industry = new Industry(p.Name, null, p.SortOrder, null);
+                        var industry = new Industry(p.Name, Industry.RootParentId, p.SortOrder, null);
                         dbContext.Industries.Add(industry);
                     }
                     dbContext.SaveChanges();
                     var parentIdByOldPk = new Dictionary<int, IndustryId>();
-                    var savedParents = dbContext.Industries.Where(x => x.ParentId == null).OrderBy(x => x.SortOrder).ToList();
+                    var savedParents = dbContext.Industries.Where(x => x.ParentId == Industry.RootParentId).OrderBy(x => x.SortOrder).ToList();
                     for (var i = 0; i < parentList.Count && i < savedParents.Count; i++)
                         parentIdByOldPk[parentList[i].Pk] = savedParents[i].Id;
                     foreach (var c in childRows)
                     {
                         if (string.IsNullOrWhiteSpace(c.Title)) continue;
-                        IndustryId? parentId = null;
+                        var parentId = Industry.RootParentId;
                         if (c.FkIndustry > 0 && parentIdByOldPk.TryGetValue(c.FkIndustry, out var pid))
                             parentId = pid;
                         var child = new Industry(c.Title.Trim(), parentId, c.SortOrder, string.IsNullOrWhiteSpace(c.Remark) ? null : c.Remark.Trim());
@@ -606,11 +667,13 @@ public static class SeedDatabaseExtension
                     (36, "速必达物流", 36),
                     (37, "城际快递", 37),
                     (38, "全峰快递", 38),
-                    (40, "递四方速递", 39),
+                    (40, "递四方速递", 40),
+                    (41, "京东快递", 41),
+                    (42, "其他", 42),
                 };
                 foreach (var (typeValue, name, sort) in logisticsCompanies)
                 {
-                    var company = OrderLogisticsCompany.Create(name, typeValue, sort);
+                    var company = new OrderLogisticsCompany(name, typeValue, sort);
                     dbContext.OrderLogisticsCompanies.Add(company);
                 }
                 dbContext.SaveChanges();
@@ -634,7 +697,7 @@ public static class SeedDatabaseExtension
                 };
                 foreach (var (typeValue, name, sort) in logisticsMethods)
                 {
-                    var method = OrderLogisticsMethod.Create(name, typeValue, sort);
+                    var method = new OrderLogisticsMethod(name, typeValue, sort);
                     dbContext.OrderLogisticsMethods.Add(method);
                 }
                 dbContext.SaveChanges();
@@ -662,11 +725,10 @@ public static class SeedDatabaseExtension
             // 初始化产品分类
             if (!dbContext.ProductCategories.Any())
             {
-                var rootParentId = new ProductCategoryId(Guid.Empty);
-                var productCategories = new[]
+                var productCategories = new (string Name, string Remark, ProductCategoryId ParentId, int SortOrder, bool Visible)[]
                 {
-                    ("阳光心健", "阳光心健产品分类", rootParentId, 0, true),
-                    ("微心理", "微心理产品分类", rootParentId, 1, true),
+                    ("示例A", "示例产品分类", ProductCategory.RootParentId, 0, true),
+                    ("示例B", "示例产品分类", ProductCategory.RootParentId, 1, true),
                 };
                 foreach (var (name, remark, parentId, sortOrder, visible) in productCategories)
                 {
@@ -697,10 +759,10 @@ public static class SeedDatabaseExtension
             if (!dbContext.Suppliers.Any())
             {
                 var supplier = new Supplier(
-                    fullName: "示例供应商A",
+                    fullName: "示例供应商有限公司",
                     shortName: "示例供应商",
                     contact: "示例联系人",
-                    phone: "13000000010",
+                    phone: "13900000000",
                     email: "",
                     address: "",
                     remark: ""
@@ -709,21 +771,21 @@ public static class SeedDatabaseExtension
                 dbContext.SaveChanges();
             }
 
-            // 初始化管理员用户（研发中心 + 技术总监岗位）
+            // 初始化管理员用户（产品研发中心 + 技术总监岗位）
             if (!dbContext.Users.Any(u => u.Name == "admin"))
             {
-                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "研发中心");
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "产品研发中心");
                 var adminRole = dbContext.Roles.FirstOrDefault(r => r.Name == "管理员");
                 var position = dbContext.Positions.FirstOrDefault(p => p.Code == "CTO");
 
                 if (dept == null)
-                    throw new InvalidOperationException("无法找到部门'研发中心'，请确保部门已正确初始化");
+                    throw new InvalidOperationException("无法找到部门'产品研发中心'，请确保部门已正确初始化");
                 if (adminRole == null)
                     throw new InvalidOperationException("无法找到角色'管理员'，请确保角色已正确初始化");
 
                 var adminUser = new User(
                     "admin",
-                    "13800138000",
+                    "13900000001",
                     passwordHasher.Hash("123456"),
                     new List<UserRole> { new UserRole(adminRole.Id, adminRole.Name) },
                     "系统管理员",
@@ -732,13 +794,13 @@ public static class SeedDatabaseExtension
                     "男",
                     DateTimeOffset.UtcNow.AddYears(-30),
                     new UserId(0),
-                    "110101199001010000",
-                    "地址",
+                    "110101199001010001",
+                    "示例地址",
                     "本科",
-                    "毕业院校",
+                    "示例大学",
                     "https://example.com/avatar.png"
                 );
-                adminUser.AssignDept(new UserDept(adminUser.Id, dept.Id, dept.Name));
+                adminUser.AssignDept(dept.Id, dept.Name);
                 dbContext.Users.Add(adminUser);
                 dbContext.SaveChanges();
                 if (position != null)
@@ -748,21 +810,21 @@ public static class SeedDatabaseExtension
                 }
             }
 
-            // 初始化测试用户（研发中心 + 工程师岗位）
+            // 初始化测试用户（产品研发中心 + 工程师岗位）
             if (!dbContext.Users.Any(u => u.Name == "test"))
             {
-                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "研发中心");
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "产品研发中心");
                 var userRole = dbContext.Roles.FirstOrDefault(r => r.Name == "普通用户");
                 var position = dbContext.Positions.FirstOrDefault(p => p.Code == "ENG");
 
                 if (dept == null)
-                    throw new InvalidOperationException("无法找到部门'研发中心'，请确保部门已正确初始化");
+                    throw new InvalidOperationException("无法找到部门'产品研发中心'，请确保部门已正确初始化");
                 if (userRole == null)
                     throw new InvalidOperationException("无法找到角色'普通用户'，请确保角色已正确初始化");
 
                 var testUser = new User(
                     "test",
-                    "13800138001",
+                    "13900000002",
                     passwordHasher.Hash("123456"),
                     new List<UserRole> { new UserRole(userRole.Id, userRole.Name) },
                     "测试用户",
@@ -771,13 +833,13 @@ public static class SeedDatabaseExtension
                     "女",
                     DateTimeOffset.UtcNow.AddYears(-25),
                     new UserId(0),
-                    "110101199001010000",
-                    "地址",
+                    "110101199001010002",
+                    "示例地址",
                     "本科",
-                    "毕业院校",
+                    "示例大学",
                     "https://example.com/avatar.png"
                 );
-                testUser.AssignDept(new UserDept(testUser.Id, dept.Id, dept.Name));
+                testUser.AssignDept(dept.Id, dept.Name);
                 dbContext.Users.Add(testUser);
                 dbContext.SaveChanges();
                 if (position != null)
@@ -787,11 +849,11 @@ public static class SeedDatabaseExtension
                 }
             }
 
-            // 初始化示例用户：张三（市场部-市场经理）、李四（人力资源部-HR专员）
+            // 初始化示例用户：用户A（市场部-市场经理）、用户B（人事组-HR专员）
             if (!dbContext.Users.Any(u => u.Name == "zhangsan"))
             {
                 var mktDept = dbContext.Depts.FirstOrDefault(r => r.Name == "市场部");
-                var hrDept = dbContext.Depts.FirstOrDefault(r => r.Name == "人力资源部");
+                var hrDept = dbContext.Depts.FirstOrDefault(r => r.Name == "人事组");
                 var userRole = dbContext.Roles.FirstOrDefault(r => r.Name == "普通用户");
                 var mmPos = dbContext.Positions.FirstOrDefault(p => p.Code == "MM");
                 var hrsPos = dbContext.Positions.FirstOrDefault(p => p.Code == "HRS");
@@ -799,12 +861,12 @@ public static class SeedDatabaseExtension
                 {
                     var zhangsan = new User(
                     "zhangsan",
-                    "13800138002",
+                    "13900000003",
                     passwordHasher.Hash("123456"),
                     new List<UserRole> { new UserRole(userRole.Id, userRole.Name) },
-                    "张三",
+                    "示例用户A",
                     1,
-                    "zhangsan@example.com",
+                    "usera@example.com",
                     "男",
                     DateTimeOffset.UtcNow.AddYears(-28),
                     new UserId(0),
@@ -814,7 +876,7 @@ public static class SeedDatabaseExtension
                     "",
                     ""
                 );
-                zhangsan.AssignDept(new UserDept(zhangsan.Id, mktDept.Id, mktDept.Name));
+                zhangsan.AssignDept(mktDept.Id, mktDept.Name);
                 dbContext.Users.Add(zhangsan);
                 dbContext.SaveChanges();
                 if (mmPos != null)
@@ -825,12 +887,12 @@ public static class SeedDatabaseExtension
 
                 var lisi = new User(
                     "lisi",
-                    "13800138003",
+                    "13900000004",
                     passwordHasher.Hash("123456"),
                     new List<UserRole> { new UserRole(userRole.Id, userRole.Name) },
-                    "李四",
+                    "示例用户B",
                     1,
-                    "lisi@example.com",
+                    "userb@example.com",
                     "女",
                     DateTimeOffset.UtcNow.AddYears(-26),
                     new UserId(0),
@@ -840,7 +902,7 @@ public static class SeedDatabaseExtension
                     "",
                     ""
                 );
-                lisi.AssignDept(new UserDept(lisi.Id, hrDept.Id, hrDept.Name));
+                lisi.AssignDept(hrDept.Id, hrDept.Name);
                 dbContext.Users.Add(lisi);
                 dbContext.SaveChanges();
                 if (hrsPos != null)
@@ -849,6 +911,211 @@ public static class SeedDatabaseExtension
                     dbContext.SaveChanges();
                 }
                 }
+            }
+
+            // 初始化营销与管理相关示例用户
+            if (!dbContext.Users.Any(u => u.Name == "chenchanghong"))
+            {
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "营销一部")
+                    ?? throw new InvalidOperationException("无法找到部门'营销一部'，请确保部门已正确初始化");
+                var role = dbContext.Roles.FirstOrDefault(r => r.Name == "业务经理")
+                    ?? throw new InvalidOperationException("无法找到角色'业务经理'，请确保角色已正确初始化");
+
+                var user = new User(
+                    "chenchanghong",
+                    "13900000010",
+                    passwordHasher.Hash("123456"),
+                    new List<UserRole> { new UserRole(role.Id, role.Name) },
+                    "示例用户C",
+                    1,
+                    "userc@example.com",
+                    "男",
+                    DateTimeOffset.UtcNow.AddYears(-32),
+                    new UserId(0),
+                    "110101199001010010",
+                    "示例地址",
+                    "本科",
+                    "示例大学",
+                    "https://example.com/avatar.png"
+                );
+                user.AssignDept(dept.Id, dept.Name);
+                dbContext.Users.Add(user);
+                dbContext.SaveChanges();
+            }
+
+            if (!dbContext.Users.Any(u => u.Name == "xuchao"))
+            {
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "营销中心")
+                    ?? throw new InvalidOperationException("无法找到部门'营销中心'，请确保部门已正确初始化");
+                var role = dbContext.Roles.FirstOrDefault(r => r.Name == "副总监（乙）")
+                    ?? throw new InvalidOperationException("无法找到角色'副总监（乙）'，请确保角色已正确初始化");
+
+                var user = new User(
+                    "xuchao",
+                    "13900000011",
+                    passwordHasher.Hash("123456"),
+                    new List<UserRole> { new UserRole(role.Id, role.Name) },
+                    "示例用户D",
+                    1,
+                    "userd@example.com",
+                    "男",
+                    DateTimeOffset.UtcNow.AddYears(-35),
+                    new UserId(0),
+                    "110101199001010011",
+                    "示例地址",
+                    "本科",
+                    "示例大学",
+                    "https://example.com/avatar.png"
+                );
+                user.AssignDept(dept.Id, dept.Name);
+                dbContext.Users.Add(user);
+                dbContext.SaveChanges();
+            }
+
+            if (!dbContext.Users.Any(u => u.Name == "shixiuli"))
+            {
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "营销中心")
+                    ?? throw new InvalidOperationException("无法找到部门'营销中心'，请确保部门已正确初始化");
+                var role = dbContext.Roles.FirstOrDefault(r => r.Name == "副总监（甲）")
+                    ?? throw new InvalidOperationException("无法找到角色'副总监（甲）'，请确保角色已正确初始化");
+
+                var user = new User(
+                    "shixiuli",
+                    "13900000012",
+                    passwordHasher.Hash("123456"),
+                    new List<UserRole> { new UserRole(role.Id, role.Name) },
+                    "示例用户E",
+                    1,
+                    "usere@example.com",
+                    "女",
+                    DateTimeOffset.UtcNow.AddYears(-33),
+                    new UserId(0),
+                    "110101199001010012",
+                    "示例地址",
+                    "本科",
+                    "示例大学",
+                    "https://example.com/avatar.png"
+                );
+                user.AssignDept(dept.Id, dept.Name);
+                dbContext.Users.Add(user);
+                dbContext.SaveChanges();
+            }
+
+            if (!dbContext.Users.Any(u => u.Name == "wangweiwei"))
+            {
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "公司")
+                    ?? throw new InvalidOperationException("无法找到部门'公司'，请确保部门已正确初始化");
+                var role = dbContext.Roles.FirstOrDefault(r => r.Name == "总经理")
+                    ?? throw new InvalidOperationException("无法找到角色'总经理'，请确保角色已正确初始化");
+
+                var user = new User(
+                    "wangweiwei",
+                    "13900000014",
+                    passwordHasher.Hash("123456"),
+                    new List<UserRole> { new UserRole(role.Id, role.Name) },
+                    "示例用户F",
+                    1,
+                    "userf@example.com",
+                    "女",
+                    DateTimeOffset.UtcNow.AddYears(-38),
+                    new UserId(0),
+                    "110101199001010014",
+                    "示例地址",
+                    "硕士",
+                    "示例大学",
+                    "https://example.com/avatar.png"
+                );
+                user.AssignDept(dept.Id, dept.Name);
+                dbContext.Users.Add(user);
+                dbContext.SaveChanges();
+            }
+
+            if (!dbContext.Users.Any(u => u.Name == "zengyuan"))
+            {
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "财务部")
+                    ?? throw new InvalidOperationException("无法找到部门'财务部'，请确保部门已正确初始化");
+                var role = dbContext.Roles.FirstOrDefault(r => r.Name == "财务部副部长")
+                    ?? throw new InvalidOperationException("无法找到角色'财务部副部长'，请确保角色已正确初始化");
+
+                var user = new User(
+                    "zengyuan",
+                    "13900000015",
+                    passwordHasher.Hash("123456"),
+                    new List<UserRole> { new UserRole(role.Id, role.Name) },
+                    "示例用户G",
+                    1,
+                    "userg@example.com",
+                    "女",
+                    DateTimeOffset.UtcNow.AddYears(-34),
+                    new UserId(0),
+                    "110101199001010015",
+                    "示例地址",
+                    "本科",
+                    "示例大学",
+                    "https://example.com/avatar.png"
+                );
+                user.AssignDept(dept.Id, dept.Name);
+                dbContext.Users.Add(user);
+                dbContext.SaveChanges();
+            }
+
+            if (!dbContext.Users.Any(u => u.Name == "xuhuanhuan"))
+            {
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "事务部")
+                    ?? throw new InvalidOperationException("无法找到部门'事务部'，请确保部门已正确初始化");
+                var role = dbContext.Roles.FirstOrDefault(r => r.Name == "事务部部长")
+                    ?? throw new InvalidOperationException("无法找到角色'事务部部长'，请确保角色已正确初始化");
+
+                var user = new User(
+                    "xuhuanhuan",
+                    "13900000016",
+                    passwordHasher.Hash("123456"),
+                    new List<UserRole> { new UserRole(role.Id, role.Name) },
+                    "示例用户H",
+                    1,
+                    "userh@example.com",
+                    "女",
+                    DateTimeOffset.UtcNow.AddYears(-29),
+                    new UserId(0),
+                    "110101199001010016",
+                    "示例地址",
+                    "本科",
+                    "示例大学",
+                    "https://example.com/avatar.png"
+                );
+                user.AssignDept(dept.Id, dept.Name);
+                dbContext.Users.Add(user);
+                dbContext.SaveChanges();
+            }
+
+            if (!dbContext.Users.Any(u => u.Name == "fangbuzhang"))
+            {
+                var dept = dbContext.Depts.FirstOrDefault(r => r.Name == "仓储部")
+                           ?? dbContext.Depts.FirstOrDefault(r => r.Name == "仓储物流部")
+                           ?? throw new InvalidOperationException("无法找到部门'仓储部/仓储物流部'，请确保部门已正确初始化");
+                var role = dbContext.Roles.FirstOrDefault(r => r.Name == "仓储部部长")
+                    ?? throw new InvalidOperationException("无法找到角色'仓储部部长'，请确保角色已正确初始化");
+
+                var user = new User(
+                    "fangbuzhang",
+                    "13900000017",
+                    passwordHasher.Hash("123456"),
+                    new List<UserRole> { new UserRole(role.Id, role.Name) },
+                    "示例用户I",
+                    1,
+                    "useri@example.com",
+                    "男",
+                    DateTimeOffset.UtcNow.AddYears(-36),
+                    new UserId(0),
+                    "110101199001010017",
+                    "示例地址",
+                    "本科",
+                    "示例大学",
+                    "https://example.com/avatar.png"
+                );
+                user.AssignDept(dept.Id, dept.Name);
+                dbContext.Users.Add(user);
+                dbContext.SaveChanges();
             }
 
             Log.Information("数据库种子数据初始化完成");

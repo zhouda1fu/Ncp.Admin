@@ -1,6 +1,8 @@
 using Ncp.Admin.Domain.AggregatesModel.NotificationAggregate;
-using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
-using Ncp.Admin.Web.Application.Commands.Notification;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.DomainEvents;
+using Ncp.Admin.Web.Application.Commands.Notifications;
+using Ncp.Admin.Web.Application.Services.Workflow;
 using Serilog;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;
@@ -8,7 +10,9 @@ namespace Ncp.Admin.Web.Application.DomainEventHandlers;
 /// <summary>
 /// 工作流任务创建领域事件处理器：向审批人发送待办通知
 /// </summary>
-public class WorkflowTaskCreatedDomainEventHandlerForSendNotification(IMediator mediator)
+public class WorkflowTaskCreatedDomainEventHandlerForSendNotification(
+    IMediator mediator,
+    WorkflowTaskVisibilityPolicy taskVisibilityPolicy)
     : IDomainEventHandler<WorkflowTaskCreatedDomainEvent>
 {
     public async Task Handle(WorkflowTaskCreatedDomainEvent domainEvent, CancellationToken cancellationToken)
@@ -16,11 +20,20 @@ public class WorkflowTaskCreatedDomainEventHandlerForSendNotification(IMediator 
         var instance = domainEvent.WorkflowInstance;
         var task = domainEvent.WorkflowTask;
 
-        // 仅对指定用户的任务发送通知（角色任务需解析用户，暂不实现）
-        if (task.AssigneeId == null)
+        if (task.AssigneeId == new UserId(0))
             return;
 
-        var receiverId = task.AssigneeId!.Id;
+        var canNotify = await taskVisibilityPolicy.CanUserAccessWorkflowByDataPermissionAsync(
+            task.AssigneeId,
+            instance.InitiatorId,
+            instance.InitiatorDeptId,
+            cancellationToken);
+        if (!canNotify)
+        {
+            return;
+        }
+
+        var receiverId = task.AssigneeId.Id;
         var title = "您有一条待办审批";
         var content = $"流程「{instance.Title}」需要您审批，请及时处理。";
 

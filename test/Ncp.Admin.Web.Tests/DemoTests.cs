@@ -1,4 +1,4 @@
-using Ncp.Admin.Web.Endpoints.DemoEndpoints;
+using Ncp.Admin.Web.Endpoints.Demos;
 using NetCorePal.Context;
 using NetCorePal.Extensions.Dto;
 namespace Ncp.Admin.Web.Tests

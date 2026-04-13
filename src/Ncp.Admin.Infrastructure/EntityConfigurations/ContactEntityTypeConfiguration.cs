@@ -19,7 +19,7 @@ internal class ContactEntityTypeConfiguration : IEntityTypeConfiguration<Contact
         builder.Property(x => x.Phone).HasMaxLength(50);
         builder.Property(x => x.Email).HasMaxLength(200);
         builder.Property(x => x.Company).HasMaxLength(200);
-        builder.Property(x => x.GroupId);
+        builder.Property(x => x.GroupId).IsRequired();
         builder.Property(x => x.CreatorId).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdateTime);

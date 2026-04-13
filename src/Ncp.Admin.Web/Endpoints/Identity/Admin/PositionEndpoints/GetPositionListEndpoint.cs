@@ -11,15 +11,13 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.PositionEndpoints;
 /// <summary>
 /// 获取岗位列表的请求模型
 /// </summary>
-public class GetPositionListRequest
-{
-    public string? Name { get; set; }
-    public string? Code { get; set; }
-    public DeptId? DeptId { get; set; }
-    public int? Status { get; set; }
-    public int PageIndex { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
-}
+public record GetPositionListRequest(
+    string? Name = null,
+    string? Code = null,
+    DeptId? DeptId = null,
+    int? Status = null,
+    int PageIndex = 1,
+    int PageSize = 20);
 
 /// <summary>
 /// 岗位列表项
@@ -41,7 +39,7 @@ public class GetPositionListEndpoint(PositionQuery positionQuery) : Endpoint<Get
     public override void Configure()
     {
         Tags("Positions");
-        Description(b => b.AutoTagOverride("Positions"));
+        Description(b => b.AutoTagOverride("Positions").WithSummary("获取岗位列表"));
         Get("/api/admin/position");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionView);

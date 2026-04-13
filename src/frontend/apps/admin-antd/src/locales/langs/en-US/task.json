@@ -19,6 +19,7 @@
   },
   "project": {
     "title": "Projects",
+    "managementTitle": "Project Management",
     "list": "Project List",
     "name": "Project",
     "projectName": "Project Name",

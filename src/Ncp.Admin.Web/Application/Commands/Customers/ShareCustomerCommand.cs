@@ -24,7 +24,7 @@ public class ShareCustomerCommandHandler(ICustomerRepository repository)
 {
     public async Task<bool> Handle(ShareCustomerCommand request, CancellationToken cancellationToken)
     {
-        var customer = await repository.GetAsync(request.CustomerId, cancellationToken)
+        var customer = await repository.GetWithSharesAsync(request.CustomerId, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
         customer.ShareToUsers(request.SharedByUserId, request.SharedToUserIds);
         return true;

@@ -1,17 +1,19 @@
+using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 /// <summary>
-/// 用户岗位关系实体
-/// 表示用户与岗位的一对一关系
+/// 用户岗位关系实体（与用户一对一；主键同用户 ID）
 /// </summary>
-public class UserPosition
+public class UserPosition : Entity<UserId>
 {
     /// <summary>
-    /// 用户ID
+    /// EF/序列化用
     /// </summary>
-    public UserId UserId { get; private set; } = default!;
+    protected UserPosition()
+    {
+    }
 
     /// <summary>
     /// 岗位ID
@@ -28,10 +30,6 @@ public class UserPosition
     /// </summary>
     public DateTimeOffset AssignedAt { get; init; }
 
-    protected UserPosition()
-    {
-    }
-
     /// <summary>
     /// 创建用户岗位关系
     /// </summary>
@@ -40,7 +38,7 @@ public class UserPosition
     /// <param name="positionName">岗位名称</param>
     public UserPosition(UserId userId, PositionId positionId, string positionName)
     {
-        UserId = userId;
+        Id = userId;
         PositionId = positionId;
         AssignedAt = DateTimeOffset.UtcNow;
         PositionName = positionName ?? string.Empty;

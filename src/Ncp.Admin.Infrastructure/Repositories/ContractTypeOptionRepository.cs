@@ -1,4 +1,4 @@
-using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptions;
+using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate;
 
 namespace Ncp.Admin.Infrastructure.Repositories;
 

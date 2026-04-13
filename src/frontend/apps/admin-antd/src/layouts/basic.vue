@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { NotificationItem } from '@vben/layouts';
 
 import { computed, ref, watch } from 'vue';
@@ -30,6 +30,8 @@ import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
 const notifications = ref<NotificationItem[]>([]);
+/** 未读总数（与列表分页无关，用于角标） */
+const unreadCount = ref(0);
 const loading = ref(false);
 
 function formatNotificationDate(createdAt: string) {
@@ -45,6 +47,20 @@ function formatNotificationDate(createdAt: string) {
   if (diffHours < 24) return `${diffHours}${$t('page.ui.widgets.hoursAgo')}`;
   if (diffDays < 7) return `${diffDays}${$t('page.ui.widgets.daysAgo')}`;
   return date.toLocaleDateString();
+}
+
+function notificationLinkFromBusiness(
+  businessId?: string,
+  businessType?: string,
+): Pick<NotificationItem, 'link' | 'query'> {
+  if (!businessId || !businessType) return {};
+  if (businessType === 'WorkflowInstance') {
+    return { link: `/workflow/instance/${businessId}` };
+  }
+  if (businessType === 'CustomerSea') {
+    return { link: '/customer/sea' };
+  }
+  return {};
 }
 
 function mapToLayoutItem(item: {
@@ -63,9 +79,7 @@ function mapToLayoutItem(item: {
     date: formatNotificationDate(item.createdAt),
     isRead: item.isRead,
     avatar: preferences.app.defaultAvatar,
-    link: item.businessId && item.businessType
-      ? `/workflow/instance/${item.businessId}`
-      : undefined,
+    ...notificationLinkFromBusiness(item.businessId, item.businessType),
   };
 }
 
@@ -76,7 +90,10 @@ async function loadNotifications() {
     const res = await getNotificationList({
       pageIndex: 1,
       pageSize: 20,
+      /** 头部下拉仅展示未读；已读后由接口排除 */
+      isRead: false,
     });
+    unreadCount.value = res.unreadCount ?? 0;
     notifications.value = (res.items || []).map(mapToLayoutItem);
   } finally {
     loading.value = false;
@@ -88,9 +105,7 @@ const userStore = useUserStore();
 const authStore = useAuthStore();
 const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
-const showDot = computed(() =>
-  notifications.value.some((item) => !item.isRead),
-);
+const showDot = computed(() => unreadCount.value > 0);
 
 watch(
   () => accessStore.accessToken,
@@ -99,6 +114,7 @@ watch(
       loadNotifications();
     } else {
       notifications.value = [];
+      unreadCount.value = 0;
     }
   },
   { immediate: true },
@@ -159,10 +175,10 @@ function handleNoticeClear() {
 async function markRead(id: number | string) {
   try {
     await markNotificationRead(id);
-    const item = notifications.value.find((item) => item.id === id);
-    if (item) {
-      item.isRead = true;
-    }
+    notifications.value = notifications.value.filter(
+      (item) => String(item.id) !== String(id),
+    );
+    unreadCount.value = Math.max(0, unreadCount.value - 1);
   } catch {
     // ignore
   }
@@ -171,7 +187,11 @@ async function markRead(id: number | string) {
 async function remove(id: number | string) {
   try {
     await deleteNotification(id);
-    notifications.value = notifications.value.filter((item) => item.id !== id);
+    const existed = notifications.value.some((item) => String(item.id) === String(id));
+    notifications.value = notifications.value.filter(
+      (item) => String(item.id) !== String(id),
+    );
+    if (existed) unreadCount.value = Math.max(0, unreadCount.value - 1);
   } catch {
     // ignore - error already shown by request interceptor
   }
@@ -184,7 +204,8 @@ function handleViewAll() {
 async function handleMakeAll() {
   try {
     await markAllNotificationsRead();
-    notifications.value.forEach((item) => (item.isRead = true));
+    notifications.value = [];
+    unreadCount.value = 0;
   } catch {
     // ignore
   }

@@ -1,0 +1,34 @@
+using FastEndpoints;
+using FastEndpoints.Swagger;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain.AggregatesModel.AssetAggregate;
+using Ncp.Admin.Web.Application.Commands.Assets;
+using Ncp.Admin.Web.AppPermissions;
+
+namespace Ncp.Admin.Web.Endpoints.Assets;
+
+/// <summary>
+/// 报废资产请求
+/// </summary>
+/// <param name="Id">资产 ID</param>
+public record ScrapAssetRequest(AssetId Id);
+
+public class ScrapAssetEndpoint(IMediator mediator) : Endpoint<ScrapAssetRequest, ResponseData<bool>>
+{
+    public override void Configure()
+    {
+        Tags("Asset");
+        Description(b => b.AutoTagOverride("Asset").WithSummary("报废资产请求"));
+        Post("/api/admin/assets/{id}/scrap");
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
+        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.AssetScrap);
+    }
+
+    public override async Task HandleAsync(ScrapAssetRequest req, CancellationToken ct)
+    {
+        var cmd = new ScrapAssetCommand(req.Id);
+        await mediator.Send(cmd, ct);
+        await Send.OkAsync(true.AsResponseData(), cancellation: ct);
+    }
+}

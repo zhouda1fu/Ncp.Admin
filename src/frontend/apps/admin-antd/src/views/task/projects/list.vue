@@ -69,7 +69,7 @@ const [Grid, gridApi] = useVbenVxeGrid<ProjectApi.ProjectItem>({
 
 async function onActionClick(e: OnActionClickParams<ProjectApi.ProjectItem>) {
   if (e.code === 'edit') {
-    router.push(`/task/projects/${e.row.id}/edit`);
+    router.push({ name: 'ProjectEdit', params: { id: e.row.id } });
     return;
   }
   if (e.code === 'archive') {
@@ -105,7 +105,7 @@ async function onActionClick(e: OnActionClickParams<ProjectApi.ProjectItem>) {
 }
 
 function onCreate() {
-  router.push('/task/projects/create');
+  router.push({ name: 'ProjectCreate' });
 }
 </script>
 

@@ -19,6 +19,7 @@
   },
   "project": {
     "title": "项目",
+    "managementTitle": "项目管理",
     "list": "项目列表",
     "name": "项目",
     "projectName": "项目名称",

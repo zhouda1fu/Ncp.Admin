@@ -3,7 +3,7 @@ using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 namespace Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 
 /// <summary>
-/// 客户共享关系（子实体）：表示某客户共享给某用户
+/// 客户共享关系（子实体）：挂入 <see cref="Customer.Shares"/>，<see cref="CustomerId"/> 由 EF 根据父子关系修复。
 /// </summary>
 public class CustomerShare
 {
@@ -11,9 +11,8 @@ public class CustomerShare
     {
     }
 
-    public CustomerShare(CustomerId customerId, UserId sharedToUserId, UserId sharedByUserId, DateTimeOffset sharedAt)
+    public CustomerShare(UserId sharedToUserId, UserId sharedByUserId, DateTimeOffset sharedAt)
     {
-        CustomerId = customerId;
         SharedToUserId = sharedToUserId;
         SharedByUserId = sharedByUserId;
         SharedAt = sharedAt.ToUniversalTime();

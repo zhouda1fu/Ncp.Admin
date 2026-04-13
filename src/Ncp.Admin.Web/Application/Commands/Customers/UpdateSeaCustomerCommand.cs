@@ -28,7 +28,6 @@ public record UpdateSeaCustomerCommand(
     string PhoneProvinceName,
     string PhoneCityName,
     string PhoneDistrictName,
-    string ConsultationContent,
     string CoverRegion,
     string RegisterAddress,
     int EmployeeCount,
@@ -43,7 +42,13 @@ public class UpdateSeaCustomerCommandValidator : AbstractValidator<UpdateSeaCust
     public UpdateSeaCustomerCommandValidator()
     {
         RuleFor(c => c.Id).NotEmpty();
+        RuleFor(c => c).Must(HavePhoneOrProjectRegion).WithMessage("电话区域与项目区域请至少填写一侧（省/市/区任一级有效编码）");
     }
+
+    private static bool HavePhoneOrProjectRegion(UpdateSeaCustomerCommand c) =>
+        SeaCustomerRegionValidation.HasAnyRegionCode(
+            c.PhoneProvinceCode, c.PhoneCityCode, c.PhoneDistrictCode,
+            c.ProvinceCode, c.CityCode, c.DistrictCode);
 }
 
 public class UpdateSeaCustomerCommandHandler(ICustomerRepository repository)
@@ -51,8 +56,12 @@ public class UpdateSeaCustomerCommandHandler(ICustomerRepository repository)
 {
     public async Task<bool> Handle(UpdateSeaCustomerCommand request, CancellationToken cancellationToken)
     {
-        var customer = await repository.GetAsync(request.Id, cancellationToken)
+        var customer = await repository.GetWithIndustriesAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到客户", ErrorCodes.CustomerNotFound);
+        if (string.IsNullOrWhiteSpace(customer.MainContactPhone)
+            && string.IsNullOrWhiteSpace(request.ContactQq)
+            && string.IsNullOrWhiteSpace(request.ContactWechat))
+            throw new KnownException("请至少保留一种联系方式（电话、QQ 或微信）");
         customer.UpdateWhenInSea(
             request.CustomerSourceId, request.CustomerSourceName,
             customer.ShortName, request.Status, request.Nature, request.ProvinceCode,
@@ -60,7 +69,7 @@ public class UpdateSeaCustomerCommandHandler(ICustomerRepository repository)
             request.ProvinceName, request.CityName, request.DistrictName,
             request.PhoneProvinceCode, request.PhoneCityCode, request.PhoneDistrictCode,
             request.PhoneProvinceName, request.PhoneCityName, request.PhoneDistrictName,
-            request.ConsultationContent,
+            customer.ConsultationContent,
             request.CoverRegion, request.RegisterAddress, request.EmployeeCount, request.BusinessLicense ?? string.Empty,
             customer.MainContactName, customer.MainContactPhone,
             request.ContactQq, request.ContactWechat,

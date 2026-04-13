@@ -36,7 +36,7 @@ public class CreateDeptEndpoint(IMediator mediator) : Endpoint<CreateDeptRequest
     public override void Configure()
     {
         Tags("Depts");
-        Description(b => b.AutoTagOverride("Depts"));
+        Description(b => b.AutoTagOverride("Depts").WithSummary("创建部门"));
         Post("/api/admin/dept");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptCreate);

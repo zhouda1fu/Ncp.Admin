@@ -1,7 +1,7 @@
 using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
-using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
-using Ncp.Admin.Web.Application.Commands.Order;
-using Ncp.Admin.Web.Application.Commands.Workflow;
+using Ncp.Admin.Domain.DomainEvents;
+using Ncp.Admin.Web.Application.Commands.Orders;
+using Ncp.Admin.Web.Application.Commands.Workflows;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;
 

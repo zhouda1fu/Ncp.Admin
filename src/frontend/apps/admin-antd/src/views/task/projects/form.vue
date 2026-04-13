@@ -142,7 +142,7 @@ const [Form, formApi] = useVbenForm({
 });
 
 function goBack() {
-  router.push('/task/projects');
+  router.push({ name: 'ProjectList' });
 }
 
 /** 生成项目编号，格式 yyyyMMddHHmmss */

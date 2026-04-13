@@ -9,11 +9,25 @@ namespace Ncp.Admin.Web.Application.Queries;
 /// <summary>
 /// 任务评论查询 DTO
 /// </summary>
+/// <param name="Id">评论 ID</param>
+/// <param name="Content">评论内容</param>
+/// <param name="AuthorId">作者用户 ID</param>
+/// <param name="CreatedAt">创建时间</param>
 public record TaskCommentQueryDto(ProjectTaskCommentId Id, string Content, UserId AuthorId, DateTimeOffset CreatedAt);
 
 /// <summary>
 /// 任务查询 DTO（含评论列表）
 /// </summary>
+/// <param name="Id">任务 ID</param>
+/// <param name="ProjectId">所属项目 ID</param>
+/// <param name="Title">标题</param>
+/// <param name="Description">描述</param>
+/// <param name="AssigneeId">负责人，未指定为 null</param>
+/// <param name="DueDate">截止日期</param>
+/// <param name="Status">状态</param>
+/// <param name="SortOrder">排序号</param>
+/// <param name="CreatedAt">创建时间</param>
+/// <param name="Comments">评论列表</param>
 public record TaskQueryDto(
     ProjectTaskId Id,
     ProjectId ProjectId,
@@ -61,7 +75,7 @@ public class TaskQuery(ApplicationDbContext dbContext) : IQuery
             task.ProjectId,
             task.Title,
             task.Description,
-            task.AssigneeId,
+            task.AssigneeId == new UserId(0) ? null : task.AssigneeId,
             task.DueDate,
             (int)task.Status,
             task.SortOrder,
@@ -88,7 +102,7 @@ public class TaskQuery(ApplicationDbContext dbContext) : IQuery
                 t.ProjectId,
                 t.Title,
                 t.Description,
-                t.AssigneeId,
+                t.AssigneeId == new UserId(0) ? null : t.AssigneeId,
                 t.DueDate,
                 (int)t.Status,
                 t.SortOrder,

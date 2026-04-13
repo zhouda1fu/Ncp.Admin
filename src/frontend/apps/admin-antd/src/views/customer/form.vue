@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { RegionCascaderOption, IndustryTreeOption } from './data';
 
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onActivated, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
@@ -23,9 +23,12 @@ import { getIndustryList } from '#/api/system/industry';
 import { getRegionList } from '#/api/system/region';
 import type { RegionApi } from '#/api/system/region';
 import { $t } from '#/locales';
+import {
+  formatCustomerContactRecordStatus,
+  formatCustomerContactRecordType,
+} from '#/utils/customer-contact-record-display';
 
 import ContactDrawer from './modules/contact-drawer.vue';
-import ContactRecordDrawer from './modules/contact-record-drawer.vue';
 import { useSchema } from './data';
 
 const route = useRoute();
@@ -38,7 +41,6 @@ const customerSourceOptions = ref<{ label: string; value: string }[]>([]);
 const regionList = ref<RegionApi.RegionItem[]>([]);
 const customerDetail = ref<CustomerApi.CustomerDetail | null>(null);
 const contactDrawerRef = ref<InstanceType<typeof ContactDrawer> | null>(null);
-const contactRecordDrawerRef = ref<InstanceType<typeof ContactRecordDrawer> | null>(null);
 const licenseBlobUrl = ref<string | null>(null);
 const submitting = ref(false);
 /** 新建客户幂等键：同一表单提交（含重复点击）使用同一 key，后端返回缓存响应防重复创建 */
@@ -73,20 +75,24 @@ function isContactPrimary(record: Record<string, unknown>): boolean {
 
 const contactColumns = [
   { title: () => $t('customer.contactName'), dataIndex: 'name', key: 'name', width: 120 },
-  { title: () => $t('customer.contactType'), dataIndex: 'contactType', key: 'contactType', width: 100 },
+  { title: () => $t('customer.contactPosition'), dataIndex: 'position', key: 'position', width: 100 },
   { title: () => $t('customer.contactMobile'), dataIndex: 'mobile', key: 'mobile', width: 120 },
   { title: () => $t('customer.contactPhone'), dataIndex: 'phone', key: 'phone', width: 120 },
-  { title: () => $t('customer.contactPosition'), dataIndex: 'position', key: 'position', width: 100 },
+  { title: 'QQ', dataIndex: 'qq', key: 'qq', width: 120 },
+  { title: '微信', dataIndex: 'wechat', key: 'wechat', width: 120 },
+  { title: () => $t('customer.contactEmail'), dataIndex: 'email', key: 'email', width: 160 },
+  { title: '微信添加', dataIndex: 'isWechatAdded', key: 'isWechatAdded', width: 90 },
   { title: () => $t('customer.isPrimary'), dataIndex: 'isPrimary', key: 'isPrimary', width: 90 },
-  { title: () => $t('customer.operation'), key: 'action', width: 160 },
+  { title: () => $t('customer.operation'), key: 'action', width: 220 },
 ];
 
 const contactRecordColumns = [
   { title: () => $t('customer.recordAt'), dataIndex: 'recordAt', key: 'recordAt', width: 170 },
   { title: () => $t('customer.recordType'), dataIndex: 'recordType', key: 'recordType', width: 100 },
+  { title: () => $t('customer.contactRecordStatus'), dataIndex: 'status', key: 'status', width: 100 },
   { title: () => $t('customer.recordContent'), dataIndex: 'content', key: 'content', ellipsis: true },
-  { title: () => $t('customer.recorderName'), dataIndex: 'recorderName', key: 'recorderName', width: 100 },
-  { title: () => $t('customer.operation'), key: 'action', width: 100 },
+  { title: () => $t('customer.contactRecordOwner'), dataIndex: 'ownerName', key: 'ownerName', width: 100 },
+  { title: () => $t('customer.operation'), key: 'action', width: 160 },
 ];
 
 /** 省级：与公海项目区域一致 */
@@ -262,6 +268,15 @@ watch(
   { immediate: true },
 );
 
+const skipFirstActivatedRefresh = ref(true);
+onActivated(() => {
+  if (skipFirstActivatedRefresh.value) {
+    skipFirstActivatedRefresh.value = false;
+    return;
+  }
+  if (id.value) loadCustomer();
+});
+
 function goBack() {
   router.push('/customer/list');
 }
@@ -295,12 +310,30 @@ async function handleDeleteContact(contact: CustomerApi.CustomerContactItem | Re
   });
 }
 
-function openContactRecordDrawer() {
-  contactRecordDrawerRef.value?.open();
+function goToContactRecordCreate() {
+  if (!id.value) return;
+  router.push({
+    name: 'CustomerContactRecordCreate',
+    params: { customerId: id.value },
+  });
 }
 
-function onContactRecordSuccess() {
-  loadCustomer();
+function goToContactRecordCreateForContact(contact: CustomerApi.CustomerContactItem | Record<string, unknown>) {
+  if (!id.value) return;
+  const c = contact as CustomerApi.CustomerContactItem;
+  router.push({
+    name: 'CustomerContactRecordCreate',
+    params: { customerId: id.value },
+    query: { contactIds: String(c.id) },
+  });
+}
+
+function goToContactRecordEdit(record: CustomerApi.CustomerContactRecordItem) {
+  if (!id.value) return;
+  router.push({
+    name: 'CustomerContactRecordEdit',
+    params: { customerId: id.value, recordId: record.id },
+  });
 }
 
 async function handleDeleteContactRecord(record: CustomerApi.CustomerContactRecordItem) {
@@ -459,10 +492,18 @@ async function onSubmit() {
                   <Button type="link" size="small" @click="openContactDrawer(record)">
                     {{ $t('customer.editContact') }}
                   </Button>
+                  <Button type="link" size="small" @click="goToContactRecordCreateForContact(record)">
+                    新增联络记录
+                  </Button>
                   <Button type="link" size="small" danger @click="handleDeleteContact(record)">
                     {{ $t('customer.deleteContact') }}
                   </Button>
                 </Space>
+              </template>
+              <template v-else-if="column.key === 'isWechatAdded'">
+                <Tag :color="record.isWechatAdded ? 'success' : 'default'">
+                  {{ record.isWechatAdded ? $t('common.yes') : $t('common.no') }}
+                </Tag>
               </template>
             </template>
           </Table>
@@ -482,7 +523,7 @@ async function onSubmit() {
             <Button
               type="primary"
               class="inline-flex items-center gap-1"
-              @click="openContactRecordDrawer"
+              @click="goToContactRecordCreate"
             >
               + {{ $t('customer.addContactRecord') }}
             </Button>
@@ -496,26 +537,36 @@ async function onSubmit() {
             class="mt-2"
           >
             <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'recordAt'">
+              <template v-if="column.key === 'recordType'">
+                {{ formatCustomerContactRecordType(record.recordType) }}
+              </template>
+              <template v-else-if="column.key === 'status'">
+                {{ formatCustomerContactRecordStatus(record.status ?? record.statusId) }}
+              </template>
+              <template v-else-if="column.key === 'recordAt'">
                 {{ formatRecordAt(record.recordAt) }}
               </template>
               <template v-else-if="column.key === 'action'">
-                <Button
-                  type="link"
-                  size="small"
-                  danger
-                  @click="handleDeleteContactRecord(record as CustomerApi.CustomerContactRecordItem)"
-                >
-                  {{ $t('customer.deleteRecord') }}
-                </Button>
+                <Space size="small">
+                  <Button
+                    type="link"
+                    size="small"
+                    @click="goToContactRecordEdit(record as CustomerApi.CustomerContactRecordItem)"
+                  >
+                    {{ $t('common.edit') }}
+                  </Button>
+                  <Button
+                    type="link"
+                    size="small"
+                    danger
+                    @click="handleDeleteContactRecord(record as CustomerApi.CustomerContactRecordItem)"
+                  >
+                    {{ $t('customer.deleteRecord') }}
+                  </Button>
+                </Space>
               </template>
             </template>
           </Table>
-          <ContactRecordDrawer
-            ref="contactRecordDrawerRef"
-            :customer-id="id"
-            @success="onContactRecordSuccess"
-          />
         </div>
       </template>
     </div>

@@ -31,22 +31,19 @@ public class OrderCategory : Entity<OrderCategoryId>
     /// <summary>备注</summary>
     public string Remark { get; private set; } = string.Empty;
 
-    /// <summary>创建</summary>
-    public static OrderCategory Create(
+    /// <summary>新建分类优惠行（业务；EF 使用无参 <see cref="OrderCategory" />）</summary>
+    public OrderCategory(
         OrderId orderId,
         ProductCategoryId productCategoryId,
         string categoryName,
         decimal discountPoints,
         string remark)
     {
-        return new OrderCategory
-        {
-            OrderId = orderId,
-            ProductCategoryId = productCategoryId,
-            CategoryName = categoryName ?? string.Empty,
-            DiscountPoints = discountPoints,
-            Remark = remark ?? string.Empty,
-        };
+        OrderId = orderId;
+        ProductCategoryId = productCategoryId;
+        CategoryName = categoryName ?? string.Empty;
+        DiscountPoints = discountPoints;
+        Remark = remark ?? string.Empty;
     }
 
     /// <summary>更新</summary>

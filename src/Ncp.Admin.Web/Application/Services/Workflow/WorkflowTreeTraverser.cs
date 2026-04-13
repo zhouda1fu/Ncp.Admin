@@ -299,6 +299,7 @@ public class WorkflowTreeTraverser
 
         // 按 priorityLevel 升序，先匹配到的分支生效
         var ordered = conditionNodes.OrderBy(c => c.PriorityLevel).ToList();
+
         foreach (var cn in ordered)
         {
             var list = cn.ConditionList;
@@ -307,7 +308,9 @@ public class WorkflowTreeTraverser
             {
                 return cn.ChildNode;
             }
-            if (WorkflowConditionEvaluator.EvaluateDesignerConditionList(variablesJson, list))
+            var matched = WorkflowConditionEvaluator.EvaluateDesignerConditionList(variablesJson, list);
+
+            if (matched)
             {
                 return cn.ChildNode;
             }

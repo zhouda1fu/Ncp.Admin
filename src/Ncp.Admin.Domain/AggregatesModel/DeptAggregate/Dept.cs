@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.DomainEvents.DeptEvents;
+using Ncp.Admin.Domain.DomainEvents;
 using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
@@ -55,6 +55,11 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     /// 删除时间
     /// </summary>
     public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
+
+    /// <summary>
+    /// 并发版本
+    /// </summary>
+    public RowVersion RowVersion { get; private set; } = new RowVersion(0);
 
     /// <summary>
     /// 更新时间

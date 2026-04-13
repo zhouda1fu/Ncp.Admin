@@ -148,6 +148,7 @@ function goContractList() {
         <Descriptions.Item v-if="hasPermission(PermissionCodes.OrderNeedInvoice)" :label="$t('order.needInvoice')">{{ detail.needInvoice ? $t('order.yes') : $t('order.no') }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.installationFee')">{{ detail.installationFee }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.estimatedFreight')">{{ detail.estimatedFreight }}</Descriptions.Item>
+        <Descriptions.Item :label="$t('order.isNoLogo')">{{ detail.isNoLogo ? $t('order.yes') : $t('order.no') }}</Descriptions.Item>
         <Descriptions.Item v-if="hasPermission(PermissionCodes.OrderContractSelect)" :label="$t('order.selectContract')">{{ detail.selectedContractFileId === 1 ? $t('order.yes') : $t('order.no') }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.isShipped')">{{ detail.isShipped ? $t('order.yes') : $t('order.no') }}</Descriptions.Item>
         <Descriptions.Item :label="$t('order.paymentStatus')">{{ $t(paymentStatusMap[detail.paymentStatus] ?? '') }}</Descriptions.Item>

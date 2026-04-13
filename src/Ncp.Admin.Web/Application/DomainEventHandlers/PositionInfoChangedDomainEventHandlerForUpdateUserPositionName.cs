@@ -1,4 +1,4 @@
-using Ncp.Admin.Domain.DomainEvents.PositionEvents;
+using Ncp.Admin.Domain.DomainEvents;
 using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;

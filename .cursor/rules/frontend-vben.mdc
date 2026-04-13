@@ -1,51 +1,24 @@
 ---
-description: 前端 Vben Admin 开发规范与文件位置，详细规范见 ncp-admin-frontend skill
+description: 前端 Vben Admin：路径与结构索引；详细与易错点见 ncp-admin-frontend skill
 globs: src/frontend/**/*.vue, src/frontend/**/*.ts
 alwaysApply: false
 ---
 
-# 前端 Vben Admin 开发
+# 前端 Vben Admin
 
-前端技术栈：Vue 3、Vite、TypeScript、Ant Design Vue、Vben Admin。  
-更完整规范请阅读：`.cursor/skills/ncp-admin-frontend/SKILL.md`。
+技术栈：Vue 3、Vite、TypeScript、Ant Design Vue、Vben Admin。
 
-## 路径与结构
+**详细规范**（API/视图易错点、权限与菜单清单、表单抽屉流程、路由 `activePath` 等）见 **`.cursor/skills/ncp-admin-frontend/SKILL.md`**；开发时建议 @ 引用该技能。
 
-- 应用根目录：`src/frontend/apps/admin-antd/`
-- API：`src/api/system/{feature}.ts`，与后端接口对应
-- 列表页：`src/views/{module}/{feature}/list.vue`
-- 表单弹窗：`src/views/{module}/{feature}/modules/form.vue`
-- 表格/表单 Schema：`src/views/{module}/{feature}/data.ts`
+## 路径与结构（相对 `src/frontend/apps/admin-antd/`）
+
+- API：`src/api/system/{feature}.ts`
+- 列表 / 表单 / Schema：`src/views/{module}/{feature}/` 下 `list.vue`、`modules/form.vue`、`data.ts`
 - 路由：`src/router/routes/modules/{module}.ts`
 - 多语言：`src/locales/langs/{zh-CN,en-US}/{module}.json`
 
-## 常用约定
+## 常用约定（摘要）
 
-- API 用 `namespace` 定义类型，用 `requestClient` 发请求
-- 列表页用 `Page`、`useVbenVxeGrid`、`useVbenModal`，弹窗用 `modules/form.vue`
-- 表单用 `useVbenForm`、`formModalApi.getData/setData`，提交后 `emit('success')`
-- 文案使用 `$t()` 做国际化
-
-## 表单抽屉（Drawer）
-
-**带表单的抽屉必须与主题一致**，统一使用 **useVbenDrawer + useVbenForm**，不要使用 Ant Design Vue 的 `Drawer` 组件 + 手写表单项。
-
-- **抽屉壳**：`useVbenDrawer`（来自 `@vben/common-ui`），提供标题、关闭、底部取消/确定、提交中 lock 等，与其它抽屉样式一致。
-- **表单内容**：`useVbenForm` + 在 `data.ts` 中定义的 **表单 schema**（与主表单一样用 `VbenFormSchema`、`z` 校验、`formItemClass` 等），保证标签、间距、栅格与主题表单一致。
-- **流程**：打开时 `drawerApi.setData({ ... }).open()`，在 `onOpenChange(isOpen)` 里根据 `drawerApi.getData()` 给 `formApi.setValues(...)`；确定时在 `onConfirm` 里 `formApi.validate()` → `formApi.getValues()` → 调接口或写本地状态，成功后 `drawerApi.close()`，提交中用 `drawerApi.lock(true/false)`。
-- **参考**：`src/views/contract/form-page.vue` 中的新增/编辑发票抽屉、`src/views/customer/modules/contact-drawer.vue`、`src/views/leave/balances/modules/form.vue`。
-
-## 新增带权限的功能时（前端必做）
-
-1. `src/constants/permission-codes.ts` 新增权限码，与后端 PermissionCodes.cs 一致
-2. `src/utils/permission-tree.ts` 的 `buildPermissionTree()` 中增加对应树节点（否则角色管理无法勾选）
-3. 父路由 `authority` 用数组，包含父权限码和所有子权限码
-4. 新菜单项：在父路由 `children` 中增加子路由并配套 views/api/locales，否则侧边栏不显示
-
-## 易错点
-
-- **data.ts**：`useGridFormSchema()` 每项 `componentProps` 必须含 `class: 'w-full'`；`useColumns` 必须有一列不设 `width` 作弹性列，否则操作列右侧空白（参考 `views/system/dept/data.ts`）
-- **子页高亮父菜单**：不在菜单中的子路由（如新建/编辑页）在 `meta` 中设 `activePath: '/父列表path'`
-- **抽屉**：带表单的抽屉用 useVbenDrawer + useVbenForm + schema，不要用 AVD `Drawer` 配手写 label/input，否则样式与主题不一致（见上文「表单抽屉」）
-
-更完整清单与示例见 `.cursor/skills/ncp-admin-frontend/SKILL.md`。
+- API：`namespace` 定义类型，`requestClient` 发请求
+- 列表：`Page`、`useVbenVxeGrid`、`useVbenModal`；弹窗表单：`modules/form.vue`
+- 表单：`useVbenForm`、`formModalApi.getData/setData`，提交后 `emit('success')`；文案：`$t()`

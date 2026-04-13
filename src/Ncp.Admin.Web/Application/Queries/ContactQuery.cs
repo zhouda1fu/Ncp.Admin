@@ -9,6 +9,14 @@ namespace Ncp.Admin.Web.Application.Queries;
 /// <summary>
 /// 联系人查询 DTO
 /// </summary>
+/// <param name="Id">联系人 ID</param>
+/// <param name="Name">姓名</param>
+/// <param name="Phone">电话</param>
+/// <param name="Email">邮箱</param>
+/// <param name="Company">公司</param>
+/// <param name="GroupId">所属分组，未分组为 null</param>
+/// <param name="CreatorId">创建人用户 ID</param>
+/// <param name="CreatedAt">创建时间</param>
 public record ContactQueryDto(
     ContactId Id,
     string Name,
@@ -72,7 +80,15 @@ public class ContactQuery(ApplicationDbContext dbContext) : IQuery
         }
         return await query
             .OrderByDescending(c => c.CreatedAt)
-            .Select(c => new ContactQueryDto(c.Id, c.Name, c.Phone, c.Email, c.Company, c.GroupId, c.CreatorId, c.CreatedAt))
+            .Select(c => new ContactQueryDto(
+                c.Id,
+                c.Name,
+                c.Phone,
+                c.Email,
+                c.Company,
+                c.GroupId == Contact.UnassignedGroupId ? null : c.GroupId,
+                c.CreatorId,
+                c.CreatedAt))
             .ToPagedDataAsync(input, cancellationToken);
     }
 }

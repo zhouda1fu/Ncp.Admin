@@ -12,7 +12,7 @@ internal class IndustryEntityTypeConfiguration : IEntityTypeConfiguration<Indust
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseGuidVersion7ValueGenerator().HasComment("行业标识");
         builder.Property(x => x.Name).IsRequired().HasMaxLength(100).HasComment("名称");
-        builder.Property(x => x.ParentId).HasComment("父级行业ID");
+        builder.Property(x => x.ParentId).IsRequired().HasComment("父级行业ID（Guid.Empty 表示一级）");
         builder.Property(x => x.SortOrder).IsRequired().HasComment("排序");
         builder.Property(x => x.Remark).HasMaxLength(500).HasComment("备注");
         builder.HasIndex(x => x.ParentId);

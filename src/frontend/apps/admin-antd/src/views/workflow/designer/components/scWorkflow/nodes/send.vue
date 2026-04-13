@@ -8,7 +8,7 @@
       </div>
       <div class="content">
         <span v-if="toText(nodeConfig)">{{ toText(nodeConfig) }}</span>
-        <span v-else class="placeholder">请选择人员</span>
+        <span v-else class="placeholder">请选择抄送对象</span>
       </div>
     </div>
     <add-node v-model="nodeConfig.childNode" />
@@ -42,7 +42,28 @@
               placeholder="如：抄送财务、抄送人事"
             />
           </a-form-item>
-          <a-form-item label="选择要抄送的人员">
+          <a-form-item label="抄送人员类型">
+            <a-select v-model:value="form.setType" @change="changeSetType" style="width: 100%">
+              <a-select-option :value="1">指定成员</a-select-option>
+              <a-select-option :value="3">角色</a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item v-if="form.setType === 3" label="选择要抄送的角色">
+            <a-button type="primary" @click="selectHandle(2, form.nodeAssigneeList)">
+              <template #icon><Plus class="size-4" /></template>
+              选择角色
+            </a-button>
+            <div class="tags-list">
+              <a-tag
+                v-for="(role, index) in form.nodeAssigneeList"
+                :key="role.id"
+                closable
+                @close="delRole(index)">
+                {{ role.name }}
+              </a-tag>
+            </div>
+          </a-form-item>
+          <a-form-item v-else label="选择要抄送的人员">
             <a-button type="primary" @click="selectHandle(1, form.nodeAssigneeList)">
               <template #icon><Plus class="size-4" /></template>
               选择人员
@@ -57,7 +78,7 @@
               </a-tag>
             </div>
           </a-form-item>
-          <a-form-item>
+          <a-form-item v-if="form.setType !== 3">
             <a-checkbox v-model:checked="form.userSelectFlag">允许发起人自选抄送人</a-checkbox>
           </a-form-item>
         </a-form>
@@ -71,14 +92,27 @@
 </template>
 
 <script>
-import { Plus, X } from '@vben/icons';
-import { Icon as IconifyIcon } from '@iconify/vue';
-import { Button, Checkbox, Drawer, Form, Input, Tag } from 'ant-design-vue';
+import { IconifyIcon, Plus, X } from '@vben/icons';
+import { Button, Checkbox, Drawer, Form, Input, Select, Tag } from 'ant-design-vue';
 import addNode from './addNode.vue';
 
 export default {
   name: 'SendNode',
-  components: { addNode, AButton: Button, ACheckbox: Checkbox, ADrawer: Drawer, AForm: Form, AFormItem: Form.Item, AInput: Input, ATag: Tag, IconifyIcon, Plus, X },
+  components: {
+    addNode,
+    AButton: Button,
+    ACheckbox: Checkbox,
+    ADrawer: Drawer,
+    AForm: Form,
+    AFormItem: Form.Item,
+    AInput: Input,
+    ASelect: Select,
+    ASelectOption: Select.Option,
+    ATag: Tag,
+    IconifyIcon,
+    Plus,
+    X,
+  },
   inject: ['select'],
   props: {
     modelValue: { type: Object, default: () => ({}) },
@@ -88,16 +122,29 @@ export default {
   watch: { modelValue() { this.nodeConfig = this.modelValue; } },
   mounted() { this.nodeConfig = this.modelValue; },
   methods: {
-    show() { this.form = JSON.parse(JSON.stringify(this.nodeConfig)); this.drawer = true; },
+    show() {
+      this.form = JSON.parse(JSON.stringify(this.nodeConfig));
+      if (!this.form.setType) this.form.setType = 1;
+      this.drawer = true;
+    },
     editTitle() { this.isEditTitle = true; this.$nextTick(() => this.$refs.nodeTitleRef?.focus()); },
     saveTitle() { this.isEditTitle = false; },
     save() { this.$emit('update:modelValue', this.form); this.drawer = false; },
     delNode() { this.$emit('update:modelValue', this.nodeConfig.childNode); },
     delUser(index) { this.form.nodeAssigneeList.splice(index, 1); },
+    delRole(index) { this.form.nodeAssigneeList.splice(index, 1); },
     selectHandle(type, data) { this.select(type, data); },
+    changeSetType() {
+      this.form.nodeAssigneeList = [];
+      if (this.form.setType === 3) this.form.userSelectFlag = false;
+    },
     toText(nodeConfig) {
-      if (nodeConfig.nodeAssigneeList?.length > 0)
+      if (nodeConfig.nodeAssigneeList?.length > 0) {
+        if (nodeConfig.setType === 3)
+          return '角色-' + nodeConfig.nodeAssigneeList.map((item) => item.name).join('、');
         return nodeConfig.nodeAssigneeList.map((item) => item.name).join('、');
+      }
+      if (nodeConfig.setType === 3) return false;
       if (nodeConfig.userSelectFlag) return '发起人自选';
       return false;
     },

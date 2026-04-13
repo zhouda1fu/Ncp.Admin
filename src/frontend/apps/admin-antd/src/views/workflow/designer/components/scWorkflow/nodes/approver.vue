@@ -104,8 +104,7 @@
 </template>
 
 <script>
-import { Plus, X } from '@vben/icons';
-import { Icon as IconifyIcon } from '@iconify/vue';
+import { IconifyIcon, Plus, X } from '@vben/icons';
 import {
   Button, Checkbox, Divider, Drawer, Form, Input, InputNumber, Radio, Select, Tag,
 } from 'ant-design-vue';

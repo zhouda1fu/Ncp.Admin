@@ -129,6 +129,20 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
         });
     }
 
+    /// <summary>
+    /// 已激活角色（名称排序），供工作流条件字段「路由角色」枚举使用。
+    /// </summary>
+    public async Task<IReadOnlyList<(RoleId Id, string Name)>> GetActiveRolesOrderedByNameAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await RoleSet.AsNoTracking()
+            .Where(r => r.IsActive)
+            .OrderBy(r => r.Name)
+            .Select(r => new { r.Id, r.Name })
+            .ToListAsync(cancellationToken);
+        return rows.Select(x => (x.Id, x.Name)).ToList();
+    }
+
     public async Task<PagedData<RoleQueryDto>> GetAllRolesAsync(RoleQueryInput query, CancellationToken cancellationToken)
     {
         return await RoleSet.AsNoTracking()

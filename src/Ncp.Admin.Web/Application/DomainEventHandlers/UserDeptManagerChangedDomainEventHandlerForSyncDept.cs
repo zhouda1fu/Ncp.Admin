@@ -1,28 +1,19 @@
-using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Domain.DomainEvents.UserEvents;
-using Ncp.Admin.Infrastructure.Repositories;
+using MediatR;
+using Ncp.Admin.Domain.DomainEvents;
+using Ncp.Admin.Web.Application.Commands.Identity.Admin.DeptCommands;
 
 namespace Ncp.Admin.Web.Application.DomainEventHandlers;
 
 /// <summary>
-/// 用户部门主管标识变更领域事件处理器 - 同步更新 Dept 聚合的 ManagerId
+/// 用户部门主管标识变更领域事件处理器 - 经命令同步更新 Dept 聚合的 ManagerId
 /// </summary>
-public class UserDeptManagerChangedDomainEventHandlerForSyncDept(IDeptRepository deptRepository)
+public class UserDeptManagerChangedDomainEventHandlerForSyncDept(IMediator mediator)
     : IDomainEventHandler<UserDeptManagerChangedDomainEvent>
 {
     public async Task Handle(UserDeptManagerChangedDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        var dept = await deptRepository.GetAsync(domainEvent.DeptId, cancellationToken);
-        if (dept == null)
-            return;
-
-        if (domainEvent.IsDeptManager)
-        {
-            dept.SetManagerId(domainEvent.UserId);
-        }
-        else if (dept.ManagerId == domainEvent.UserId)
-        {
-            dept.SetManagerId(new UserId(0));
-        }
+        await mediator.Send(
+            new SyncDeptManagerFromUserDeptChangeCommand(domainEvent.UserId, domainEvent.DeptId, domainEvent.IsDeptManager),
+            cancellationToken);
     }
 }

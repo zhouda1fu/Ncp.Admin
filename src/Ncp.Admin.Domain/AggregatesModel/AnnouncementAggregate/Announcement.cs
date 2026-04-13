@@ -1,4 +1,5 @@
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate;
 
@@ -63,6 +64,16 @@ public class Announcement : Entity<AnnouncementId>, IAggregateRoot
     public UpdateTime UpdateTime { get; private set; } = new UpdateTime(DateTimeOffset.UtcNow);
 
     /// <summary>
+    /// 是否软删
+    /// </summary>
+    public Deleted IsDeleted { get; private set; } = new Deleted(false);
+
+    /// <summary>
+    /// 并发版本
+    /// </summary>
+    public RowVersion RowVersion { get; private set; } = new RowVersion(0);
+
+    /// <summary>
     /// 创建一条新公告（初始为草稿状态）
     /// </summary>
     /// <param name="publisherId">发布人用户ID</param>
@@ -77,6 +88,7 @@ public class Announcement : Entity<AnnouncementId>, IAggregateRoot
         Content = content ;
         Status = AnnouncementStatus.Draft;
         CreatedAt = DateTimeOffset.UtcNow;
+        AddDomainEvent(new AnnouncementCreatedDomainEvent(this));
     }
 
     /// <summary>
@@ -92,6 +104,7 @@ public class Announcement : Entity<AnnouncementId>, IAggregateRoot
         Title = title ;
         Content = content ;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new AnnouncementDraftUpdatedDomainEvent(this));
     }
 
     /// <summary>
@@ -105,5 +118,6 @@ public class Announcement : Entity<AnnouncementId>, IAggregateRoot
         Status = AnnouncementStatus.Published;
         PublishAt = DateTimeOffset.UtcNow;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new AnnouncementPublishedDomainEvent(this));
     }
 }

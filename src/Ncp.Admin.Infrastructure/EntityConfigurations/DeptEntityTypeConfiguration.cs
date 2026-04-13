@@ -14,31 +14,36 @@ internal class DeptEntityTypeConfiguration : IEntityTypeConfiguration<Dept>
         builder.ToTable("dept");
 
         builder.HasKey(d => d.Id);
-        builder.Property(t => t.Id).UseSnowFlakeValueGenerator();
+        builder.Property(t => t.Id).UseSnowFlakeValueGenerator().HasComment("部门标识");
 
         builder.Property(d => d.Name)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .HasComment("部门名称");
 
         builder.Property(d => d.Remark)
-            .HasMaxLength(500);
+            .HasMaxLength(500)
+            .HasComment("备注");
 
         builder.Property(d => d.ManagerId)
             .IsRequired()
             .HasComment("部门主管用户ID");
 
         builder.Property(d => d.Status)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("状态（0=禁用，1=启用）");
 
         builder.Property(d => d.CreatedAt)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("创建时间");
 
         builder.Property(d => d.IsDeleted)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("是否软删");
 
-        builder.Property(d => d.DeletedAt);
+        builder.Property(d => d.DeletedAt).HasComment("删除时间");
 
-        builder.Property(d => d.UpdateTime);
+        builder.Property(d => d.UpdateTime).HasComment("更新时间");
 
         // 索引
         builder.HasIndex(d => d.ParentId);

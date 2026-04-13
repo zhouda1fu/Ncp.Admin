@@ -22,7 +22,7 @@ public class GetRoleEndpoint(RoleQuery roleQuery) : Endpoint<GetRoleRequest, Res
     public override void Configure()
     {
         Tags("Roles");
-        Description(b => b.AutoTagOverride("Roles"));
+        Description(b => b.AutoTagOverride("Roles").WithSummary("获取角色"));
         Get("/api/admin/roles/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleView);

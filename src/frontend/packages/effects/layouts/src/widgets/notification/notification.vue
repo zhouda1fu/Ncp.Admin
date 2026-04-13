@@ -62,9 +62,16 @@ function handleClear() {
 }
 
 function handleClick(item: NotificationItem) {
-  // 如果通知项有链接，点击时跳转
+  // 有链接：跳转并由父级标记已读；无链接的未读项点击也标记已读（无跳转）
   if (item.link) {
     navigateTo(item.link, item.query, item.state);
+    if (!item.isRead) {
+      emit('read', item);
+    }
+    close();
+  } else if (!item.isRead) {
+    emit('read', item);
+    close();
   }
 }
 

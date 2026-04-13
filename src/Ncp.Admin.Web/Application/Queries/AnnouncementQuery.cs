@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.AnnouncementAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Infrastructure;
-using Ncp.Admin.Infrastructure.Repositories;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
@@ -42,7 +41,7 @@ public class AnnouncementQueryInput : PageRequest
 /// <summary>
 /// 公告查询服务（支持按当前用户填充已读状态）
 /// </summary>
-public class AnnouncementQuery(ApplicationDbContext dbContext, IAnnouncementReadRecordRepository readRecordRepository) : IQuery
+public class AnnouncementQuery(ApplicationDbContext dbContext) : IQuery
 {
     /// <summary>
     /// 按 ID 查询公告详情；若传入 readerId 则填充 IsRead
@@ -65,7 +64,8 @@ public class AnnouncementQuery(ApplicationDbContext dbContext, IAnnouncementRead
             .FirstOrDefaultAsync(cancellationToken);
         if (dto != null && readerId != null)
         {
-            var isRead = await readRecordRepository.ExistsAsync(id, readerId, cancellationToken);
+            var isRead = await dbContext.AnnouncementReadRecords
+                .AnyAsync(r => r.AnnouncementId == id && r.UserId == readerId, cancellationToken);
             dto = dto with { IsRead = isRead };
         }
         return dto;
@@ -101,7 +101,12 @@ public class AnnouncementQuery(ApplicationDbContext dbContext, IAnnouncementRead
         if (readerId != null && list.Items.Count() > 0)
         {
             var ids = list.Items.Select(x => x.Id).ToList();
-            var readIds = await readRecordRepository.GetReadAnnouncementIdsAsync(readerId, ids, cancellationToken);
+            var readIds = await dbContext.AnnouncementReadRecords
+                .AsNoTracking()
+                .Where(r => r.UserId == readerId && ids.Contains(r.AnnouncementId))
+                .Select(r => r.AnnouncementId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
             var readSet = readIds.ToHashSet();
             var items = list.Items.Select(dto => dto with { IsRead = readSet.Contains(dto.Id) }).ToList();
             return new PagedData<AnnouncementQueryDto>(items, input.PageIndex, input.PageSize, (int)list.Total);

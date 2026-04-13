@@ -45,11 +45,11 @@ public class ProjectFollowUpRecord : Entity<ProjectFollowUpRecordId>
     public DateTimeOffset CreatedAt { get; init; }
 
     /// <summary>
-    /// 创建人用户 ID
+    /// 创建人用户 ID（系统/未知为 <c>new UserId(0)</c>）
     /// </summary>
-    public UserId? CreatorId { get; private set; }
+    public UserId CreatorId { get; private set; } = new UserId(0);
 
-    internal static ProjectFollowUpRecord Create(
+    internal ProjectFollowUpRecord(
         ProjectId projectId,
         string title,
         DateOnly? visitDate,
@@ -57,16 +57,13 @@ public class ProjectFollowUpRecord : Entity<ProjectFollowUpRecordId>
         string content,
         UserId? creatorId)
     {
-        return new ProjectFollowUpRecord
-        {
-            ProjectId = projectId,
-            Title = title ?? string.Empty,
-            VisitDate = visitDate,
-            ReminderIntervalDays = reminderIntervalDays >= 0 ? reminderIntervalDays : 0,
-            Content = content ?? string.Empty,
-            CreatedAt = DateTimeOffset.UtcNow,
-            CreatorId = creatorId,
-        };
+        ProjectId = projectId;
+        Title = title ?? string.Empty;
+        VisitDate = visitDate;
+        ReminderIntervalDays = reminderIntervalDays >= 0 ? reminderIntervalDays : 0;
+        Content = content ?? string.Empty;
+        CreatedAt = DateTimeOffset.UtcNow;
+        CreatorId = creatorId ?? new UserId(0);
     }
 
     internal void Update(string title, DateOnly? visitDate, int reminderIntervalDays, string content)

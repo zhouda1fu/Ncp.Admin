@@ -4,7 +4,7 @@ using Ncp.Admin.Web.Application.Queries;
 namespace Ncp.Admin.Web.Application.Services.Workflow;
 
 /// <summary>
-/// 保存/发布流程定义时校验：审批「指定成员」、抄送成员须可选中有效用户；「角色」须每个已选角色下至少有一名用户。
+/// 保存/发布流程定义时校验：审批/抄送「指定成员」须可选中有效用户；「角色」须每个已选角色下至少有一名用户。
 /// </summary>
 public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser treeTraverser, UserQuery userQuery)
 {
@@ -14,7 +14,14 @@ public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser tre
         {
             if (node.Type == 2)
             {
-                EnsureHasMemberUsers(node, isApproval: false);
+                if (node.SetType == 3)
+                {
+                    await EnsureEachRoleHasUsersAsync(node, isApproval: false, cancellationToken);
+                }
+                else
+                {
+                    EnsureHasMemberUsers(node, isApproval: false);
+                }
             }
             else if (node.Type == 1)
             {
@@ -24,7 +31,7 @@ public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser tre
                         EnsureHasMemberUsers(node, isApproval: true);
                         break;
                     case 3:
-                        await EnsureEachRoleHasUsersAsync(node, cancellationToken);
+                        await EnsureEachRoleHasUsersAsync(node, isApproval: true, cancellationToken);
                         break;
                     case 2:
                     case 5:
@@ -80,13 +87,17 @@ public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser tre
         return false;
     }
 
-    private async Task EnsureEachRoleHasUsersAsync(DesignerNodeConfig node, CancellationToken cancellationToken)
+    private async Task EnsureEachRoleHasUsersAsync(
+        DesignerNodeConfig node,
+        bool isApproval,
+        CancellationToken cancellationToken)
     {
+        var kind = isApproval ? "审批" : "抄送";
         var list = node.NodeAssigneeList;
         if (list == null || list.Count == 0)
         {
             throw new KnownException(
-                $"审批节点「{node.NodeName}」请选择审批角色",
+                $"{kind}节点「{node.NodeName}」请选择角色",
                 ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
         }
 
@@ -105,7 +116,7 @@ public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser tre
             {
                 var roleLabel = string.IsNullOrWhiteSpace(item.Name) ? item.Id : item.Name;
                 throw new KnownException(
-                    $"审批节点「{node.NodeName}」中的角色「{roleLabel}」下暂无成员，请分配用户后再保存",
+                    $"{kind}节点「{node.NodeName}」中的角色「{roleLabel}」下暂无成员，请分配用户后再保存",
                     ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
             }
         }
@@ -113,7 +124,7 @@ public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser tre
         if (!parsedAny)
         {
             throw new KnownException(
-                $"审批节点「{node.NodeName}」请选择有效的审批角色",
+                $"{kind}节点「{node.NodeName}」请选择有效的角色",
                 ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
         }
     }

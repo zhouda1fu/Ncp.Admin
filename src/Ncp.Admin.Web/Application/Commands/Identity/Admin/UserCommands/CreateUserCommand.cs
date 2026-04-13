@@ -85,10 +85,12 @@ public class CreateUserCommandHandler(IUserRepository userRepository, IPasswordH
             request.WechatGuid,
             request.IsResigned,
             request.ResignedTime);
+
+        await userRepository.AddAsync(user, cancellationToken);
+
         if (request.DeptId != null && !string.IsNullOrEmpty(request.DeptName))
         {
-            var dept = new UserDept(user.Id, request.DeptId, request.DeptName, request.IsDeptManager);
-            user.AssignDept(dept);
+            user.AssignDept(request.DeptId, request.DeptName, request.IsDeptManager);
             Log.Debug("为用户分配部门: UserId={UserId}, DeptId={DeptId}, DeptName={DeptName}", user.Id, request.DeptId, request.DeptName);
         }
 
@@ -98,8 +100,6 @@ public class CreateUserCommandHandler(IUserRepository userRepository, IPasswordH
             user.AssignPosition(position);
             Log.Debug("为用户分配岗位: UserId={UserId}, PositionId={PositionId}, PositionName={PositionName}", user.Id, request.PositionId, request.PositionName);
         }
-
-        await userRepository.AddAsync(user, cancellationToken);
 
         Log.Information("用户创建成功: UserId={UserId}, UserName={UserName}, Email={Email}, RoleCount={RoleCount}", 
             user.Id, request.Name, request.Email, roles.Count);

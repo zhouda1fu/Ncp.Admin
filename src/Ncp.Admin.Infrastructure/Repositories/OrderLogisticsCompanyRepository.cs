@@ -1,5 +1,5 @@
 using Ncp.Admin.Domain;
-using Ncp.Admin.Domain.AggregatesModel.OrderAggregate;
+using Ncp.Admin.Domain.AggregatesModel.OrderLogisticsCompanyAggregate;
 
 namespace Ncp.Admin.Infrastructure.Repositories;
 

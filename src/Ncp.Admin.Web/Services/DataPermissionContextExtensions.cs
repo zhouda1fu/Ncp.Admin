@@ -20,32 +20,35 @@ public static class DataPermissionContextExtensions
         if (user == null)
             return null;
 
-        var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userIdValue))
+        if (!user.TryGetUserId(out var userId))
             return null;
 
-        var userId = new UserId(userIdValue);
-
         var scope = DataScope.All;
-        var dataScopeClaim = user.FindFirstValue("data_scope");
-        if (!string.IsNullOrEmpty(dataScopeClaim) && int.TryParse(dataScopeClaim, out var scopeValue) &&
+        var dataScopeClaim = user.FindFirstValue(JwtDataPermissionClaimTypes.DataScope);
+        if (!string.IsNullOrWhiteSpace(dataScopeClaim) && int.TryParse(dataScopeClaim.Trim(), out var scopeValue) &&
             scopeValue >= (int)DataScope.All && scopeValue <= (int)DataScope.CustomDeptAndSub)
             scope = (DataScope)scopeValue;
 
         DeptId? deptId = null;
-        var deptIdClaim = user.FindFirstValue("dept_id");
-        if (!string.IsNullOrEmpty(deptIdClaim) && long.TryParse(deptIdClaim, out var deptIdValue))
+        var deptIdClaim = user.FindFirstValue(JwtDataPermissionClaimTypes.DeptId);
+        if (!string.IsNullOrWhiteSpace(deptIdClaim) && long.TryParse(deptIdClaim.Trim(), out var deptIdValue))
             deptId = new DeptId(deptIdValue);
 
         IReadOnlyList<DeptId> authorizedDeptIds;
-        var authorizedDeptIdsClaim = user.FindFirstValue("authorized_dept_ids");
-        if (!string.IsNullOrEmpty(authorizedDeptIdsClaim))
+        var authorizedDeptIdsClaim = user.FindFirstValue(JwtDataPermissionClaimTypes.AuthorizedDeptIds);
+        // 仅含空白视为未提供，与无 claim 一致走 deptId 兜底，避免解析出空列表
+        if (!string.IsNullOrWhiteSpace(authorizedDeptIdsClaim))
         {
-            authorizedDeptIds = authorizedDeptIdsClaim
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Where(s => long.TryParse(s.Trim(), out _))
-                .Select(s => new DeptId(long.Parse(s.Trim())))
-                .ToList();
+            var parsed = new List<DeptId>();
+            foreach (var segment in authorizedDeptIdsClaim.Split(
+                         ',',
+                         StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (long.TryParse(segment, out var id))
+                    parsed.Add(new DeptId(id));
+            }
+
+            authorizedDeptIds = parsed;
         }
         else
         {

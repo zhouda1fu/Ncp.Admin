@@ -43,6 +43,17 @@ public record ProjectQueryDto(
 /// <summary>
 /// 项目联系人 DTO
 /// </summary>
+/// <param name="Id">联系人 ID</param>
+/// <param name="CustomerContactId">关联的客户联系人，未关联为 null</param>
+/// <param name="Name">姓名</param>
+/// <param name="Position">职位</param>
+/// <param name="Mobile">手机</param>
+/// <param name="OfficePhone">办公电话</param>
+/// <param name="QQ">QQ</param>
+/// <param name="Wechat">微信</param>
+/// <param name="Email">邮箱</param>
+/// <param name="IsPrimary">是否主要联系人</param>
+/// <param name="Remark">备注</param>
 public record ProjectContactDto(
     ProjectContactId Id,
     CustomerContactId? CustomerContactId,
@@ -59,6 +70,13 @@ public record ProjectContactDto(
 /// <summary>
 /// 项目跟进记录 DTO
 /// </summary>
+/// <param name="Id">记录 ID</param>
+/// <param name="Title">标题</param>
+/// <param name="VisitDate">拜访日期</param>
+/// <param name="ReminderIntervalDays">提醒间隔天数</param>
+/// <param name="Content">内容</param>
+/// <param name="CreatedAt">创建时间</param>
+/// <param name="CreatorId">创建人，未知为 null</param>
 public record ProjectFollowUpRecordDto(
     ProjectFollowUpRecordId Id,
     string Title,
@@ -116,19 +134,19 @@ public class ProjectQueryInput : PageRequest
     /// <summary>
     /// 客户ID筛选
     /// </summary>
-    public Guid? CustomerId { get; set; }
+    public CustomerId? CustomerId { get; set; }
     /// <summary>
     /// 项目类型ID筛选
     /// </summary>
-    public Guid? ProjectTypeId { get; set; }
+    public ProjectTypeId? ProjectTypeId { get; set; }
     /// <summary>
     /// 项目状态选项ID筛选
     /// </summary>
-    public Guid? ProjectStatusOptionId { get; set; }
+    public ProjectStatusOptionId? ProjectStatusOptionId { get; set; }
     /// <summary>
     /// 项目行业ID筛选
     /// </summary>
-    public Guid? ProjectIndustryId { get; set; }
+    public ProjectIndustryId? ProjectIndustryId { get; set; }
 }
 
 /// <summary>
@@ -170,8 +188,26 @@ public class ProjectQuery(ApplicationDbContext dbContext) : IQuery
             p.ProjectNumber, p.ProjectIndustryId, p.ProjectIndustryName,
             p.ProvinceRegionId, p.ProvinceName, p.CityRegionId, p.CityName, p.DistrictRegionId, p.DistrictName,
             p.StartDate, p.Budget, p.PurchaseAmount, p.ProjectContent,
-            p.Contacts.Select(c => new ProjectContactDto(c.Id, c.CustomerContactId, c.Name, c.Position, c.Mobile, c.OfficePhone, c.QQ, c.Wechat, c.Email, c.IsPrimary, c.Remark)).ToList(),
-            p.FollowUpRecords.OrderByDescending(r => r.CreatedAt).Select(r => new ProjectFollowUpRecordDto(r.Id, r.Title, r.VisitDate, r.ReminderIntervalDays, r.Content, r.CreatedAt, r.CreatorId)).ToList());
+            p.Contacts.Select(c => new ProjectContactDto(
+                c.Id,
+                c.CustomerContactId == ProjectContact.NoLinkedCustomerContactId ? null : c.CustomerContactId,
+                c.Name,
+                c.Position,
+                c.Mobile,
+                c.OfficePhone,
+                c.QQ,
+                c.Wechat,
+                c.Email,
+                c.IsPrimary,
+                c.Remark)).ToList(),
+            p.FollowUpRecords.OrderByDescending(r => r.CreatedAt).Select(r => new ProjectFollowUpRecordDto(
+                r.Id,
+                r.Title,
+                r.VisitDate,
+                r.ReminderIntervalDays,
+                r.Content,
+                r.CreatedAt,
+                r.CreatorId == new UserId(0) ? null : r.CreatorId)).ToList());
     }
 
     /// <summary>
@@ -184,14 +220,18 @@ public class ProjectQuery(ApplicationDbContext dbContext) : IQuery
             query = query.Where(p => p.Name.Contains(input.Name));
         if (input.Status.HasValue)
             query = query.Where(p => (int)p.Status == input.Status.Value);
-        if (input.CustomerId.HasValue)
-            query = query.Where(p => p.CustomerId.Id == input.CustomerId.Value);
-        if (input.ProjectTypeId.HasValue)
-            query = query.Where(p => p.ProjectTypeId != null && p.ProjectTypeId.Id == input.ProjectTypeId.Value);
-        if (input.ProjectStatusOptionId.HasValue)
-            query = query.Where(p => p.ProjectStatusOptionId != null && p.ProjectStatusOptionId.Id == input.ProjectStatusOptionId.Value);
-        if (input.ProjectIndustryId.HasValue)
-            query = query.Where(p => p.ProjectIndustryId.Id == input.ProjectIndustryId.Value);
+        var filterCustomerId = input.CustomerId;
+        if (filterCustomerId != null)
+            query = query.Where(p => p.CustomerId == filterCustomerId);
+        var filterProjectTypeId = input.ProjectTypeId;
+        if (filterProjectTypeId != null)
+            query = query.Where(p => p.ProjectTypeId == filterProjectTypeId);
+        var filterProjectStatusOptionId = input.ProjectStatusOptionId;
+        if (filterProjectStatusOptionId != null)
+            query = query.Where(p => p.ProjectStatusOptionId == filterProjectStatusOptionId);
+        var filterProjectIndustryId = input.ProjectIndustryId;
+        if (filterProjectIndustryId != null)
+            query = query.Where(p => p.ProjectIndustryId == filterProjectIndustryId);
         return await query
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new ProjectQueryDto(

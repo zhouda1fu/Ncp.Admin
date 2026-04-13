@@ -79,7 +79,7 @@ public class RegisterEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpoin
     public override void Configure()
     {
         Tags("Users");
-        Description(b => b.AutoTagOverride("Users"));
+        Description(b => b.AutoTagOverride("Users").WithSummary("用户注册"));
         Post("/api/admin/user/register");
         AllowAnonymous();
     }

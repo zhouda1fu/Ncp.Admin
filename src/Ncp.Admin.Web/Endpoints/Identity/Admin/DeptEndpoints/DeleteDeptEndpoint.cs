@@ -23,7 +23,7 @@ public class DeleteDeptEndpoint(IMediator mediator) : Endpoint<DeleteDeptRequest
     public override void Configure()
     {
         Tags("Depts");
-        Description(b => b.AutoTagOverride("Depts"));
+        Description(b => b.AutoTagOverride("Depts").WithSummary("删除部门"));
         Delete("/api/admin/dept/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptDelete);

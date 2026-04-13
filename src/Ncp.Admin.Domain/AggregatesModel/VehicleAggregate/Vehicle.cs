@@ -1,3 +1,5 @@
+using Ncp.Admin.Domain.DomainEvents;
+
 namespace Ncp.Admin.Domain.AggregatesModel.VehicleAggregate;
 
 /// <summary>
@@ -53,6 +55,16 @@ public class Vehicle : Entity<VehicleId>, IAggregateRoot
     public UpdateTime UpdateTime { get; private set; } = new UpdateTime(DateTimeOffset.UtcNow);
 
     /// <summary>
+    /// 是否软删
+    /// </summary>
+    public Deleted IsDeleted { get; private set; } = new Deleted(false);
+
+    /// <summary>
+    /// 并发版本
+    /// </summary>
+    public RowVersion RowVersion { get; private set; } = new RowVersion(0);
+
+    /// <summary>
     /// 创建车辆
     /// </summary>
     public Vehicle(string plateNumber, string model, string? remark = null)
@@ -62,6 +74,7 @@ public class Vehicle : Entity<VehicleId>, IAggregateRoot
         Remark = remark;
         Status = VehicleStatus.Available;
         CreatedAt = DateTimeOffset.UtcNow;
+        AddDomainEvent(new VehicleCreatedDomainEvent(this));
     }
 
     /// <summary>
@@ -73,6 +86,7 @@ public class Vehicle : Entity<VehicleId>, IAggregateRoot
         Model = model ;
         Remark = remark;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new VehicleUpdatedDomainEvent(this));
     }
 
     /// <summary>
@@ -82,5 +96,6 @@ public class Vehicle : Entity<VehicleId>, IAggregateRoot
     {
         Status = status;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new VehicleStatusChangedDomainEvent(this));
     }
 }

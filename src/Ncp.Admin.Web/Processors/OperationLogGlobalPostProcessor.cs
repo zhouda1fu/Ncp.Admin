@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Reflection;
-using System.Security.Claims;
 using FastEndpoints;
 using Ncp.Admin.Domain.AggregatesModel.OperationLogAggregate;
 using Ncp.Admin.Web.Middleware;
@@ -66,10 +65,10 @@ public sealed class OperationLogGlobalPostProcessor : IGlobalPostProcessor
         }
         var endpoint = http.GetEndpoint();
 
-        var userIdStr = http.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var userName = http.User.FindFirstValue(ClaimTypes.Name) ?? http.User.FindFirstValue(ClaimTypes.GivenName) ?? string.Empty;
-        if (string.IsNullOrEmpty(userIdStr) || !long.TryParse(userIdStr, out var userId))
+        if (!http.User.TryGetUserId(out var userIdTyped))
             return;
+        var userId = userIdTyped.Id;
+        var userName = http.User.GetUserDisplayNameOrGivenName();
 
         var statusCode = http.Response.StatusCode;
         var ip = http.Connection.RemoteIpAddress?.ToString();

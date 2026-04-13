@@ -86,9 +86,10 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// <summary>
     /// 创建工作流任务（指定用户）
     /// </summary>
-    public WorkflowTask(string nodeKey, string nodeName, WorkflowTaskType taskType, UserId assigneeId, string assigneeName)
+    internal WorkflowTask(WorkflowInstanceId workflowInstanceId, string nodeKey, string nodeName, WorkflowTaskType taskType, UserId assigneeId, string assigneeName)
     {
         CreatedAt = DateTimeOffset.UtcNow;
+        WorkflowInstanceId = workflowInstanceId;
         NodeKey = nodeKey ?? string.Empty;
         NodeName = nodeName ?? string.Empty;
         TaskType = taskType;
@@ -102,9 +103,10 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// <summary>
     /// 创建工作流任务（指定角色，一条记录，待办按角色查）
     /// </summary>
-    public WorkflowTask(string nodeKey, string nodeName, WorkflowTaskType taskType, RoleId assigneeRoleId, string assigneeName)
+    internal WorkflowTask(WorkflowInstanceId workflowInstanceId, string nodeKey, string nodeName, WorkflowTaskType taskType, RoleId assigneeRoleId, string assigneeName)
     {
         CreatedAt = DateTimeOffset.UtcNow;
+        WorkflowInstanceId = workflowInstanceId;
         NodeKey = nodeKey ?? string.Empty;
         NodeName = nodeName ?? string.Empty;
         TaskType = taskType;
@@ -120,6 +122,10 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// </summary>
     public void Approve(string comment)
     {
+        if (Status != WorkflowTaskStatus.Pending)
+        {
+            throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
+        }
         Status = WorkflowTaskStatus.Approved;
         Comment = comment;
         CompletedAt = DateTimeOffset.UtcNow;
@@ -130,6 +136,10 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// </summary>
     public void Reject(string comment)
     {
+        if (Status != WorkflowTaskStatus.Pending)
+        {
+            throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
+        }
         Status = WorkflowTaskStatus.Rejected;
         Comment = comment;
         CompletedAt = DateTimeOffset.UtcNow;
@@ -140,6 +150,10 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// </summary>
     public void Transfer(string comment)
     {
+        if (Status != WorkflowTaskStatus.Pending)
+        {
+            throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
+        }
         Status = WorkflowTaskStatus.Transferred;
         Comment = comment;
         CompletedAt = DateTimeOffset.UtcNow;
@@ -150,6 +164,10 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// </summary>
     public void Cancel()
     {
+        if (Status != WorkflowTaskStatus.Pending)
+        {
+            return;
+        }
         Status = WorkflowTaskStatus.Cancelled;
         CompletedAt = DateTimeOffset.UtcNow;
     }
@@ -159,6 +177,10 @@ public class WorkflowTask : Entity<WorkflowTaskId>
     /// </summary>
     public void Delegate(string comment, string delegateToUserName)
     {
+        if (Status != WorkflowTaskStatus.Pending)
+        {
+            throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
+        }
         Status = WorkflowTaskStatus.Delegated;
         Comment = $"已委托给 {delegateToUserName}。备注：{comment}";
         CompletedAt = DateTimeOffset.UtcNow;

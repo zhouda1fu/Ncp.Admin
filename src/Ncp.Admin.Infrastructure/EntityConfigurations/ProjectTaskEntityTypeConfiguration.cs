@@ -18,7 +18,7 @@ internal class ProjectTaskEntityTypeConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(x => x.ProjectId).IsRequired().HasComment("项目ID");
         builder.Property(x => x.Title).IsRequired().HasMaxLength(500).HasComment("任务标题");
         builder.Property(x => x.Description).HasMaxLength(2000).HasComment("任务描述");
-        builder.Property(x => x.AssigneeId).HasComment("负责人用户ID");
+        builder.Property(x => x.AssigneeId).IsRequired().HasComment("负责人用户ID（0 表示未指定）");
         builder.Property(x => x.DueDate).HasComment("截止日期");
         builder.Property(x => x.Status).IsRequired().HasComment("任务状态");
         builder.Property(x => x.SortOrder).IsRequired().HasComment("排序");

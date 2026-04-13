@@ -14,48 +14,59 @@ internal class NotificationEntityTypeConfiguration : IEntityTypeConfiguration<No
         builder.ToTable("notification");
 
         builder.HasKey(n => n.Id);
-        builder.Property(n => n.Id).UseSnowFlakeValueGenerator();
+        builder.Property(n => n.Id).UseSnowFlakeValueGenerator().HasComment("通知标识");
 
         builder.Property(n => n.Title)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(200)
+            .HasComment("标题");
 
         builder.Property(n => n.Content)
             .IsRequired()
-            .HasMaxLength(2000);
+            .HasMaxLength(2000)
+            .HasComment("内容");
 
         builder.Property(n => n.Type)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("类型");
 
         builder.Property(n => n.Level)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("等级");
 
-        builder.Property(n => n.SenderId);
+        builder.Property(n => n.SenderId).HasComment("发送人用户ID");
 
         builder.Property(n => n.SenderName)
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .HasComment("发送人姓名");
 
         builder.Property(n => n.ReceiverId)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("接收人用户ID");
 
         builder.Property(n => n.IsRead)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("是否已读");
 
-        builder.Property(n => n.ReadAt);
+        builder.Property(n => n.ReadAt).HasComment("已读时间");
 
         builder.Property(n => n.BusinessId)
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .HasComment("业务ID（字符串）");
 
         builder.Property(n => n.BusinessType)
-            .HasMaxLength(50);
+            .HasMaxLength(50)
+            .HasComment("业务类型");
 
         builder.Property(n => n.CreatedAt)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("创建时间");
 
         builder.Property(n => n.IsDeleted)
-            .IsRequired();
+            .IsRequired()
+            .HasComment("是否软删");
 
-        builder.Property(n => n.DeletedAt);
+        builder.Property(n => n.DeletedAt).HasComment("删除时间");
 
         // 索引
         builder.HasIndex(n => n.ReceiverId);

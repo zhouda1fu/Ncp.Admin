@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Ncp.Admin.Web.Application.Hubs;
@@ -9,5 +8,5 @@ namespace Ncp.Admin.Web.Application.Hubs;
 public class NameUserIdProvider : IUserIdProvider
 {
     public string? GetUserId(HubConnectionContext connection) =>
-        connection.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        connection.User is { } u && u.TryGetUserId(out var id) ? id.Id.ToString() : null;
 }

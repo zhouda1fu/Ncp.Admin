@@ -53,9 +53,9 @@ public class ProjectTask : Entity<ProjectTaskId>, IAggregateRoot
     /// </summary>
     public string? Description { get; private set; }
     /// <summary>
-    /// 负责人用户ID（可选）
+    /// 负责人用户 ID（未指定为 <c>new UserId(0)</c>）
     /// </summary>
-    public UserId? AssigneeId { get; private set; }
+    public UserId AssigneeId { get; private set; } = new UserId(0);
     /// <summary>
     /// 截止日期（可选）
     /// </summary>
@@ -90,7 +90,7 @@ public class ProjectTask : Entity<ProjectTaskId>, IAggregateRoot
         ProjectId = projectId;
         Title = title;
         Description = description;
-        AssigneeId = assigneeId;
+        AssigneeId = assigneeId ?? new UserId(0);
         DueDate = dueDate;
         SortOrder = sortOrder;
         Status = ProjectTaskStatus.Todo;
@@ -104,7 +104,7 @@ public class ProjectTask : Entity<ProjectTaskId>, IAggregateRoot
     {
         Title = title;
         Description = description;
-        AssigneeId = assigneeId;
+        AssigneeId = assigneeId ?? new UserId(0);
         DueDate = dueDate;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }

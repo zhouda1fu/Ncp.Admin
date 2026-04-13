@@ -95,8 +95,7 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, IMemoryCac
         // 分配部门
         if (request.DeptId != new DeptId(0) && !string.IsNullOrEmpty(request.DeptName))
         {
-            var dept = new UserDept(user.Id, request.DeptId, request.DeptName, request.IsDeptManager);
-            user.AssignDept(dept);
+            user.AssignDept(request.DeptId, request.DeptName, request.IsDeptManager);
         }
 
         // 分配岗位（null 或空表示清除岗位）

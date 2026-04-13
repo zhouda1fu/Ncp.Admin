@@ -111,9 +111,16 @@ export const PermissionCodes = {
   CustomerEdit: 'CustomerEdit',
   CustomerDelete: 'CustomerDelete',
   CustomerContactEdit: 'CustomerContactEdit',
+  CustomerContactRecordView: 'CustomerContactRecordView',
+  CustomerContactRecordCreate: 'CustomerContactRecordCreate',
+  CustomerContactRecordEdit: 'CustomerContactRecordEdit',
   CustomerReleaseToSea: 'CustomerReleaseToSea',
   CustomerClaimFromSea: 'CustomerClaimFromSea',
+  CustomerSeaVoid: 'CustomerSeaVoid',
+  CustomerSeaConsultationEdit: 'CustomerSeaConsultationEdit',
   CustomerShare: 'CustomerShare',
+  CustomerSeaRegionAssignView: 'CustomerSeaRegionAssignView',
+  CustomerSeaRegionAssignEdit: 'CustomerSeaRegionAssignEdit',
   IndustryView: 'IndustryView',
   IndustryCreate: 'IndustryCreate',
   IndustryEdit: 'IndustryEdit',
@@ -135,14 +142,11 @@ export const PermissionCodes = {
   AnnouncementEdit: 'AnnouncementEdit',
   AnnouncementPublish: 'AnnouncementPublish',
 
-  // 任务/项目管理权限
-  TaskManagement: 'TaskManagement',
+  // 项目管理权限
+  ProjectManagement: 'ProjectManagement',
   ProjectView: 'ProjectView',
   ProjectCreate: 'ProjectCreate',
   ProjectEdit: 'ProjectEdit',
-  TaskView: 'TaskView',
-  TaskCreate: 'TaskCreate',
-  TaskEdit: 'TaskEdit',
   ProjectTypeView: 'ProjectTypeView',
   ProjectTypeCreate: 'ProjectTypeCreate',
   ProjectTypeEdit: 'ProjectTypeEdit',
@@ -152,6 +156,12 @@ export const PermissionCodes = {
   ProjectIndustryView: 'ProjectIndustryView',
   ProjectIndustryCreate: 'ProjectIndustryCreate',
   ProjectIndustryEdit: 'ProjectIndustryEdit',
+
+  // 任务管理权限
+  TaskManagement: 'TaskManagement',
+  TaskView: 'TaskView',
+  TaskCreate: 'TaskCreate',
+  TaskEdit: 'TaskEdit',
 
   // 即时通讯权限
   ChatManagement: 'ChatManagement',
@@ -188,6 +198,8 @@ export const PermissionCodes = {
   OrderNeedInvoice: 'OrderNeedInvoice',
   OrderContractAmount: 'OrderContractAmount',
   OrderTechnicalStatus: 'OrderTechnicalStatus',
+  OrderDiscountPointsDescriptionView: 'OrderDiscountPointsDescriptionView',
+  OrderDiscountPointsCreate: 'OrderDiscountPointsCreate',
 
   // 产品管理权限
   ProductManagement: 'ProductManagement',

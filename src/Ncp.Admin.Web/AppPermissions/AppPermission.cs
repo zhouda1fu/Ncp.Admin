@@ -18,10 +18,15 @@ public sealed class AppPermission
     public string DisplayName { get; }
 
     /// <summary>
+    /// 权限的描述信息（用于权限列表/种子数据等）。
+    /// </summary>
+    public string Description { get; }
+
+    /// <summary>
     /// 当前权限的所有子权限
     /// 子权限是只读的
     /// </summary>
-    public IReadOnlyList<AppPermission> Children => _children.ToImmutableList();
+    public IReadOnlyList<AppPermission> Children => _children;
 
     private readonly List<AppPermission> _children;
 
@@ -39,10 +44,12 @@ public sealed class AppPermission
     /// </summary>
     /// <param name="code">权限的唯一代码。</param>
     /// <param name="displayName">权限的显示名称。</param>
+    /// <param name="description">权限的描述信息，默认等于显示名称。</param>
     /// <param name="isEnabled">是否启用此权限，默认为 true。</param>
     internal AppPermission(
         string code,
         string displayName,
+        string? description = null,
         bool isEnabled = true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
@@ -50,6 +57,7 @@ public sealed class AppPermission
 
         Code = code;
         DisplayName = displayName;
+        Description = string.IsNullOrWhiteSpace(description) ? displayName : description;
         IsEnabled = isEnabled;
         _children = [];
     }
@@ -59,11 +67,12 @@ public sealed class AppPermission
     /// </summary>
     /// <param name="code">子权限的唯一代码。</param>
     /// <param name="displayName">子权限的显示名称。</param>
+    /// <param name="description">子权限的描述信息，默认等于显示名称。</param>
     /// <param name="isEnabled">子权限是否启用，默认为 true。</param>
     /// <returns>返回创建的子权限对象。</returns>
-    public AppPermission AddChild(string code, string displayName, bool isEnabled = true)
+    public AppPermission AddChild(string code, string displayName, string? description = null, bool isEnabled = true)
     {
-        var child = new AppPermission(code, displayName, isEnabled);
+        var child = new AppPermission(code, displayName, description, isEnabled);
 
         _children.Add(child);
 

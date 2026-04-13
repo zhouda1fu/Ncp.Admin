@@ -2,7 +2,6 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Security.Claims;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
@@ -85,7 +84,7 @@ public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHash
     public override void Configure()
     {
         Tags("Users");
-        Description(b => b.AutoTagOverride("Users"));
+        Description(b => b.AutoTagOverride("Users").WithSummary("更新用户"));
         Put("/api/admin/user/update");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserEdit);
@@ -93,10 +92,7 @@ public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHash
 
     public override async Task HandleAsync(UpdateUserRequest request, CancellationToken ct)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var modifierId = !string.IsNullOrWhiteSpace(userIdString) && long.TryParse(userIdString, out var userIdValue)
-            ? new UserId(userIdValue)
-            : new UserId(0);
+        var modifierId = User.GetUserIdOrNull() ?? new UserId(0);
         var passwordHash = string.Empty;
         if (!string.IsNullOrWhiteSpace(request.Password))
         {

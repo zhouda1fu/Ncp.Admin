@@ -9,7 +9,7 @@ namespace Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 public partial record CustomerIndustryId : IGuidStronglyTypedId;
 
 /// <summary>
-/// 客户-行业关联子实体，通过 <see cref="Customer"/> 的 SetIndustries/Update 维护
+/// 客户-行业关联子实体，仅通过 <see cref="CustomerIndustry.CreatePending"/> 挂入 <see cref="Customer.Industries"/>，由 EF 修复 <see cref="CustomerId"/>。
 /// </summary>
 public class CustomerIndustry : Entity<CustomerIndustryId>
 {
@@ -29,13 +29,12 @@ public class CustomerIndustry : Entity<CustomerIndustryId>
     public IndustryId IndustryId { get; private set; } = default!;
 
     /// <summary>
-    /// 创建客户-行业关联（由聚合根调用）
+    /// 挂入 <see cref="Customer.Industries"/>：仅填 <see cref="IndustryId"/>，<see cref="CustomerId"/> 由 EF 在持久化前根据父子关系修复（新建或更新时均适用）。
     /// </summary>
-    internal static CustomerIndustry Create(CustomerId customerId, IndustryId industryId)
+    internal static CustomerIndustry CreatePending(IndustryId industryId)
     {
         return new CustomerIndustry
         {
-            CustomerId = customerId,
             IndustryId = industryId,
         };
     }

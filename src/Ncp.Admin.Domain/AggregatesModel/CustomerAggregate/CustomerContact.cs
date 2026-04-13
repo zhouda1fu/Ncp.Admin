@@ -8,7 +8,7 @@ namespace Ncp.Admin.Domain.AggregatesModel.CustomerAggregate;
 public partial record CustomerContactId : IGuidStronglyTypedId;
 
 /// <summary>
-/// 客户联系人子实体，通过 <see cref="Customer"/> 的 AddContact/UpdateContact/RemoveContact 维护
+/// 客户联系人子实体，仅通过 <see cref="Customer"/> 的领域行为挂入 <see cref="Customer.Contacts"/>，<see cref="CustomerId"/> 由 EF 根据父子关系修复。
 /// </summary>
 public class CustomerContact : Entity<CustomerContactId>
 {
@@ -63,15 +63,29 @@ public class CustomerContact : Entity<CustomerContactId>
     public string Email { get; private set; } = string.Empty;
 
     /// <summary>
+    /// QQ
+    /// </summary>
+    public string Qq { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 微信
+    /// </summary>
+    public string Wechat { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 微信添加情况
+    /// </summary>
+    public bool IsWechatAdded { get; private set; }
+
+    /// <summary>
     /// 是否主联系人
     /// </summary>
     public bool IsPrimary { get; private set; }
 
     /// <summary>
-    /// 创建联系人（由聚合根调用）
+    /// 挂入 <see cref="Customer.Contacts"/>：不填 <see cref="CustomerId"/>，由 EF 在持久化前修复。
     /// </summary>
-    internal static CustomerContact Create(
-        CustomerId customerId,
+    internal CustomerContact(
         string name,
         string contactType,
         int gender,
@@ -80,21 +94,23 @@ public class CustomerContact : Entity<CustomerContactId>
         string mobile,
         string phone,
         string email,
+        string qq,
+        string wechat,
+        bool isWechatAdded,
         bool isPrimary)
     {
-        return new CustomerContact
-        {
-            CustomerId = customerId,
-            Name = name ,
-            ContactType = contactType ,
-            Gender = gender,
-            Birthday = birthday,
-            Position = position ,
-            Mobile = mobile ,
-            Phone = phone ,
-            Email = email ,
-            IsPrimary = isPrimary,
-        };
+        Name = name;
+        ContactType = contactType;
+        Gender = gender;
+        Birthday = birthday;
+        Position = position;
+        Mobile = mobile;
+        Phone = phone;
+        Email = email;
+        Qq = qq;
+        Wechat = wechat;
+        IsWechatAdded = isWechatAdded;
+        IsPrimary = isPrimary;
     }
 
     /// <summary>
@@ -109,6 +125,9 @@ public class CustomerContact : Entity<CustomerContactId>
         string mobile,
         string phone,
         string email,
+        string qq,
+        string wechat,
+        bool isWechatAdded,
         bool isPrimary)
     {
         Name = name ;
@@ -119,6 +138,9 @@ public class CustomerContact : Entity<CustomerContactId>
         Mobile = mobile ;
         Phone = phone ;
         Email = email ;
+        Qq = qq;
+        Wechat = wechat;
+        IsWechatAdded = isWechatAdded;
         IsPrimary = isPrimary;
     }
 }

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptions;
+using Ncp.Admin.Domain.AggregatesModel.ContractTypeOptionAggregate;
 
 namespace Ncp.Admin.Infrastructure.EntityConfigurations;
 

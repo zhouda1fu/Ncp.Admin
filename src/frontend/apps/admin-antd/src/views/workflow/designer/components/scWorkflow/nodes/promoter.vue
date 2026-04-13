@@ -71,8 +71,7 @@
 </template>
 
 <script>
-import { Plus } from '@vben/icons';
-import { Icon as IconifyIcon } from '@iconify/vue';
+import { IconifyIcon, Plus } from '@vben/icons';
 import { Alert, Button, Drawer, Form, Input, Tag } from 'ant-design-vue';
 import addNode from './addNode.vue';
 

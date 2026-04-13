@@ -1,4 +1,4 @@
-using Ncp.Admin.Domain.DomainEvents.RoleEvents;
+using Ncp.Admin.Domain.DomainEvents;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.Application.Queries;
 

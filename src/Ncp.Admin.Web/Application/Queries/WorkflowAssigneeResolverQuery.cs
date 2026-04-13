@@ -14,7 +14,8 @@ public sealed record WorkflowAssigneeResult(UserId AssigneeId, RoleId AssigneeRo
 
 /// <summary>
 /// 工作流审批人解析查询：根据设计器节点配置解析出处理人。
-/// setType: 1=指定成员, 2=主管, 3=角色（可多角色合并用户并去重）, 5=发起人自己；抄送节点 type=2 按成员列表解析。
+/// setType: 1=指定成员, 2=主管, 3=角色（可多角色合并用户并去重）, 5=发起人自己；
+/// 抄送节点 type=2 支持指定成员/角色（默认指定成员）。
 /// </summary>
 public class WorkflowAssigneeResolverQuery(UserQuery userQuery, DeptQuery deptQuery) : IQuery
 {
@@ -50,7 +51,9 @@ public class WorkflowAssigneeResolverQuery(UserQuery userQuery, DeptQuery deptQu
     {
         if (node.Type == 2)
         {
-            return await ResolveUserListFromListAsync(node, cancellationToken);
+            return node.SetType == 3
+                ? await ResolveRoleUserListAsync(node, cancellationToken)
+                : await ResolveUserListFromListAsync(node, cancellationToken);
         }
 
         return node.SetType switch

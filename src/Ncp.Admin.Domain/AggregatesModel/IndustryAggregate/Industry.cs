@@ -1,3 +1,4 @@
+using System;
 using Ncp.Admin.Domain;
 
 namespace Ncp.Admin.Domain.AggregatesModel.IndustryAggregate;
@@ -12,6 +13,9 @@ public partial record IndustryId : IGuidStronglyTypedId;
 /// </summary>
 public class Industry : Entity<IndustryId>, IAggregateRoot
 {
+    /// <summary>一级行业占位父 ID（<see cref="Guid.Empty"/>）</summary>
+    public static IndustryId RootParentId { get; } = new(Guid.Empty);
+
     protected Industry() { }
 
     /// <summary>
@@ -19,9 +23,9 @@ public class Industry : Entity<IndustryId>, IAggregateRoot
     /// </summary>
     public string Name { get; private set; } = string.Empty;
     /// <summary>
-    /// 父级行业ID（ null 表示一级）
+    /// 父级行业 ID（一级行业为 <see cref="RootParentId"/>）
     /// </summary>
-    public IndustryId? ParentId { get; private set; }
+    public IndustryId ParentId { get; private set; } = RootParentId;
     /// <summary>
     /// 排序（数字越小越靠前）
     /// </summary>
@@ -34,7 +38,7 @@ public class Industry : Entity<IndustryId>, IAggregateRoot
     /// <summary>
     /// 创建行业
     /// </summary>
-    public Industry(string name, IndustryId? parentId, int sortOrder = 0, string? remark = null)
+    public Industry(string name, IndustryId parentId, int sortOrder = 0, string? remark = null)
     {
         Name = name ;
         ParentId = parentId;
@@ -45,7 +49,7 @@ public class Industry : Entity<IndustryId>, IAggregateRoot
     /// <summary>
     /// 更新行业信息
     /// </summary>
-    public void Update(string name, IndustryId? parentId, int sortOrder, string? remark = null)
+    public void Update(string name, IndustryId parentId, int sortOrder, string? remark = null)
     {
         Name = name;
         ParentId = parentId;

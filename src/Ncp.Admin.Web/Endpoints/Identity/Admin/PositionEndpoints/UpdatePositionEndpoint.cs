@@ -22,7 +22,7 @@ public class UpdatePositionEndpoint(IMediator mediator) : Endpoint<UpdatePositio
     public override void Configure()
     {
         Tags("Positions");
-        Description(b => b.AutoTagOverride("Positions"));
+        Description(b => b.AutoTagOverride("Positions").WithSummary("更新岗位"));
         Put("/api/admin/position");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionEdit);

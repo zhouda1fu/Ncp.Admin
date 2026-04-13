@@ -10,9 +10,9 @@ namespace Ncp.Admin.Infrastructure.Repositories;
 public interface IDeptRepository : IRepository<Dept, DeptId>
 {
     /// <summary>
-    /// 清除指定用户作为部门主管的关联（用户离职或删除时调用）
+    /// 查询主管为指定用户的部门 ID 列表（用于通过聚合根清除主管关联）
     /// </summary>
-    Task ClearManagerIdForUserAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DeptId>> GetDeptIdsWhereManagerIsUserAsync(UserId userId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -20,12 +20,12 @@ public interface IDeptRepository : IRepository<Dept, DeptId>
 /// </summary>
 public class DeptRepository(ApplicationDbContext context) : RepositoryBase<Dept, DeptId, ApplicationDbContext>(context), IDeptRepository
 {
-    public async Task ClearManagerIdForUserAsync(UserId userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<DeptId>> GetDeptIdsWhereManagerIsUserAsync(UserId userId, CancellationToken cancellationToken = default)
     {
-        await context.Depts
+        return await context.Depts
+            .AsNoTracking()
             .Where(d => d.ManagerId == userId)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(d => d.ManagerId, new UserId(0)),
-                cancellationToken);
+            .Select(d => d.Id)
+            .ToListAsync(cancellationToken);
     }
 }

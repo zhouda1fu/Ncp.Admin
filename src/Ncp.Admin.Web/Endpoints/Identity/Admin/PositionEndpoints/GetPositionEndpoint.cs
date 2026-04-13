@@ -28,7 +28,7 @@ public class GetPositionEndpoint(PositionQuery positionQuery) : Endpoint<GetPosi
     public override void Configure()
     {
         Tags("Positions");
-        Description(b => b.AutoTagOverride("Positions"));
+        Description(b => b.AutoTagOverride("Positions").WithSummary("获取岗位详情"));
         Get("/api/admin/position/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
         Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionView);

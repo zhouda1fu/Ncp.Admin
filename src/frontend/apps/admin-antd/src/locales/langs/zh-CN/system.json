@@ -36,6 +36,7 @@
       "purchaseOrder": "采购审批",
       "reimbursement": "报销审批",
       "order": "订单审批",
+      "customerSeaVoid": "客户作废",
       "general": "通用流程"
     },
     "node": {

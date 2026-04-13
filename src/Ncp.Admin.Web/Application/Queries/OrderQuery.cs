@@ -107,6 +107,9 @@ public record OrderQueryDto(
     string Feedback,
     string Scontent,
     WarehouseStatus WarehouseStatus,
+    UserId WarehousePickerId,
+    UserId WarehouseTechId,
+    UserId WarehouseReviewerId,
     WorkflowInstanceId WorkflowInstanceId,
     DateTimeOffset CreatedAt);
 
@@ -169,6 +172,9 @@ public record OrderDetailDto(
     string Feedback,
     string Scontent,
     WarehouseStatus WarehouseStatus,
+    UserId WarehousePickerId,
+    UserId WarehouseTechId,
+    UserId WarehouseReviewerId,
     UserId CreatorId,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
@@ -262,6 +268,9 @@ public class OrderQuery(ApplicationDbContext dbContext) : IQuery
             o.Feedback,
             o.Scontent,
             o.WarehouseStatus,
+            o.WarehousePickerId,
+            o.WarehouseTechId,
+            o.WarehouseReviewerId,
             o.CreatorId,
             o.CreatedAt,
             o.UpdatedAt,
@@ -364,6 +373,9 @@ public class OrderQuery(ApplicationDbContext dbContext) : IQuery
                 x.Order.Feedback,
                 x.Order.Scontent,
                 x.Order.WarehouseStatus,
+                x.Order.WarehousePickerId,
+                x.Order.WarehouseTechId,
+                x.Order.WarehouseReviewerId,
                 x.Order.WorkflowInstanceId,
                 x.Order.CreatedAt))
             .ToPagedDataAsync(input, cancellationToken);

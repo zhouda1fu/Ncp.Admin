@@ -1,5 +1,6 @@
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.VehicleAggregate;
 
@@ -79,6 +80,7 @@ public class VehicleBooking : Entity<VehicleBookingId>, IAggregateRoot
         EndAt = endAt;
         Status = VehicleBookingStatus.Booked;
         CreatedAt = DateTimeOffset.UtcNow;
+        AddDomainEvent(new VehicleBookingCreatedDomainEvent(this));
     }
 
     /// <summary>
@@ -90,6 +92,7 @@ public class VehicleBooking : Entity<VehicleBookingId>, IAggregateRoot
             throw new KnownException("仅已预订可取消", ErrorCodes.VehicleBookingInvalidStatus);
         Status = VehicleBookingStatus.Cancelled;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new VehicleBookingCancelledDomainEvent(this));
     }
 
     /// <summary>
@@ -101,5 +104,6 @@ public class VehicleBooking : Entity<VehicleBookingId>, IAggregateRoot
             throw new KnownException("仅已预订可完成", ErrorCodes.VehicleBookingInvalidStatus);
         Status = VehicleBookingStatus.Completed;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+        AddDomainEvent(new VehicleBookingCompletedDomainEvent(this));
     }
 }

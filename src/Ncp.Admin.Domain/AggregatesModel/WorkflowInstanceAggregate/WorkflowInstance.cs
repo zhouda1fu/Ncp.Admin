@@ -2,7 +2,7 @@ using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
-using Ncp.Admin.Domain.DomainEvents.WorkflowEvents;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 
@@ -106,6 +106,9 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// </summary>
     public virtual ICollection<WorkflowTask> Tasks { get; } = [];
 
+    private static readonly RoleId EmptyRoleId = new(Guid.Empty);
+    private static readonly UserId EmptyUserId = new(0);
+
     /// <summary>
     /// 创建流程实例
     /// </summary>
@@ -147,7 +150,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         UserId assigneeId,
         string assigneeName)
     {
-        var task = new WorkflowTask(nodeKey, nodeName, taskType, assigneeId, assigneeName);
+        var task = new WorkflowTask(Id, nodeKey, nodeName, taskType, assigneeId, assigneeName);
         Tasks.Add(task);
         CurrentNodeKey = nodeKey ?? string.Empty;
         CurrentNodeName = nodeName ?? string.Empty;
@@ -166,7 +169,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         RoleId assigneeRoleId,
         string assigneeName)
     {
-        var task = new WorkflowTask(nodeKey, nodeName, taskType, assigneeRoleId, assigneeName);
+        var task = new WorkflowTask(Id, nodeKey, nodeName, taskType, assigneeRoleId, assigneeName);
         Tasks.Add(task);
         CurrentNodeKey = nodeKey ?? string.Empty;
         CurrentNodeName = nodeName ?? string.Empty;
@@ -175,10 +178,32 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
         return task;
     }
 
+    private void EnsureOperatorAssignedToTask(WorkflowTask task, UserId operatorId, IReadOnlyCollection<RoleId>? operatorRoleIds)
+    {
+        if (task.AssigneeType == AssigneeType.User)
+        {
+            if (task.AssigneeId == EmptyUserId || task.AssigneeId != operatorId)
+                throw new KnownException("无权限操作该任务", ErrorCodes.WorkflowTaskNotAssignedToOperator);
+            return;
+        }
+
+        if (task.AssigneeType == AssigneeType.Role)
+        {
+            if (task.AssigneeRoleId == EmptyRoleId)
+                throw new KnownException("无权限操作该任务", ErrorCodes.WorkflowTaskNotAssignedToOperator);
+
+            if (operatorRoleIds == null || operatorRoleIds.Count == 0 || !operatorRoleIds.Contains(task.AssigneeRoleId))
+                throw new KnownException("无权限操作该任务", ErrorCodes.WorkflowTaskNotAssignedToOperator);
+            return;
+        }
+
+        throw new KnownException("无权限操作该任务", ErrorCodes.WorkflowTaskNotAssignedToOperator);
+    }
+
     /// <summary>
     /// 审批通过任务
     /// </summary>
-    public void ApproveTask(WorkflowTaskId taskId, UserId operatorId, string comment)
+    public void ApproveTask(WorkflowTaskId taskId, UserId operatorId, IReadOnlyCollection<RoleId>? operatorRoleIds, string comment)
     {
         if (Status != WorkflowInstanceStatus.Running)
         {
@@ -193,6 +218,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
             throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
         }
 
+        EnsureOperatorAssignedToTask(task, operatorId, operatorRoleIds);
         task.Approve(comment);
 
         AddDomainEvent(new WorkflowTaskCompletedDomainEvent(this, task));
@@ -201,7 +227,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// <summary>
     /// 驳回任务
     /// </summary>
-    public void RejectTask(WorkflowTaskId taskId, UserId operatorId, string comment)
+    public void RejectTask(WorkflowTaskId taskId, UserId operatorId, IReadOnlyCollection<RoleId>? operatorRoleIds, string comment)
     {
         if (Status != WorkflowInstanceStatus.Running)
         {
@@ -216,6 +242,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
             throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
         }
 
+        EnsureOperatorAssignedToTask(task, operatorId, operatorRoleIds);
         task.Reject(comment);
 
         foreach (var t in Tasks.Where(t => t.Status == WorkflowTaskStatus.Pending))
@@ -233,7 +260,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// <summary>
     /// 转办任务
     /// </summary>
-    public void TransferTask(WorkflowTaskId taskId, UserId newAssigneeId, string newAssigneeName, string comment)
+    public void TransferTask(WorkflowTaskId taskId, UserId operatorId, IReadOnlyCollection<RoleId>? operatorRoleIds, UserId newAssigneeId, string newAssigneeName, string comment)
     {
         var task = Tasks.FirstOrDefault(t => t.Id == taskId)
             ?? throw new KnownException("未找到该任务", ErrorCodes.WorkflowTaskNotFound);
@@ -243,10 +270,11 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
             throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
         }
 
+        EnsureOperatorAssignedToTask(task, operatorId, operatorRoleIds);
         task.Transfer(comment);
 
         // 创建新任务分配给新的处理人
-        var newTask = new WorkflowTask(task.NodeKey, task.NodeName, task.TaskType, newAssigneeId, newAssigneeName);
+        var newTask = new WorkflowTask(Id, task.NodeKey, task.NodeName, task.TaskType, newAssigneeId, newAssigneeName);
         Tasks.Add(newTask);
 
         AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, newTask));
@@ -255,7 +283,7 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
     /// <summary>
     /// 委托任务（将任务委托给其他人处理，原任务标记为已委托）
     /// </summary>
-    public WorkflowTask DelegateTask(WorkflowTaskId taskId, UserId delegateToUserId, string delegateToUserName, string comment)
+    public WorkflowTask DelegateTask(WorkflowTaskId taskId, UserId operatorId, IReadOnlyCollection<RoleId>? operatorRoleIds, UserId delegateToUserId, string delegateToUserName, string comment)
     {
         var task = Tasks.FirstOrDefault(t => t.Id == taskId)
             ?? throw new KnownException("未找到该任务", ErrorCodes.WorkflowTaskNotFound);
@@ -265,11 +293,12 @@ public class WorkflowInstance : Entity<WorkflowInstanceId>, IAggregateRoot
             throw new KnownException("该任务已处理", ErrorCodes.WorkflowTaskAlreadyProcessed);
         }
 
+        EnsureOperatorAssignedToTask(task, operatorId, operatorRoleIds);
         // 原任务标记为已委托
         task.Delegate(comment, delegateToUserName);
 
         // 创建新任务给被委托人
-        var newTask = new WorkflowTask(task.NodeKey, task.NodeName, task.TaskType, delegateToUserId, delegateToUserName);
+        var newTask = new WorkflowTask(Id, task.NodeKey, task.NodeName, task.TaskType, delegateToUserId, delegateToUserName);
         Tasks.Add(newTask);
 
         AddDomainEvent(new WorkflowTaskCreatedDomainEvent(this, newTask));

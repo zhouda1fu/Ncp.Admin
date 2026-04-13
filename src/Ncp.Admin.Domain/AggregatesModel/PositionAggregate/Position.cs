@@ -1,5 +1,5 @@
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
-using Ncp.Admin.Domain.DomainEvents.PositionEvents;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 

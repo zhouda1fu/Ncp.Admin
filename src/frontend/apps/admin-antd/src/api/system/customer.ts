@@ -50,6 +50,8 @@ export namespace CustomerApi {
     creatorName?: string;
     ownerName?: string;
     claimedAt?: string;
+    /** 公海作废标记 */
+    isVoided?: boolean;
     createdAt: string;
     contactCount: number;
     industryIds: string[];
@@ -67,15 +69,43 @@ export namespace CustomerApi {
     mobile?: string;
     phone?: string;
     email?: string;
+    qq?: string;
+    wechat?: string;
+    isWechatAdded?: boolean;
     isPrimary: boolean;
   }
 
   export interface CustomerContactRecordItem {
     id: string;
     recordAt: string;
-    recordType: string;
+    /** 1电话 2出差 3微信 4其他 */
+    recordType: number;
+    title?: string;
     content: string;
-    recorderName: string;
+    nextVisitAt?: string;
+    /** 0待选择 1有效联系 2无效联系 */
+    status: number;
+    customerContactIds?: string[];
+    ownerId?: string;
+    ownerName?: string;
+    ownerDeptId?: string;
+    ownerDeptName?: string;
+    creatorId?: string;
+    /** 录入人姓名（接口若返回则展示） */
+    creatorName?: string;
+    createdAt?: string;
+    modifierId?: string;
+    modifiedAt?: string;
+    remark?: string;
+    reminderIntervalDays?: number;
+    reminderCount?: number;
+    filePath?: string;
+    customerAddress?: string;
+    visitAddress?: string;
+    /** @deprecated 使用 status */
+    statusId?: number;
+    /** @deprecated 使用 ownerName */
+    recorderName?: string;
   }
 
   export interface CustomerDetail extends CustomerItem {
@@ -127,6 +157,29 @@ async function createSeaCustomer(data: Recordable<any>) {
   return requestClient.post<{ id: string }>('/customers/sea', data);
 }
 
+/** 公海录入专用：检查联系方式是否重复（电话/QQ/微信） */
+async function checkSeaCustomerDuplicateContacts(data: {
+  mainContactPhone?: string;
+  contactQq?: string;
+  contactWechat?: string;
+}) {
+  return requestClient.post<{
+    items: Array<{
+      customerId: string;
+      customerName: string;
+      customerSourceName: string;
+      ownerName: string;
+      duplicatePhones: string[];
+      duplicateQqs: string[];
+      duplicateWechats: string[];
+    }>;
+  }>('/customers/sea/check-duplicate-contacts', {
+    mainContactPhone: data.mainContactPhone ?? '',
+    contactQq: data.contactQq ?? '',
+    contactWechat: data.contactWechat ?? '',
+  });
+}
+
 async function updateCustomer(id: string, data: Recordable<any>) {
   return requestClient.put(`/customers/${id}`, data);
 }
@@ -163,8 +216,21 @@ async function updateSeaCustomer(id: string, data: Recordable<any>) {
   return requestClient.put(`/customers/${id}/sea`, data);
 }
 
-async function voidCustomer(id: string) {
-  return requestClient.post(`/customers/${id}/void`, {});
+async function updateSeaCustomerConsultation(id: string, consultationContent: string) {
+  return requestClient.put(`/customers/${id}/sea/consultation`, {
+    id,
+    consultationContent,
+  });
+}
+
+export interface VoidCustomerWorkflowResponse {
+  workflowInstanceId: string;
+  title: string;
+}
+
+async function voidCustomer(id: string, routingRoleId?: string) {
+  const body = routingRoleId ? { routingRoleId } : {};
+  return requestClient.post<VoidCustomerWorkflowResponse>(`/customers/${id}/void`, body);
 }
 
 async function deleteCustomer(id: string) {
@@ -191,6 +257,14 @@ async function addCustomerContactRecord(customerId: string, data: Recordable<any
   return requestClient.post<{ id: string }>(`/customers/${customerId}/contact-records`, data);
 }
 
+async function updateCustomerContactRecord(
+  customerId: string,
+  recordId: string,
+  data: Recordable<any>,
+) {
+  return requestClient.put(`/customers/${customerId}/contact-records/${recordId}`, data);
+}
+
 async function removeCustomerContactRecord(customerId: string, recordId: string) {
   return requestClient.delete(`/customers/${customerId}/contact-records/${recordId}`);
 }
@@ -200,8 +274,10 @@ export {
   getCustomer,
   createCustomer,
   createSeaCustomer,
+  checkSeaCustomerDuplicateContacts,
   updateCustomer,
   updateSeaCustomer,
+  updateSeaCustomerConsultation,
   getCustomerSearch,
   getCustomerShares,
   shareCustomer,
@@ -214,5 +290,6 @@ export {
   updateCustomerContact,
   removeCustomerContact,
   addCustomerContactRecord,
+  updateCustomerContactRecord,
   removeCustomerContactRecord,
 };

@@ -1,18 +1,19 @@
-using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 /// <summary>
-/// 用户部门关系实体
-/// 表示用户与部门的一对一关系
+/// 用户部门关系实体（与用户一对一；主键同用户 ID）
 /// </summary>
-public class UserDept
+public class UserDept : Entity<UserId>
 {
     /// <summary>
-    /// 用户ID
+    /// EF/序列化用
     /// </summary>
-    public UserId UserId { get; private set; } = default!;
+    protected UserDept()
+    {
+    }
 
     /// <summary>
     /// 部门ID
@@ -34,20 +35,16 @@ public class UserDept
     /// </summary>
     public DateTimeOffset AssignedAt { get; init; }
 
-    protected UserDept()
-    {
-    }
-
     /// <summary>
-    /// 创建用户部门关系
+    /// 创建用户部门关系（仅领域层使用；由 <see cref="User"/> 分配部门时构造，主键与用户聚合根一致）
     /// </summary>
-    /// <param name="userId">用户ID</param>
+    /// <param name="userId">用户ID（与聚合根一致）</param>
     /// <param name="deptId">部门ID</param>
     /// <param name="deptName">部门名称</param>
     /// <param name="isDeptManager">是否为该部门主管</param>
-    public UserDept(UserId userId, DeptId deptId, string deptName, bool isDeptManager = false)
+    internal UserDept(UserId userId, DeptId deptId, string deptName, bool isDeptManager = false)
     {
-        UserId = userId;
+        Id = userId;
         DeptId = deptId;
         AssignedAt = DateTimeOffset.UtcNow;
         DeptName = deptName;

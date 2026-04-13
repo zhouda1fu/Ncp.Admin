@@ -10,7 +10,8 @@ namespace Ncp.Admin.Web.Application.Services.Workflow;
 /// </summary>
 public class WorkflowOutgoingTaskService(
     WorkflowTreeTraverser treeTraverser,
-    WorkflowAssigneeResolverQuery assigneeResolverQuery)
+    WorkflowAssigneeResolverQuery assigneeResolverQuery,
+    WorkflowTaskVisibilityPolicy taskVisibilityPolicy)
 {
     /// <summary>
     /// 在实例上已通过某条任务后，创建后续待办或结束流程。若应等待会签/已创建下一依次任务则不再向下游推进。
@@ -55,6 +56,7 @@ public class WorkflowOutgoingTaskService(
             }
 
             var ordered = await assigneeResolverQuery.ResolveOrderedAssigneesAsync(nextNode, instance, cancellationToken);
+            ordered = await taskVisibilityPolicy.FilterAssigneesByDataPermissionAsync(instance, ordered, cancellationToken);
             var toCreate = WorkflowDesignerTaskHelper.SelectAssigneesForNodeEntry(nextNode, ordered);
             if (nextNode.Type == 1 && toCreate.Count == 0)
             {
@@ -88,6 +90,7 @@ public class WorkflowOutgoingTaskService(
         CancellationToken cancellationToken)
     {
         var ordered = await assigneeResolverQuery.ResolveOrderedAssigneesAsync(currentNode, instance, cancellationToken);
+        ordered = await taskVisibilityPolicy.FilterAssigneesByDataPermissionAsync(instance, ordered, cancellationToken);
         if (ordered.Count == 0)
         {
             return false;

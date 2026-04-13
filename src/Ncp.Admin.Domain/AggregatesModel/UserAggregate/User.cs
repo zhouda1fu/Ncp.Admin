@@ -1,7 +1,8 @@
+using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
-using Ncp.Admin.Domain.DomainEvents.UserEvents;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
@@ -43,6 +44,8 @@ public class User : Entity<UserId>, IAggregateRoot
     public string? LastLoginIp { get; private set; }
     /// <summary>最后更新时间（UTC）</summary>
     public UpdateTime UpdateTime { get; private set; } = new UpdateTime(DateTimeOffset.UtcNow);
+    /// <summary>行版本（并发）</summary>
+    public RowVersion RowVersion { get; private set; } = new RowVersion();
     /// <summary>是否已删除（软删标记）</summary>
     public Deleted IsDeleted { get; private set; } = new Deleted(false);
     /// <summary>删除时间（UTC）</summary>
@@ -134,6 +137,8 @@ public class User : Entity<UserId>, IAggregateRoot
         {
             Roles.Add(userRole);
         }
+
+        AddDomainEvent(new UserCreatedDomainEvent(this));
     }
 
     public void SoftDelete(UserId deleterId)
@@ -264,15 +269,15 @@ public class User : Entity<UserId>, IAggregateRoot
     }
 
     /// <summary>
-    /// 分配部门
+    /// 分配部门（使用当前用户主键作为 <see cref="UserDept"/> 的标识，调用方无需再传 userId）
     /// </summary>
-    /// <param name="dept">部门</param>
-    public void AssignDept(UserDept dept)
+    /// <param name="deptId">部门 ID</param>
+    /// <param name="deptName">部门名称</param>
+    /// <param name="isDeptManager">是否为该部门主管</param>
+    public void AssignDept(DeptId deptId, string deptName, bool isDeptManager = false)
     {
-        ArgumentNullException.ThrowIfNull(dept);
-
+        var dept = new UserDept(Id, deptId, deptName, isDeptManager);
         Dept = dept;
-        // 通过领域事件同步更新 Dept 聚合的 ManagerId
         if (dept.DeptId != new DeptId(0))
         {
             AddDomainEvent(new UserDeptManagerChangedDomainEvent(Id, dept.DeptId, dept.IsDeptManager));

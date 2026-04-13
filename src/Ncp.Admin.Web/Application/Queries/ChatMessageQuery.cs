@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.ChatGroupAggregate;
 using Ncp.Admin.Domain.AggregatesModel.ChatMessageAggregate;
@@ -9,6 +10,13 @@ namespace Ncp.Admin.Web.Application.Queries;
 /// <summary>
 /// 聊天消息查询 DTO
 /// </summary>
+/// <param name="Id">消息 ID</param>
+/// <param name="ChatGroupId">聊天组 ID</param>
+/// <param name="SenderId">发送人用户 ID</param>
+/// <param name="Content">消息内容</param>
+/// <param name="ReplyToMessageId">被回复的消息 ID，非回复时为 null</param>
+/// <param name="CreatedAt">发送时间</param>
+/// <param name="SenderName">发送人显示名称</param>
 public record ChatMessageQueryDto(
     ChatMessageId Id,
     string ChatGroupId,
@@ -48,7 +56,7 @@ public class ChatMessageQuery(ApplicationDbContext dbContext) : IQuery
                 x.m.ChatGroupId.ToString(),
                 x.m.SenderId,
                 x.m.Content,
-                x.m.ReplyToMessageId,
+                x.m.ReplyToMessageId == new ChatMessageId(Guid.Empty) ? null : x.m.ReplyToMessageId,
                 x.m.CreatedAt,
                 string.IsNullOrEmpty(x.u.RealName) ? x.u.Name : x.u.RealName))
             .FirstOrDefaultAsync(cancellationToken);
@@ -72,7 +80,7 @@ public class ChatMessageQuery(ApplicationDbContext dbContext) : IQuery
                 x.m.ChatGroupId.ToString(),
                 x.m.SenderId,
                 x.m.Content,
-                x.m.ReplyToMessageId,
+                x.m.ReplyToMessageId == new ChatMessageId(Guid.Empty) ? null : x.m.ReplyToMessageId,
                 x.m.CreatedAt,
                 string.IsNullOrEmpty(x.u.RealName) ? x.u.Name : x.u.RealName));
         return await query.ToPagedDataAsync(input, cancellationToken);

@@ -7,6 +7,13 @@ namespace Ncp.Admin.Web.Application.Queries;
 /// <summary>
 /// 产品分类单条 DTO（用于编辑回填）
 /// </summary>
+/// <param name="Id">分类 ID</param>
+/// <param name="Name">分类名称</param>
+/// <param name="Remark">备注</param>
+/// <param name="ParentId">上级分类，根节点为 null</param>
+/// <param name="SortOrder">排序</param>
+/// <param name="Visible">是否可见</param>
+/// <param name="IsDiscount">是否优惠分类</param>
 public record ProductCategoryDto(
     ProductCategoryId Id,
     string Name,
@@ -19,6 +26,14 @@ public record ProductCategoryDto(
 /// <summary>
 /// 产品分类树节点 DTO
 /// </summary>
+/// <param name="Id">分类 ID</param>
+/// <param name="Name">分类名称</param>
+/// <param name="Remark">备注</param>
+/// <param name="ParentId">上级分类，根节点为 null</param>
+/// <param name="SortOrder">排序</param>
+/// <param name="Visible">是否可见</param>
+/// <param name="IsDiscount">是否优惠分类</param>
+/// <param name="Children">子节点</param>
 public record ProductCategoryTreeDto(
     ProductCategoryId Id,
     string Name,
@@ -46,7 +61,7 @@ public class ProductCategoryQuery(ApplicationDbContext dbContext) : IQuery
                 x.Id,
                 x.Name,
                 x.Remark,
-                x.ParentId == new ProductCategoryId(Guid.Empty) ? null : x.ParentId,
+                x.ParentId == ProductCategory.RootParentId ? null : x.ParentId,
                 x.SortOrder,
                 x.Visible,
                 x.IsDiscount))
@@ -68,9 +83,7 @@ public class ProductCategoryQuery(ApplicationDbContext dbContext) : IQuery
             .ToListAsync(cancellationToken);
 
         var dict = list.ToDictionary(x => x.Id);
-        var emptyId = new ProductCategoryId(Guid.Empty);
-        // 投影时 EF 可能未对 ParentId 应用 ValueConverter，DB 的 NULL 在 list 中为 null，需同时视为根节点
-        var roots = list.Where(x => x.ParentId == null || x.ParentId == emptyId).OrderBy(x => x.SortOrder).ThenBy(x => x.Name).ToList();
+        var roots = list.Where(x => x.ParentId == ProductCategory.RootParentId).OrderBy(x => x.SortOrder).ThenBy(x => x.Name).ToList();
         return roots.Select(r => BuildNode(r, dict));
     }
 
@@ -84,26 +97,30 @@ public class ProductCategoryQuery(ApplicationDbContext dbContext) : IQuery
             .ThenBy(x => x.Name)
             .Select(c => BuildNode(c, dict))
             .ToList();
-        var emptyId = new ProductCategoryId(Guid.Empty);
         return new ProductCategoryTreeDto(
             r.Id,
             r.Name,
             r.Remark,
-            (r.ParentId == null || r.ParentId == emptyId) ? null : r.ParentId,
+            r.ParentId == ProductCategory.RootParentId ? null : r.ParentId,
             r.SortOrder,
             r.Visible,
             r.IsDiscount,
             children);
     }
 
-    /// <summary>
-    /// 投影时 EF 可能不对 ParentId 应用 ValueConverter，DB 的 NULL 会以 null 出现，故用可空类型。
-    /// </summary>
+    /// <summary>树构建用的平面节点</summary>
+    /// <param name="Id">分类 ID</param>
+    /// <param name="Name">分类名称</param>
+    /// <param name="Remark">备注</param>
+    /// <param name="ParentId">上级分类 ID</param>
+    /// <param name="SortOrder">排序</param>
+    /// <param name="Visible">是否可见</param>
+    /// <param name="IsDiscount">是否优惠分类</param>
     private sealed record ProductCategoryNode(
         ProductCategoryId Id,
         string Name,
         string Remark,
-        ProductCategoryId? ParentId,
+        ProductCategoryId ParentId,
         int SortOrder,
         bool Visible,
         bool IsDiscount);
