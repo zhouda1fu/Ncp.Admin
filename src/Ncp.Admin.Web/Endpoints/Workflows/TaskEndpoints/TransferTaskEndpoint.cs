@@ -33,7 +33,7 @@ public class TransferTaskEndpoint(IMediator mediator) : Endpoint<TransferTaskReq
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("转办任务"));
         Post("/api/admin/workflow/tasks/{taskId}/transfer");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
+        Permissions(PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async System.Threading.Tasks.Task HandleAsync(TransferTaskRequest req, CancellationToken ct)

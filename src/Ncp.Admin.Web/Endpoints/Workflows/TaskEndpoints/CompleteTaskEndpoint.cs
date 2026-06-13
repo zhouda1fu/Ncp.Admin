@@ -30,7 +30,7 @@ public class CompleteTaskEndpoint(IMediator mediator) : Endpoint<CompleteTaskReq
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("完成通知任务"));
         Post("/api/admin/workflow/tasks/{taskId}/complete");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
+        Permissions(PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async Task HandleAsync(CompleteTaskRequest req, CancellationToken ct)

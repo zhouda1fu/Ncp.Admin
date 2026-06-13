@@ -26,7 +26,7 @@ public class DeleteRoleEndpoint(IMediator mediator) : Endpoint<DeleteRoleRequest
         Description(b => b.AutoTagOverride("Roles").WithSummary("删除角色"));
         Delete("/api/admin/roles/{roleId}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleDelete);
+        Permissions(PermissionCodes.RoleDelete);
     }
 
     public override async Task HandleAsync(DeleteRoleRequest request, CancellationToken ct)

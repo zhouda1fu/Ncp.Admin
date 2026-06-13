@@ -26,7 +26,7 @@ public class DeactivateRoleEndpoint(IMediator mediator) : Endpoint<DeactivateRol
         Description(b => b.AutoTagOverride("Roles").WithSummary("停用角色"));
         Put("/api/admin/roles/deactivate");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleEdit);
+        Permissions(PermissionCodes.RoleEdit);
     }
 
     public override async Task HandleAsync(DeactivateRoleRequest req, CancellationToken ct)

@@ -45,7 +45,7 @@ public sealed class GetSystemLogListEndpoint(SystemLogQuery query)
         Description(b => b.AutoTagOverride("SystemLog").WithSummary("获取系统日志分页列表"));
         Get("/api/admin/system-logs");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.SystemLogView);
+        Permissions(PermissionCodes.SystemLogView);
     }
 
     public override async Task HandleAsync(GetSystemLogListRequest req, CancellationToken ct)

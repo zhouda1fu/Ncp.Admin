@@ -46,7 +46,7 @@ public class GetDeptEndpoint(DeptQuery deptQuery) : Endpoint<GetDeptRequest, Res
         Description(b => b.AutoTagOverride("Depts").WithSummary("获取部门"));
         Get("/api/admin/dept/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptView);
+        Permissions(PermissionCodes.DeptView);
     }
 
     public override async Task HandleAsync(GetDeptRequest req, CancellationToken ct)

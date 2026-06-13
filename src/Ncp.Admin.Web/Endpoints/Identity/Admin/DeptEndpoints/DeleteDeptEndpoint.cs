@@ -26,7 +26,7 @@ public class DeleteDeptEndpoint(IMediator mediator) : Endpoint<DeleteDeptRequest
         Description(b => b.AutoTagOverride("Depts").WithSummary("删除部门"));
         Delete("/api/admin/dept/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptDelete);
+        Permissions(PermissionCodes.DeptDelete);
     }
 
     public override async Task HandleAsync(DeleteDeptRequest request, CancellationToken ct)

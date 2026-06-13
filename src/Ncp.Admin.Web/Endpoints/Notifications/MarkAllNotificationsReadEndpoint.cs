@@ -23,7 +23,7 @@ public class MarkAllNotificationsReadEndpoint(IMediator mediator) : EndpointWith
         Description(b => b.AutoTagOverride("Notifications").WithSummary("标记所有通知为已读"));
         Put("/api/notification/read-all");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.NotificationView);
+        Permissions(PermissionCodes.NotificationView);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

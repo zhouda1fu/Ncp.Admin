@@ -27,7 +27,7 @@ public class GetRoleChangeHistoryEndpoint(RoleChangeHistoryQuery historyQuery)
         Description(b => b.AutoTagOverride("Roles").WithSummary("角色字段级修改历史"));
         Get("/api/admin/roles/{roleId:guid}/change-history");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleView);
+        Permissions(PermissionCodes.RoleView);
     }
 
     public override async Task HandleAsync(GetRoleChangeHistoryRequest req, CancellationToken ct)

@@ -255,6 +255,36 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
         IsDeleted = true;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
+
+    /// <summary>
+    /// 删除草稿状态的流程定义（须为 <see cref="WorkflowDefinitionStatus.Draft"/>）。
+    /// </summary>
+    public void SoftDeleteDraft()
+    {
+        if (Status != WorkflowDefinitionStatus.Draft)
+        {
+            throw new KnownException(
+                "仅草稿状态的流程定义可删除，已发布或已归档请使用删除已发布流程接口。",
+                ErrorCodes.WorkflowDefinitionCannotDelete);
+        }
+
+        SoftDelete();
+    }
+
+    /// <summary>
+    /// 删除已发布或已归档的流程定义。
+    /// </summary>
+    public void SoftDeletePublishedOrArchived()
+    {
+        if (Status is not WorkflowDefinitionStatus.Published and not WorkflowDefinitionStatus.Archived)
+        {
+            throw new KnownException(
+                "仅已发布或已归档的流程定义可删除，草稿请使用删除草稿流程接口。",
+                ErrorCodes.WorkflowDefinitionCannotDelete);
+        }
+
+        SoftDelete();
+    }
 }
 
 /// <summary>

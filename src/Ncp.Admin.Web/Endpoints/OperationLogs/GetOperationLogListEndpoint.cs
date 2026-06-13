@@ -41,7 +41,7 @@ public class GetOperationLogListEndpoint(OperationLogQuery query)
         Description(b => b.AutoTagOverride("OperationLog").WithSummary("获取操作日志分页列表"));
         Get("/api/admin/operation-logs");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.OperationLogView);
+        Permissions(PermissionCodes.OperationLogView);
     }
 
     /// <inheritdoc />

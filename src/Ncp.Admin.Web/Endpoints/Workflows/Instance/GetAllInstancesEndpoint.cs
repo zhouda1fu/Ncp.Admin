@@ -17,7 +17,7 @@ public class GetAllInstancesEndpoint(WorkflowInstanceQuery query) : Endpoint<Wor
         Description(b => b.AutoTagOverride("WorkflowInstances").WithSummary("获取所有流程实例列表（管理员视角）"));
         Get("/api/admin/workflow/instances");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowMonitor);
+        Permissions(PermissionCodes.WorkflowMonitor);
     }
 
     public override async Task HandleAsync(WorkflowInstanceQueryInput req, CancellationToken ct)

@@ -17,7 +17,7 @@ public sealed class TriggerRecurringJobEndpoint(RecurringJobManagementService se
         Tags("BackgroundJobs");
         Post("/api/admin/background-jobs/recurring/{id}/trigger");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.BackgroundJobTrigger);
+        Permissions(PermissionCodes.BackgroundJobTrigger);
         Description(b => b.AutoTagOverride("BackgroundJobs").WithSummary("立即执行定时任务"));
         Idempotency();
     }

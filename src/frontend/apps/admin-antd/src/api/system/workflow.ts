@@ -324,10 +324,17 @@ async function createDefinitionNewVersion(id: string) {
 }
 
 /**
- * 删除流程定义
+ * 删除草稿流程定义
  */
-async function deleteDefinition(id: string) {
-  return requestClient.delete(`/workflow/definitions/${id}`);
+async function deleteDraftDefinition(id: string) {
+  return requestClient.delete(`/workflow/definitions/${id}/draft`);
+}
+
+/**
+ * 删除已发布或已归档流程定义
+ */
+async function deletePublishedDefinition(id: string) {
+  return requestClient.delete(`/workflow/definitions/${id}/published`);
 }
 
 /**
@@ -524,7 +531,8 @@ export {
   cancelWorkflow,
   createDefinition,
   delegateTask,
-  deleteDefinition,
+  deleteDraftDefinition,
+  deletePublishedDefinition,
   getConditionFields,
   getDefinition,
   getDefinitionList,

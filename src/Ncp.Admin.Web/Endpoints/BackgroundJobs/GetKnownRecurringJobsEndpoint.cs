@@ -18,7 +18,7 @@ public sealed class GetKnownRecurringJobsEndpoint(RecurringJobManagementService 
         Tags("BackgroundJobs");
         Get("/api/admin/background-jobs/recurring/known");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.BackgroundJobView);
+        Permissions(PermissionCodes.BackgroundJobView);
         Description(b => b.AutoTagOverride("BackgroundJobs").WithSummary("获取系统内置定时任务"));
     }
 

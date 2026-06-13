@@ -28,7 +28,7 @@ public class ImportUsersEndpoint(IMediator mediator) : Endpoint<ImportUsersReque
         Description(b => b.AutoTagOverride("Users").WithSummary("从 Excel 批量导入用户（逐行创建，部分失败时返回明细）"));
         Post("/api/admin/users/excel/import");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserImport);
+        Permissions(PermissionCodes.UserImport);
         AllowFileUploads();
     }
 

@@ -19,7 +19,7 @@ public class ExportUsersEndpoint(UserQuery userQuery) : Endpoint<UserQueryInput>
         Description(b => b.AutoTagOverride("Users"));
         Get("/api/admin/users/excel/export");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserExport);
+        Permissions(PermissionCodes.UserExport);
     }
 
     public override async Task HandleAsync(UserQueryInput req, CancellationToken ct)

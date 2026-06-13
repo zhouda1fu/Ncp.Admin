@@ -19,7 +19,7 @@ public class GetMyCompletedTasksEndpoint(WorkflowInstanceQuery query) : Endpoint
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("获取我的已办任务"));
         Get("/api/admin/workflow/tasks/completed");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowInstanceView);
+        Permissions(PermissionCodes.WorkflowInstanceView);
     }
 
     public override async System.Threading.Tasks.Task HandleAsync(CompletedTaskQueryInput req, CancellationToken ct)

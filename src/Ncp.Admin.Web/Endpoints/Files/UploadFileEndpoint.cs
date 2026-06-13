@@ -27,7 +27,7 @@ public class UploadFileEndpoint(IFileStorageService fileStorage)
         Description(b => b.AutoTagOverride("File").WithSummary("通用文件上传，仅存储并返回 path，不落业务表。"));
         Post("/api/admin/files/upload");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess);
+        Permissions(PermissionCodes.FileAccess);
         AllowFileUploads();
     }
 

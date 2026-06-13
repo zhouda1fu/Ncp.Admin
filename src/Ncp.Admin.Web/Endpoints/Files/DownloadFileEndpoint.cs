@@ -17,7 +17,7 @@ public class DownloadFileEndpoint(IFileStorageService fileStorage) : Endpoint<Do
         Description(b => b.AutoTagOverride("File").WithSummary("按存储 path 下载文件（path 为上传接口返回的相对路径，需 URL 编码）。"));
         Get("/api/admin/files/download");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess);
+        Permissions(PermissionCodes.FileAccess);
     }
 
     public override async Task HandleAsync(DownloadFileRequest req, CancellationToken ct)

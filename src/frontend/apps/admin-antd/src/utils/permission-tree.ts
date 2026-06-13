@@ -232,9 +232,23 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       icon: 'mdi:view-dashboard-outline',
     },
     {
+      value: PermissionCodes.CommonDataAccess,
+      label: '公共基础数据',
+      icon: 'mdi:database-search',
+      hint: '业务页面下拉/附件等公共接口，与菜单权限解耦',
+      children: [
+        { value: PermissionCodes.RoleOptionView, label: '角色下拉查询', icon: 'mdi:account-group-outline' },
+        { value: PermissionCodes.UserOptionView, label: '用户下拉查询', icon: 'mdi:account-outline' },
+        { value: PermissionCodes.DeptOptionView, label: '部门树查询', icon: 'charm:organisation' },
+        { value: PermissionCodes.PositionOptionView, label: '岗位下拉查询', icon: 'mdi:briefcase-outline' },
+        { value: PermissionCodes.FileAccess, label: '通用文件访问', icon: 'mdi:file-multiple' },
+      ],
+    },
+    {
       value: PermissionCodes.AllApiAccess,
       label: '所有接口访问权限',
       icon: 'mdi:shield-check',
+      hint: '超级管理员全局兜底，勿授予普通业务角色',
     },
   ];
   return groupPermissionTreeByModuleCategory(ensureTreeKeys(groupPermissionTreePages(tree)));
@@ -248,7 +262,10 @@ function groupPermissionTreeByModuleCategory(
   const systemNodes: PermissionTreeNode[] = [];
 
   for (const node of nodes) {
-    if (node.value === PermissionCodes.AllApiAccess) {
+    if (
+      node.value === PermissionCodes.AllApiAccess
+      || node.value === PermissionCodes.CommonDataAccess
+    ) {
       globalNodes.push(node);
       continue;
     }

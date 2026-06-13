@@ -25,7 +25,7 @@ public sealed class UpsertKnownRecurringJobEndpoint(RecurringJobManagementServic
         Tags("BackgroundJobs");
         Put("/api/admin/background-jobs/recurring/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.BackgroundJobManagement);
+        Permissions(PermissionCodes.BackgroundJobManagement);
         Description(b => b.AutoTagOverride("BackgroundJobs").WithSummary("启用或更新系统内置定时任务"));
         Idempotency();
     }

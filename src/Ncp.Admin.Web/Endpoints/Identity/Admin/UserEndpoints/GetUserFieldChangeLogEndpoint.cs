@@ -34,7 +34,7 @@ public class GetUserFieldChangeLogEndpoint(ApplicationDbContext dbContext, UserC
         Description(b => b.AutoTagOverride("Users").WithSummary("用户字段修改记录（query: userId, page, pageSize）"));
         Get("/api/admin/user/log");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserChangeHistoryView);
+        Permissions(PermissionCodes.UserChangeHistoryView);
     }
 
     public override async Task HandleAsync(GetUserFieldChangeLogRequest req, CancellationToken ct)

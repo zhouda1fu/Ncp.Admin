@@ -27,6 +27,7 @@ export const MODULE_TOP_LEVEL_PERMISSION_ROOTS = [] as const;
 
 /** 有权限定义但无侧栏菜单入口，不参与模块分组展示判定 */
 export const MODULE_CATEGORY_NON_MENU_ROOT_PERMISSIONS = [
+  PermissionCodes.CommonDataAccess,
   PermissionCodes.NotificationManagement,
   PermissionCodes.HomeDashboard,
 ] as const;
@@ -42,6 +43,7 @@ export function isModuleCategoryNonMenuRootPermission(code: string): boolean {
 export const SYSTEM_GROUP_VALUE_PREFIX = '__system_group__:';
 
 export const PERMISSION_ROOT_CATEGORY_MAP: Record<string, ModuleCategoryId> = {
+  [PermissionCodes.CommonDataAccess]: 'system',
   [PermissionCodes.RoleManagement]: 'system',
   [PermissionCodes.UserManagement]: 'system',
   [PermissionCodes.DeptManagement]: 'system',

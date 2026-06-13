@@ -58,6 +58,7 @@ dotnet ef database update -p src/Ncp.Admin.Infrastructure -s src/Ncp.Admin.Web
 - Command 绝不能直接调用 `SaveChanges` — 由 Unit of Work 行为统一处理持久化
 - **Domain 聚合实体**：属性非可空；可选强类型 ID 用 `XxxId.Unassigned`（`IGuid` → `Guid.Empty`，`IInt64` → `0`）；可选时间用 `DateTimeOffset.MinValue`；软删字段名为 `IsDeleted`（类型 `Deleted`）。每个 `XxxId` 定义 `Unassigned`。详见 `.cursor/skills/cleanddd-dotnet-coding/SKILL.md`
 - 新增受权限保护的端点时，需要更新 **5 个地方**：`PermissionCodes.cs`、`PermissionDefinitionContext.cs`、端点的 `Permissions(...)`、前端 `permission-codes.ts` + `permission-tree.ts`（`PermissionMapper` 自动从定义上下文读取）
+- **公共基础数据权限**（`RoleOptionView` / `UserOptionView` / `DeptOptionView` / `PositionOptionView` / `FileAccess`）：供业务页下拉与附件接口，与 IAM 菜单权限解耦；公共查询 Endpoint 使用 `Permissions(OptionView, ModuleView)`，管理类 Endpoint 仅保留模块权限；`AllApiAccess` 仅超级管理员全局兜底，详见 [docs/PERMISSION_MIGRATION.md](docs/PERMISSION_MIGRATION.md)
 
 ## 前端（Vben Admin）
 
@@ -80,6 +81,6 @@ dotnet ef database update -p src/Ncp.Admin.Infrastructure -s src/Ncp.Admin.Web
 2. `src/utils/permission-tree.ts` — `buildPermissionTree()` 中增加树节点（漏了则角色管理无法勾选、菜单不显示）
 3. `src/router/routes/modules/` — 添加路由（`meta.authority`；父路由 authority 写成数组包含父+所有子权限码）
 4. `src/views/{module}/{feature}/` + `src/api/system/` + `src/locales/langs/` — 页面、API、文案三件套
-5. 后端同步：`PermissionCodes.cs`、`PermissionDefinitionContext.cs`、`PermissionMapper.cs`、端点 `Permissions()`、`SeedDatabaseExtension.cs`
+5. 后端同步：`PermissionCodes.cs`、`PermissionDefinitionContext.cs`、端点 `Permissions()`、`PlatformAdminSeeder`（反射自动含新码，排除 `AllApiAccess`）
 
 > 详细前端规范参见 `.cursor/skills/ncp-admin-frontend/SKILL.md`；CleanDDD 编码详细规范参见 `.cursor/skills/cleanddd-dotnet-coding/SKILL.md`

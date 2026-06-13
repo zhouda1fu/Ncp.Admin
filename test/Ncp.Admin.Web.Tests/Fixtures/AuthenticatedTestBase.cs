@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using NetCorePal.Extensions.Dto;
 using Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
+using Ncp.Admin.Web.Utils;
 
 namespace Ncp.Admin.Web.Tests.Fixtures;
 
@@ -22,7 +23,7 @@ public abstract class AuthenticatedTestBase<TFixture>(TFixture fixture) : TestBa
         var client = fixture.CreateClient();
         
         // 登录获取token
-        var loginRequest = new LoginRequest("admin", "123456");
+        var loginRequest = new LoginRequest("admin", PlatformAdminSeeder.DefaultAdminPassword);
         var (_, loginResponse) = await client.POSTAsync<LoginEndpoint, LoginRequest, ResponseData<LoginResponse>>(loginRequest);
         
         if (loginResponse?.Data == null)

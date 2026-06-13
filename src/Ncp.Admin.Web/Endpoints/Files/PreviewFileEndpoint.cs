@@ -17,7 +17,7 @@ public class PreviewFileEndpoint(IFileStorageService fileStorage) : Endpoint<Dow
         Description(b => b.AutoTagOverride("File").WithSummary("文件在线预览"));
         Get("/api/admin/files/preview");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess);
+        Permissions(PermissionCodes.FileAccess);
     }
 
     public override async Task HandleAsync(DownloadFileRequest req, CancellationToken ct)

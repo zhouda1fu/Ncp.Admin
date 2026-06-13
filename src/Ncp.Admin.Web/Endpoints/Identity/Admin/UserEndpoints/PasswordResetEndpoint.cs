@@ -34,7 +34,7 @@ public class PasswordResetEndpoint(IMediator mediator, IPasswordHasher passwordH
         Description(b => b.AutoTagOverride("Users").WithSummary("密码重置"));
         Put("/api/admin/user/password-reset");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserEdit);
+        Permissions(PermissionCodes.UserResetPassword);
     }
 
     public override async Task HandleAsync(PasswordResetRequest request, CancellationToken ct)

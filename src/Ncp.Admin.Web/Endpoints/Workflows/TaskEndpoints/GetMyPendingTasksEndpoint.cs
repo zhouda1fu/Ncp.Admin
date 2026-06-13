@@ -19,7 +19,7 @@ public class GetMyPendingTasksEndpoint(WorkflowInstanceQuery query) : Endpoint<P
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("获取我的待办任务"));
         Get("/api/admin/workflow/tasks/pending");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowInstanceView);
+        Permissions(PermissionCodes.WorkflowInstanceView);
     }
 
     public override async Task HandleAsync(PendingTaskQueryInput req, CancellationToken ct)

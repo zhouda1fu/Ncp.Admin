@@ -17,7 +17,7 @@ public class DownloadUserImportTemplateEndpoint : EndpointWithoutRequest
         Description(b => b.AutoTagOverride("Users").WithSummary("下载用户导入 Excel 模板（仅表头）"));
         Get("/api/admin/users/excel/import-template");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserImport);
+        Permissions(PermissionCodes.UserImport);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

@@ -118,6 +118,48 @@ public class WorkflowDefinitionTests
     }
 
     [Fact]
+    public void SoftDeleteDraft_WhenDraft_ShouldSetIsDeleted()
+    {
+        var def = CreateDraft();
+
+        def.SoftDeleteDraft();
+
+        Assert.True(def.IsDeleted);
+    }
+
+    [Fact]
+    public void SoftDeleteDraft_WhenPublished_ShouldThrow()
+    {
+        var def = CreateDraft();
+        def.Publish();
+
+        var ex = Assert.Throws<KnownException>(() => def.SoftDeleteDraft());
+
+        Assert.Equal(ErrorCodes.WorkflowDefinitionCannotDelete, ex.ErrorCode);
+    }
+
+    [Fact]
+    public void SoftDeletePublishedOrArchived_WhenPublished_ShouldSetIsDeleted()
+    {
+        var def = CreateDraft();
+        def.Publish();
+
+        def.SoftDeletePublishedOrArchived();
+
+        Assert.True(def.IsDeleted);
+    }
+
+    [Fact]
+    public void SoftDeletePublishedOrArchived_WhenDraft_ShouldThrow()
+    {
+        var def = CreateDraft();
+
+        var ex = Assert.Throws<KnownException>(() => def.SoftDeletePublishedOrArchived());
+
+        Assert.Equal(ErrorCodes.WorkflowDefinitionCannotDelete, ex.ErrorCode);
+    }
+
+    [Fact]
     public void SoftDelete_WhenNotDeleted_ShouldSetIsDeleted()
     {
         var def = CreateDraft();

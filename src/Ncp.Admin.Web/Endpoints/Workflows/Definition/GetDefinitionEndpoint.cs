@@ -23,7 +23,7 @@ public class GetDefinitionEndpoint(WorkflowDefinitionQuery query) : Endpoint<Get
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("获取流程定义详情"));
         Get("/api/admin/workflow/definitions/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionView);
+        Permissions(PermissionCodes.WorkflowDefinitionView);
     }
 
     public override async Task HandleAsync(GetDefinitionRequest req, CancellationToken ct)

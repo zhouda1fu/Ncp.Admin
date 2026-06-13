@@ -25,7 +25,7 @@ public class ExportWorkflowDefinitionEndpoint(IMediator mediator)
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("导出流程定义 JSON（含身份目录）"));
         Get("/api/admin/workflow/definitions/{id}/export");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionView);
+        Permissions(PermissionCodes.WorkflowDefinitionView);
     }
 
     public override async Task HandleAsync(ExportWorkflowDefinitionRequest req, CancellationToken ct)

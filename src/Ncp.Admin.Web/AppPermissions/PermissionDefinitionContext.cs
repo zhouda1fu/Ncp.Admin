@@ -74,6 +74,16 @@ public static class PermissionDefinitionContext
         backgroundJobManagement.AddChild(PermissionCodes.BackgroundJobTrigger, "触发后台任务");
 
         systemModule.AddChild(PermissionCodes.HomeDashboard, "首页工作台");
+
+        var commonDataAccess = systemAccess.AddPermission(
+            PermissionCodes.CommonDataAccess,
+            "公共基础数据",
+            "业务页面可调用的公共查询接口，与菜单权限解耦");
+        commonDataAccess.AddChild(PermissionCodes.RoleOptionView, "角色下拉查询");
+        commonDataAccess.AddChild(PermissionCodes.UserOptionView, "用户下拉查询");
+        commonDataAccess.AddChild(PermissionCodes.DeptOptionView, "部门树查询");
+        commonDataAccess.AddChild(PermissionCodes.PositionOptionView, "岗位下拉查询");
+        commonDataAccess.AddChild(PermissionCodes.FileAccess, "通用文件访问");
     }
 
     public static IReadOnlyDictionary<string, AppPermission> PermissionsByCode =>

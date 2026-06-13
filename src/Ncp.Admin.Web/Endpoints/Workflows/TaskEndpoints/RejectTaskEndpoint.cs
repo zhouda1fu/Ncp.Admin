@@ -31,7 +31,7 @@ public class RejectTaskEndpoint(IMediator mediator) : Endpoint<RejectTaskRequest
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("驳回任务"));
         Post("/api/admin/workflow/tasks/{taskId}/reject");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
+        Permissions(PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async System.Threading.Tasks.Task HandleAsync(RejectTaskRequest req, CancellationToken ct)

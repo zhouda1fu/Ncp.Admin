@@ -25,7 +25,7 @@ public class GetRoleEndpoint(RoleQuery roleQuery) : Endpoint<GetRoleRequest, Res
         Description(b => b.AutoTagOverride("Roles").WithSummary("获取角色"));
         Get("/api/admin/roles/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleView);
+        Permissions(PermissionCodes.RoleView);
     }
 
     public override async Task HandleAsync(GetRoleRequest req, CancellationToken ct)

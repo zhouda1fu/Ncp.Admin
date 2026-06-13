@@ -11,7 +11,9 @@ import { useVbenForm } from '#/adapter/form';
 import { getDeptTree } from '#/api/system/dept';
 import { fetchFileBlob } from '#/api/system/file';
 import { getRoleList } from '#/api/system/role';
-import { createUser, getUser, updateUser, updateUserRoles } from '#/api/system/user';
+import { createUser, getUser, resetUserPassword, updateUser, updateUserRoles } from '#/api/system/user';
+import { PermissionCodes } from '#/constants/permission-codes';
+import { useAccessStore } from '@vben/stores';
 import { getPublishedDefinitions, startWorkflow } from '#/api/system/workflow';
 import { $t } from '#/locales';
 import { navigateBackToList } from '#/utils/list-return-state';
@@ -114,6 +116,12 @@ async function handleSetAsDeptResponsibleUserChange(checked: boolean) {
   }
 }
 
+const accessStore = useAccessStore();
+
+function canResetPassword() {
+  return accessStore.accessCodes?.includes(PermissionCodes.UserResetPassword) ?? false;
+}
+
 const [Form, formApi] = useVbenForm({
   layout: 'horizontal',
   labelWidth: 120,
@@ -124,6 +132,7 @@ const [Form, formApi] = useVbenForm({
       (path) => formApi.setFieldValue('avatarUrl', path),
       handleDeptChange,
       handleSetAsDeptResponsibleUserChange,
+      canResetPassword(),
     ),
   ),
   showDefaultActions: false,
@@ -298,7 +307,6 @@ async function onSubmit() {
 
     if (id.value) {
       const resetPwd = !!values.resetPassword;
-      const newPlainPassword = resetPwd ? generateRandomPassword8() : '';
       await updateUser(id.value, {
         name: values.name,
         email: values.email,
@@ -310,7 +318,6 @@ async function onSubmit() {
         birthDate: values.birthDate,
         deptId: values.deptId ?? '0',
         deptName,
-        password: resetPwd ? newPlainPassword : '',
         idCardNumber: values.idCardNumber ?? '',
         address: values.address ?? '',
         education: values.education ?? '',
@@ -328,19 +335,12 @@ async function onSubmit() {
       if (values.roleIds && Array.isArray(values.roleIds)) {
         await updateUserRoles(id.value, values.roleIds);
       }
-      if (resetPwd && newPlainPassword) {
+      if (resetPwd) {
+        await resetUserPassword(id.value);
         Modal.info({
           title: $t('system.user.passwordResetSavedTitle'),
           content: h('div', { class: 'mt-2 space-y-2' }, [
             h('p', { class: 'text-muted-foreground text-sm' }, $t('system.user.passwordResetSavedHint')),
-            h(
-              'div',
-              {
-                class:
-                  'rounded border border-border bg-muted px-3 py-2 font-mono text-base tracking-wide select-all',
-              },
-              newPlainPassword,
-            ),
           ]),
           okText: $t('system.user.closeModal'),
           maskClosable: false,

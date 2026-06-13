@@ -20,7 +20,7 @@ public sealed class GetSystemLogOptionsEndpoint(SystemLogQuery query)
         Description(b => b.AutoTagOverride("SystemLog").WithSummary("获取系统日志筛选选项"));
         Get("/api/admin/system-logs/options");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.SystemLogView);
+        Permissions(PermissionCodes.SystemLogView);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

@@ -90,13 +90,7 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, IMemoryCac
             request.ModifierId,
             request.AttendanceRequired);
 
-        // 如果提供了新密码，则更新密码
-        if (!string.IsNullOrEmpty(request.PasswordHash))
-        {
-            user.UpdatePassword(request.PasswordHash);
-        }
-
-        // 分配部门
+        // 密码修改仅允许通过 PasswordResetCommand / 密码重置接口
         if (request.DeptId != DeptId.Unassigned && !string.IsNullOrEmpty(request.DeptName))
         {
             user.AssignDept(request.DeptId, request.DeptName);

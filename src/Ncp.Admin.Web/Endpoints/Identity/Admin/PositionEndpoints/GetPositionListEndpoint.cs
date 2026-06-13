@@ -42,7 +42,7 @@ public class GetPositionListEndpoint(PositionQuery positionQuery) : Endpoint<Get
         Description(b => b.AutoTagOverride("Positions").WithSummary("获取岗位列表"));
         Get("/api/admin/position");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionView);
+        Permissions(PermissionCodes.PositionOptionView, PermissionCodes.PositionView);
     }
 
     public override async Task HandleAsync(GetPositionListRequest req, CancellationToken ct)

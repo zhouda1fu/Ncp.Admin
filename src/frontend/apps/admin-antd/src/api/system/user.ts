@@ -182,6 +182,13 @@ async function createUser(data: {
 }
 
 /**
+ * 重置用户密码（固定重置为系统默认初始密码，需 UserResetPassword 权限）
+ */
+async function resetUserPassword(userId: string) {
+  return requestClient.put('/user/password-reset', { userId });
+}
+
+/**
  * 更新用户
  *
  * @param id 用户 ID
@@ -200,7 +207,6 @@ async function updateUser(
     birthDate: string;
     deptId: string;
     deptName: string;
-    password?: string;
     idCardNumber?: string;
     address?: string;
     education?: string;
@@ -323,6 +329,7 @@ export {
   getUserColumnFacets,
   getUserList,
   importUsersExcel,
+  resetUserPassword,
   updateUser,
   updateUserRoles,
 };

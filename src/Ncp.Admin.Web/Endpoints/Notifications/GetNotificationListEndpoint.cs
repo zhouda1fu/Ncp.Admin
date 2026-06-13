@@ -29,7 +29,7 @@ public class GetNotificationListEndpoint(NotificationQuery notificationQuery)
         Description(b => b.AutoTagOverride("Notifications").WithSummary("获取当前用户的通知列表"));
         Get("/api/notification");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.NotificationView);
+        Permissions(PermissionCodes.NotificationView);
     }
 
     public override async Task HandleAsync(NotificationQueryInput req, CancellationToken ct)

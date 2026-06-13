@@ -212,8 +212,12 @@ public class CreateUserEndpoint(IMediator mediator)
         Tags("Users");
         Post("/api/users");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserCreate);
+        Permissions(PermissionCodes.UserCreate);
     }
+
+当「菜单权限」与「高危/状态相关操作」无法用单一 Endpoint 表达时，优先 **方案 B：拆 Endpoint + 拆 Command**，权限与领域状态在各自入口对齐；**禁止**在 Command Handler 内通过 `IHttpContextAccessor` 读 JWT 做二次鉴权。
+
+示例：删除流程定义 → `DELETE .../draft`（`WorkflowDefinitionDelete`）+ `DELETE .../published`（`WorkflowDefinitionDeletePublished`）；重置密码 → `PUT .../password-reset`（`UserResetPassword`），更新用户（`UserEdit`）不接受 `password` 字段。
 
     public override async Task HandleAsync(CreateUserRequest req, CancellationToken ct)
     {

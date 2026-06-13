@@ -31,7 +31,7 @@ public class BatchUpdateRolePermissionsEndpoint(IMediator mediator)
         Description(b => b.AutoTagOverride("Roles").WithSummary("批量调整角色权限"));
         Put("/api/admin/roles/permissions/batch");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleUpdatePermissions);
+        Permissions(PermissionCodes.RoleUpdatePermissions);
     }
 
     public override async Task HandleAsync(BatchUpdateRolePermissionsRequest req, CancellationToken ct)

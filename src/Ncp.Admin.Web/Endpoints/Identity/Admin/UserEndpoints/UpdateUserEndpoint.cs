@@ -2,10 +2,10 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
-using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Commands.Identity.Admin.UserCommands;
 using Ncp.Admin.Web.AppPermissions;
 using Ncp.Admin.Web.Utils;
@@ -83,7 +83,7 @@ public record UpdateUserResponse(UserId UserId, string Name, string Email);
 /// 更新用户
 /// </summary>
 /// <param name="mediator"></param>
-public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHasher) : Endpoint<UpdateUserRequest, ResponseData<UpdateUserResponse>>
+public class UpdateUserEndpoint(IMediator mediator) : Endpoint<UpdateUserRequest, ResponseData<UpdateUserResponse>>
 {
     public override void Configure()
     {
@@ -91,17 +91,19 @@ public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHash
         Description(b => b.AutoTagOverride("Users").WithSummary("更新用户"));
         Put("/api/admin/user/update");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserEdit);
+        Permissions(PermissionCodes.UserEdit);
     }
 
     public override async Task HandleAsync(UpdateUserRequest request, CancellationToken ct)
     {
-        var modifierId = User.GetUserIdOrNull() ?? UserId.Unassigned;
-        var passwordHash = string.Empty;
         if (!string.IsNullOrWhiteSpace(request.Password))
         {
-            passwordHash = passwordHasher.Hash(request.Password);
+            throw new KnownException(
+                "不允许通过更新用户接口修改密码，请使用密码重置接口。",
+                ErrorCodes.UserPasswordMustUseResetEndpoint);
         }
+
+        var modifierId = User.GetUserIdOrNull() ?? UserId.Unassigned;
         var cmd = new UpdateUserCommand(
             request.UserId,
             request.Name,
@@ -116,7 +118,7 @@ public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHash
             request.DeptName,
             request.PositionId,
             request.PositionName,
-            passwordHash,
+            string.Empty,
             request.IdCardNumber,
             request.Address,
             request.Education,

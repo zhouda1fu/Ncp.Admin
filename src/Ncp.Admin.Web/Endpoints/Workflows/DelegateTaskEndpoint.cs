@@ -31,7 +31,7 @@ public class DelegateTaskEndpoint(IMediator mediator) : Endpoint<DelegateTaskReq
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("委托审批任务"));
         Post("/api/admin/workflow/tasks/{taskId}/delegate");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
+        Permissions(PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async Task HandleAsync(DelegateTaskRequest req, CancellationToken ct)

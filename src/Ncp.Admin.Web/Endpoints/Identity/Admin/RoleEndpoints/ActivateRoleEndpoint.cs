@@ -26,7 +26,7 @@ public class ActivateRoleEndpoint(IMediator mediator) : Endpoint<ActivateRoleReq
         Description(b => b.AutoTagOverride("Roles").WithSummary("激活角色"));
         Put("/api/admin/roles/activate");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleEdit);
+        Permissions(PermissionCodes.RoleEdit);
     }
 
     public override async Task HandleAsync(ActivateRoleRequest req, CancellationToken ct)

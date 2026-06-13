@@ -32,7 +32,7 @@ public class GetUserChangeHistoryEndpoint(ApplicationDbContext dbContext, UserCh
         Description(b => b.AutoTagOverride("Users").WithSummary("用户字段级修改历史"));
         Get("/api/admin/users/{userId}/change-history");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserChangeHistoryView);
+        Permissions(PermissionCodes.UserChangeHistoryView);
     }
 
     public override async Task HandleAsync(GetUserChangeHistoryRequest req, CancellationToken ct)

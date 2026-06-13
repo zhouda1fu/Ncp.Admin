@@ -24,7 +24,7 @@ public class PublishDefinitionEndpoint(IMediator mediator) : Endpoint<PublishDef
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("发布流程定义"));
         Post("/api/admin/workflow/definitions/{id}/publish");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionPublish);
+        Permissions(PermissionCodes.WorkflowDefinitionPublish);
     }
 
     public override async Task HandleAsync(PublishDefinitionRequest req, CancellationToken ct)

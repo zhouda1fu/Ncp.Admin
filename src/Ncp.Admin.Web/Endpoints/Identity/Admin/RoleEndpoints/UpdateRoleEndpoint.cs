@@ -37,7 +37,7 @@ public class UpdateRoleEndpoint(IMediator mediator) : Endpoint<UpdateRoleInfoReq
         Description(b => b.AutoTagOverride("Roles").WithSummary("更新角色"));
         Put("/api/admin/roles/update");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleEdit);
+        Permissions(PermissionCodes.RoleEdit);
     }
 
     public override async Task HandleAsync(UpdateRoleInfoRequest request, CancellationToken ct)

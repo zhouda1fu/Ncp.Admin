@@ -30,7 +30,7 @@ public class GetTaskReturnFieldsEndpoint(IMediator mediator)
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("获取任务退回字段"));
         Get("/api/admin/workflow/tasks/{taskId}/return-fields");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
+        Permissions(PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async System.Threading.Tasks.Task HandleAsync(GetTaskReturnFieldsRequest req, CancellationToken ct)

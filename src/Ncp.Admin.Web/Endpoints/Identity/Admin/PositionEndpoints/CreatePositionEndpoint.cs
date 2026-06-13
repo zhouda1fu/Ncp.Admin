@@ -30,7 +30,7 @@ public class CreatePositionEndpoint(IMediator mediator) : Endpoint<CreatePositio
         Description(b => b.AutoTagOverride("Positions").WithSummary("创建岗位"));
         Post("/api/admin/position");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.PositionCreate);
+        Permissions(PermissionCodes.PositionCreate);
     }
 
     public override async Task HandleAsync(CreatePositionRequest req, CancellationToken ct)

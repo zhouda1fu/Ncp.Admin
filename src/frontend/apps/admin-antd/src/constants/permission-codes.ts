@@ -7,6 +7,13 @@ export const PermissionCodes = {
 
   SystemModule: 'SystemModule',
 
+  CommonDataAccess: 'CommonDataAccess',
+  RoleOptionView: 'RoleOptionView',
+  UserOptionView: 'UserOptionView',
+  DeptOptionView: 'DeptOptionView',
+  PositionOptionView: 'PositionOptionView',
+  FileAccess: 'FileAccess',
+
   RoleManagement: 'RoleManagement',
   RoleCreate: 'RoleCreate',
   RoleEdit: 'RoleEdit',

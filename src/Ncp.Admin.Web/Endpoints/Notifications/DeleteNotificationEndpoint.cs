@@ -19,7 +19,7 @@ public class DeleteNotificationEndpoint(IMediator mediator) : EndpointWithoutReq
         Description(b => b.AutoTagOverride("Notifications").WithSummary("删除通知"));
         Delete("/api/notification/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.NotificationView);
+        Permissions(PermissionCodes.NotificationView);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

@@ -24,7 +24,7 @@ public class GetDeptTreeEndpoint(DeptQuery deptQuery) : Endpoint<GetDeptTreeRequ
         Description(b => b.AutoTagOverride("Depts").WithSummary("获取部门树"));
         Get("/api/admin/dept/tree");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptView);
+        Permissions(PermissionCodes.DeptOptionView, PermissionCodes.DeptView);
     }
 
     public override async Task HandleAsync(GetDeptTreeRequest req, CancellationToken ct)

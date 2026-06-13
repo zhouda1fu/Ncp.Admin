@@ -105,6 +105,7 @@ function useStatusTagOptions(): Array<{ color: string; label: string; value: num
 
 export function useColumns<T = WorkflowApi.WorkflowDefinition>(
   onActionClick: OnActionClickFn<T>,
+  canDeleteDraft: () => boolean = () => false,
   canDeletePublished: () => boolean = () => false,
 ): VxeTableGridOptions['columns'] {
   return [
@@ -183,7 +184,8 @@ export function useColumns<T = WorkflowApi.WorkflowDefinition>(
             code: 'delete',
             text: $t('common.delete'),
             show: (row: WorkflowApi.WorkflowDefinition) =>
-              row.status === 0 || canDeletePublished(),
+              (row.status === 0 && canDeleteDraft())
+              || ((row.status === 1 || row.status === 2) && canDeletePublished()),
           },
         ],
       },

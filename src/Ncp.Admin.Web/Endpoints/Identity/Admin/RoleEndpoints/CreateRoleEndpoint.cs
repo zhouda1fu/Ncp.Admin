@@ -43,7 +43,7 @@ public class CreateRoleEndpoint(IMediator mediator) : Endpoint<CreateRoleRequest
         Description(b => b.AutoTagOverride("Roles").WithSummary("创建角色"));
         Post("/api/admin/roles");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.RoleCreate);
+        Permissions(PermissionCodes.RoleCreate);
     }
 
     public override async Task HandleAsync(CreateRoleRequest req, CancellationToken ct)

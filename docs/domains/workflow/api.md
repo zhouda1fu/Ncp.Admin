@@ -17,7 +17,8 @@
 | 更新定义 | `updateDefinition` | `PUT /workflow/definitions` |
 | 发布定义 | `publishDefinition` | `POST /workflow/definitions/{id}/publish` |
 | 创建新版本 | `createDefinitionNewVersion` | `POST /workflow/definitions/{id}/new-version` |
-| 删除定义 | `deleteDefinition` | `DELETE /workflow/definitions/{id}` |
+| 删除草稿定义 | `deleteDraftDefinition` | `DELETE /workflow/definitions/{id}/draft` |
+| 删除已发布/归档定义 | `deletePublishedDefinition` | `DELETE /workflow/definitions/{id}/published` |
 | 条件字段 | `getConditionFields` | `GET /workflow/condition-fields/{category}` |
 
 ### 流程实例

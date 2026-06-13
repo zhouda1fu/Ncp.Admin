@@ -42,7 +42,7 @@ public class UpdateDeptEndpoint(IMediator mediator) : Endpoint<UpdateDeptRequest
         Description(b => b.AutoTagOverride("Depts").WithSummary("更新部门"));
         Put("/api/admin/dept");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptEdit);
+        Permissions(PermissionCodes.DeptEdit);
     }
 
     public override async Task HandleAsync(UpdateDeptRequest req, CancellationToken ct)

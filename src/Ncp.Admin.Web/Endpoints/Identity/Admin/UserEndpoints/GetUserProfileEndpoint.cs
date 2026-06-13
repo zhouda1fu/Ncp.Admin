@@ -47,7 +47,7 @@ public class GetUserProfileEndpoint(UserQuery userQuery) : Endpoint<GetUserProfi
         Description(b => b.AutoTagOverride("Users"));
         Get("/api/admin/user/profile/{userId}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserView);
+        Permissions(PermissionCodes.UserOptionView, PermissionCodes.UserView);
     }
 
     public override async Task HandleAsync(GetUserProfileRequest req, CancellationToken ct)

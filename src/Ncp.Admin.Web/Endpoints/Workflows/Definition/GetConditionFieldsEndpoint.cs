@@ -28,7 +28,7 @@ public class GetConditionFieldsEndpoint(WorkflowConditionFieldsProvider conditio
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("获取流程条件字段"));
         Get("/api/admin/workflow/condition-fields/{category}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionView);
+        Permissions(PermissionCodes.WorkflowDefinitionView);
     }
 
     public override async Task HandleAsync(GetConditionFieldsRequest req, CancellationToken ct)

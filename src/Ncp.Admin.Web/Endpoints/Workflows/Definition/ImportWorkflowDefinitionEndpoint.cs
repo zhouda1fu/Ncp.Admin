@@ -49,7 +49,7 @@ public class ImportWorkflowDefinitionEndpoint(IMediator mediator)
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("从导出文件导入流程定义（按名称重映射）"));
         Post("/api/admin/workflow/definitions/import");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionCreate);
+        Permissions(PermissionCodes.WorkflowDefinitionCreate);
     }
 
     public override async Task HandleAsync(ImportWorkflowDefinitionRequest req, CancellationToken ct)

@@ -30,7 +30,7 @@ public class ReadTaskEndpoint(IMediator mediator) : Endpoint<ReadTaskRequest, Re
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("标记抄送任务已读"));
         Post("/api/admin/workflow/tasks/{taskId}/read");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
+        Permissions(PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async Task HandleAsync(ReadTaskRequest req, CancellationToken ct)

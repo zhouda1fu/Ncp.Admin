@@ -26,7 +26,7 @@ public class DeleteUserEndpoint(IMediator mediator) : Endpoint<DeleteUserRequest
         Description(b => b.AutoTagOverride("Users").WithSummary("删除用户"));
         Delete("/api/admin/users/{userId}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserDelete);
+        Permissions(PermissionCodes.UserDelete);
     }
 
     public override async Task HandleAsync(DeleteUserRequest request, CancellationToken ct)

@@ -19,8 +19,8 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
     {
         using var scope = Fixture.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.Name == "管理员", TestContext.Current.CancellationToken);
-        return role?.Id ?? throw new InvalidOperationException("找不到管理员角色");
+        var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.Name == "超级管理员", TestContext.Current.CancellationToken);
+        return role?.Id ?? throw new InvalidOperationException("找不到超级管理员角色");
     }
 
     /// <summary>
@@ -30,8 +30,8 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
     {
         using var scope = Fixture.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var dept = await dbContext.Depts.FirstOrDefaultAsync(d => d.Name == "研发", TestContext.Current.CancellationToken);
-        return dept?.Id ?? throw new InvalidOperationException("找不到研发部门");
+        var dept = await dbContext.Depts.FirstOrDefaultAsync(d => d.Name == "总公司", TestContext.Current.CancellationToken);
+        return dept?.Id ?? throw new InvalidOperationException("找不到总公司部门");
     }
 
     /// <summary>

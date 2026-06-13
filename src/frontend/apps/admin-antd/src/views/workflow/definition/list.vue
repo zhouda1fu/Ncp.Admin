@@ -21,7 +21,8 @@ import {
   WORKFLOW_DEFINITION_EXPORT_LEGACY_VERSION,
   WORKFLOW_DEFINITION_EXPORT_VERSION,
   createDefinitionNewVersion,
-  deleteDefinition,
+  deleteDraftDefinition,
+  deletePublishedDefinition,
   exportWorkflowDefinition,
   getDefinitionList,
   importWorkflowDefinition,
@@ -56,6 +57,9 @@ function hasPermission(code: string) {
   return accessStore.accessCodes?.includes(code) ?? false;
 }
 
+const canDeleteDraft = () =>
+  hasPermission(PermissionCodes.WorkflowDefinitionDelete);
+
 const canDeletePublished = () =>
   hasPermission(PermissionCodes.WorkflowDefinitionDeletePublished);
 
@@ -73,7 +77,7 @@ const [Grid, gridApi] = useVbenVxeGrid<WorkflowApi.WorkflowDefinition>({
     'cell-dblclick': (event: any) => handleVxeCellDblclick(event, onRowDblclick),
   } as any,
   gridOptions: {
-    columns: useColumns(onActionClick, canDeletePublished),
+    columns: useColumns(onActionClick, canDeleteDraft, canDeletePublished),
     height: 'auto',
     keepSource: true,
     checkboxConfig: { highlight: true },
@@ -342,7 +346,10 @@ function onDelete(row: WorkflowApi.WorkflowDefinition) {
       duration: 0,
       key: 'action_process_msg',
     });
-    deleteDefinition(row.id)
+    const deleteRequest = isPublishedOrArchived
+      ? deletePublishedDefinition(row.id)
+      : deleteDraftDefinition(row.id);
+    deleteRequest
       .then(() => {
         message.success({
           content: $t('ui.actionMessage.deleteSuccess', [row.name]),

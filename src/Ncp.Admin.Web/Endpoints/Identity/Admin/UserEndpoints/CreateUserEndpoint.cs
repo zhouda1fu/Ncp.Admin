@@ -91,7 +91,7 @@ public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpo
         Description(b => b.AutoTagOverride("Users").WithSummary("创建用户"));
         Post("/api/admin/users");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserCreate);
+        Permissions(PermissionCodes.UserCreate);
     }
 
     public override async Task HandleAsync(CreateUserRequest request, CancellationToken ct)

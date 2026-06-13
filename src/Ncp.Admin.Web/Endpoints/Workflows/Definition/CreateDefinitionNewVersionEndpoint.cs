@@ -37,7 +37,7 @@ public class CreateDefinitionNewVersionEndpoint(IMediator mediator)
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("基于已有流程定义创建新版本"));
         Post("/api/admin/workflow/definitions/{id}/new-version");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionCreate);
+        Permissions(PermissionCodes.WorkflowDefinitionCreate);
     }
 
     public override async Task HandleAsync(CreateDefinitionNewVersionRequest req, CancellationToken ct)

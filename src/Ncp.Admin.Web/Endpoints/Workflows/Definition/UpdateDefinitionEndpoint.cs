@@ -29,7 +29,7 @@ public class UpdateDefinitionEndpoint(IMediator mediator) : Endpoint<UpdateDefin
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("更新流程定义"));
         Put("/api/admin/workflow/definitions");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionEdit);
+        Permissions(PermissionCodes.WorkflowDefinitionEdit);
     }
 
     public override async Task HandleAsync(UpdateDefinitionRequest req, CancellationToken ct)

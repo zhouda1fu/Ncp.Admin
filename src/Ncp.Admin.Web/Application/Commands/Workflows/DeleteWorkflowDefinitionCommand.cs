@@ -1,60 +1,78 @@
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Services.Workflow;
-using Ncp.Admin.Web.AppPermissions;
-using Ncp.Admin.Web.Services;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
 /// <summary>
-/// 删除流程定义命令
+/// 删除草稿流程定义命令
 /// </summary>
-public record DeleteWorkflowDefinitionCommand(WorkflowDefinitionId Id) : ICommand;
+/// <param name="Id">流程定义 ID</param>
+public record DeleteDraftWorkflowDefinitionCommand(WorkflowDefinitionId Id) : ICommand;
 
 /// <summary>
-/// 删除流程定义命令验证器
+/// 删除草稿流程定义命令验证器
 /// </summary>
-public class DeleteWorkflowDefinitionCommandValidator : AbstractValidator<DeleteWorkflowDefinitionCommand>
+public class DeleteDraftWorkflowDefinitionCommandValidator : AbstractValidator<DeleteDraftWorkflowDefinitionCommand>
 {
-    public DeleteWorkflowDefinitionCommandValidator()
+    public DeleteDraftWorkflowDefinitionCommandValidator()
     {
         RuleFor(c => c.Id).NotNull().WithMessage("流程定义ID不能为空");
     }
 }
 
 /// <summary>
-/// 删除流程定义命令处理器
+/// 删除草稿流程定义命令处理器
 /// </summary>
-public class DeleteWorkflowDefinitionCommandHandler(
+public class DeleteDraftWorkflowDefinitionCommandHandler(
     IWorkflowDefinitionRepository repository,
-    WorkflowDefinitionCacheInvalidator cacheInvalidator,
-    IHttpContextAccessor httpContextAccessor)
-    : ICommandHandler<DeleteWorkflowDefinitionCommand>
+    WorkflowDefinitionCacheInvalidator cacheInvalidator)
+    : ICommandHandler<DeleteDraftWorkflowDefinitionCommand>
 {
-    public async Task Handle(DeleteWorkflowDefinitionCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteDraftWorkflowDefinitionCommand request, CancellationToken cancellationToken)
     {
         var definition = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
 
-        if (definition.Status is WorkflowDefinitionStatus.Published or WorkflowDefinitionStatus.Archived
-            && !HasDeletePublishedPermission())
-        {
-            throw new KnownException(
-                "已发布或已归档的流程定义不能删除，请保留历史版本或创建新版本后使用新流程。",
-                ErrorCodes.WorkflowDefinitionCannotDelete);
-        }
-
-        definition.SoftDelete();
+        definition.SoftDeleteDraft();
 
         cacheInvalidator.InvalidateDefinitionWrite(request.Id);
     }
+}
 
-    private bool HasDeletePublishedPermission()
+/// <summary>
+/// 删除已发布或已归档流程定义命令
+/// </summary>
+/// <param name="Id">流程定义 ID</param>
+public record DeletePublishedWorkflowDefinitionCommand(WorkflowDefinitionId Id) : ICommand;
+
+/// <summary>
+/// 删除已发布或已归档流程定义命令验证器
+/// </summary>
+public class DeletePublishedWorkflowDefinitionCommandValidator
+    : AbstractValidator<DeletePublishedWorkflowDefinitionCommand>
+{
+    public DeletePublishedWorkflowDefinitionCommandValidator()
     {
-        var user = httpContextAccessor.HttpContext?.User;
-        return user?.Claims.Any(c =>
-            c.Type == JwtPermissionClaimTypes.Permissions
-            && (c.Value == PermissionCodes.WorkflowDefinitionDeletePublished
-                || c.Value == PermissionCodes.AllApiAccess)) == true;
+        RuleFor(c => c.Id).NotNull().WithMessage("流程定义ID不能为空");
+    }
+}
+
+/// <summary>
+/// 删除已发布或已归档流程定义命令处理器
+/// </summary>
+public class DeletePublishedWorkflowDefinitionCommandHandler(
+    IWorkflowDefinitionRepository repository,
+    WorkflowDefinitionCacheInvalidator cacheInvalidator)
+    : ICommandHandler<DeletePublishedWorkflowDefinitionCommand>
+{
+    public async Task Handle(DeletePublishedWorkflowDefinitionCommand request, CancellationToken cancellationToken)
+    {
+        var definition = await repository.GetAsync(request.Id, cancellationToken)
+            ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
+
+        definition.SoftDeletePublishedOrArchived();
+
+        cacheInvalidator.InvalidateDefinitionWrite(request.Id);
     }
 }

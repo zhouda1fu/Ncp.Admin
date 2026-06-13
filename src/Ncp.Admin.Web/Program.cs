@@ -83,6 +83,7 @@ try
     builder.Services.AddMemoryCache();
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<IClaimsTransformation, PermissionClaimsTransformation>();
+    builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, AllApiAccessAuthorizationHandler>();
     builder.Services.Configure<WeChatOfficialAccountOptions>(
         builder.Configuration.GetSection(WeChatOfficialAccountOptions.SectionName));
     builder.Services.Configure<SystemLogOptions>(

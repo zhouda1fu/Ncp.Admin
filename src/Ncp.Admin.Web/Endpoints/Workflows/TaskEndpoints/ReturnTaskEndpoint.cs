@@ -32,7 +32,7 @@ public class ReturnTaskEndpoint(IMediator mediator) : Endpoint<ReturnTaskRequest
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("退回任务"));
         Post("/api/admin/workflow/tasks/{taskId}/return");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
+        Permissions(PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async System.Threading.Tasks.Task HandleAsync(ReturnTaskRequest req, CancellationToken ct)

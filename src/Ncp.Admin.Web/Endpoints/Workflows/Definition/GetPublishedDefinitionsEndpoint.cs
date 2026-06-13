@@ -17,7 +17,7 @@ public class GetPublishedDefinitionsEndpoint(WorkflowDefinitionQuery query) : En
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("获取已发布的流程定义列表（供发起流程时选择）"));
         Get("/api/admin/workflow/definitions/published");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowStart);
+        Permissions(PermissionCodes.WorkflowStart);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

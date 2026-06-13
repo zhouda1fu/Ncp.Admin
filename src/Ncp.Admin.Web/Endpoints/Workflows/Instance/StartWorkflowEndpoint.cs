@@ -37,7 +37,7 @@ public class StartWorkflowEndpoint(IMediator mediator) : Endpoint<StartWorkflowR
         Description(b => b.AutoTagOverride("WorkflowInstances").WithSummary("发起流程"));
         Post("/api/admin/workflow/instances");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowStart);
+        Permissions(PermissionCodes.WorkflowStart);
     }
 
     public override async Task HandleAsync(StartWorkflowRequest req, CancellationToken ct)

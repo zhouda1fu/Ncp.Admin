@@ -29,7 +29,7 @@ public class ReorderDeptSortEndpoint(IMediator mediator)
         Description(b => b.AutoTagOverride("Depts").WithSummary("重排同级部门排序"));
         Post("/api/admin/dept/reorder");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.DeptEdit);
+        Permissions(PermissionCodes.DeptEdit);
     }
 
     /// <inheritdoc />

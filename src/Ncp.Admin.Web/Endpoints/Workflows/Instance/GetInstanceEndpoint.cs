@@ -26,7 +26,7 @@ public class GetInstanceEndpoint(WorkflowInstanceQuery query) : Endpoint<GetInst
         Description(b => b.AutoTagOverride("WorkflowInstances").WithSummary("获取流程实例详情（包含审批时间线）"));
         Get("/api/admin/workflow/instances/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowInstanceView);
+        Permissions(PermissionCodes.WorkflowInstanceView);
     }
 
     public override async Task HandleAsync(GetInstanceRequest req, CancellationToken ct)

@@ -33,7 +33,7 @@ public class ApproveTaskEndpoint(IMediator mediator) : Endpoint<ApproveTaskReque
         Description(b => b.AutoTagOverride("WorkflowTasks").WithSummary("审批通过"));
         Post("/api/admin/workflow/tasks/{taskId}/approve");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowTaskApprove);
+        Permissions(PermissionCodes.WorkflowTaskApprove);
     }
 
     public override async System.Threading.Tasks.Task HandleAsync(ApproveTaskRequest req, CancellationToken ct)

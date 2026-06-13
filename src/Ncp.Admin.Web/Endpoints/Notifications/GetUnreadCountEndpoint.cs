@@ -22,7 +22,7 @@ public class GetUnreadCountEndpoint(NotificationQuery notificationQuery) : Endpo
         Description(b => b.AutoTagOverride("Notifications").WithSummary("获取当前用户未读通知数量"));
         Get("/api/notification/unread-count");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.NotificationView);
+        Permissions(PermissionCodes.NotificationView);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

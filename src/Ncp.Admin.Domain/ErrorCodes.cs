@@ -66,6 +66,11 @@ public sealed class ErrorCodes
     public const int SessionReplaced = 100011;
 
     /// <summary>
+    /// 更新用户接口不允许修改密码，须调用密码重置接口
+    /// </summary>
+    public const int UserPasswordMustUseResetEndpoint = 100012;
+
+    /// <summary>
     /// 导出员工档案行数超过上限
     /// </summary>
     public const int EmployeeProfileExportTooManyRows = 100010;

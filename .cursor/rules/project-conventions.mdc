@@ -51,8 +51,8 @@ Ncp.Admin.sln
 | 1 | `AppPermissions/PermissionCodes.cs` | 新增权限常量 |
 | 2 | `AppPermissions/PermissionDefinitionContext.cs` | 对应父权限下 `AddChild(权限码, "显示名")` |
 | 3 | `AppPermissions/PermissionMapper.cs` | `_permissionDescriptionMap` 增加条目 |
-| 4 | 各端点 | `Permissions(PermissionCodes.AllApiAccess, PermissionCodes.XxxView)` 等 |
-| 5 | `Utils/SeedDatabaseExtension.cs` | 需默认给管理员时在 `adminPermissionCodes` 中加入新权限码 |
+| 4 | 各端点 | 公共查询：`Permissions(PermissionCodes.XxxOptionView, PermissionCodes.XxxView)`；写操作：`Permissions(PermissionCodes.XxxCreate)` 等单权限；勿在普通 Endpoint 使用 `AllApiAccess` |
+| 5 | `Utils/PlatformAdminSeeder.cs` | 新权限码由反射自动纳入默认管理员；`AllApiAccess` 仍排除，仅超级管理员角色手工勾选 |
 
 ## API 端点 Request/Response（`src/Ncp.Admin.Web/Endpoints/**/*.cs`）
 

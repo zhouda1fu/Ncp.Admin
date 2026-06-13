@@ -26,7 +26,7 @@ public class CancelWorkflowEndpoint(IMediator mediator) : Endpoint<CancelWorkflo
         Description(b => b.AutoTagOverride("WorkflowInstances").WithSummary("撤销流程"));
         Post("/api/admin/workflow/instances/{id}/cancel");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowCancel);
+        Permissions(PermissionCodes.WorkflowCancel);
     }
 
     public override async Task HandleAsync(CancelWorkflowRequest req, CancellationToken ct)

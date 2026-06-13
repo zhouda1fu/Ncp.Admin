@@ -35,7 +35,7 @@ public class CreateDefinitionEndpoint(IMediator mediator) : Endpoint<CreateDefin
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("创建流程定义"));
         Post("/api/admin/workflow/definitions");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionCreate);
+        Permissions(PermissionCodes.WorkflowDefinitionCreate);
     }
 
     public override async Task HandleAsync(CreateDefinitionRequest req, CancellationToken ct)

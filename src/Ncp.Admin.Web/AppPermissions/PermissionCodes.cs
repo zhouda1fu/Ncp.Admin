@@ -11,6 +11,15 @@ public static class PermissionCodes
     public const string SystemModule = nameof(SystemModule);
     #endregion
 
+    #region 公共基础数据
+    public const string CommonDataAccess = nameof(CommonDataAccess);
+    public const string RoleOptionView = nameof(RoleOptionView);
+    public const string UserOptionView = nameof(UserOptionView);
+    public const string DeptOptionView = nameof(DeptOptionView);
+    public const string PositionOptionView = nameof(PositionOptionView);
+    public const string FileAccess = nameof(FileAccess);
+    #endregion
+
     #region 角色
     public const string RoleManagement = nameof(RoleManagement);
     public const string RoleCreate = nameof(RoleCreate);

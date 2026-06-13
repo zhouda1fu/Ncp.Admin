@@ -18,7 +18,7 @@ public class GetAllUsersEndpoint(UserQuery userQuery) : Endpoint<UserQueryInput,
         Description(b => b.AutoTagOverride("Users"));
         Get("/api/admin/users");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserView);
+        Permissions(PermissionCodes.UserOptionView, PermissionCodes.UserView);
     }
 
     public override async Task HandleAsync(UserQueryInput req, CancellationToken ct)

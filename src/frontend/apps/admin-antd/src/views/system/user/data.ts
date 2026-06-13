@@ -38,6 +38,7 @@ export function useFormSchema(
   setAvatarUrlPath?: SetAvatarUrlPathFn,
   onDeptChange?: UserDeptChangeFn,
   onSetAsDeptResponsibleUserChange?: SetAsDeptResponsibleUserChangeFn,
+  showResetPassword = false,
 ): VbenFormSchema[] {
   return [
     {
@@ -281,7 +282,7 @@ export function useFormSchema(
               message: $t('ui.formRules.minLength', [$t('system.user.password'), 6]),
             }).optional(),
     },
-    ...(mode === 'edit'
+    ...(mode === 'edit' && showResetPassword
       ? ([
           {
             component: 'Checkbox',

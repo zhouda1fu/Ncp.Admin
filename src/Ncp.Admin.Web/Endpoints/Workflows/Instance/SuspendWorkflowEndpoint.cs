@@ -26,7 +26,7 @@ public class SuspendWorkflowEndpoint(IMediator mediator) : Endpoint<SuspendWorkf
         Description(b => b.AutoTagOverride("WorkflowInstances").WithSummary("挂起流程"));
         Post("/api/admin/workflow/instances/{id}/suspend");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowMonitor);
+        Permissions(PermissionCodes.WorkflowMonitor);
     }
 
     public override async Task HandleAsync(SuspendWorkflowRequest req, CancellationToken ct)

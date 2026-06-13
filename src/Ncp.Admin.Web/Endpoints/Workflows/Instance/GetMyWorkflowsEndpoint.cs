@@ -19,7 +19,7 @@ public class GetMyWorkflowsEndpoint(WorkflowInstanceQuery query) : Endpoint<Work
         Description(b => b.AutoTagOverride("WorkflowInstances").WithSummary("获取我发起的流程"));
         Get("/api/admin/workflow/my-workflows");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowInstanceView);
+        Permissions(PermissionCodes.WorkflowInstanceView);
     }
 
     public override async Task HandleAsync(WorkflowInstanceQueryInput req, CancellationToken ct)

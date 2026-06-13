@@ -24,7 +24,7 @@ public sealed class RemoveRecurringJobEndpoint(RecurringJobManagementService ser
         Tags("BackgroundJobs");
         Delete("/api/admin/background-jobs/recurring/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.BackgroundJobManagement);
+        Permissions(PermissionCodes.BackgroundJobManagement);
         Description(b => b.AutoTagOverride("BackgroundJobs").WithSummary("移除定时任务"));
         Idempotency();
     }

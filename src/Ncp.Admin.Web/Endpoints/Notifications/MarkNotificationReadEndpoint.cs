@@ -19,7 +19,7 @@ public class MarkNotificationReadEndpoint(IMediator mediator) : EndpointWithoutR
         Description(b => b.AutoTagOverride("Notifications").WithSummary("标记通知为已读"));
         Put("/api/notification/{id}/read");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.NotificationView);
+        Permissions(PermissionCodes.NotificationView);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

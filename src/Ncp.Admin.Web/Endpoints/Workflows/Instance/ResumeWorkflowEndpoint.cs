@@ -26,7 +26,7 @@ public class ResumeWorkflowEndpoint(IMediator mediator) : Endpoint<ResumeWorkflo
         Description(b => b.AutoTagOverride("WorkflowInstances").WithSummary("恢复流程"));
         Post("/api/admin/workflow/instances/{id}/resume");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowMonitor);
+        Permissions(PermissionCodes.WorkflowMonitor);
     }
 
     public override async Task HandleAsync(ResumeWorkflowRequest req, CancellationToken ct)
