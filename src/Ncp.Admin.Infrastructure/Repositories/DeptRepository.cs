@@ -9,10 +9,12 @@ namespace Ncp.Admin.Infrastructure.Repositories;
 /// </summary>
 public interface IDeptRepository : IRepository<Dept, DeptId>
 {
-    /// <summary>
-    /// 查询主管为指定用户的部门 ID 列表（用于通过聚合根清除主管关联）
-    /// </summary>
-    Task<IReadOnlyList<DeptId>> GetDeptIdsWhereManagerIsUserAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<Dept?> GetWithResponsibleUsersAsync(DeptId id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Dept>> GetDeptsWithResponsibleUserAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<bool> HasActiveChildrenAsync(DeptId id, CancellationToken cancellationToken = default);
+    Task<bool> HasUsersAsync(DeptId id, CancellationToken cancellationToken = default);
+    Task<bool> HasActivePositionsAsync(DeptId id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Dept>> GetActiveSiblingsAsync(DeptId parentId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -20,12 +22,52 @@ public interface IDeptRepository : IRepository<Dept, DeptId>
 /// </summary>
 public class DeptRepository(ApplicationDbContext context) : RepositoryBase<Dept, DeptId, ApplicationDbContext>(context), IDeptRepository
 {
-    public async Task<IReadOnlyList<DeptId>> GetDeptIdsWhereManagerIsUserAsync(UserId userId, CancellationToken cancellationToken = default)
+    public Task<Dept?> GetWithResponsibleUsersAsync(DeptId id, CancellationToken cancellationToken = default)
+    {
+        return context.Depts
+            .Include(d => d.ResponsibleUsers)
+            .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Dept>> GetDeptsWithResponsibleUserAsync(
+        UserId userId,
+        CancellationToken cancellationToken = default)
+    {
+        var deptIds = await context.DeptResponsibleUsers
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .Select(x => x.DeptId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (deptIds.Count == 0)
+            return [];
+
+        return await context.Depts
+            .Include(d => d.ResponsibleUsers)
+            .Where(d => deptIds.Contains(d.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<bool> HasActiveChildrenAsync(DeptId id, CancellationToken cancellationToken = default)
+    {
+        return context.Depts.AnyAsync(d => d.ParentId == id && !d.IsDeleted, cancellationToken);
+    }
+
+    public Task<bool> HasUsersAsync(DeptId id, CancellationToken cancellationToken = default)
+    {
+        return context.UserDepts.AnyAsync(ud => ud.DeptId == id, cancellationToken);
+    }
+
+    public Task<bool> HasActivePositionsAsync(DeptId id, CancellationToken cancellationToken = default)
+    {
+        return context.Positions.AnyAsync(p => p.DeptId == id && !p.IsDeleted, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Dept>> GetActiveSiblingsAsync(DeptId parentId, CancellationToken cancellationToken = default)
     {
         return await context.Depts
-            .AsNoTracking()
-            .Where(d => d.ManagerId == userId)
-            .Select(d => d.Id)
+            .Where(d => d.ParentId == parentId && !d.IsDeleted)
             .ToListAsync(cancellationToken);
     }
 }

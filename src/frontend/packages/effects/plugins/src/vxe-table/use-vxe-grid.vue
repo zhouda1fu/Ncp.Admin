@@ -315,7 +315,7 @@ async function init() {
       '[Vben Vxe Table]: The formConfig in the grid is not supported, please use the `formOptions` props',
     );
   }
-  props.api?.setState?.({ gridOptions: defaultGridOptions });
+  props.api?.setState?.({ gridOptions: defaultGridOptions as any });
   // form 由 vben-form 代替，所以需要保证query相关事件可以拿到参数
   extendProxyOptions(props.api, defaultGridOptions, () =>
     formApi.getLatestSubmissionValues(),
@@ -396,16 +396,23 @@ onUnmounted(() => {
         <slot :name="slotName" v-bind="slotProps"></slot>
       </template>
       <template #toolbar-tools="slotProps">
-        <slot name="toolbar-tools" v-bind="slotProps"></slot>
-        <VxeButton
-          icon="vxe-icon-search"
-          circle
-          class="ml-2"
-          v-if="gridOptions?.toolbarConfig?.search && !!formOptions"
-          :status="showSearchForm ? 'primary' : undefined"
-          :title="$t('common.search')"
-          @click="onSearchBtnClick"
-        />
+        <div
+          class="flex min-w-0 flex-wrap items-center justify-end gap-2"
+          data-vxe-toolbar-tools-wrap
+        >
+          <div class="flex min-w-0 flex-wrap items-center gap-2">
+            <slot name="toolbar-tools" v-bind="slotProps"></slot>
+          </div>
+          <VxeButton
+            icon="vxe-icon-search"
+            circle
+            class="shrink-0"
+            v-if="gridOptions?.toolbarConfig?.search && !!formOptions"
+            :status="showSearchForm ? 'primary' : undefined"
+            :title="$t('common.search')"
+            @click="onSearchBtnClick"
+          />
+        </div>
       </template>
 
       <!-- form表单 -->

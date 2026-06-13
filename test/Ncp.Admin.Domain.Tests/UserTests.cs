@@ -1,5 +1,7 @@
+using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.Tests;
 
@@ -27,7 +29,7 @@ public class UserTests
             "email@test.com",
             "male",
             DateTimeOffset.UtcNow.AddYears(-20),
-            new UserId(0),
+            UserId.Unassigned,
             "110101199001010000",
             "地址",
             "本科",
@@ -60,7 +62,7 @@ public class UserTests
             "email@test.com",
             "male",
             DateTimeOffset.UtcNow.AddYears(-20),
-            new UserId(0),
+            UserId.Unassigned,
             "110101199001010000",
             "地址",
             "本科",
@@ -90,7 +92,7 @@ public class UserTests
             "email@test.com",
             "male",
             DateTimeOffset.UtcNow.AddYears(-20),
-            new UserId(0),
+            UserId.Unassigned,
             "110101199001010000",
             "地址",
             "本科",
@@ -150,7 +152,7 @@ public class UserTests
             "email@test.com",
             "male",
             DateTimeOffset.UtcNow.AddYears(-20),
-            new UserId(0),
+            UserId.Unassigned,
             "110101199001010000",
             "地址",
             "本科",
@@ -178,16 +180,50 @@ public class UserTests
             "email@test.com",
             "male",
             DateTimeOffset.UtcNow.AddYears(-20),
-            new UserId(0),
+            UserId.Unassigned,
             "110101199001010000",
             "地址",
             "本科",
             "毕业院校",
             "https://example.com/avatar.png");
 
-        user.SoftDelete(new UserId(0));
+        user.SoftDelete(UserId.Unassigned);
 
         Assert.True(user.IsDeleted);
+    }
+
+    /// <summary>
+    /// 请求追加为部门负责人时，用户聚合只发布跨聚合协作事件。
+    /// </summary>
+    [Fact]
+    public void RequestDeptResponsibleUserAssignment_WithValidDept_ShouldRaiseDomainEvent()
+    {
+        var user = new User(
+            "test",
+            "13800000000",
+            "pwd",
+            [],
+            "real",
+            1,
+            "email@test.com",
+            "male",
+            DateTimeOffset.UtcNow.AddYears(-20),
+            UserId.Unassigned,
+            "110101199001010000",
+            "地址",
+            "本科",
+            "毕业院校",
+            "https://example.com/avatar.png");
+        user.ClearDomainEvents();
+
+        var deptId = new DeptId(1001);
+        user.RequestDeptResponsibleUserAssignment(deptId, true);
+
+        var domainEvent = Assert.IsType<UserDeptResponsibleUserAssignmentRequestedDomainEvent>(
+            Assert.Single(user.GetDomainEvents()));
+        Assert.Equal(user.Id, domainEvent.UserId);
+        Assert.Equal(deptId, domainEvent.DeptId);
+        Assert.True(domainEvent.SetAsDefault);
     }
 
     /// <summary>

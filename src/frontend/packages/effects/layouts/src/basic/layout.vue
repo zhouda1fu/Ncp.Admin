@@ -269,6 +269,7 @@ const headerSlots = computed(() => {
         :fit="preferences.logo.fit"
         :class="logoClass"
         :collapsed="logoCollapsed"
+        :logo-size="36"
         :src="preferences.logo.source"
         :src-dark="preferences.logo.sourceDark"
         :text="preferences.app.name"
@@ -329,6 +330,7 @@ const headerSlots = computed(() => {
         :collapse="preferences.sidebar.collapsed"
         :collapse-show-title="preferences.sidebar.collapsedShowTitle"
         :default-active="sidebarActive"
+        :default-openeds="preferences.navigation.defaultOpeneds ?? []"
         :menus="wrapperMenus(sidebarMenus)"
         :rounded="isMenuRounded"
         :theme="sidebarTheme"
@@ -362,6 +364,9 @@ const headerSlots = computed(() => {
       <VbenLogo
         v-if="preferences.logo.enable"
         :fit="preferences.logo.fit"
+        :logo-size="36"
+        :src="preferences.logo.source"
+        :src-dark="preferences.logo.sourceDark"
         :text="preferences.app.name"
         :theme="theme"
       >

@@ -4,12 +4,11 @@ import type { WorkflowApi } from '#/api/system/workflow';
 
 import { $t } from '#/locales';
 
-/** 流程分类选项：仅保留用户管理、订单审批 */
+/** 平台脚手架流程分类选项 */
 export function useCategoryOptions() {
   return [
     { label: $t('system.workflow.category.userManagement'), value: 'CreateUser' },
-    { label: $t('system.workflow.category.order'), value: 'Order' },
-    { label: $t('system.workflow.category.customerSeaVoid'), value: 'CustomerSeaVoid' },
+    { label: $t('system.workflow.category.general'), value: 'General' },
   ];
 }
 
@@ -44,6 +43,9 @@ export function useGridFormSchema(): VbenFormSchema[] {
   return [
     {
       component: 'Input',
+      componentProps: {
+        class: 'w-full',
+      },
       fieldName: 'name',
       label: $t('system.workflow.definition.flowName'),
     },
@@ -51,6 +53,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
       component: 'Select',
       componentProps: {
         allowClear: true,
+        class: 'w-full',
         options: useCategoryOptions(),
       },
       fieldName: 'category',
@@ -60,6 +63,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
       component: 'Select',
       componentProps: {
         allowClear: true,
+        class: 'w-full',
         options: [
           { label: $t('system.workflow.definition.statusDraft'), value: 0 },
           {
@@ -101,8 +105,10 @@ function useStatusTagOptions(): Array<{ color: string; label: string; value: num
 
 export function useColumns<T = WorkflowApi.WorkflowDefinition>(
   onActionClick: OnActionClickFn<T>,
+  canDeletePublished: () => boolean = () => false,
 ): VxeTableGridOptions['columns'] {
   return [
+    { type: 'checkbox', width: 48, fixed: 'left' },
     {
       field: 'name',
       title: $t('system.workflow.definition.flowName'),
@@ -142,6 +148,7 @@ export function useColumns<T = WorkflowApi.WorkflowDefinition>(
       title: $t('system.workflow.definition.createTime'),
       width: 180,
     },
+    { field: '_flex', minWidth: 1, title: '' },
     {
       align: 'center',
       cellRender: {
@@ -176,12 +183,13 @@ export function useColumns<T = WorkflowApi.WorkflowDefinition>(
             code: 'delete',
             text: $t('common.delete'),
             show: (row: WorkflowApi.WorkflowDefinition) =>
-              row.status === 0,
+              row.status === 0 || canDeletePublished(),
           },
         ],
       },
       field: 'operation',
       fixed: 'right',
+      showOverflow: false,
       title: $t('system.workflow.definition.operation'),
       width: 230,
     },

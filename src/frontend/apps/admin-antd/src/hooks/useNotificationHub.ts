@@ -1,45 +1,82 @@
 import * as signalR from '@microsoft/signalr';
-import { onUnmounted, watch } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 
 import { useAppConfig } from '@vben/hooks';
 import { useAccessStore } from '@vben/stores';
+
+import { resolveSignalRHubUrl } from '#/utils/signalr-hub-url';
 
 /**
  * SignalR 通知 Hub 连接
  * 连接后监听 ReceiveNotification，收到新通知时触发 onNotification
  */
-export function useNotificationHub(onNotification: () => void | Promise<void>) {
+export function useNotificationHub(
+  onNotification: () => void | Promise<void>,
+  onSessionReplaced?: () => void | Promise<void>,
+) {
   const accessStore = useAccessStore();
   const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+  const connected = ref(false);
 
   let connection: signalR.HubConnection | null = null;
+  let notifyTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function scheduleNotification() {
+    if (notifyTimer) {
+      clearTimeout(notifyTimer);
+    }
+    notifyTimer = setTimeout(() => {
+      notifyTimer = null;
+      void Promise.resolve(onNotification());
+    }, 200);
+  }
 
   async function connect() {
     const token = accessStore.accessToken;
-    if (!token) return;
+    if (!token || !accessStore.isAccessChecked) {
+      return;
+    }
 
-    const baseUrl = apiURL.replace(/\/api\/admin\/?$/, '') || apiURL.split('/api')[0];
-    const hubUrl = `${baseUrl}/notification`;
+    const hubUrl = resolveSignalRHubUrl('notification', apiURL);
 
     connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: () => accessStore.accessToken ?? '',
       })
-      .withAutomaticReconnect()
+      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .build();
 
     connection.on('ReceiveNotification', () => {
-      onNotification();
+      scheduleNotification();
+    });
+
+    connection.on('SessionReplaced', () => {
+      void Promise.resolve(onSessionReplaced?.());
+    });
+
+    connection.onreconnected(() => {
+      connected.value = true;
+      scheduleNotification();
+    });
+
+    connection.onclose(() => {
+      connected.value = false;
     });
 
     try {
       await connection.start();
+      connected.value = true;
     } catch (err) {
+      connected.value = false;
       console.warn('[NotificationHub] 连接失败:', err);
     }
   }
 
   async function disconnect() {
+    if (notifyTimer) {
+      clearTimeout(notifyTimer);
+      notifyTimer = null;
+    }
     if (connection) {
       try {
         await connection.stop();
@@ -48,13 +85,14 @@ export function useNotificationHub(onNotification: () => void | Promise<void>) {
       }
       connection = null;
     }
+    connected.value = false;
   }
 
   watch(
-    () => accessStore.accessToken,
-    async (token) => {
+    () => [accessStore.accessToken, accessStore.isAccessChecked] as const,
+    async ([token, accessChecked]) => {
       await disconnect();
-      if (token) {
+      if (token && accessChecked) {
         await connect();
       }
     },
@@ -62,8 +100,8 @@ export function useNotificationHub(onNotification: () => void | Promise<void>) {
   );
 
   onUnmounted(() => {
-    disconnect();
+    void disconnect();
   });
 
-  return { connect, disconnect };
+  return { connect, disconnect, connected };
 }

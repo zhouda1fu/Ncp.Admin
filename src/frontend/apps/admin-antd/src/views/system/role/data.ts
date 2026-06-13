@@ -98,11 +98,17 @@ export function useGridFormSchema(): VbenFormSchema[] {
   return [
     {
       component: 'Input',
+      componentProps: {
+        class: 'w-full',
+      },
       fieldName: 'name',
       label: $t('system.role.roleName'),
     },
     {
       component: 'Input',
+      componentProps: {
+        class: 'w-full',
+      },
       fieldName: 'roleId',
       label: $t('system.role.id'),
     },
@@ -110,6 +116,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
       component: 'Select',
       componentProps: {
         allowClear: true,
+        class: 'w-full',
         options: [
           { label: $t('common.enabled'), value: true },
           { label: $t('common.disabled'), value: false },
@@ -139,6 +146,7 @@ export function useColumns<T = SystemRoleApi.SystemRole>(
   ) => PromiseLike<boolean | undefined>,
 ): VxeTableGridOptions['columns'] {
   return [
+    { type: 'checkbox', width: 48 },
     {
       field: 'name',
       title: $t('system.role.roleName'),
@@ -175,6 +183,7 @@ export function useColumns<T = SystemRoleApi.SystemRole>(
       title: $t('system.role.createTime'),
       width: 200,
     },
+    { field: '_flex', minWidth: 1, title: '' },
     {
       align: 'center',
       cellRender: {
@@ -184,11 +193,20 @@ export function useColumns<T = SystemRoleApi.SystemRole>(
           onClick: onActionClick,
         },
         name: 'CellOperation',
+        options: [
+          'edit',
+          {
+            code: 'changeHistory',
+            text: $t('system.role.changeHistoryAction'),
+          },
+          'delete',
+        ],
       },
       field: 'operation',
       fixed: 'right',
+      showOverflow: false,
       title: $t('system.role.operation'),
-      width: 130,
+      width: 200,
     },
   ];
 }

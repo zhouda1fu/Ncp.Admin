@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Queries;
-using Ncp.Admin.Web.AppPermissions;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 
@@ -22,7 +21,6 @@ public class GetUserAccessCodesEndpoint(RoleQuery roleQuery, UserQuery userQuery
         Description(b => b.AutoTagOverride("Users"));
         Get("/api/admin/auth/codes");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.UserView);
     }
 
     public override async Task HandleAsync(CancellationToken ct)
@@ -43,7 +41,7 @@ public class GetUserAccessCodesEndpoint(RoleQuery roleQuery, UserQuery userQuery
             throw new KnownException("用户不存在", ErrorCodes.UserNotFound);
         }
 
-        // 获取用户角色ID列表
+        // 获取用户角色 ID 列表
         var roleIds = userInfo.UserRoles.Select(r => r.RoleId).ToList();
 
         // 查询权限代码（如果用户没有角色，则返回空列表）

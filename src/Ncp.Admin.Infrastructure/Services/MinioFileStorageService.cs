@@ -23,7 +23,7 @@ public class MinioFileStorageService : IFileStorageService
             throw new InvalidOperationException("FileStorage:MinIO:Bucket is required.");
 
         _bucket = opt.Bucket;
-        _ensureBucketOnFirstUse = true;
+        _ensureBucketOnFirstUse = opt.EnsureBucketOnFirstUse;
         _bucketEnsured = false;
 
         var endpoint = NormalizeEndpoint(opt.Endpoint);
@@ -49,15 +49,23 @@ public class MinioFileStorageService : IFileStorageService
     {
         if (_bucketEnsured)
             return;
-        var exists = await _client.BucketExistsAsync(
-            new BucketExistsArgs().WithBucket(_bucket),
-            cancellationToken).ConfigureAwait(false);
-        if (!exists)
+        try
         {
-            await _client.MakeBucketAsync(
-                new MakeBucketArgs().WithBucket(_bucket),
+            var exists = await _client.BucketExistsAsync(
+                new BucketExistsArgs().WithBucket(_bucket),
                 cancellationToken).ConfigureAwait(false);
+            if (!exists)
+            {
+                await _client.MakeBucketAsync(
+                    new MakeBucketArgs().WithBucket(_bucket),
+                    cancellationToken).ConfigureAwait(false);
+            }
         }
+        catch (Exception ex)
+        {
+            throw WrapMinioException("MinIO 检查或创建存储桶失败，请检查 MinIO 服务与配置。", ex);
+        }
+
         _bucketEnsured = true;
     }
 
@@ -100,7 +108,15 @@ public class MinioFileStorageService : IFileStorageService
             .WithStreamData(uploadStream)
             .WithObjectSize(size)
             .WithContentType(contentType);
-        await _client.PutObjectAsync(args, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await _client.PutObjectAsync(args, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            throw WrapMinioException($"MinIO 上传文件失败：{safeName}", ex);
+        }
+
         if (copy != null)
             await copy.DisposeAsync().ConfigureAwait(false);
         return objectKey;
@@ -147,6 +163,33 @@ public class MinioFileStorageService : IFileStorageService
         }
     }
 
+    private static InvalidOperationException WrapMinioException(string message, Exception inner)
+    {
+        if (LooksLikeHtmlInsteadOfS3Response(inner))
+        {
+            message =
+                "MinIO 服务不可用或 Endpoint 配置错误（服务器返回 HTML 页面而非 S3 接口响应）。请确认 MinIO 已启动、Endpoint/UseSSL 正确，本地开发可将 FileStorage:Provider 设为 Local。";
+        }
+
+        return new($"{message} ({inner.GetType().Name}: {inner.Message})", inner);
+    }
+
+    private static bool LooksLikeHtmlInsteadOfS3Response(Exception ex)
+    {
+        for (var current = ex; current != null; current = current.InnerException)
+        {
+            var text = current.Message;
+            if (text.Contains("<html", StringComparison.OrdinalIgnoreCase)
+                || text.Contains("was not expected", StringComparison.OrdinalIgnoreCase)
+                || text.Contains("error in XML document", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static string GetContentType(string ext)
     {
         return ext switch
@@ -156,6 +199,7 @@ public class MinioFileStorageService : IFileStorageService
             ".gif" => "image/gif",
             ".webp" => "image/webp",
             ".pdf" => "application/pdf",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             _ => "application/octet-stream"
         };
     }

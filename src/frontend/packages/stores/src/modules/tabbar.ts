@@ -4,6 +4,7 @@ import type {
   Router,
   RouteRecordNormalized,
 } from 'vue-router';
+import { isNavigationFailure, NavigationFailureType } from 'vue-router';
 
 import type { TabDefinition } from '@vben-core/typings';
 
@@ -94,13 +95,25 @@ export const useTabbarStore = defineStore('core-tabbar', {
      * @param router
      */
     async _goToTab(tab: TabDefinition, router: Router) {
-      const { params, path, query } = tab;
-      const toParams = {
-        params: params || {},
+      const { fullPath, name, params, path, query } = tab;
+      const q = query || {};
+      // 已解析的 path 不可再带 params，否则会触发 Vue Router 警告且 params 被忽略
+      if (fullPath) {
+        await router.replace(fullPath);
+        return;
+      }
+      if (name) {
+        await router.replace({
+          name,
+          params: params || {},
+          query: q,
+        });
+        return;
+      }
+      await router.replace({
         path,
-        query: query || {},
-      };
-      await router.replace(toParams);
+        query: q,
+      });
     },
     /**
      * @zh_CN 添加标签页
@@ -108,9 +121,7 @@ export const useTabbarStore = defineStore('core-tabbar', {
      */
     addTab(routeTab: TabDefinition): TabDefinition {
       let tab = cloneTab(routeTab);
-      if (!tab.key) {
-        tab.key = getTabKey(routeTab);
-      }
+      tab.key = getTabKey(tab);
       if (!isTabShown(tab)) {
         return tab;
       }
@@ -163,7 +174,8 @@ export const useTabbarStore = defineStore('core-tabbar', {
           }
         }
         tab = mergedTab;
-        this.tabs.splice(tabIndex, 1, mergedTab);
+        tab.key = getTabKey(tab);
+        this.tabs.splice(tabIndex, 1, tab);
       }
       this.updateCacheTabs();
       return tab;
@@ -249,30 +261,47 @@ export const useTabbarStore = defineStore('core-tabbar', {
      */
     async closeTab(tab: TabDefinition, router: Router) {
       const { currentRoute } = router;
-      // 关闭不是激活选项卡
-      if (getTabKey(currentRoute.value) !== getTabKeyFromTab(tab)) {
+      const isActive = getTabKey(currentRoute.value) === getTabKeyFromTab(tab);
+
+      // 关闭非激活标签：直接移除
+      if (!isActive) {
         this._close(tab);
-        this.updateCacheTabs();
+        await this.updateCacheTabs();
         return;
       }
-      const index = this.getTabs.findIndex(
-        (item) => getTabKeyFromTab(item) === getTabKey(currentRoute.value),
-      );
 
-      const before = this.getTabs[index - 1];
-      const after = this.getTabs[index + 1];
-
-      // 下一个tab存在，跳转到下一个
-      if (after) {
-        this._close(tab);
-        await this._goToTab(after, router);
-        // 上一个tab存在，跳转到上一个
-      } else if (before) {
-        this._close(tab);
-        await this._goToTab(before, router);
-      } else {
-        console.error('Failed to close the tab; only one tab remains open.');
+      // 关闭激活标签：必须先离开当前路由再移除，否则 fullPath watch 会立刻把标签加回来
+      let index = this.getTabs.findIndex((item) => equalTab(item, tab));
+      if (index === -1) {
+        index = this.getTabs.findIndex(
+          (item) => getTabKeyFromTab(item) === getTabKey(currentRoute.value),
+        );
       }
+
+      const after = index >= 0 ? this.getTabs[index + 1] : undefined;
+      const before = index >= 0 ? this.getTabs[index - 1] : undefined;
+      const nextTab =
+        after ??
+        before ??
+        this.getTabs.find((item) => !equalTab(item, tab));
+
+      try {
+        if (nextTab) {
+          await this._goToTab(nextTab, router);
+        } else {
+          await this._goToDefaultTab(router);
+        }
+      } catch (error) {
+        const duplicated =
+          isNavigationFailure(error, NavigationFailureType.duplicated) ||
+          isNavigationFailure(error, NavigationFailureType.cancelled);
+        if (!duplicated) {
+          throw error;
+        }
+      }
+
+      this._close(tab);
+      await this.updateCacheTabs();
     },
 
     /**
@@ -281,10 +310,19 @@ export const useTabbarStore = defineStore('core-tabbar', {
      * @param router
      */
     async closeTabByKey(key: string, router: Router) {
-      const originKey = decodeURIComponent(key);
-      const index = this.tabs.findIndex(
+      const rawKey = String(key ?? '').trim();
+      if (!rawKey) {
+        return;
+      }
+      const originKey = safeDecodeTabKey(rawKey);
+      let index = this.tabs.findIndex(
         (item) => getTabKeyFromTab(item) === originKey,
       );
+      if (index === -1 && rawKey !== originKey) {
+        index = this.tabs.findIndex(
+          (item) => getTabKeyFromTab(item) === rawKey,
+        );
+      }
       if (index === -1) {
         return;
       }
@@ -604,6 +642,14 @@ function isTabShown(tab: TabDefinition) {
  * 从route获取tab页的key
  * @param tab
  */
+function safeDecodeTabKey(key: string): string {
+  try {
+    return decodeURIComponent(key);
+  } catch {
+    return key;
+  }
+}
+
 function getTabKey(tab: RouteLocationNormalized | RouteRecordNormalized) {
   const {
     fullPath,

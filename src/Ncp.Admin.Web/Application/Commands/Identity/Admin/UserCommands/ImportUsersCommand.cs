@@ -95,11 +95,6 @@ public class ImportUsersCommandHandler(
             throw new KnownException("出生日期格式不正确", ErrorCodes.InvalidUser);
         }
 
-        if (!UserImportParsing.TryParseBool(row.IsDeptManager, out var isDeptManager))
-        {
-            isDeptManager = false;
-        }
-
         if (!UserImportParsing.TryParseBool(row.NotOrderMeal, out var notOrderMeal))
         {
             notOrderMeal = false;
@@ -179,7 +174,6 @@ public class ImportUsersCommandHandler(
             birthDate,
             deptId,
             deptName,
-            isDeptManager,
             positionId,
             positionName,
             rolesToAssign,
@@ -192,6 +186,7 @@ public class ImportUsersCommandHandler(
             notOrderMeal,
             row.WechatGuid?.Trim() ?? string.Empty,
             isResigned,
-            resignedTime);
+            resignedTime,
+            AttendanceRequired: true);
     }
 }

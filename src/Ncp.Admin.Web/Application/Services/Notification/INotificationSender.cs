@@ -27,3 +27,14 @@ public interface INotificationSender
     /// </summary>
     Task SendAsync(NotificationMessage message, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// 单一通知通道（SignalR、微信公众号等）
+/// </summary>
+public interface INotificationChannel
+{
+    /// <summary>
+    /// 发送通知到指定通道
+    /// </summary>
+    Task SendAsync(NotificationMessage message, CancellationToken cancellationToken = default);
+}

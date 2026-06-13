@@ -14,6 +14,7 @@ import {
   getPositionList,
 } from '#/api/system/position';
 import { $t } from '#/locales';
+import { handleVxeCellDblclick } from '#/utils/vxe-row-navigation';
 
 import { useColumns, useGridFormSchema } from './data';
 import Form from './modules/form.vue';
@@ -28,9 +29,25 @@ const [Grid, gridApi] = useVbenVxeGrid<SystemPositionApi.PositionListItem>({
     schema: useGridFormSchema(),
     submitOnChange: true,
   },
+  gridClass: 'w-full min-w-0 [&_.vxe-table]:w-full',
+    gridEvents: {
+    'cell-dblclick': (event: any) => handleVxeCellDblclick(event, onRowDblclick),
+  } as any,
+
   gridOptions: {
     columns: useColumns(onActionClick),
+    customConfig: {
+      visibleMethod({ column }: any) {
+        const field = (column as { field?: string; type?: string }).field;
+        const type = (column as { field?: string; type?: string }).type;
+        if (type) return false;
+        return ['name', 'code', 'sortOrder', 'status', 'createdAt', 'operation'].includes(
+          field ?? '',
+        );
+      },
+    },
     height: 'auto',
+    id: 'SystemPositionListGrid-v2',
     keepSource: true,
     proxyConfig: {
       ajax: {
@@ -50,11 +67,13 @@ const [Grid, gridApi] = useVbenVxeGrid<SystemPositionApi.PositionListItem>({
         },
       },
     },
+    rowClassName: () => 'vxe-row-clickable',
+
     rowConfig: {
       keyField: 'id',
     },
     toolbarConfig: {
-      custom: true,
+      custom: false,
       export: false,
       refresh: true,
       search: true,
@@ -99,6 +118,10 @@ function onDelete(row: SystemPositionApi.PositionListItem) {
 
 function onRefresh() {
   gridApi.query();
+}
+
+function onRowDblclick(row: SystemPositionApi.PositionListItem) {
+  onEdit(row);
 }
 
 function onCreate() {

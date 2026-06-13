@@ -6,7 +6,7 @@ namespace Ncp.Admin.Web.Application.Services.Notification;
 /// <summary>
 /// 通过 SignalR 向指定用户连接推送站内通知
 /// </summary>
-public class SignalRNotificationSender(IHubContext<NotificationHub> hubContext) : INotificationSender
+public class SignalRNotificationSender(IHubContext<NotificationHub> hubContext) : INotificationChannel
 {
     public const string MethodName = "ReceiveNotification";
 

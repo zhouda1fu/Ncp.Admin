@@ -1,7 +1,8 @@
-using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Services.Workflow;
+using Ncp.Admin.Web.AppPermissions;
+using Ncp.Admin.Web.Services;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
@@ -26,7 +27,8 @@ public class DeleteWorkflowDefinitionCommandValidator : AbstractValidator<Delete
 /// </summary>
 public class DeleteWorkflowDefinitionCommandHandler(
     IWorkflowDefinitionRepository repository,
-    IMemoryCache memoryCache)
+    WorkflowDefinitionCacheInvalidator cacheInvalidator,
+    IHttpContextAccessor httpContextAccessor)
     : ICommandHandler<DeleteWorkflowDefinitionCommand>
 {
     public async Task Handle(DeleteWorkflowDefinitionCommand request, CancellationToken cancellationToken)
@@ -34,7 +36,8 @@ public class DeleteWorkflowDefinitionCommandHandler(
         var definition = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
 
-        if (definition.Status is WorkflowDefinitionStatus.Published or WorkflowDefinitionStatus.Archived)
+        if (definition.Status is WorkflowDefinitionStatus.Published or WorkflowDefinitionStatus.Archived
+            && !HasDeletePublishedPermission())
         {
             throw new KnownException(
                 "已发布或已归档的流程定义不能删除，请保留历史版本或创建新版本后使用新流程。",
@@ -43,7 +46,15 @@ public class DeleteWorkflowDefinitionCommandHandler(
 
         definition.SoftDelete();
 
-        memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(request.Id));
-        memoryCache.Remove(WorkflowCacheKeys.PublishedListKey);
+        cacheInvalidator.InvalidateDefinitionWrite(request.Id);
+    }
+
+    private bool HasDeletePublishedPermission()
+    {
+        var user = httpContextAccessor.HttpContext?.User;
+        return user?.Claims.Any(c =>
+            c.Type == JwtPermissionClaimTypes.Permissions
+            && (c.Value == PermissionCodes.WorkflowDefinitionDeletePublished
+                || c.Value == PermissionCodes.AllApiAccess)) == true;
     }
 }

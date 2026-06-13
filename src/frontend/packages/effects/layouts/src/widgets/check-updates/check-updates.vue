@@ -14,9 +14,11 @@ interface Props {
 
 defineOptions({ name: 'CheckUpdates' });
 
+const baseUrl = import.meta.env.BASE_URL || '/';
+const defaultCheckUpdateUrl = `${baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`}version.json`;
+
 const props = withDefaults(defineProps<Props>(), {
   checkUpdatesInterval: 1,
-  checkUpdateUrl: import.meta.env.BASE_URL || '/',
 });
 
 let isCheckingUpdates = false;
@@ -43,15 +45,20 @@ async function getVersionTag() {
     ) {
       return null;
     }
-    const response = await fetch(props.checkUpdateUrl, {
-      cache: 'no-cache',
-      method: 'HEAD',
-      redirect: 'manual',
-    });
-
-    return (
-      response.headers.get('etag') || response.headers.get('last-modified')
+    const response = await fetch(
+      props.checkUpdateUrl || defaultCheckUpdateUrl,
+      {
+        cache: 'no-store',
+        method: 'GET',
+      },
     );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const versionInfo = await response.json();
+    return versionInfo.version || versionInfo.buildTime || null;
   } catch {
     console.error('Failed to fetch version tag');
     return null;

@@ -1,9 +1,9 @@
+using System.Text.Json;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
-using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
@@ -15,7 +15,9 @@ public record ApproveTaskCommand(
     WorkflowInstanceId WorkflowInstanceId,
     WorkflowTaskId TaskId,
     UserId OperatorId,
-    string Comment) : ICommand;
+    string Comment,
+    /// <summary>审批动作扩展负载。通用工作流不解释该字段，由业务适配器按 BusinessType 读取。</summary>
+    IReadOnlyDictionary<string, JsonElement>? ActionPayload = null) : ICommand;
 
 /// <summary>
 /// 审批通过命令验证器
@@ -36,13 +38,14 @@ public class ApproveTaskCommandValidator : AbstractValidator<ApproveTaskCommand>
 public class ApproveTaskCommandHandler(
     IWorkflowInstanceRepository instanceRepository,
     IWorkflowDefinitionRepository definitionRepository,
-    UserQuery userQuery,
-    WorkflowOutgoingTaskService outgoingTaskService)
+    WorkflowOutgoingTaskService outgoingTaskService,
+    WorkflowTaskOperationAuthorizer taskOperationAuthorizer,
+    WorkflowBusinessAdapterDispatcher businessAdapterDispatcher)
     : ICommandHandler<ApproveTaskCommand>
 {
     public async Task Handle(ApproveTaskCommand request, CancellationToken cancellationToken)
     {
-        var instance = await instanceRepository.GetAsync(request.WorkflowInstanceId, cancellationToken)
+        var instance = await instanceRepository.GetWithTasksIgnoringQueryFiltersAsync(request.WorkflowInstanceId, cancellationToken)
             ?? throw new KnownException("未找到流程实例", ErrorCodes.WorkflowInstanceNotFound);
 
         if (instance.Status != WorkflowInstanceStatus.Running)
@@ -50,12 +53,28 @@ public class ApproveTaskCommandHandler(
             throw new KnownException("流程未在运行中", ErrorCodes.WorkflowInstanceNotRunning);
         }
 
-        var operatorRoleIds = await userQuery.GetRoleIdsByUserIdAsync(request.OperatorId, cancellationToken);
+        var operatorRoleIds = await taskOperationAuthorizer.EnsureCanOperateAsync(
+            instance,
+            request.TaskId,
+            request.OperatorId,
+            cancellationToken);
+        await businessAdapterDispatcher.DispatchBeforeTaskApprovedAsync(
+            new WorkflowTaskActionContext(
+                instance,
+                request.TaskId,
+                request.OperatorId,
+                operatorRoleIds,
+                request.ActionPayload ?? new Dictionary<string, JsonElement>()),
+            cancellationToken);
         instance.ApproveTask(request.TaskId, request.OperatorId, operatorRoleIds, request.Comment);
 
-        var definition = await definitionRepository.GetAsync(instance.WorkflowDefinitionId, cancellationToken)
-            ?? throw new KnownException("未找到流程定义，无法继续审批流转", ErrorCodes.WorkflowDefinitionNotFound);
+        var definitionVersion = await definitionRepository.GetVersionAsync(instance.WorkflowDefinitionVersionId, cancellationToken)
+            ?? throw new KnownException("未找到流程定义版本，无法继续审批流转", ErrorCodes.WorkflowDefinitionNotFound);
 
-        await outgoingTaskService.AdvanceAfterTaskApprovedAsync(instance, request.TaskId, definition, cancellationToken);
+        await outgoingTaskService.AdvanceAfterTaskApprovedAsync(
+            instance,
+            request.TaskId,
+            definitionVersion,
+            cancellationToken);
     }
 }

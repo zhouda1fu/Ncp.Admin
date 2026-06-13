@@ -28,4 +28,37 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// 自动注册非聚合根实体仓储（未继承 <see cref="IRepository{TEntity,TKey}"/> 的 I*Repository 接口及其实现）。
+    /// </summary>
+    public static IServiceCollection AddCustomEntityRepositories(this IServiceCollection services, Assembly assembly)
+    {
+        const string repositoryNamespace = "Ncp.Admin.Infrastructure.Repositories";
+        var repositoryTypes = assembly.GetTypes()
+            .Where(t => t.Namespace == repositoryNamespace)
+            .ToList();
+
+        var customRepositoryInterfaces = repositoryTypes
+            .Where(t => t.IsInterface
+                && t.Name.StartsWith('I')
+                && t.Name.EndsWith("Repository")
+                && !IsAggregateRepository(t))
+            .ToList();
+
+        foreach (var interfaceType in customRepositoryInterfaces)
+        {
+            var implementationName = interfaceType.Name[1..];
+            var implementationType = repositoryTypes.FirstOrDefault(t =>
+                t.IsClass && !t.IsAbstract && t.Name == implementationName);
+            if (implementationType is not null)
+                services.AddScoped(interfaceType, implementationType);
+        }
+
+        return services;
+    }
+
+    private static bool IsAggregateRepository(Type interfaceType) =>
+        interfaceType.GetInterfaces().Any(i =>
+            i.IsGenericType && i.GetGenericTypeDefinition().Name.StartsWith("IRepository", StringComparison.Ordinal));
 }

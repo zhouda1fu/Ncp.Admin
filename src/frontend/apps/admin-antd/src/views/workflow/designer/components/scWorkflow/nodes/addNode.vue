@@ -32,12 +32,16 @@
 import { IconifyIcon, Plus } from '@vben/icons';
 import { Button, Popover } from 'ant-design-vue';
 
+import { createWorkflowNodeKey } from '../../../utils/createWorkflowNodeKey';
+
 export default {
   name: 'AddNode',
   components: { AButton: Button, APopover: Popover, IconifyIcon, Plus },
   props: { modelValue: { type: Object, default: () => ({}) } },
   methods: {
-    getNodeKey() { return 'flk' + Date.now(); },
+    getNodeKey() {
+      return createWorkflowNodeKey();
+    },
     addType(type) {
       let node = {};
       if (type === 1) {
@@ -45,9 +49,18 @@ export default {
           nodeName: '审核人',
           nodeKey: this.getNodeKey(),
           type: 1,
-          setType: 1,
-          nodeAssigneeList: [],
-          examineLevel: 1,
+          approverConfigs: [
+            {
+              setType: 2,
+              nodeAssigneeList: [],
+              examineLevel: 1,
+              initiatorDeptScopeMode: 0,
+              initiatorDeptList: [],
+            },
+          ],
+          emptyApproverPolicy: 1,
+          emptyApproverAssigneeList: [],
+          selfApprovalPolicy: 1,
           directorLevel: 1,
           selectMode: 1,
           termAuto: false,
@@ -55,6 +68,8 @@ export default {
           termMode: 1,
           examineMode: 1,
           directorMode: 0,
+          officeTaskParticipantNode: false,
+          officeTaskReceiverConfigMode: 'preset',
           childNode: this.modelValue,
         };
       } else if (type === 2) {
@@ -63,8 +78,17 @@ export default {
           nodeKey: this.getNodeKey(),
           type: 2,
           setType: 1,
-          userSelectFlag: true,
+          userSelectFlag: false,
           nodeAssigneeList: [],
+          copyConfigs: [
+            {
+              setType: 1,
+              nodeAssigneeList: [],
+              examineLevel: 1,
+              initiatorDeptScopeMode: 0,
+              initiatorDeptList: [],
+            },
+          ],
           childNode: this.modelValue,
         };
       } else if (type === 4) {

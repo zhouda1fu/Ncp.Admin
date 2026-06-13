@@ -7,13 +7,22 @@ using Scalar.AspNetCore;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
+using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Application.Services.BackgroundJobs;
+using Ncp.Admin.Web.Application.Services.Notification;
+using Ncp.Admin.Web.Application.Services.Workflow;
+using Ncp.Admin.Web.Application.Services.Workflow.BusinessAdapters;
+using Ncp.Admin.Web.Application.Services.Workflow.Graph;
 using Ncp.Admin.Web.Clients;
-using Ncp.Admin.Web.Extensions;
-using Ncp.Admin.Web.Services;
 using Ncp.Admin.Web.Middleware;
+using Ncp.Admin.Web.Services;
+using Ncp.Admin.Web.Services.SystemLogs;
 using Ncp.Admin.Web.Utils;
 using NetCorePal.Extensions.CodeAnalysis;
 using Newtonsoft.Json;
@@ -24,11 +33,10 @@ using Serilog;
 using Serilog.Formatting.Json;
 using StackExchange.Redis;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text.Json;
-using Ncp.Admin.Web.Application.Services;
-using Ncp.Admin.Web.Application.Services.Workflow;
+using Microsoft.AspNetCore.Authentication;
 
-// Create a minimal logger for startup
 Log.Logger = new LoggerConfiguration()
     .Enrich.WithClientIp()
     .WriteTo.Console(new JsonFormatter())
@@ -36,8 +44,14 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-    
-    // Add service defaults & Aspire client integrations.
+
+    // SignalR（浏览器 WebSocket）会把 JWT 放在查询参数 access_token 中；默认 MaxRequestLineSize=8192 易触发 414，
+    // 进而表现为控制台「CORS / 连接失败」（错误响应常不带 Access-Control-Allow-Origin）。
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.Limits.MaxRequestLineSize = 65536;
+    });
+
     builder.AddServiceDefaults();
 
     #region SignalR
@@ -47,6 +61,7 @@ try
         .AddNewtonsoftJson(options => { options.SerializerSettings.AddNetCorePalJsonConverters(); });
     builder.Services.AddSignalR();
     builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, Ncp.Admin.Web.Application.Hubs.NameUserIdProvider>();
+    builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IHubFilter, Ncp.Admin.Web.Application.Hubs.UserSessionHubFilter>();
 
     #endregion
 
@@ -58,27 +73,28 @@ try
 
     #endregion
 
-    // Add services to the container.
-
     #region 身份认证
 
-    // When using Aspire, Redis connection is managed by Aspire and injected automatically
     builder.AddRedisClient("Redis");
-    
-    // DataProtection - use custom extension that resolves IConnectionMultiplexer from DI
+
     builder.Services.AddDataProtection()
         .PersistKeysToStackExchangeRedis("DataProtection-Keys");
-    
-    builder.Services.AddMemoryCache();
 
-    // 密码哈希与刷新令牌（可测试、可替换）
+    builder.Services.AddMemoryCache();
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<IClaimsTransformation, PermissionClaimsTransformation>();
+    builder.Services.Configure<WeChatOfficialAccountOptions>(
+        builder.Configuration.GetSection(WeChatOfficialAccountOptions.SectionName));
+    builder.Services.Configure<SystemLogOptions>(
+        builder.Configuration.GetSection(SystemLogOptions.SectionName));
+
     builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
     builder.Services.AddSingleton<IRefreshTokenGenerator, DefaultRefreshTokenGenerator>();
+    builder.Services.AddSingleton<IUserSessionService, UserSessionService>();
 
-    // 配置JWT认证
     builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("AppConfiguration"));
     var appConfig = builder.Configuration.GetSection("AppConfiguration").Get<AppConfiguration>() ?? new AppConfiguration { JwtIssuer = "netcorepal", JwtAudience = "netcorepal" };
-    
+
     builder.Services.AddAuthentication().AddJwtBearer(options =>
     {
         options.RequireHttpsMetadata = false;
@@ -86,20 +102,82 @@ try
         options.TokenValidationParameters.ValidateAudience = true;
         options.TokenValidationParameters.ValidIssuer = appConfig.JwtIssuer;
         options.TokenValidationParameters.ValidateIssuer = true;
-        // SignalR 通过 WebSocket 连接时无法发送 Authorization 头，需从 query 读取 access_token
         options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
         {
             OnMessageReceived = ctx =>
             {
                 var accessToken = ctx.Request.Query["access_token"];
                 var path = ctx.HttpContext.Request.Path;
-                // /notification 与 /chat 等 Hub 连接均需从 query 取 token
-                if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/notification") || path.StartsWithSegments("/chat")))
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notification"))
                 {
                     ctx.Token = accessToken;
                 }
                 return Task.CompletedTask;
+            },
+            OnTokenValidated = async ctx =>
+            {
+                var userIdString = ctx.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!long.TryParse(userIdString, out var userIdValue))
+                {
+                    ctx.Fail("Invalid user identity.");
+                    return;
+                }
+
+                var dbContext = ctx.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+                var userAvailable = await dbContext.Users
+                    .AsNoTracking()
+                    .AnyAsync(u =>
+                        u.Id == new UserId(userIdValue)
+                        && !u.IsResigned
+                        && u.Status == 1
+                        && u.IsActive,
+                        ctx.HttpContext.RequestAborted);
+                if (!userAvailable)
+                {
+                    ctx.Fail("Current user is disabled, resigned, or does not exist.");
+                    return;
+                }
+
+                var sessionId = ctx.Principal?.FindFirstValue(UserSessionClaimTypes.SessionId);
+                if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    ctx.HttpContext.Items[UserSessionAuthenticationReasons.HeaderName] =
+                        UserSessionAuthenticationReasons.SessionReplaced;
+                    ctx.Fail("Current session is no longer valid.");
+                    return;
+                }
+
+                try
+                {
+                    var sessionService = ctx.HttpContext.RequestServices.GetRequiredService<IUserSessionService>();
+                    if (!await sessionService.IsCurrentAsync(userIdValue, sessionId))
+                    {
+                        ctx.HttpContext.Items[UserSessionAuthenticationReasons.HeaderName] =
+                            UserSessionAuthenticationReasons.SessionReplaced;
+                        ctx.Fail("Current session is no longer valid.");
+                    }
+                }
+                catch (RedisException)
+                {
+                    ctx.HttpContext.Items[UserSessionAuthenticationReasons.HeaderName] =
+                        UserSessionAuthenticationReasons.SessionStoreUnavailable;
+                    ctx.Fail("Session store is unavailable.");
+                }
+            },
+            OnChallenge = async ctx =>
+            {
+                if (ctx.HttpContext.Items.TryGetValue(
+                        UserSessionAuthenticationReasons.HeaderName,
+                        out var reasonValue)
+                    && reasonValue is string reason)
+                {
+                    ctx.HandleResponse();
+                    ctx.Response.Headers[UserSessionAuthenticationReasons.HeaderName] = reason;
+                    ctx.Response.StatusCode = reason == UserSessionAuthenticationReasons.SessionStoreUnavailable
+                        ? StatusCodes.Status503ServiceUnavailable
+                        : StatusCodes.Status401Unauthorized;
+                    await ctx.Response.CompleteAsync();
+                }
             }
         };
     });
@@ -109,9 +187,9 @@ try
 
     #region CORS
 
-    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
         ?? new[] { "http://localhost:5666", "http://localhost:5173", "http://localhost:3000" };
-    
+
     builder.Services.AddCors(options =>
     {
         options.AddDefaultPolicy(policy =>
@@ -119,6 +197,7 @@ try
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyMethod()
                   .AllowAnyHeader()
+                  .WithExposedHeaders(UserSessionAuthenticationReasons.HeaderName)
                   .AllowCredentials();
         });
     });
@@ -128,9 +207,6 @@ try
     #region Controller
 
     builder.Services.AddControllers().AddNetCorePalSystemTextJson();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(c => c.AddEntityIdSchemaMap()); //强类型id swagger schema 映射
 
     #endregion
 
@@ -147,15 +223,8 @@ try
             s.Title = "Ncp.AdminAPI接口文档";
             s.Version = "v1";
             s.Description = "Ncp.AdminAPI接口文档";
-
             s.UseControllerSummaryAsTagDescription = true;
         };
-
-        // 过滤端点 - 只显示指定标签的端点
-        //settings.EndpointFilter = ep => ep.EndpointTags?.Any(tag =>
-        //    new[] { "Users","test" }.Contains(tag)) is true;
-
-        // 启用授权支持
         settings.EnableJWTBearerAuth = true;
     });
 
@@ -172,69 +241,104 @@ try
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
     builder.Services.AddKnownExceptionErrorModelInterceptor();
+    builder.Services.AddTransient<
+        IPipelineBehavior<Ncp.Admin.Web.Application.Commands.Workflows.StartWorkflowCommand, WorkflowInstanceId>,
+        Ncp.Admin.Web.Application.Commands.Workflows.StartWorkflowDuplicateBusinessKeyBehavior>();
 
     #endregion
 
     #region Query
-    // 自动注册所有实现 IQuery 接口的查询类
+
     builder.Services.AddQueries(Assembly.GetExecutingAssembly());
-    builder.Services.AddScoped<WorkflowTreeTraverser>();
+
+    builder.Services.AddScoped<IWorkflowAssigneeResolver>(sp => sp.GetRequiredService<WorkflowAssigneeResolverQuery>());
     builder.Services.AddScoped<WorkflowOutgoingTaskService>();
+    builder.Services.AddScoped<WorkflowRuntimeRecordService>();
+    builder.Services.AddScoped<IWorkflowVisibilityService, WorkflowVisibilityService>();
+    builder.Services.AddScoped<WorkflowTaskOperationAuthorizer>();
     builder.Services.AddScoped<WorkflowTaskVisibilityPolicy>();
+    builder.Services.AddScoped<IWorkflowTaskVisibilityPolicy>(sp => sp.GetRequiredService<WorkflowTaskVisibilityPolicy>());
+    builder.Services.AddScoped<WorkflowApprovalAssignmentService>();
+    builder.Services.AddScoped<IWorkflowApprovalAssignmentService>(sp => sp.GetRequiredService<WorkflowApprovalAssignmentService>());
     builder.Services.AddScoped<WorkflowDefinitionAssigneeConfigValidator>();
-    builder.Services.AddScoped<ICustomerSeaVisibilityTargetResolver, CustomerSeaVisibilityTargetResolver>();
+    builder.Services.AddScoped<WorkflowDefinitionIdentityCatalogBuilder>();
+    builder.Services.AddScoped<WorkflowDefinitionIdentityRemapper>();
+    builder.Services.AddScoped<WorkflowDefinitionExportService>();
+    builder.Services.AddScoped<WorkflowDefinitionCacheInvalidator>();
+    builder.Services.AddScoped<WorkflowGraphCompiler>();
+    builder.Services.AddScoped<WorkflowGraphRuntimeService>();
+    builder.Services.AddScoped<WorkflowBusinessAdapterDispatcher>();
+    builder.Services.AddScoped<WorkflowConditionFieldsProvider>();
+    builder.Services.AddScoped<WorkflowStartAssigneeGate>();
+    builder.Services.AddScoped<IWorkflowBusinessAdapter, CreateUserWorkflowBusinessAdapter>();
+    builder.Services.AddScoped<RecurringJobManagementService>();
+
+    builder.Services.AddHttpClient(WeChatOfficialAccountClient.HttpClientName, client =>
+    {
+        client.BaseAddress = new Uri("https://api.weixin.qq.com/");
+        client.Timeout = TimeSpan.FromSeconds(20);
+    });
+
     #endregion
 
     #region 基础设施
 
     builder.Services.AddRepositories(typeof(ApplicationDbContext).Assembly);
-    // When using Aspire, database connection is managed by Aspire
-    // Use AddDbContext instead of AddMySqlDbContext/AddSqlServerDbContext/AddNpgsqlDbContext
-    // to avoid ExecutionStrategy issues with user-initiated transactions
+    builder.Services.AddCustomEntityRepositories(typeof(ApplicationDbContext).Assembly);
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
         options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"), npgsql =>
         {
-            // 同一查询加载多个集合导航时避免笛卡尔积与 MultipleCollectionInclude 警告，拆成多条 SQL
             npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
         });
-        // 仅在开发环境启用敏感数据日志，防止生产环境泄露敏感信息
         if (builder.Environment.IsDevelopment())
         {
             options.EnableSensitiveDataLogging();
+            options.EnableDetailedErrors();
+            options.ConfigureWarnings(w =>
+                w.Ignore(CoreEventId.SensitiveDataLoggingEnabledWarning));
         }
-        options.EnableDetailedErrors();
     });
+
     var fileStorageProvider = builder.Configuration.GetValue<string>("FileStorage:Provider") ?? "Local";
-    var minioSection = builder.Configuration.GetSection(MinioFileStorageOptions.SectionName);
-    var minioEndpoint = minioSection.GetValue<string>("Endpoint");
-    var minioBucket = minioSection.GetValue<string>("Bucket");
-
-    var useMinio =
-        string.Equals(fileStorageProvider, "MinIO", StringComparison.OrdinalIgnoreCase)
-        && !string.IsNullOrWhiteSpace(minioEndpoint)
-        && !string.IsNullOrWhiteSpace(minioBucket);
-
-    if (string.Equals(fileStorageProvider, "MinIO", StringComparison.OrdinalIgnoreCase) && !useMinio)
+    if (string.Equals(fileStorageProvider, "MinIO", StringComparison.OrdinalIgnoreCase))
     {
-        Log.Warning("FileStorage provider is MinIO, but configuration is incomplete (Endpoint/Bucket missing). Falling back to Local storage.");
-    }
-
-    if (useMinio)
-    {
-        builder.Services.Configure<MinioFileStorageOptions>(minioSection);
-        builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
+        builder.Services.Configure<MinioFileStorageOptions>(builder.Configuration.GetSection(MinioFileStorageOptions.SectionName));
+        builder.Services.AddScoped<MinioFileStorageService>();
+        builder.Services.AddScoped<IFileStorageService>(sp =>
+            new Ncp.Admin.Web.Application.Services.Files.LegacyFilesFileStorageService(
+                sp.GetRequiredService<MinioFileStorageService>(),
+                sp.GetRequiredService<IWebHostEnvironment>()));
     }
     else
     {
         builder.Services.Configure<LocalFileStorageOptions>(builder.Configuration.GetSection(LocalFileStorageOptions.SectionName));
-        builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        builder.Services.AddScoped<LocalFileStorageService>();
+        builder.Services.AddScoped<IFileStorageService>(sp =>
+            new Ncp.Admin.Web.Application.Services.Files.LegacyFilesFileStorageService(
+                sp.GetRequiredService<LocalFileStorageService>(),
+                sp.GetRequiredService<IWebHostEnvironment>()));
     }
-    builder.Services.AddScoped<Ncp.Admin.Web.Application.Services.Notification.INotificationSender, Ncp.Admin.Web.Application.Services.Notification.SignalRNotificationSender>();
+
+    builder.Services.AddScoped<IWeChatAccessTokenProvider, WeChatAccessTokenProvider>();
+    builder.Services.AddScoped<IWeChatOfficialAccountClient, WeChatOfficialAccountClient>();
+    builder.Services.AddScoped<IWeChatBindingService, WeChatBindingService>();
+    builder.Services.AddScoped<NotificationNavigationResolver>();
+    builder.Services.AddScoped<INotificationLinkResolver, NotificationLinkResolver>();
+    builder.Services.AddScoped<INotificationPushBuffer, NotificationPushBuffer>();
+    builder.Services.AddScoped<INotificationChannel, SignalRNotificationSender>();
+    builder.Services.AddScoped<INotificationChannel, WeChatNotificationSender>();
+    builder.Services.AddScoped<CompositeNotificationSender>();
+    builder.Services.AddScoped<INotificationSender, DeferredNotificationSender>();
+
     builder.Services.AddUnitOfWork<ApplicationDbContext>();
     builder.Services.AddSingleton<OperationLogChannel>();
     builder.Services.AddHostedService<OperationLogBackgroundService>();
-    // Redis locks use the Aspire-managed Redis connection
+    builder.Services.AddSingleton<SystemLogChannel>();
+    builder.Services.AddSingleton<SystemLogDatabase>();
+    builder.Services.AddSingleton<ILoggerProvider, SystemLogLoggerProvider>();
+    builder.Services.AddHostedService<SystemLogBackgroundService>();
+
     builder.Services.AddRedisLocks();
     builder.Services.AddContext().AddEnvContext().AddDataPermissionContext().AddCapContextProcessor();
     builder.Services.AddNetCorePalServiceDiscoveryClient();
@@ -245,19 +349,16 @@ try
             b.AddContextIntegrationFilters();
         });
 
-
     builder.Services.AddCap(x =>
     {
         x.UseNetCorePalStorage<ApplicationDbContext>();
         x.JsonSerializerOptions.AddNetCorePalJsonConverters();
         x.ConsumerThreadCount = Environment.ProcessorCount;
-        // When using Aspire, RabbitMQ connection is managed by Aspire
         x.UseRabbitMQ(p =>
         {
             var connectionString = builder.Configuration.GetConnectionString("rabbitmq");
             if (!string.IsNullOrEmpty(connectionString))
             {
-                // Parse Aspire-provided connection string
                 var uri = new Uri(connectionString);
                 p.HostName = uri.Host;
                 p.Port = uri.Port;
@@ -280,7 +381,7 @@ try
                 builder.Configuration.GetSection("RabbitMQ").Bind(p);
             }
         });
-        x.UseDashboard(); //CAP Dashboard  path：  /cap
+        x.UseDashboard();
     });
 
     #endregion
@@ -289,6 +390,7 @@ try
         cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly())
             .AddCommandLockBehavior()
             .AddKnownExceptionValidationBehavior()
+            .AddOpenBehavior(typeof(NotificationPushAfterUnitOfWorkBehavior<,>))
             .AddUnitOfWorkBehaviors());
 
     #region 多环境支持与服务注册发现
@@ -313,19 +415,17 @@ try
     builder.Services.AddRefitClient<IUserServiceClient>(settings)
         .ConfigureHttpClient(client =>
             client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("https+http://user:8080")!))
-        .AddMultiEnvMicrosoftServiceDiscovery() //多环境服务发现支持
-        .AddStandardResilienceHandler(); //添加标准的重试策略
+        .AddMultiEnvMicrosoftServiceDiscovery()
+        .AddStandardResilienceHandler();
 
     #endregion
 
     #region Jobs
 
-    // When using Aspire, Redis connection is managed by Aspire
     builder.Services.AddHangfire(x => { x.UseRedisStorage(builder.Configuration.GetConnectionString("Redis")); });
-    builder.Services.AddHangfireServer(); //hangfire dashboard  path：  /hangfire
+    builder.Services.AddHangfireServer();
 
     #endregion
-
 
     var app = builder.Build();
 
@@ -333,26 +433,26 @@ try
     {
         using var scope = app.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var migrateLogger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Database.Migrate");
         await dbContext.Database.MigrateAsync();
-
-        // 添加种子数据（包含部门/角色等主数据）
-        app.SeedDatabase();
-
-        // 已移除业务角色同步种子（SeedDatabaseExtension.BusinessRoles.cs）
     }
+
+    using (var seedScope = app.Services.CreateScope())
+    {
+        var dbContext = seedScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var seedLogger = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Database.Seed");
+        var passwordHasher = seedScope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        await PlatformAdminSeeder.EnsureSeededAsync(dbContext, passwordHasher, seedLogger, CancellationToken.None);
+    }
+
     app.UseKnownExceptionHandler();
-    // Configure the HTTP request pipeline.
-    //if (app.Environment.IsDevelopment())
-    //{
-    //    app.UseSwagger();
-    //    app.UseSwaggerUI();
-    //}
 
     app.UseStaticFiles();
-    //app.UseHttpsRedirection();
-    app.UseCors(); // CORS 必须在 UseRouting 之前
+    app.UseCors();
     app.UseRouting();
-    app.UseAuthentication(); // Authentication 必须在 Authorization 之前
+    app.UseAuthentication();
     app.UseAuthorization();
     app.UseContext();
     app.UseMiddleware<DataPermissionContextMiddleware>();
@@ -373,21 +473,19 @@ try
     {
         options.WithOpenApiRoutePattern("/openapi/v1.json");
     });
-  
+
     #endregion
 
     #region SignalR
 
-    app.MapHub<Ncp.Admin.Web.Application.Hubs.ChatHub>("/chat");
     app.MapHub<Ncp.Admin.Web.Application.Hubs.NotificationHub>("/notification");
 
     #endregion
 
     app.UseHttpMetrics();
-    app.MapMetrics(); // 通过   /metrics  访问指标
+    app.MapMetrics();
     app.MapDefaultEndpoints();
 
-    // Code analysis endpoint
     app.MapGet("/code-analysis", () =>
     {
         var html = VisualizationHtmlBuilder.GenerateVisualizationHtml(
@@ -397,13 +495,17 @@ try
         );
         return Results.Content(html, "text/html; charset=utf-8");
     });
-    
-    app.UseHangfireDashboard();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseHangfireDashboard();
+    }
+
     await app.RunAsync();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Application terminated unexpectedly");
+    Log.Fatal(ex, "应用程序意外终止。");
 }
 finally
 {

@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Web.Application.Commands.Workflows;
 using Ncp.Admin.Web.AppPermissions;
@@ -29,7 +31,12 @@ public class ResumeWorkflowEndpoint(IMediator mediator) : Endpoint<ResumeWorkflo
 
     public override async Task HandleAsync(ResumeWorkflowRequest req, CancellationToken ct)
     {
-        await mediator.Send(new ResumeWorkflowCommand(req.Id), ct);
+        if (!User.TryGetUserId(out var userIdValue))
+        {
+            throw new KnownException("无效的用户身份", ErrorCodes.InvalidUserIdentity);
+        }
+
+        await mediator.Send(new ResumeWorkflowCommand(req.Id, userIdValue), ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }
 }

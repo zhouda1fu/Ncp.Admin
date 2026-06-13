@@ -1,6 +1,6 @@
 import type { Recordable, UserInfo } from '@vben/types';
 
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { LOGIN_PATH } from '@vben/constants';
@@ -10,8 +10,12 @@ import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
+import { getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
+import {
+  resolveUserAvatarBlobUrl,
+  revokeUserAvatarBlobUrl,
+} from '#/utils/user-avatar';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
@@ -19,6 +23,36 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter();
 
   const loginLoading = ref(false);
+
+  async function clearLocalSession(redirect: boolean) {
+    localStorage.removeItem('userId');
+    revokeUserAvatarBlobUrl();
+
+    accessStore.setLoginExpired(false);
+    accessStore.setAccessToken(null);
+    accessStore.setRefreshToken(null);
+    accessStore.setAccessCodes([]);
+    accessStore.setIsAccessChecked(false);
+    userStore.setUserInfo(null);
+
+    resetAllStores();
+
+    accessStore.setAccessToken(null);
+    accessStore.setRefreshToken(null);
+    accessStore.setAccessCodes([]);
+    accessStore.setIsAccessChecked(false);
+    accessStore.setLoginExpired(false);
+
+    await nextTick();
+    await router.replace({
+      path: LOGIN_PATH,
+      query: redirect
+        ? {
+            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
+          }
+        : {},
+    });
+  }
 
   /**
    * 异步处理登录操作
@@ -89,24 +123,15 @@ export const useAuthStore = defineStore('auth', () => {
     } catch {
       // 不做任何处理
     }
-    // 清除保存的 userId
-    localStorage.removeItem('userId');
-    resetAllStores();
-    accessStore.setLoginExpired(false);
-
-    // 回登录页带上当前路由地址
-    await router.replace({
-      path: LOGIN_PATH,
-      query: redirect
-        ? {
-            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
-          }
-        : {},
-    });
+    await clearLocalSession(redirect);
   }
 
-  async function fetchUserInfo(userId?: string) {
-    let userInfo: null | UserInfo = null;
+  async function forceLogout() {
+    await clearLocalSession(false);
+  }
+
+  async function fetchUserInfo(userId?: string): Promise<UserInfo> {
+    let userInfo: UserInfo | null = null;
     try {
       // 如果没有提供 userId，尝试从 localStorage 获取
       const targetUserId = userId || localStorage.getItem('userId');
@@ -116,24 +141,33 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         // 如果没有 userId，使用已存储的用户信息
         if (userStore.userInfo) {
-          return userStore.userInfo;
+          return userStore.userInfo as UserInfo;
         }
         // 如果都没有，返回默认值
         throw new Error('无法获取用户信息：缺少 userId');
       }
       if (userInfo) {
+        const raw = userInfo as UserInfo & Record<string, unknown>;
+        const avatarUrl = String(raw.avatarUrl ?? '').trim();
+        const avatar = await resolveUserAvatarBlobUrl(avatarUrl);
+        userInfo = {
+          ...raw,
+          avatarUrl,
+          avatar,
+          username: raw.username || String(raw.name ?? ''),
+        } as UserInfo;
         userStore.setUserInfo(userInfo);
       }
     } catch (error) {
       // 如果获取用户信息失败，使用已存储的用户信息或返回默认值
       console.warn('获取用户信息失败:', error);
       if (userStore.userInfo) {
-        return userStore.userInfo;
+        return userStore.userInfo as UserInfo;
       }
       // 返回一个基本的用户信息对象，避免后续代码报错
       userInfo = {
         roles: [],
-      } as UserInfo;
+      } as unknown as UserInfo;
     }
     return userInfo;
   }
@@ -146,6 +180,7 @@ export const useAuthStore = defineStore('auth', () => {
     $reset,
     authLogin,
     fetchUserInfo,
+    forceLogout,
     loginLoading,
     logout,
   };

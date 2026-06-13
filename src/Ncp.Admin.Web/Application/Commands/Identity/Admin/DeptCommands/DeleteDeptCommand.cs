@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
-using Ncp.Admin.Infrastructure;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Domain;
 
@@ -14,7 +12,7 @@ public record DeleteDeptCommand(DeptId Id) : ICommand;
 /// <summary>
 /// 删除部门命令处理器
 /// </summary>
-public class DeleteDeptCommandHandler(IDeptRepository deptRepository, ApplicationDbContext dbContext) : ICommandHandler<DeleteDeptCommand>
+public class DeleteDeptCommandHandler(IDeptRepository deptRepository) : ICommandHandler<DeleteDeptCommand>
 {
     public async Task Handle(DeleteDeptCommand request, CancellationToken cancellationToken)
     {
@@ -22,8 +20,7 @@ public class DeleteDeptCommandHandler(IDeptRepository deptRepository, Applicatio
             ?? throw new KnownException($"未找到部门，Id = {request.Id}", ErrorCodes.DeptNotFound);
 
         // 检查是否有子部门
-        var hasChildren = await dbContext.Depts
-            .AnyAsync(d => d.ParentId == request.Id && !d.IsDeleted, cancellationToken);
+        var hasChildren = await deptRepository.HasActiveChildrenAsync(request.Id, cancellationToken);
 
         if (hasChildren)
         {
@@ -31,8 +28,7 @@ public class DeleteDeptCommandHandler(IDeptRepository deptRepository, Applicatio
         }
 
         // 检查是否有用户属于该部门
-        var hasUsers = await dbContext.UserDepts
-            .AnyAsync(ud => ud.DeptId == request.Id, cancellationToken);
+        var hasUsers = await deptRepository.HasUsersAsync(request.Id, cancellationToken);
 
         if (hasUsers)
         {
@@ -40,8 +36,7 @@ public class DeleteDeptCommandHandler(IDeptRepository deptRepository, Applicatio
         }
 
         // 检查是否有岗位属于该部门
-        var hasPositions = await dbContext.Positions
-            .AnyAsync(p => p.DeptId == request.Id && !p.IsDeleted, cancellationToken);
+        var hasPositions = await deptRepository.HasActivePositionsAsync(request.Id, cancellationToken);
 
         if (hasPositions)
         {

@@ -19,12 +19,15 @@ export function useSchema(): VbenFormSchema[] {
     },
     {
       component: 'Input',
+      componentProps: {
+        placeholder: '新增时自动生成',
+      },
       fieldName: 'code',
       label: $t('system.position.code'),
       rules: z
         .string()
-        .min(1, $t('ui.formRules.required', [$t('system.position.code')]))
-        .max(32, $t('ui.formRules.maxLength', [$t('system.position.code'), 32])),
+        .max(32, $t('ui.formRules.maxLength', [$t('system.position.code'), 32]))
+        .optional(),
     },
     {
       component: 'ApiTreeSelect',
@@ -82,11 +85,17 @@ export function useGridFormSchema(): VbenFormSchema[] {
   return [
     {
       component: 'Input',
+      componentProps: {
+        class: 'w-full',
+      },
       fieldName: 'name',
       label: $t('system.position.positionName'),
     },
     {
       component: 'Input',
+      componentProps: {
+        class: 'w-full',
+      },
       fieldName: 'code',
       label: $t('system.position.code'),
     },
@@ -107,6 +116,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
       component: 'Select',
       componentProps: {
         allowClear: true,
+        class: 'w-full',
         options: [
           { label: $t('common.enabled'), value: 1 },
           { label: $t('common.disabled'), value: 0 },
@@ -124,18 +134,14 @@ export function useColumns(
   return [
     {
       field: 'name',
+      showOverflow: 'tooltip',
       title: $t('system.position.positionName'),
-      width: 140,
+      width: 180,
     },
     {
       field: 'code',
+      showOverflow: 'tooltip',
       title: $t('system.position.code'),
-      width: 120,
-    },
-    {
-      field: 'deptName',
-      title: $t('system.position.dept'),
-      width: 140,
     },
     {
       field: 'sortOrder',
@@ -170,7 +176,7 @@ export function useColumns(
       headerAlign: 'center',
       showOverflow: false,
       title: $t('system.position.operation'),
-      width: 140,
+      width: 200,
     },
   ];
 }

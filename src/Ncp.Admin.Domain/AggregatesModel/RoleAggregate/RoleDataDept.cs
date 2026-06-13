@@ -8,13 +8,12 @@ public class RoleDataDept
     {
     }
 
-    public RoleDataDept(RoleId roleId, DeptId deptId)
+    internal RoleDataDept(DeptId deptId)
     {
-        RoleId = roleId;
         DeptId = deptId;
     }
 
-    public RoleId RoleId { get; private set; } = default!;
-    public DeptId DeptId { get; private set; } = default!;
+    public RoleId RoleId { get; private set; } = RoleId.Unassigned;
+    public DeptId DeptId { get; private set; } = DeptId.Unassigned;
 }
 

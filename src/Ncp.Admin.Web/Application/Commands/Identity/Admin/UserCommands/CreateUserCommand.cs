@@ -23,7 +23,6 @@ public record CreateUserCommand(
     DateTimeOffset BirthDate,
     DeptId? DeptId,
     string? DeptName,
-    bool IsDeptManager,
     PositionId? PositionId,
     string? PositionName,
     IEnumerable<AssignAdminUserRoleQueryDto> RolesToBeAssigned,
@@ -36,7 +35,10 @@ public record CreateUserCommand(
     bool NotOrderMeal,
     string WechatGuid,
     bool IsResigned,
-    DateTimeOffset ResignedTime) : ICommand<UserId>;
+    DateTimeOffset ResignedTime,
+    bool AttendanceRequired = true,
+    bool SetAsDeptResponsibleUser = false,
+    bool SetAsDefaultDeptResponsibleUser = false) : ICommand<UserId>;
 
 public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 {
@@ -53,12 +55,12 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     }
 }
 
-public class CreateUserCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher) : ICommandHandler<CreateUserCommand, UserId>
+public class CreateUserCommandHandler(
+    IUserRepository userRepository,
+    IPasswordHasher passwordHasher) : ICommandHandler<CreateUserCommand, UserId>
 {
     public async Task<UserId> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        Log.Information("开始创建用户: {UserName}, Email: {Email}", request.Name, request.Email);
-
         var passwordHash = passwordHasher.Hash(request.Password);
 
         var roles = request.RolesToBeAssigned
@@ -84,25 +86,31 @@ public class CreateUserCommandHandler(IUserRepository userRepository, IPasswordH
             request.NotOrderMeal,
             request.WechatGuid,
             request.IsResigned,
-            request.ResignedTime);
+            request.ResignedTime,
+            request.AttendanceRequired);
 
         await userRepository.AddAsync(user, cancellationToken);
 
         if (request.DeptId != null && !string.IsNullOrEmpty(request.DeptName))
         {
-            user.AssignDept(request.DeptId, request.DeptName, request.IsDeptManager);
-            Log.Debug("为用户分配部门: UserId={UserId}, DeptId={DeptId}, DeptName={DeptName}", user.Id, request.DeptId, request.DeptName);
+            user.AssignDept(request.DeptId, request.DeptName);
+        }
+
+        if (request.SetAsDeptResponsibleUser || request.SetAsDefaultDeptResponsibleUser)
+        {
+            if (request.DeptId is null || request.DeptId == DeptId.Unassigned)
+            {
+                throw new KnownException("设为部门负责人时必须选择部门", ErrorCodes.DeptNotFound);
+            }
+
+            // 这里只表达用户创建时的跨聚合协作意图，实际负责人关系由部门命令加载部门聚合后写入。
+            user.RequestDeptResponsibleUserAssignment(request.DeptId, request.SetAsDefaultDeptResponsibleUser);
         }
 
         if (request.PositionId != null && !string.IsNullOrEmpty(request.PositionName))
         {
-            var position = new UserPosition(user.Id, request.PositionId!, request.PositionName);
-            user.AssignPosition(position);
-            Log.Debug("为用户分配岗位: UserId={UserId}, PositionId={PositionId}, PositionName={PositionName}", user.Id, request.PositionId, request.PositionName);
+            user.AssignPosition(request.PositionId, request.PositionName);
         }
-
-        Log.Information("用户创建成功: UserId={UserId}, UserName={UserName}, Email={Email}, RoleCount={RoleCount}", 
-            user.Id, request.Name, request.Email, roles.Count);
 
         return user.Id;
     }

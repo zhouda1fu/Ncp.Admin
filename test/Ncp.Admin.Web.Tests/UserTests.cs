@@ -49,7 +49,7 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         
         foreach (var user in testUsers)
         {
-            user.SoftDelete(new UserId(0));
+            user.SoftDelete(UserId.Unassigned);
         }
         
         await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -81,7 +81,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                false,
                 null,
                 null,
                 new[] { roleId },
@@ -137,7 +136,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                false,
                 null,
                 null,
                 new[] { roleId },
@@ -166,7 +164,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                false,
                 null,
                 null,
                 new[] { roleId },
@@ -213,7 +210,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             DateTimeOffset.UtcNow.AddYears(-25),
             deptId,
             "研发",
-            false,
             null,
             null,
             new[] { roleId },
@@ -264,7 +260,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                false,
                 null,
                 null,
                 new[] { roleId },
@@ -346,7 +341,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                false,
                 null,
                 null,
                 new[] { roleId },
@@ -377,7 +371,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-30),
                 deptId,
                 "研发",
-                false,
                 null,
                 null,
                 "", // 不更新密码
@@ -388,9 +381,10 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 "https://example.com/avatar.png",
                 false,
                 0,
+                true,
                 "wechat-guid",
                 false,
-                DateTimeOffset.UtcNow
+                DateTimeOffset.MinValue
             );
             var (response, result) = await client.PUTAsync<UpdateUserEndpoint, UpdateUserRequest, ResponseData<UpdateUserResponse>>(request);
             
@@ -435,7 +429,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             DateTimeOffset.UtcNow.AddYears(-25),
             deptId,
             "研发",
-            false,
             null,
             null,
             "",
@@ -446,9 +439,10 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             "https://example.com/avatar.png",
             false,
             0,
+            true,
             "wechat-guid",
             false,
-            DateTimeOffset.UtcNow
+            DateTimeOffset.MinValue
         );
         var (response, result) = await client.PUTAsync<UpdateUserEndpoint, UpdateUserRequest, ResponseData<UpdateUserResponse>>(request);
         
@@ -486,7 +480,6 @@ public class UserTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
                 DateTimeOffset.UtcNow.AddYears(-25),
                 deptId,
                 "研发",
-                false,
                 null,
                 null,
                 new[] { roleId },

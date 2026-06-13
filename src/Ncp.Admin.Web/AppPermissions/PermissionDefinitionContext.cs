@@ -3,52 +3,55 @@ using System.Collections.Immutable;
 namespace Ncp.Admin.Web.AppPermissions;
 
 /// <summary>
-/// 管理权限定义的上下文类，负责初始化和提供权限组及其权限项。
+/// 平台脚手架权限定义。
 /// </summary>
 public static class PermissionDefinitionContext
 {
-    // 存储权限组的字典，键为权限组名称，值为权限组对象
     private static Dictionary<string, AppPermissionGroup> Groups { get; } = new();
 
     private static IReadOnlyDictionary<string, AppPermission>? _permissionsByCode;
 
-    // 静态构造函数，在类初始化时创建默认的权限组和权限项
     static PermissionDefinitionContext()
     {
         var systemAccess = AddGroup("SystemAccess");
-        
-        // 用户管理权限
-        var adminUserManagement = systemAccess.AddPermission(PermissionCodes.UserManagement, "用户管理");
-        adminUserManagement.AddChild(PermissionCodes.UserCreate, "创建用户", "创建新用户");
-        adminUserManagement.AddChild(PermissionCodes.UserEdit, "编辑用户", "更新用户信息");
-        adminUserManagement.AddChild(PermissionCodes.UserDelete, "删除用户");
-        adminUserManagement.AddChild(PermissionCodes.UserView, "查看用户", "查看用户信息");
-        adminUserManagement.AddChild(PermissionCodes.UserRoleAssign, "分配用户角色", "分配用户角色权限");
-        adminUserManagement.AddChild(PermissionCodes.UserResetPassword, "重置用户密码");
-        adminUserManagement.AddChild(PermissionCodes.UserExport, "导出用户", "导出用户 Excel");
-        adminUserManagement.AddChild(PermissionCodes.UserImport, "导入用户", "导入用户 Excel");
+        var systemModule = systemAccess.AddPermission(PermissionCodes.SystemModule, "系统模块", "系统管理菜单入口");
 
-        // 角色管理权限
-        var roleManagement = systemAccess.AddPermission(PermissionCodes.RoleManagement, "角色管理");
-        roleManagement.AddChild(PermissionCodes.RoleCreate, "创建角色", "创建新角色");
-        roleManagement.AddChild(PermissionCodes.RoleEdit, "编辑角色", "更新角色信息");
+        var userManagement = systemModule.AddChild(PermissionCodes.UserManagement, "用户管理");
+        userManagement.AddChild(PermissionCodes.UserCreate, "创建用户");
+        userManagement.AddChild(PermissionCodes.UserEdit, "编辑用户");
+        userManagement.AddChild(PermissionCodes.UserDelete, "删除用户");
+        userManagement.AddChild(PermissionCodes.UserView, "查看用户");
+        userManagement.AddChild(PermissionCodes.UserRoleAssign, "分配用户角色");
+        userManagement.AddChild(PermissionCodes.UserResetPassword, "重置用户密码");
+        userManagement.AddChild(PermissionCodes.UserExport, "导出用户");
+        userManagement.AddChild(PermissionCodes.UserImport, "导入用户");
+        userManagement.AddChild(PermissionCodes.UserChangeHistoryView, "用户修改记录");
+
+        var roleManagement = systemModule.AddChild(PermissionCodes.RoleManagement, "角色管理");
+        roleManagement.AddChild(PermissionCodes.RoleCreate, "创建角色");
+        roleManagement.AddChild(PermissionCodes.RoleEdit, "编辑角色");
         roleManagement.AddChild(PermissionCodes.RoleDelete, "删除角色");
-        roleManagement.AddChild(PermissionCodes.RoleView, "查看角色", "查看角色信息");
-        roleManagement.AddChild(PermissionCodes.RoleUpdatePermissions, "更新角色权限", "更新角色的权限");
+        roleManagement.AddChild(PermissionCodes.RoleView, "查看角色");
+        roleManagement.AddChild(PermissionCodes.RoleUpdatePermissions, "更新角色权限");
 
-        // 部门管理权限
-        var deptManagement = systemAccess.AddPermission(PermissionCodes.DeptManagement, "部门管理");
+        var deptManagement = systemModule.AddChild(PermissionCodes.DeptManagement, "部门管理");
         deptManagement.AddChild(PermissionCodes.DeptCreate, "创建部门");
-        deptManagement.AddChild(PermissionCodes.DeptEdit, "编辑部门", "更新部门信息");
+        deptManagement.AddChild(PermissionCodes.DeptEdit, "编辑部门");
         deptManagement.AddChild(PermissionCodes.DeptDelete, "删除部门");
-        deptManagement.AddChild(PermissionCodes.DeptView, "查看部门", "查看部门信息");
+        deptManagement.AddChild(PermissionCodes.DeptView, "查看部门");
 
-        // 工作流管理权限
-        var workflowManagement = systemAccess.AddPermission(PermissionCodes.WorkflowManagement, "工作流管理");
+        var positionManagement = systemModule.AddChild(PermissionCodes.PositionManagement, "岗位管理");
+        positionManagement.AddChild(PermissionCodes.PositionCreate, "创建岗位");
+        positionManagement.AddChild(PermissionCodes.PositionEdit, "编辑岗位");
+        positionManagement.AddChild(PermissionCodes.PositionDelete, "删除岗位");
+        positionManagement.AddChild(PermissionCodes.PositionView, "查看岗位");
+
+        var workflowManagement = systemModule.AddChild(PermissionCodes.WorkflowManagement, "工作流管理");
         workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionView, "查看流程定义");
         workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionCreate, "创建流程定义");
         workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionEdit, "编辑流程定义");
         workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionDelete, "删除流程定义");
+        workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionDeletePublished, "删除已发布流程定义");
         workflowManagement.AddChild(PermissionCodes.WorkflowDefinitionPublish, "发布流程定义");
         workflowManagement.AddChild(PermissionCodes.WorkflowStart, "发起流程");
         workflowManagement.AddChild(PermissionCodes.WorkflowCancel, "撤销流程");
@@ -56,253 +59,55 @@ public static class PermissionDefinitionContext
         workflowManagement.AddChild(PermissionCodes.WorkflowInstanceView, "查看流程实例");
         workflowManagement.AddChild(PermissionCodes.WorkflowMonitor, "流程监控");
 
-        // 岗位管理权限
-        var positionManagement = systemAccess.AddPermission(PermissionCodes.PositionManagement, "岗位管理");
-        positionManagement.AddChild(PermissionCodes.PositionCreate, "创建岗位");
-        positionManagement.AddChild(PermissionCodes.PositionEdit, "编辑岗位");
-        positionManagement.AddChild(PermissionCodes.PositionDelete, "删除岗位");
-        positionManagement.AddChild(PermissionCodes.PositionView, "查看岗位");
-
-        // 通知管理权限
-        var notificationManagement = systemAccess.AddPermission(PermissionCodes.NotificationManagement, "通知管理");
+        var notificationManagement = systemModule.AddChild(PermissionCodes.NotificationManagement, "通知管理");
         notificationManagement.AddChild(PermissionCodes.NotificationView, "查看通知");
         notificationManagement.AddChild(PermissionCodes.NotificationSend, "发送通知");
 
-        // 公告管理权限
-        var announcementManagement = systemAccess.AddPermission(PermissionCodes.AnnouncementManagement, "公告管理");
-        announcementManagement.AddChild(PermissionCodes.AnnouncementView, "查看公告");
-        announcementManagement.AddChild(PermissionCodes.AnnouncementCreate, "创建公告");
-        announcementManagement.AddChild(PermissionCodes.AnnouncementEdit, "编辑公告");
-        announcementManagement.AddChild(PermissionCodes.AnnouncementPublish, "发布公告");
-
-        // 会议/预订管理权限
-        var meetingManagement = systemAccess.AddPermission(PermissionCodes.MeetingManagement, "会议管理");
-        meetingManagement.AddChild(PermissionCodes.MeetingRoomView, "查看会议室");
-        meetingManagement.AddChild(PermissionCodes.MeetingRoomEdit, "管理会议室");
-        meetingManagement.AddChild(PermissionCodes.MeetingBookingView, "查看预订");
-        meetingManagement.AddChild(PermissionCodes.MeetingBookingCreate, "预订会议室");
-
-        // 报销管理权限
-        var expenseManagement = systemAccess.AddPermission(PermissionCodes.ExpenseManagement, "报销管理");
-        expenseManagement.AddChild(PermissionCodes.ExpenseClaimView, "查看报销单");
-        expenseManagement.AddChild(PermissionCodes.ExpenseClaimCreate, "创建报销单");
-        expenseManagement.AddChild(PermissionCodes.ExpenseClaimSubmit, "提交报销单");
-
-        // 考勤管理权限
-        var attendanceManagement = systemAccess.AddPermission(PermissionCodes.AttendanceManagement, "考勤管理");
-        attendanceManagement.AddChild(PermissionCodes.AttendanceRecordView, "查看考勤记录");
-        attendanceManagement.AddChild(PermissionCodes.AttendanceCheckIn, "打卡/签退");
-        attendanceManagement.AddChild(PermissionCodes.ScheduleView, "查看排班");
-        attendanceManagement.AddChild(PermissionCodes.ScheduleEdit, "编辑排班");
-
-        // 请假管理权限
-        var leaveManagement = systemAccess.AddPermission(PermissionCodes.LeaveManagement, "请假管理");
-        leaveManagement.AddChild(PermissionCodes.LeaveRequestView, "查看请假申请");
-        leaveManagement.AddChild(PermissionCodes.LeaveRequestCreate, "创建请假申请");
-        leaveManagement.AddChild(PermissionCodes.LeaveRequestEdit, "编辑请假申请");
-        leaveManagement.AddChild(PermissionCodes.LeaveRequestSubmit, "提交请假申请");
-        leaveManagement.AddChild(PermissionCodes.LeaveRequestCancel, "撤销请假申请");
-        leaveManagement.AddChild(PermissionCodes.LeaveBalanceView, "查看请假余额");
-        leaveManagement.AddChild(PermissionCodes.LeaveBalanceEdit, "设置请假余额");
-
-        // 项目管理权限
-        var projectManagement = systemAccess.AddPermission(PermissionCodes.ProjectManagement, "项目管理");
-        projectManagement.AddChild(PermissionCodes.ProjectView, "查看项目");
-        projectManagement.AddChild(PermissionCodes.ProjectCreate, "创建项目");
-        projectManagement.AddChild(PermissionCodes.ProjectEdit, "编辑项目");
-        projectManagement.AddChild(PermissionCodes.ProjectTypeView, "查看项目类型");
-        projectManagement.AddChild(PermissionCodes.ProjectTypeCreate, "创建项目类型");
-        projectManagement.AddChild(PermissionCodes.ProjectTypeEdit, "编辑项目类型");
-        projectManagement.AddChild(PermissionCodes.ProjectStatusOptionView, "查看项目状态");
-        projectManagement.AddChild(PermissionCodes.ProjectStatusOptionCreate, "创建项目状态");
-        projectManagement.AddChild(PermissionCodes.ProjectStatusOptionEdit, "编辑项目状态");
-        projectManagement.AddChild(PermissionCodes.ProjectIndustryView, "查看项目行业");
-        projectManagement.AddChild(PermissionCodes.ProjectIndustryCreate, "创建项目行业");
-        projectManagement.AddChild(PermissionCodes.ProjectIndustryEdit, "编辑项目行业");
-
-        // 任务管理权限
-        var taskManagement = systemAccess.AddPermission(PermissionCodes.TaskManagement, "任务管理");
-        taskManagement.AddChild(PermissionCodes.TaskView, "查看任务");
-        taskManagement.AddChild(PermissionCodes.TaskCreate, "创建任务");
-        taskManagement.AddChild(PermissionCodes.TaskEdit, "编辑任务");
-
-        // 文档管理权限
-        var documentManagement = systemAccess.AddPermission(PermissionCodes.DocumentManagement, "文档管理");
-        documentManagement.AddChild(PermissionCodes.DocumentView, "查看文档");
-        documentManagement.AddChild(PermissionCodes.DocumentCreate, "上传文档");
-        documentManagement.AddChild(PermissionCodes.DocumentEdit, "编辑文档/添加版本");
-        documentManagement.AddChild(PermissionCodes.DocumentShare, "创建共享链接");
-
-        // 即时通讯权限
-        var chatManagement = systemAccess.AddPermission(PermissionCodes.ChatManagement, "即时通讯");
-        chatManagement.AddChild(PermissionCodes.ChatView, "查看会话与消息");
-        chatManagement.AddChild(PermissionCodes.ChatCreate, "创建会话");
-
-        // 通讯录管理权限
-        var contactManagement = systemAccess.AddPermission(PermissionCodes.ContactManagement, "通讯录管理");
-        contactManagement.AddChild(PermissionCodes.ContactGroupView, "查看联系组");
-        contactManagement.AddChild(PermissionCodes.ContactGroupCreate, "创建联系组");
-        contactManagement.AddChild(PermissionCodes.ContactGroupEdit, "编辑联系组");
-        contactManagement.AddChild(PermissionCodes.ContactView, "查看联系人");
-        contactManagement.AddChild(PermissionCodes.ContactCreate, "创建联系人");
-        contactManagement.AddChild(PermissionCodes.ContactEdit, "编辑联系人");
-
-        // 资产管理权限
-        var assetManagement = systemAccess.AddPermission(PermissionCodes.AssetManagement, "资产管理");
-        assetManagement.AddChild(PermissionCodes.AssetView, "查看资产");
-        assetManagement.AddChild(PermissionCodes.AssetCreate, "创建资产");
-        assetManagement.AddChild(PermissionCodes.AssetEdit, "编辑资产");
-        assetManagement.AddChild(PermissionCodes.AssetAllocate, "领用资产");
-        assetManagement.AddChild(PermissionCodes.AssetReturn, "归还资产");
-        assetManagement.AddChild(PermissionCodes.AssetScrap, "报废资产");
-        assetManagement.AddChild(PermissionCodes.AssetAllocationView, "查看领用记录");
-
-        // 车辆管理权限
-        var vehicleManagement = systemAccess.AddPermission(PermissionCodes.VehicleManagement, "车辆管理");
-        vehicleManagement.AddChild(PermissionCodes.VehicleView, "查看车辆");
-        vehicleManagement.AddChild(PermissionCodes.VehicleEdit, "管理车辆");
-        vehicleManagement.AddChild(PermissionCodes.VehicleBookingView, "查看预订");
-        vehicleManagement.AddChild(PermissionCodes.VehicleBookingCreate, "预订用车");
-        vehicleManagement.AddChild(PermissionCodes.VehicleBookingCancel, "取消预订");
-        vehicleManagement.AddChild(PermissionCodes.VehicleBookingComplete, "完成预订");
-
-        // 合同管理权限
-        var contractManagement = systemAccess.AddPermission(PermissionCodes.ContractManagement, "合同管理");
-        contractManagement.AddChild(PermissionCodes.ContractView, "查看合同");
-        contractManagement.AddChild(PermissionCodes.ContractCreate, "创建合同");
-        contractManagement.AddChild(PermissionCodes.ContractEdit, "编辑合同");
-        contractManagement.AddChild(PermissionCodes.ContractDelete, "删除合同");
-        contractManagement.AddChild(PermissionCodes.ContractSubmit, "提交审批");
-        contractManagement.AddChild(PermissionCodes.ContractApprove, "审批合同");
-        contractManagement.AddChild(PermissionCodes.ContractArchive, "归档合同");
-        contractManagement.AddChild(PermissionCodes.ContractTypeView, "查看合同类型");
-        contractManagement.AddChild(PermissionCodes.ContractTypeCreate, "创建合同类型");
-        contractManagement.AddChild(PermissionCodes.ContractTypeEdit, "编辑合同类型");
-        contractManagement.AddChild(PermissionCodes.ContractTypeDelete, "删除合同类型");
-        contractManagement.AddChild(PermissionCodes.IncomeExpenseTypeView, "查看收支类型");
-        contractManagement.AddChild(PermissionCodes.IncomeExpenseTypeCreate, "创建收支类型");
-        contractManagement.AddChild(PermissionCodes.IncomeExpenseTypeEdit, "编辑收支类型");
-        contractManagement.AddChild(PermissionCodes.IncomeExpenseTypeDelete, "删除收支类型");
-
-        // 客户管理权限
-        var customerManagement = systemAccess.AddPermission(PermissionCodes.CustomerManagement, "客户管理");
-        customerManagement.AddChild(PermissionCodes.CustomerView, "查看客户");
-        customerManagement.AddChild(PermissionCodes.CustomerCreate, "创建客户");
-        customerManagement.AddChild(PermissionCodes.CustomerEdit, "编辑客户");
-        customerManagement.AddChild(PermissionCodes.CustomerDelete, "删除客户");
-        customerManagement.AddChild(PermissionCodes.CustomerContactEdit, "编辑客户联系人");
-        customerManagement.AddChild(PermissionCodes.CustomerContactRecordView, "查看客户联络记录");
-        customerManagement.AddChild(PermissionCodes.CustomerContactRecordCreate, "创建客户联络记录");
-        customerManagement.AddChild(PermissionCodes.CustomerContactRecordEdit, "编辑客户联络记录");
-        customerManagement.AddChild(PermissionCodes.CustomerReleaseToSea, "释放到公海");
-        customerManagement.AddChild(PermissionCodes.CustomerClaimFromSea, "公海领用");
-        customerManagement.AddChild(PermissionCodes.CustomerSeaVoid, "公海作废");
-        customerManagement.AddChild(PermissionCodes.CustomerSeaConsultationEdit, "公海咨询内容编辑");
-        customerManagement.AddChild(PermissionCodes.CustomerShare, "共享客户");
-        customerManagement.AddChild(PermissionCodes.CustomerSeaRegionAssignView, "查看客户公海片区分配");
-        customerManagement.AddChild(PermissionCodes.CustomerSeaRegionAssignEdit, "编辑客户公海片区分配");
-        customerManagement.AddChild(PermissionCodes.IndustryView, "查看行业");
-        customerManagement.AddChild(PermissionCodes.IndustryCreate, "创建行业");
-        customerManagement.AddChild(PermissionCodes.IndustryEdit, "编辑行业");
-        customerManagement.AddChild(PermissionCodes.IndustryDelete, "删除行业");
-        customerManagement.AddChild(PermissionCodes.CustomerSourceView, "查看客户来源");
-        customerManagement.AddChild(PermissionCodes.CustomerSourceCreate, "创建客户来源");
-        customerManagement.AddChild(PermissionCodes.CustomerSourceEdit, "编辑客户来源");
-        customerManagement.AddChild(PermissionCodes.RegionView, "查看区域");
-        customerManagement.AddChild(PermissionCodes.RegionCreate, "创建区域");
-        customerManagement.AddChild(PermissionCodes.RegionEdit, "编辑区域");
-
-        // 订单管理权限
-        var orderManagement = systemAccess.AddPermission(PermissionCodes.OrderManagement, "订单管理");
-        orderManagement.AddChild(PermissionCodes.OrderView, "查看订单");
-        orderManagement.AddChild(PermissionCodes.OrderCreate, "创建订单");
-        orderManagement.AddChild(PermissionCodes.OrderEdit, "编辑订单");
-        orderManagement.AddChild(PermissionCodes.OrderDelete, "删除订单");
-        orderManagement.AddChild(PermissionCodes.OrderSubmit, "提交订单审批");
-        
-        var orderSpecialDataDisplay = orderManagement.AddChild(PermissionCodes.OrderSpecialDataDisplay, "特殊数据展示");
-        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderContractUpload, "合同上传");
-        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderContractSelect, "选择合同");
-        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderContractNotCompanyTemplate, "合同非公司模版");
-        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderNeedInvoice, "是否需要发票");
-        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderContractAmount, "合同金额");
-        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderTechnicalStatus, "技术状态");
-        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderDiscountPointsDescriptionView, "查看优惠点数说明");
-        orderSpecialDataDisplay.AddChild(PermissionCodes.OrderDiscountPointsCreate, "优惠点数新增");
-
-        // 产品管理权限
-        var productManagement = systemAccess.AddPermission(PermissionCodes.ProductManagement, "产品管理");
-        productManagement.AddChild(PermissionCodes.ProductView, "查看产品");
-        productManagement.AddChild(PermissionCodes.ProductCreate, "创建产品");
-        productManagement.AddChild(PermissionCodes.ProductEdit, "编辑产品");
-        productManagement.AddChild(PermissionCodes.ProductDelete, "删除产品");
-
-        // 操作日志权限
-        var operationLogManagement = systemAccess.AddPermission(PermissionCodes.OperationLogManagement, "操作日志");
+        var operationLogManagement = systemModule.AddChild(PermissionCodes.OperationLogManagement, "操作日志");
         operationLogManagement.AddChild(PermissionCodes.OperationLogView, "查看操作日志");
 
-        // 所有接口访问权限
-        var allApiAccess = systemAccess.AddPermission(PermissionCodes.AllApiAccess, "所有接口访问权限");
+        var systemLogManagement = systemModule.AddChild(PermissionCodes.SystemLogManagement, "系统日志");
+        systemLogManagement.AddChild(PermissionCodes.SystemLogView, "查看系统日志");
 
-        _permissionsByCode = BuildPermissionIndex(PermissionGroups);
+        var backgroundJobManagement = systemModule.AddChild(PermissionCodes.BackgroundJobManagement, "后台任务");
+        backgroundJobManagement.AddChild(PermissionCodes.BackgroundJobView, "查看后台任务");
+        backgroundJobManagement.AddChild(PermissionCodes.BackgroundJobTrigger, "触发后台任务");
+
+        systemModule.AddChild(PermissionCodes.HomeDashboard, "首页工作台");
     }
 
-    /// <summary>
-    /// 添加一个新的权限组，如果权限组名称已存在则抛出异常。
-    /// </summary>
-    /// <param name="name">权限组名称</param>
-    /// <returns>返回创建的权限组</returns>
-    /// <exception cref="ArgumentException">如果权限组名称已经存在，则抛出异常</exception>
+    public static IReadOnlyDictionary<string, AppPermission> PermissionsByCode =>
+        _permissionsByCode ??= BuildPermissionsByCode();
+
+    public static IReadOnlyList<AppPermissionGroup> GroupsList => Groups.Values.ToList();
+
     private static AppPermissionGroup AddGroup(string name)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-
-        if (Groups.ContainsKey(name))
-        {
-            throw new ArgumentException($"There is already an existing permission group with name: {name}");
-        }
-
-        return Groups[name] = new AppPermissionGroup(name);
+        var group = new AppPermissionGroup(name);
+        Groups[name] = group;
+        return group;
     }
 
-    /// <summary>
-    /// 获取所有的权限组。
-    /// </summary>
-    public static IReadOnlyList<AppPermissionGroup> PermissionGroups => Groups.Values.ToImmutableList();
-
-    /// <summary>
-    /// 获取所有权限（包含子权限）的索引字典，键为权限代码。
-    /// </summary>
-    public static IReadOnlyDictionary<string, AppPermission> PermissionsByCode
-        => _permissionsByCode ??= BuildPermissionIndex(PermissionGroups);
-
-    private static IReadOnlyDictionary<string, AppPermission> BuildPermissionIndex(
-        IReadOnlyList<AppPermissionGroup> groups)
+    private static IReadOnlyDictionary<string, AppPermission> BuildPermissionsByCode()
     {
         var dict = new Dictionary<string, AppPermission>(StringComparer.Ordinal);
-
-        foreach (var group in groups)
+        foreach (var group in Groups.Values)
         {
             foreach (var permission in group.Permissions)
             {
-                IndexPermissionRecursive(dict, permission);
+                CollectPermissions(permission, dict);
             }
         }
 
-        return dict;
+        return dict.ToImmutableDictionary(StringComparer.Ordinal);
     }
 
-    private static void IndexPermissionRecursive(Dictionary<string, AppPermission> dict, AppPermission permission)
+    private static void CollectPermissions(AppPermission permission, Dictionary<string, AppPermission> dict)
     {
-        if (!dict.TryAdd(permission.Code, permission))
-        {
-            throw new InvalidOperationException($"Duplicate permission code detected: {permission.Code}");
-        }
-
+        dict[permission.Code] = permission;
         foreach (var child in permission.Children)
         {
-            IndexPermissionRecursive(dict, child);
+            CollectPermissions(child, dict);
         }
     }
 }
-

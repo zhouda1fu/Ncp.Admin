@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Services.Workflow;
@@ -13,7 +12,7 @@ public record UpdateWorkflowDefinitionCommand(
     string Name,
     string Description,
     string Category,
-    string DefinitionJson) : ICommand;
+    string DesignerSchemaJson) : ICommand;
 
 /// <summary>
 /// 更新流程定义命令验证器
@@ -35,7 +34,7 @@ public class UpdateWorkflowDefinitionCommandValidator : AbstractValidator<Update
 /// </summary>
 public class UpdateWorkflowDefinitionCommandHandler(
     IWorkflowDefinitionRepository repository,
-    IMemoryCache memoryCache,
+    WorkflowDefinitionCacheInvalidator cacheInvalidator,
     WorkflowDefinitionAssigneeConfigValidator assigneeConfigValidator)
     : ICommandHandler<UpdateWorkflowDefinitionCommand>
 {
@@ -44,11 +43,11 @@ public class UpdateWorkflowDefinitionCommandHandler(
         var definition = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
 
-        await assigneeConfigValidator.ValidateAsync(request.DefinitionJson, cancellationToken);
+        await assigneeConfigValidator.ValidateAsync(request.DesignerSchemaJson, request.Category, cancellationToken);
 
-        definition.UpdateInfo(request.Name, request.Description, request.Category, request.DefinitionJson ?? string.Empty);
+        definition.UpdateInfo(request.Name, request.Description, request.Category, request.DesignerSchemaJson ?? string.Empty);
+        definition.UpdateLatestDraftVersion(request.DesignerSchemaJson ?? string.Empty);
 
-        memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(request.Id));
-        memoryCache.Remove(WorkflowCacheKeys.PublishedListKey);
+        cacheInvalidator.InvalidateDefinitionWrite(request.Id);
     }
 }

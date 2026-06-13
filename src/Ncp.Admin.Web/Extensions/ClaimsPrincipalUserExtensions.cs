@@ -25,7 +25,7 @@ public static class ClaimsPrincipalUserExtensions
     }
 
     /// <summary>
-    /// 对应 <c>Name</c> claim；缺失时为空串。
+    /// 对应 JWT <c>Name</c> claim（登录账号）；写入回复/活动记录等展示场景请从用户表解析真实姓名。
     /// </summary>
     public static string GetUserDisplayName(this ClaimsPrincipal? user) =>
         user?.FindFirstValue(ClaimTypes.Name) ?? string.Empty;

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Recordable } from '@vben/types';
+import type { WorkflowDesignerSchema } from './utils/workflow-schema';
 
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -14,10 +14,17 @@ import {
   updateDefinition,
 } from '#/api/system/workflow';
 import { $t } from '#/locales';
+import { navigateBackToList } from '#/utils/list-return-state';
 
 import { useCategoryOptions } from '#/views/workflow/definition/data';
 
 import WorkFlow from './components/workFlow.vue';
+import { createWorkflowRootNodeKey } from './utils/createWorkflowNodeKey';
+import {
+  createDefaultWorkflowSchema,
+  parseWorkflowDefinitionSchema,
+  serializeWorkflowSchema,
+} from './utils/workflow-schema';
 
 const route = useRoute();
 const router = useRouter();
@@ -28,7 +35,7 @@ const viewOnly = computed(() => route.query.view === '1');
 const name = ref('');
 const category = ref<string>('');
 const description = ref('');
-const nodeConfig = ref<Recordable<any> | null>(null);
+const workflowSchema = ref<WorkflowDesignerSchema>(createWorkflowSchema());
 const loading = ref(false);
 const saving = ref(false);
 
@@ -42,27 +49,21 @@ async function loadDefinition() {
     name.value = detail.name ?? '';
     category.value = detail.category ?? '';
     description.value = detail.description ?? '';
-    if (detail.definitionJson) {
-      try {
-        nodeConfig.value = JSON.parse(detail.definitionJson);
-      } catch {
-        nodeConfig.value = null;
-      }
-    } else {
-      nodeConfig.value = null;
-    }
+    workflowSchema.value =
+      parseWorkflowDefinitionSchema(detail.designerSchemaJson) ?? createWorkflowSchema();
   } finally {
     loading.value = false;
   }
 }
+
+const WORKFLOW_DEFINITION_LIST_PATH = '/workflow/definitions';
 
 async function onSave() {
   if (!name.value?.trim()) {
     message.warning($t('system.workflow.definition.flowName') + '不能为空');
     return;
   }
-  const definitionJson =
-    nodeConfig.value != null ? JSON.stringify(nodeConfig.value) : '{}';
+  const designerSchemaJson = serializeWorkflowSchema(workflowSchema.value);
   saving.value = true;
   try {
     if (isEdit.value && id.value) {
@@ -71,7 +72,7 @@ async function onSave() {
         name: name.value.trim(),
         description: description.value?.trim() ?? '',
         category: category.value || 'CreateUser',
-        definitionJson,
+        designerSchemaJson,
       });
       message.success('保存成功');
     } else {
@@ -79,10 +80,16 @@ async function onSave() {
         name: name.value.trim(),
         description: description.value?.trim() ?? '',
         category: category.value || 'CreateUser',
-        definitionJson,
+        designerSchemaJson,
       });
       message.success('创建成功');
-      router.push('/workflow/definitions');
+      await navigateBackToList(
+        router,
+        route,
+        [WORKFLOW_DEFINITION_LIST_PATH],
+        WORKFLOW_DEFINITION_LIST_PATH,
+        { reload: true },
+      );
     }
   } finally {
     saving.value = false;
@@ -105,17 +112,17 @@ async function onPublish() {
 }
 
 function onBack() {
-  router.push('/workflow/definitions');
+  void navigateBackToList(
+    router,
+    route,
+    [WORKFLOW_DEFINITION_LIST_PATH],
+    WORKFLOW_DEFINITION_LIST_PATH,
+    { reload: true },
+  );
 }
 
-function getDefaultNodeConfig() {
-  return {
-    nodeName: '发起人',
-    nodeKey: 'root_' + Date.now(),
-    type: 0,
-    nodeAssigneeList: [],
-    childNode: null,
-  };
+function createWorkflowSchema() {
+  return createDefaultWorkflowSchema(createWorkflowRootNodeKey());
 }
 
 onMounted(() => {
@@ -213,10 +220,9 @@ onMounted(() => {
     <div class="workflow-designer-body min-h-0 flex-1 overflow-hidden p-3 sm:p-4">
       <WorkFlow
         v-if="!loading"
-        v-model="nodeConfig"
+        v-model="workflowSchema"
         :category="category"
         :view-only="viewOnly"
-        :initial-config="isEdit ? undefined : getDefaultNodeConfig()"
       />
     </div>
   </div>

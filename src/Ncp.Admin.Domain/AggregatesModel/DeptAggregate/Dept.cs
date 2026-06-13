@@ -1,14 +1,20 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.DomainEvents;
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 namespace Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 
 /// <summary>
 /// 部门ID（强类型ID）
 /// </summary>
-public partial record DeptId : IInt64StronglyTypedId;
+public partial record DeptId : IInt64StronglyTypedId
+{
+    /// <summary>
+    /// 未分配部门（哨兵值）
+    /// </summary>
+    public static DeptId Unassigned { get; } = new(0);
+}
 
 /// <summary>
 /// 部门聚合根
@@ -29,17 +35,17 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     /// <summary>
     /// 上级部门ID
     /// </summary>
-    public DeptId ParentId { get; private set; } = default!;
-
-    /// <summary>
-    /// 部门主管用户ID
-    /// </summary>
-    public UserId ManagerId { get; private set; } = default!;
+    public DeptId ParentId { get; private set; } = DeptId.Unassigned;
 
     /// <summary>
     /// 状态（0=禁用，1=启用）
     /// </summary>
     public int Status { get; private set; } = 1;
+
+    /// <summary>
+    /// 排序号（同级部门内数字越小越靠前）
+    /// </summary>
+    public int SortOrder { get; private set; }
 
     /// <summary>
     /// 创建时间
@@ -72,6 +78,11 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     [NotMapped]
     public virtual ICollection<Dept> Children { get; } = [];
 
+    /// <summary>
+    /// 部门负责人列表；部门聚合负责维护该集合的一致性，应用层只表达“替换为哪些负责人”。
+    /// </summary>
+    public ICollection<DeptResponsibleUser> ResponsibleUsers { get; private set; } = [];
+
     protected Dept()
     {
     }
@@ -83,15 +94,15 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     /// <param name="remark">备注</param>
     /// <param name="parentId">上级部门ID</param>
     /// <param name="status">状态（0=禁用，1=启用）</param>
-    /// <param name="managerId">部门主管用户ID</param>
-    public Dept(string name, string remark, DeptId parentId, int status, UserId managerId)
+    /// <param name="sortOrder">排序号</param>
+    public Dept(string name, string remark, DeptId parentId, int status, int sortOrder = 0)
     {
         CreatedAt = DateTimeOffset.UtcNow;
         Name = name;
         Remark = remark;
         ParentId = parentId;
-        ManagerId = managerId;
         Status = status;
+        SortOrder = sortOrder;
     }
 
     /// <summary>
@@ -101,27 +112,106 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     /// <param name="remark">备注</param>
     /// <param name="parentId">上级部门ID</param>
     /// <param name="status">状态（0=禁用，1=启用）</param>
-    /// <param name="managerId">部门主管用户ID</param>
-    public void UpdateInfo(string name, string remark, DeptId parentId, int status, UserId managerId)
+    /// <param name="sortOrder">排序号</param>
+    public void UpdateInfo(string name, string remark, DeptId parentId, int status, int sortOrder = 0)
     {
         Name = name;
         Remark = remark;
         ParentId = parentId;
-        ManagerId = managerId;
         Status = status;
+        SortOrder = sortOrder;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
 
         AddDomainEvent(new DeptInfoChangedDomainEvent(this));
     }
 
     /// <summary>
-    /// 设置部门主管（由用户部门主管标识变更领域事件触发）
+    /// 更新同级排序号
     /// </summary>
-    /// <param name="managerId">部门主管用户ID，UserId(0) 表示无主管</param>
-    public void SetManagerId(UserId managerId)
+    /// <param name="sortOrder">排序号</param>
+    public void SetSortOrder(int sortOrder)
     {
-        ManagerId = managerId;
+        SortOrder = sortOrder;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 全量替换部门负责人，保证排重、排序和默认负责人约束都由部门聚合统一维护。
+    /// </summary>
+    /// <param name="responsibleUserIds">负责人用户 ID 列表。</param>
+    /// <param name="defaultResponsibleUserId">默认负责人用户 ID；仅用于单人兜底场景。</param>
+    public void ReplaceResponsibleUsers(
+        IReadOnlyList<UserId> responsibleUserIds,
+        UserId? defaultResponsibleUserId)
+    {
+        var normalized = responsibleUserIds
+            .Where(id => id != UserId.Unassigned)
+            .Distinct()
+            .ToList();
+        var defaultId = defaultResponsibleUserId is { } d && d != UserId.Unassigned ? d : null;
+        if (defaultId != null && !normalized.Contains(defaultId))
+        {
+            throw new KnownException("默认负责人必须在部门负责人列表中", ErrorCodes.DeptResponsibleUserDefaultInvalid);
+        }
+
+        ResponsibleUsers.Clear();
+        foreach (var (userId, index) in normalized.Select((userId, index) => (userId, index)))
+        {
+            // 子实体始终由部门聚合创建，避免应用层绕过排序和默认负责人规则。
+            ResponsibleUsers.Add(new DeptResponsibleUser(
+                Id,
+                userId,
+                defaultId != null && userId == defaultId,
+                index + 1));
+        }
+
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 追加部门负责人，并在需要时把该负责人设为默认负责人。
+    /// 用于新增用户等快捷入口，实际负责人关系仍统一归部门聚合维护。
+    /// </summary>
+    /// <param name="userId">要追加为部门负责人的用户 ID。</param>
+    /// <param name="setAsDefault">是否同步设为默认负责人。</param>
+    public void AddResponsibleUser(UserId userId, bool setAsDefault)
+    {
+        SetResponsibleUser(userId, true, setAsDefault);
+    }
+
+    /// <summary>
+    /// 设置单个用户在当前部门的负责人状态。
+    /// 可用于编辑用户时同步负责人/默认负责人状态，避免重复追加时保留旧默认状态。
+    /// </summary>
+    /// <param name="userId">要设置的用户 ID。</param>
+    /// <param name="setAsResponsible">是否设为部门负责人。</param>
+    /// <param name="setAsDefault">是否设为默认负责人。</param>
+    public void SetResponsibleUser(UserId userId, bool setAsResponsible, bool setAsDefault)
+    {
+        if (userId == UserId.Unassigned)
+        {
+            return;
+        }
+
+        var others = ResponsibleUsers
+            .OrderBy(r => r.SortOrder)
+            .Where(r => r.UserId != userId)
+            .ToList();
+        var responsibleUserIds = ResponsibleUsers
+            .OrderBy(r => r.SortOrder)
+            .Where(r => r.UserId != userId)
+            .Select(r => r.UserId)
+            .ToList();
+        if (setAsResponsible)
+        {
+            responsibleUserIds.Add(userId);
+        }
+
+        // 当当前用户取消默认负责人时，不沿用其旧默认状态，只保留其他人的默认负责人。
+        var defaultResponsibleUserId = setAsDefault
+            ? userId
+            : others.FirstOrDefault(r => r.IsDefault)?.UserId;
+        ReplaceResponsibleUsers(responsibleUserIds, defaultResponsibleUserId);
     }
 
     /// <summary>
@@ -216,5 +306,61 @@ public class Dept : Entity<DeptId>, IAggregateRoot
     public string GetPath()
     {
         return Name;
+    }
+}
+
+/// <summary>
+/// 部门负责人关系ID（强类型ID）。
+/// </summary>
+public partial record DeptResponsibleUserId : IInt64StronglyTypedId
+{
+    public static DeptResponsibleUserId Unassigned { get; } = new(0);
+}
+
+/// <summary>
+/// 部门负责人关系。
+/// 一个部门可以配置多个负责人，用于工作流“部门负责人”审批来源，不再表达单一直属上级。
+/// </summary>
+public class DeptResponsibleUser : Entity<DeptResponsibleUserId>
+{
+    protected DeptResponsibleUser()
+    {
+    }
+
+    /// <summary>
+    /// 负责人所属部门。
+    /// </summary>
+    public DeptId DeptId { get; private set; } = DeptId.Unassigned;
+
+    /// <summary>
+    /// 负责人用户。
+    /// </summary>
+    public UserId UserId { get; private set; } = UserId.Unassigned;
+
+    /// <summary>
+    /// 是否为默认负责人；仅用于需要单人兜底的场景，不代表唯一上级。
+    /// </summary>
+    public bool IsDefault { get; private set; }
+
+    /// <summary>
+    /// 负责人解析顺序；工作流顺序审批会按该字段稳定排序。
+    /// </summary>
+    public int SortOrder { get; private set; }
+
+    /// <summary>
+    /// 创建时间。
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>
+    /// 创建部门负责人关系。
+    /// </summary>
+    public DeptResponsibleUser(DeptId deptId, UserId userId, bool isDefault, int sortOrder)
+    {
+        DeptId = deptId;
+        UserId = userId;
+        IsDefault = isDefault;
+        SortOrder = sortOrder;
+        CreatedAt = DateTimeOffset.UtcNow;
     }
 }

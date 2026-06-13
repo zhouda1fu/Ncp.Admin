@@ -10,8 +10,6 @@ namespace Ncp.Admin.Domain.Tests;
 /// </summary>
 public class DeptTests
 {
-    private static readonly UserId TestManagerId = new(0);
-
     /// <summary>
     /// 创建部门时，应正确设置名称、备注、上级部门ID和状态。
     /// </summary>
@@ -19,12 +17,11 @@ public class DeptTests
     public void Constructor_WithValidArgs_ShouldSetProperties()
     {
         var parentId = new DeptId(0);
-        var dept = new Dept("研发部", "技术研发", parentId, 1, TestManagerId);
+        var dept = new Dept("研发部", "技术研发", parentId, 1);
 
         Assert.Equal("研发部", dept.Name);
         Assert.Equal("技术研发", dept.Remark);
         Assert.Equal(parentId, dept.ParentId);
-        Assert.Equal(TestManagerId, dept.ManagerId);
         Assert.Equal(1, dept.Status);
         Assert.False(dept.IsDeleted);
     }
@@ -37,15 +34,13 @@ public class DeptTests
     {
         var parentId = new DeptId(0);
         var newParentId = new DeptId(100);
-        var newManagerId = new UserId(100);
-        var dept = new Dept("研发部", "技术研发", parentId, 1, TestManagerId);
+        var dept = new Dept("研发部", "技术研发", parentId, 1);
 
-        dept.UpdateInfo("研发中心", "核心技术部门", newParentId, 1, newManagerId);
+        dept.UpdateInfo("研发中心", "核心技术部门", newParentId, 1);
 
         Assert.Equal("研发中心", dept.Name);
         Assert.Equal("核心技术部门", dept.Remark);
         Assert.Equal(newParentId, dept.ParentId);
-        Assert.Equal(newManagerId, dept.ManagerId);
         Assert.Equal(1, dept.Status);
     }
 
@@ -55,7 +50,7 @@ public class DeptTests
     [Fact]
     public void Activate_WhenDeactivated_ShouldSetStatusToOne()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 0, TestManagerId);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 0);
 
         dept.Activate();
 
@@ -68,7 +63,7 @@ public class DeptTests
     [Fact]
     public void Activate_WhenAlreadyActivated_ShouldThrow()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
 
         var ex = Assert.Throws<KnownException>(() => dept.Activate());
 
@@ -82,7 +77,7 @@ public class DeptTests
     [Fact]
     public void Deactivate_WhenActivated_ShouldSetStatusToZero()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
 
         dept.Deactivate();
 
@@ -95,7 +90,7 @@ public class DeptTests
     [Fact]
     public void Deactivate_WhenAlreadyDeactivated_ShouldThrow()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 0, TestManagerId);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 0);
 
         var ex = Assert.Throws<KnownException>(() => dept.Deactivate());
 
@@ -109,7 +104,7 @@ public class DeptTests
     [Fact]
     public void SoftDelete_WhenNotDeleted_ShouldSetIsDeleted()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
 
         dept.SoftDelete();
 
@@ -122,7 +117,7 @@ public class DeptTests
     [Fact]
     public void SoftDelete_WhenAlreadyDeleted_ShouldThrow()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
         dept.SoftDelete();
 
         var ex = Assert.Throws<KnownException>(() => dept.SoftDelete());
@@ -137,8 +132,8 @@ public class DeptTests
     [Fact]
     public void AddChild_WithValidChild_ShouldAddToChildren()
     {
-        var parent = new Dept("总部", "根", new DeptId(0), 1, TestManagerId);
-        var child = new Dept("分公司", "子部门", new DeptId(0), 1, TestManagerId);
+        var parent = new Dept("总部", "根", new DeptId(0), 1);
+        var child = new Dept("分公司", "子部门", new DeptId(0), 1);
 
         parent.AddChild(child);
 
@@ -152,7 +147,7 @@ public class DeptTests
     [Fact]
     public void AddChild_WithNull_ShouldThrow()
     {
-        var parent = new Dept("总部", "根", new DeptId(0), 1, TestManagerId);
+        var parent = new Dept("总部", "根", new DeptId(0), 1);
 
         var ex = Assert.Throws<KnownException>(() => parent.AddChild(null!));
 
@@ -166,8 +161,8 @@ public class DeptTests
     [Fact]
     public void RemoveChild_WithExistingChild_ShouldRemoveFromChildren()
     {
-        var parent = new Dept("总部", "根", new DeptId(0), 1, TestManagerId);
-        var child = new Dept("分公司", "子部门", new DeptId(0), 1, TestManagerId);
+        var parent = new Dept("总部", "根", new DeptId(0), 1);
+        var child = new Dept("分公司", "子部门", new DeptId(0), 1);
         parent.AddChild(child);
 
         parent.RemoveChild(child);
@@ -181,7 +176,7 @@ public class DeptTests
     [Fact]
     public void RemoveChild_WithNull_ShouldThrow()
     {
-        var parent = new Dept("总部", "根", new DeptId(0), 1, TestManagerId);
+        var parent = new Dept("总部", "根", new DeptId(0), 1);
 
         var ex = Assert.Throws<KnownException>(() => parent.RemoveChild(null!));
 
@@ -195,9 +190,9 @@ public class DeptTests
     [Fact]
     public void GetAllChildren_WithNestedChildren_ShouldReturnAllDescendants()
     {
-        var root = new Dept("根", "根", new DeptId(0), 1, TestManagerId);
-        var level1 = new Dept("一级", "备注", new DeptId(0), 1, TestManagerId);
-        var level2 = new Dept("二级", "备注", new DeptId(0), 1, TestManagerId);
+        var root = new Dept("根", "根", new DeptId(0), 1);
+        var level1 = new Dept("一级", "备注", new DeptId(0), 1);
+        var level2 = new Dept("二级", "备注", new DeptId(0), 1);
         root.AddChild(level1);
         level1.AddChild(level2);
 
@@ -214,7 +209,7 @@ public class DeptTests
     [Fact]
     public void GetAllChildren_WithNoChildren_ShouldReturnEmpty()
     {
-        var dept = new Dept("叶子", "备注", new DeptId(0), 1, TestManagerId);
+        var dept = new Dept("叶子", "备注", new DeptId(0), 1);
 
         var all = dept.GetAllChildren().ToList();
 
@@ -227,10 +222,81 @@ public class DeptTests
     [Fact]
     public void GetPath_ShouldReturnName()
     {
-        var dept = new Dept("研发部", "备注", new DeptId(0), 1, TestManagerId);
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
 
         var path = dept.GetPath();
 
         Assert.Equal("研发部", path);
+    }
+
+    /// <summary>
+    /// 替换部门负责人时，应由聚合根排重、排序并标记默认负责人。
+    /// </summary>
+    [Fact]
+    public void ReplaceResponsibleUsers_WithDuplicateUsers_ShouldNormalizeResponsibleUsers()
+    {
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+        var firstUserId = new UserId(1001);
+        var secondUserId = new UserId(1002);
+
+        dept.ReplaceResponsibleUsers(
+            [firstUserId, firstUserId, UserId.Unassigned, secondUserId],
+            secondUserId);
+
+        var responsibleUsers = dept.ResponsibleUsers.OrderBy(x => x.SortOrder).ToList();
+        Assert.Equal(2, responsibleUsers.Count);
+        Assert.Equal(firstUserId, responsibleUsers[0].UserId);
+        Assert.False(responsibleUsers[0].IsDefault);
+        Assert.Equal(secondUserId, responsibleUsers[1].UserId);
+        Assert.True(responsibleUsers[1].IsDefault);
+    }
+
+    /// <summary>
+    /// 默认负责人不在负责人列表中时，应由聚合根拒绝该状态变更。
+    /// </summary>
+    [Fact]
+    public void ReplaceResponsibleUsers_WhenDefaultUserNotInList_ShouldThrow()
+    {
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+
+        var ex = Assert.Throws<KnownException>(() =>
+            dept.ReplaceResponsibleUsers([new UserId(1001)], new UserId(1002)));
+
+        Assert.Equal(ErrorCodes.DeptResponsibleUserDefaultInvalid, ex.ErrorCode);
+    }
+
+    /// <summary>
+    /// 从用户创建等快捷入口追加部门负责人时，应保留原有负责人顺序，并可切换默认负责人。
+    /// </summary>
+    [Fact]
+    public void AddResponsibleUser_WhenSetAsDefault_ShouldAppendAndSwitchDefault()
+    {
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+        var firstUserId = new UserId(1001);
+        var secondUserId = new UserId(1002);
+        dept.ReplaceResponsibleUsers([firstUserId], firstUserId);
+
+        dept.AddResponsibleUser(secondUserId, true);
+
+        var responsibleUsers = dept.ResponsibleUsers.OrderBy(x => x.SortOrder).ToList();
+        Assert.Equal(2, responsibleUsers.Count);
+        Assert.Equal(firstUserId, responsibleUsers[0].UserId);
+        Assert.False(responsibleUsers[0].IsDefault);
+        Assert.Equal(secondUserId, responsibleUsers[1].UserId);
+        Assert.True(responsibleUsers[1].IsDefault);
+    }
+
+    [Fact]
+    public void SetResponsibleUser_WhenDefaultUnchecked_ShouldKeepResponsibleAndUnsetDefault()
+    {
+        var dept = new Dept("研发部", "备注", new DeptId(0), 1);
+        var userId = new UserId(1001);
+        dept.ReplaceResponsibleUsers([userId], userId);
+
+        dept.SetResponsibleUser(userId, true, false);
+
+        var responsibleUser = Assert.Single(dept.ResponsibleUsers);
+        Assert.Equal(userId, responsibleUser.UserId);
+        Assert.False(responsibleUser.IsDefault);
     }
 }

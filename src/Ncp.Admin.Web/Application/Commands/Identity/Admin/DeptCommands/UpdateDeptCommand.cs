@@ -8,7 +8,15 @@ namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.DeptCommands;
 /// <summary>
 /// 更新部门命令
 /// </summary>
-public record UpdateDeptCommand(DeptId Id, string Name, string Remark, DeptId ParentId, int Status, UserId ManagerId) : ICommand;
+public record UpdateDeptCommand(
+    DeptId Id,
+    string Name,
+    string Remark,
+    DeptId ParentId,
+    int Status,
+    int SortOrder,
+    IReadOnlyList<UserId> ResponsibleUserIds,
+    UserId? DefaultResponsibleUserId) : ICommand;
 
 public class UpdateDeptCommandValidator : AbstractValidator<UpdateDeptCommand>
 {
@@ -16,7 +24,19 @@ public class UpdateDeptCommandValidator : AbstractValidator<UpdateDeptCommand>
     {
         RuleFor(d => d.Name).NotEmpty().WithMessage("部门名称不能为空");
         RuleFor(d => d.Status).InclusiveBetween(0, 1).WithMessage("状态值必须为0或1");
-        RuleFor(d => d.ManagerId).NotNull().WithMessage("部门主管不能为空");
+        RuleFor(d => d.SortOrder).GreaterThanOrEqualTo(0).WithMessage("排序号不能小于0");
+        RuleFor(d => d)
+            .Must(d =>
+            {
+                var defaultResponsibleUserId = d.DefaultResponsibleUserId;
+                return defaultResponsibleUserId is null
+                    || defaultResponsibleUserId == UserId.Unassigned
+                    || d.ResponsibleUserIds
+                        .Where(id => id != UserId.Unassigned)
+                        .Distinct()
+                        .Contains(defaultResponsibleUserId);
+            })
+            .WithMessage("默认负责人必须在部门负责人列表中");
         RuleFor(d => d.ParentId)
             .MustAsync(async (cmd, parentId, ct) =>
             {
@@ -34,9 +54,12 @@ public class UpdateDeptCommandHandler(IDeptRepository deptRepository) : ICommand
 {
     public async Task Handle(UpdateDeptCommand request, CancellationToken cancellationToken)
     {
-        var dept = await deptRepository.GetAsync(request.Id, cancellationToken)
+        var dept = await deptRepository.GetWithResponsibleUsersAsync(request.Id, cancellationToken)
             ?? throw new KnownException($"未找到部门，Id = {request.Id}", ErrorCodes.DeptNotFound);
 
-        dept.UpdateInfo(request.Name, request.Remark, request.ParentId, request.Status, request.ManagerId);
+        dept.UpdateInfo(request.Name, request.Remark, request.ParentId, request.Status, request.SortOrder);
+        dept.ReplaceResponsibleUsers(
+            request.ResponsibleUserIds,
+            request.DefaultResponsibleUserId);
     }
 }

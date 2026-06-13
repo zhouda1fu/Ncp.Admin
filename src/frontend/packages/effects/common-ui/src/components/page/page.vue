@@ -32,6 +32,16 @@ const contentStyle = computed<StyleValue>(() => {
   return {};
 });
 
+const rootClass = computed(() =>
+  autoContentHeight
+    ? 'relative flex h-full min-h-0 flex-col overflow-hidden'
+    : 'relative flex min-h-full flex-col',
+);
+
+const resolvedContentClass = computed(() =>
+  autoContentHeight ? 'h-full min-h-0 p-4' : 'h-full p-4',
+);
+
 async function calcContentHeight() {
   if (!autoContentHeight) {
     return;
@@ -50,7 +60,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative flex min-h-full flex-col">
+  <div :class="rootClass">
     <div
       v-if="
         description ||
@@ -86,7 +96,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div :class="cn('h-full p-4', contentClass)" :style="contentStyle">
+    <div :class="cn(resolvedContentClass, contentClass)" :style="contentStyle">
       <slot></slot>
     </div>
     <div

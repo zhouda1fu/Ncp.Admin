@@ -17,7 +17,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
     /// </summary>
     protected async Task<DeptId> CreateTestDeptAsync(HttpClient client, string name, string remark = "测试备注", DeptId? parentId = null, int status = 1)
     {
-        var request = new CreateDeptRequest(name, remark, parentId, status, new UserId(0));
+        var request = new CreateDeptRequest(name, remark, parentId, status);
         var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
         
         Assert.True(response.IsSuccessStatusCode);
@@ -61,7 +61,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         try
         {
             // Act
-            var request = new CreateDeptRequest(deptName, "测试备注", null, 1, new UserId(0));
+            var request = new CreateDeptRequest(deptName, "测试备注", null, 1);
             var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
             
             // Assert
@@ -92,7 +92,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var parentId = await CreateTestDeptAsync(client, parentDeptName);
             
             // Act - 创建子部门
-            var request = new CreateDeptRequest(childDeptName, "子部门备注", parentId, 1, new UserId(0));
+            var request = new CreateDeptRequest(childDeptName, "子部门备注", parentId, 1);
             var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
             
             // Assert
@@ -120,7 +120,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             await CreateTestDeptAsync(client, deptName);
             
             // Act - 尝试创建同名部门
-            var request = new CreateDeptRequest(deptName, "重复名称测试", null, 1, new UserId(0));
+            var request = new CreateDeptRequest(deptName, "重复名称测试", null, 1);
             var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
             
             // Assert
@@ -140,7 +140,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var client = await GetAuthenticatedClientAsync();
         
         // Act
-        var request = new CreateDeptRequest("", "备注", null, 1, new UserId(0));
+        var request = new CreateDeptRequest("", "备注", null, 1);
         var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
         
         // Assert
@@ -156,7 +156,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var deptName = $"测试部门_{Guid.NewGuid():N}";
         
         // Act
-        var request = new CreateDeptRequest(deptName, "备注", null, 2, new UserId(0)); // 无效的状态值
+        var request = new CreateDeptRequest(deptName, "备注", null, 2); // 无效的状态值
         var (response, result) = await client.POSTAsync<CreateDeptEndpoint, CreateDeptRequest, ResponseData<CreateDeptResponse>>(request);
         
         // Assert
@@ -347,7 +347,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var deptId = await CreateTestDeptAsync(client, deptName, "原始备注");
             
             // Act
-            var request = new UpdateDeptRequest(deptId, updatedName, "更新后的备注", new DeptId(0), 1, new UserId(0));
+            var request = new UpdateDeptRequest(deptId, updatedName, "更新后的备注", new DeptId(0), 1);
             var (response, result) = await client.PUTAsync<UpdateDeptEndpoint, UpdateDeptRequest, ResponseData<bool>>(request);
             
             // Assert
@@ -378,7 +378,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
         var nonExistentId = new DeptId(999999999);
         
         // Act
-        var request = new UpdateDeptRequest(nonExistentId, "新名称", "新备注", new DeptId(0), 1, new UserId(0));
+        var request = new UpdateDeptRequest(nonExistentId, "新名称", "新备注", new DeptId(0), 1);
             var (response, result) = await client.PUTAsync<UpdateDeptEndpoint, UpdateDeptRequest, ResponseData<bool>>(request);
             
             // Assert
@@ -398,7 +398,7 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var deptId = await CreateTestDeptAsync(client, deptName);
             
             // Act
-            var request = new UpdateDeptRequest(deptId, "", "备注", new DeptId(0), 1, new UserId(0));
+            var request = new UpdateDeptRequest(deptId, "", "备注", new DeptId(0), 1);
             var (response, result) = await client.PUTAsync<UpdateDeptEndpoint, UpdateDeptRequest, ResponseData<bool>>(request);
             
             // Assert
@@ -423,12 +423,58 @@ public class DeptTests(WebAppFixture app) : AuthenticatedTestBase<WebAppFixture>
             var deptId = await CreateTestDeptAsync(client, deptName);
             
             // Act
-            var request = new UpdateDeptRequest(deptId, "新名称", "备注", new DeptId(0), 2, new UserId(0)); // 无效的状态值
+            var request = new UpdateDeptRequest(deptId, "新名称", "备注", new DeptId(0), 2); // 无效的状态值
             var (response, result) = await client.PUTAsync<UpdateDeptEndpoint, UpdateDeptRequest, ResponseData<bool>>(request);
             
             // Assert
             Assert.NotNull(result);
             Assert.False(result.Success);
+        }
+        finally
+        {
+            await CleanupTestDataAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ReorderDeptSort_WithSiblingDepts_ShouldPersistOrder()
+    {
+        var client = await GetAuthenticatedClientAsync();
+        var deptName1 = $"测试部门_排序1_{Guid.NewGuid():N}";
+        var deptName2 = $"测试部门_排序2_{Guid.NewGuid():N}";
+        var deptName3 = $"测试部门_排序3_{Guid.NewGuid():N}";
+
+        try
+        {
+            var id1 = await CreateTestDeptAsync(client, deptName1);
+            var id2 = await CreateTestDeptAsync(client, deptName2);
+            var id3 = await CreateTestDeptAsync(client, deptName3);
+
+            var reorderRequest = new ReorderDeptSortRequest(
+                DeptId.Unassigned,
+                [id3, id1, id2]);
+            var (reorderResponse, reorderResult) = await client.POSTAsync<
+                ReorderDeptSortEndpoint,
+                ReorderDeptSortRequest,
+                ResponseData<bool>>(reorderRequest);
+
+            Assert.True(reorderResponse.IsSuccessStatusCode);
+            Assert.NotNull(reorderResult);
+            Assert.True(reorderResult.Success);
+            Assert.True(reorderResult.Data);
+
+            var treeRequest = new GetDeptTreeRequest(true);
+            var (_, treeResult) = await client.GETAsync<
+                GetDeptTreeEndpoint,
+                GetDeptTreeRequest,
+                ResponseData<IEnumerable<DeptTreeDto>>>(treeRequest);
+            var roots = (treeResult?.Data ?? [])
+                .Where(d => d.Name is var n && (n == deptName1 || n == deptName2 || n == deptName3))
+                .OrderBy(d => d.SortOrder)
+                .Select(d => d.Id)
+                .ToList();
+
+            Assert.Equal([id3, id1, id2], roots);
         }
         finally
         {

@@ -12,7 +12,7 @@ public record CreateWorkflowDefinitionCommand(
     string Name,
     string Description,
     string Category,
-    string DefinitionJson,
+    string DesignerSchemaJson,
     UserId CreatedBy) : ICommand<WorkflowDefinitionId>;
 
 /// <summary>
@@ -34,21 +34,24 @@ public class CreateWorkflowDefinitionCommandValidator : AbstractValidator<Create
 /// </summary>
 public class CreateWorkflowDefinitionCommandHandler(
     IWorkflowDefinitionRepository repository,
+    WorkflowDefinitionCacheInvalidator cacheInvalidator,
     WorkflowDefinitionAssigneeConfigValidator assigneeConfigValidator)
     : ICommandHandler<CreateWorkflowDefinitionCommand, WorkflowDefinitionId>
 {
     public async Task<WorkflowDefinitionId> Handle(CreateWorkflowDefinitionCommand request, CancellationToken cancellationToken)
     {
-        await assigneeConfigValidator.ValidateAsync(request.DefinitionJson, cancellationToken);
+        await assigneeConfigValidator.ValidateAsync(request.DesignerSchemaJson, request.Category, cancellationToken);
 
         var definition = new WorkflowDefinition(
             request.Name,
             request.Description,
             request.Category,
-            request.DefinitionJson ?? string.Empty,
+            request.DesignerSchemaJson ?? string.Empty,
             request.CreatedBy);
 
+        definition.AddDraftVersion(request.DesignerSchemaJson ?? string.Empty);
         await repository.AddAsync(definition, cancellationToken);
+        cacheInvalidator.InvalidatePublishedList();
         return definition.Id;
     }
 }

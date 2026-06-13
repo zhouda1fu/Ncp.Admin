@@ -12,7 +12,7 @@ public sealed class OperationLogBackgroundService(
     IServiceScopeFactory scopeFactory) : BackgroundService
 {
     private const int BatchSize = 50;
-    private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan FlushInterval = TimeSpan.FromMilliseconds(500);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

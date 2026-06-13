@@ -6,7 +6,7 @@
           class="add-branch"
           type="primary"
           @click="addTerm">
-          添加条件
+          添加同级条件
         </a-button>
         <div
           class="col-box"
@@ -39,7 +39,10 @@
                   <ChevronRight class="size-4" />
                 </div>
               </div>
-              <add-node v-model="item.childNode" />
+              <add-node
+                :model-value="item.childNode"
+                @update:model-value="updateConditionChildNode(item, $event)"
+              />
             </div>
           </div>
           <slot v-if="item.childNode" :node="item" />
@@ -49,28 +52,19 @@
           <div class="bottom-right-cover-line" v-if="index == nodeConfig.conditionNodes.length - 1" />
         </div>
       </div>
-      <add-node v-model="nodeConfig.childNode" />
+      <add-node
+        :model-value="nodeConfig.childNode"
+        @update:model-value="updateChildNode"
+      />
     </div>
-    <a-drawer
+    <workflow-node-config-drawer
       v-model:open="drawer"
       title="条件设置"
       :width="600"
-      destroy-on-close
-      get-container="body">
+      :show-confirm-button="!viewOnly"
+      @confirm="save">
       <template #title>
-        <div class="node-wrap-drawer__title">
-          <label v-if="!isEditTitle" @click="editTitle">
-            {{ form.nodeName }}
-            <IconifyIcon icon="lucide:pencil" class="node-wrap-drawer__title-edit" />
-          </label>
-          <a-input
-            v-else
-            ref="nodeTitleRef"
-            v-model:value="form.nodeName"
-            allow-clear
-            @blur="saveTitle"
-            @press-enter="saveTitle" />
-        </div>
+        <workflow-node-drawer-title v-model:name="form.nodeName" :disabled="viewOnly" />
       </template>
       <div class="drawer-body">
         <a-form layout="vertical">
@@ -81,9 +75,28 @@
               placeholder="如：金额>1万、销售部"
             />
           </a-form-item>
+          <a-form-item label="与指定优先级互换">
+            <a-select
+              v-model:value="form.priorityLevel"
+              :options="conditionPriorityOptions()"
+              placeholder="请选择要互换的优先级"
+            />
+          </a-form-item>
+          <a-form-item v-if="!viewOnly">
+            <workflow-fragment-copy-actions
+              :node="form"
+              :fragment-node="form.childNode"
+              tip="复制当前条件分支下面的流程；套用时插入到当前分支已有流程前面。"
+              copy-tip="默认选中当前条件分支下面的所有流程节点，可取消不需要复制的节点。"
+              @apply="applyWorkflowFragment"
+            />
+          </a-form-item>
         </a-form>
-        <div class="top-tips">满足以下条件时进入当前分支</div>
-        <template v-for="(conditionGroup, conditionGroupIdx) in form.conditionList" :key="conditionGroupIdx">
+        <div v-if="isCurrentFallback()" class="top-tips">
+          当前分支为“其他情况”兜底分支，无需配置条件；前面条件都不满足时进入此分支。
+        </div>
+        <div v-else class="top-tips">满足以下条件时进入当前分支</div>
+        <template v-if="!isCurrentFallback()" v-for="(conditionGroup, conditionGroupIdx) in form.conditionList" :key="conditionGroupIdx">
           <div class="or-branch-link-tip" v-if="conditionGroupIdx != 0">或满足</div>
           <div class="condition-group-editor">
             <div class="header">
@@ -110,8 +123,13 @@
                     style="min-width: 120px"
                     :options="conditionFieldOptions"
                     allow-clear
-                    :loading="conditionFieldsLoading" />
-                  <a-select v-model:value="condition.operator" placeholder="运算符" style="min-width: 100px">
+                    :loading="conditionFieldsLoading"
+                    @change="onConditionFieldChange(condition, $event)" />
+                  <a-select
+                    v-if="!isPresenceCondition(condition)"
+                    v-model:value="condition.operator"
+                    placeholder="运算符"
+                    style="min-width: 100px">
                     <a-select-option value="==">等于</a-select-option>
                     <a-select-option value="!=">不等于</a-select-option>
                     <a-select-option value=">">大于</a-select-option>
@@ -121,13 +139,29 @@
                     <a-select-option value="include">包含</a-select-option>
                     <a-select-option value="notinclude">不包含</a-select-option>
                   </a-select>
+                  <span v-else class="text-muted-foreground text-sm">等于</span>
                   <a-select
-                    v-if="getValueSelectOptions(condition).length"
+                    v-if="isEnumMultiSelectCondition(condition) && getValueSelectOptions(condition).length"
+                    :value="getMultiSelectValue(condition)"
+                    mode="multiple"
+                    allow-clear
+                    placeholder="请选择（可多选）"
+                    style="min-width: 220px"
+                    :max-tag-count="3"
+                    :options="getValueSelectOptions(condition)"
+                    show-search
+                    :filter-option="filterSelectOption"
+                    @update:value="onMultiSelectValueChange(condition, $event)"
+                  />
+                  <a-select
+                    v-else-if="getValueSelectOptions(condition).length"
                     v-model:value="condition.value"
                     allow-clear
                     placeholder="请选择"
                     style="min-width: 180px"
-                    :options="getValueSelectOptions(condition)" />
+                    :options="getValueSelectOptions(condition)"
+                    show-search
+                    :filter-option="filterSelectOption" />
                   <a-input
                     v-else
                     v-model:value="condition.value"
@@ -140,30 +174,30 @@
             </div>
           </div>
         </template>
-        <a-button type="dashed" block @click="addConditionGroup">添加条件组</a-button>
+        <a-button v-if="!isCurrentFallback()" type="dashed" block @click="addConditionGroup">添加条件组</a-button>
       </div>
-      <template #footer>
-        <a-button v-if="!viewOnly" type="primary" @click="save">保存</a-button>
-        <a-button @click="drawer = false">取消</a-button>
-      </template>
-    </a-drawer>
+    </workflow-node-config-drawer>
   </div>
 </template>
 
 <script>
 import { ChevronLeft, ChevronRight, IconifyIcon, X } from '@vben/icons';
-import { Button, Drawer, Form, Input, Select } from 'ant-design-vue';
+import { Button, Form, Input, Select } from 'ant-design-vue';
 
 import { getConditionFields } from '#/api/system/workflow';
 
+import { createWorkflowNodeKey } from '../../../utils/createWorkflowNodeKey';
+
 import addNode from './addNode.vue';
+import WorkflowFragmentCopyActions from '../WorkflowFragmentCopyActions.vue';
+import WorkflowNodeConfigDrawer from '../WorkflowNodeConfigDrawer.vue';
+import WorkflowNodeDrawerTitle from '../WorkflowNodeDrawerTitle.vue';
 
 export default {
   name: 'BranchNode',
   components: {
     addNode,
     AButton: Button,
-    ADrawer: Drawer,
     AForm: Form,
     AFormItem: Form.Item,
     AInput: Input,
@@ -172,6 +206,9 @@ export default {
     ChevronLeft,
     ChevronRight,
     IconifyIcon,
+    WorkflowFragmentCopyActions,
+    WorkflowNodeConfigDrawer,
+    WorkflowNodeDrawerTitle,
     X,
   },
   props: {
@@ -183,7 +220,6 @@ export default {
     return {
       nodeConfig: {},
       drawer: false,
-      isEditTitle: false,
       index: 0,
       form: {},
       conditionFieldOptions: [],
@@ -207,7 +243,7 @@ export default {
   },
   methods: {
     normalizeOperator(op) {
-      // 将历史数据中的 "=" / "<>" 统一为后端支持的 "==" / "!="
+      // 将设计器运算符别名统一为后端支持的标准运算符。
       if (op === '=') return '=='
       if (op === '<>') return '!='
       return op
@@ -215,7 +251,7 @@ export default {
     getFieldDef(fieldKey) {
       return (this.conditionFieldDefs || []).find((d) => d.key === fieldKey)
     },
-    /** 兼容后端 PascalCase 与 camelCase */
+    /** 标准化条件字段接口返回的大小写。 */
     normalizeConditionFieldDefs(list) {
       return (list || []).map((raw) => ({
         key: raw.key ?? raw.Key ?? '',
@@ -250,6 +286,21 @@ export default {
       const def = this.getFieldDef(condition.field)
       const opts = def?.options
       if (!opts?.length) return String(raw)
+      const isMulti = def && String(def.type || '').toLowerCase() === 'enummulti'
+      if (isMulti) {
+        const ids = String(raw)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+        if (!ids.length) return ''
+        return ids
+          .map((id) => {
+            const v = id.toLowerCase()
+            const found = opts.find((o) => String(o.value).trim().toLowerCase() === v)
+            return found ? found.label : id
+          })
+          .join('、')
+      }
       const v = String(raw).trim().toLowerCase()
       const found = opts.find((o) => String(o.value).trim().toLowerCase() === v)
       return found ? found.label : String(raw)
@@ -260,12 +311,51 @@ export default {
       if (!opts?.length) return []
       return opts.map((o) => ({ value: o.value, label: o.label }))
     },
+    filterSelectOption(input, option) {
+      const keyword = String(input || '').trim().toLowerCase()
+      if (!keyword) return true
+      return String(option?.label ?? '').toLowerCase().includes(keyword)
+        || String(option?.value ?? '').toLowerCase().includes(keyword)
+    },
+    isEnumMultiSelectCondition(condition) {
+      const d = this.getFieldDef(condition?.field)
+      return Boolean(d && String(d.type || '').toLowerCase() === 'enummulti')
+    },
+    isPresenceCondition(condition) {
+      const d = this.getFieldDef(condition?.field)
+      return Boolean(d && String(d.type || '').toLowerCase() === 'presence')
+    },
+    getMultiSelectValue(condition) {
+      const raw = (condition?.value ?? '').trim()
+      if (!raw) return []
+      return raw.split(',').map((s) => s.trim()).filter(Boolean)
+    },
+    onMultiSelectValueChange(condition, val) {
+      const arr = Array.isArray(val) ? val.filter((x) => x != null && String(x).trim() !== '') : []
+      condition.value = arr.length ? arr.map((x) => String(x).trim()).join(',') : ''
+    },
+    onConditionFieldChange(condition, newFieldKey) {
+      const d = this.getFieldDef(newFieldKey)
+      const type = String(d?.type || '').toLowerCase()
+      const multi = type === 'enummulti'
+      if (type === 'presence') {
+        condition.operator = '=='
+        if (!condition.value) condition.value = 'empty'
+      }
+      if (!multi && condition.value && String(condition.value).includes(',')) {
+        const parts = String(condition.value)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+        condition.value = parts[0] || ''
+      }
+    },
     async show(index) {
       this.index = index
       this.form = {}
       this.form = JSON.parse(JSON.stringify(this.nodeConfig.conditionNodes[index]))
 
-      // 兼容旧流程：把已保存的 "=" / "<>" 运算符转换为 "==" / "!="，避免后端不再兼容后条件永远不命中
+      // 条件编辑器统一使用后端支持的标准运算符。
       const list = this.form?.conditionList || []
       for (const group of list) {
         for (const c of group || []) {
@@ -280,15 +370,23 @@ export default {
         label: item.label,
       }))
     },
-    editTitle() {
-      this.isEditTitle = true
-      this.$nextTick(() => this.$refs.nodeTitleRef?.focus())
+    updateConditionChildNode(item, childNode) {
+      item.childNode = childNode
+      this.$emit('update:modelValue', this.nodeConfig)
     },
-    saveTitle() {
-      this.isEditTitle = false
+    updateChildNode(childNode) {
+      this.nodeConfig.childNode = childNode
+      this.$emit('update:modelValue', this.nodeConfig)
+    },
+    applyWorkflowFragment(fragment) {
+      this.form.childNode = fragment
     },
     save() {
       // 保存前再做一次归一化，确保落库/发给后端的运算符合法
+      if (this.isFallbackBranch(this.form)) {
+        this.form.conditionList = []
+      }
+
       const list = this.form?.conditionList || []
       for (const group of list) {
         for (const c of group || []) {
@@ -296,19 +394,64 @@ export default {
         }
       }
 
-      this.nodeConfig.conditionNodes[this.index] = this.form
+      this.swapConditionNodePriority(this.index, Number(this.form.priorityLevel || this.index + 1), this.form)
       this.$emit('update:modelValue', this.nodeConfig)
       this.drawer = false
     },
+    isFallbackBranch(branch) {
+      return this.index === this.nodeConfig.conditionNodes.length - 1
+        || branch?.nodeName === '其他情况'
+    },
+    isCurrentFallback() {
+      return this.isFallbackBranch(this.form)
+    },
     addTerm() {
-      let len = this.nodeConfig.conditionNodes.length + 1
-      this.nodeConfig.conditionNodes.push({
-        nodeName: '条件' + len,
+      const fallbackIndex = this.findFallbackIndex()
+      const insertIndex = fallbackIndex >= 0 ? fallbackIndex : this.nodeConfig.conditionNodes.length
+      this.nodeConfig.conditionNodes.splice(insertIndex, 0, {
+        nodeName: '条件' + (insertIndex + 1),
+        nodeKey: createWorkflowNodeKey(),
         type: 3,
-        priorityLevel: len,
+        priorityLevel: insertIndex + 1,
         conditionMode: 1,
         conditionList: []
       })
+      this.normalizeConditionNodePriorities()
+      this.$emit('update:modelValue', this.nodeConfig)
+    },
+    findFallbackIndex() {
+      return this.nodeConfig.conditionNodes.findIndex((item) => !item.conditionList || item.conditionList.length === 0)
+    },
+    normalizeConditionNodePriorities() {
+      this.nodeConfig.conditionNodes.forEach((item, index) => {
+        item.priorityLevel = index + 1
+        if (!item.nodeName || /^条件\d+$/.test(item.nodeName)) {
+          item.nodeName = '条件' + (index + 1)
+        }
+      })
+    },
+    // 构建同级条件可交换的优先级列表。
+    conditionPriorityOptions() {
+      const nodes = Array.isArray(this.nodeConfig.conditionNodes) ? this.nodeConfig.conditionNodes : []
+      return nodes.map((item, index) => ({
+        label: `优先级${index + 1}：${item.nodeName || `条件${index + 1}`}`,
+        value: index + 1,
+      }))
+    },
+    // 按目标优先级交换整个条件分支，保留分支下已配置的审批流程。
+    swapConditionNodePriority(sourceIndex, targetPriority, sourceBranch) {
+      const nodes = this.nodeConfig.conditionNodes
+      const targetIndex = targetPriority - 1
+      if (!Array.isArray(nodes) || sourceIndex < 0 || sourceIndex >= nodes.length) return
+
+      nodes[sourceIndex] = sourceBranch
+      if (targetIndex >= 0 && targetIndex < nodes.length && targetIndex !== sourceIndex) {
+        // 交换的是完整分支对象，因此 childNode 会跟随条件一起移动。
+        const source = nodes[sourceIndex]
+        nodes[sourceIndex] = nodes[targetIndex]
+        nodes[targetIndex] = source
+      }
+      this.normalizeConditionNodePriorities()
     },
     delTerm(index) {
       this.nodeConfig.conditionNodes.splice(index, 1)
@@ -332,9 +475,7 @@ export default {
     },
     arrTransfer(index, type = 1) {
       this.nodeConfig.conditionNodes[index] = this.nodeConfig.conditionNodes.splice(index + type, 1, this.nodeConfig.conditionNodes[index])[0]
-      this.nodeConfig.conditionNodes.map((item, index) => {
-        item.priorityLevel = index + 1
-      })
+      this.normalizeConditionNodePriorities()
       this.$emit('update:modelValue', this.nodeConfig)
     },
     addConditionList(conditionList) {

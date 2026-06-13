@@ -24,7 +24,10 @@ public class DeleteDefinitionEndpoint(IMediator mediator) : Endpoint<DeleteDefin
         Description(b => b.AutoTagOverride("WorkflowDefinitions").WithSummary("删除流程定义"));
         Delete("/api/admin/workflow/definitions/{id}");
         AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
-        Permissions(PermissionCodes.AllApiAccess, PermissionCodes.WorkflowDefinitionDelete);
+        Permissions(
+            PermissionCodes.AllApiAccess,
+            PermissionCodes.WorkflowDefinitionDelete,
+            PermissionCodes.WorkflowDefinitionDeletePublished);
     }
 
     public override async Task HandleAsync(DeleteDefinitionRequest req, CancellationToken ct)

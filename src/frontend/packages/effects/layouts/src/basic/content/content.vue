@@ -97,7 +97,7 @@ function transformComponent(
 </script>
 
 <template>
-  <div class="relative h-full">
+  <div class="relative h-full min-h-0 overflow-hidden">
     <IFrameRouterView />
     <RouterView v-slot="{ Component, route }">
       <Transition

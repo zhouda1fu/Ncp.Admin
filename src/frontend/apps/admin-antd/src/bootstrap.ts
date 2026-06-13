@@ -46,6 +46,9 @@ async function bootstrap(namespace: string) {
   // 配置 pinia-tore
   await initStores(app, { namespace });
 
+  const { setupListReturnTabClose } = await import('#/utils/setup-list-return-tab-close');
+  setupListReturnTabClose();
+
   // 安装权限指令
   registerAccessDirective(app);
 

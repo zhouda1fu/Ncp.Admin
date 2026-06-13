@@ -3,17 +3,31 @@ import type { Recordable } from '@vben/types';
 
 import type { WorkflowApi } from '#/api/system/workflow';
 
-import { useRouter } from 'vue-router';
+import { onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
 import { Button, Tag } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
+import { useListReturnState } from '#/composables/use-list-return-state';
 import { getMyCompletedTasks } from '#/api/system/workflow';
 import { $t } from '#/locales';
+import { handleVxeCellDblclick } from '#/utils/vxe-row-navigation';
+
+const LIST_PATH = '/workflow/completed';
+const SEARCH_KEYS = ['title'] as const;
 
 const router = useRouter();
+const route = useRoute();
+
+const { shouldDeferGridAutoLoad, pagerConfig, trackPage, buildReturnQuery, restoreOnMount } =
+  useListReturnState({
+    route,
+    listPath: LIST_PATH,
+    searchKeys: SEARCH_KEYS,
+  });
 
 const taskTypeLabels: Record<number, string> = {
   0: $t('system.workflow.task.taskTypeApproval'),
@@ -42,9 +56,25 @@ const statusLabels: Record<
     color: 'default',
     label: $t('system.workflow.task.statusCancelled'),
   },
+  5: {
+    color: 'warning',
+    label: $t('system.workflow.task.statusDelegated'),
+  },
+  6: {
+    color: 'success',
+    label: $t('system.workflow.task.statusRead'),
+  },
+  7: {
+    color: 'success',
+    label: $t('system.workflow.task.statusTaskCompleted'),
+  },
+  8: {
+    color: 'default',
+    label: $t('system.workflow.task.statusAutoSkipped'),
+  },
 };
 
-const [Grid] = useVbenVxeGrid<WorkflowApi.MyCompletedTask>({
+const [Grid, gridApi] = useVbenVxeGrid<WorkflowApi.MyCompletedTask>({
   formOptions: {
     schema: [
       {
@@ -55,6 +85,9 @@ const [Grid] = useVbenVxeGrid<WorkflowApi.MyCompletedTask>({
     ],
     submitOnChange: true,
   },
+  gridEvents: {
+    'cell-dblclick': (event: any) => handleVxeCellDblclick(event, onViewDetail),
+  } as any,
   gridOptions: {
     columns: [
       {
@@ -101,10 +134,12 @@ const [Grid] = useVbenVxeGrid<WorkflowApi.MyCompletedTask>({
         title: $t('system.workflow.task.completedAt'),
         width: 180,
       },
+      { field: '_flex', minWidth: 1, title: '' },
       {
         align: 'center',
         field: 'operation',
         fixed: 'right',
+      showOverflow: false,
         title: $t('system.workflow.task.operation'),
         width: 100,
         slots: { default: 'action' },
@@ -112,12 +147,15 @@ const [Grid] = useVbenVxeGrid<WorkflowApi.MyCompletedTask>({
     ],
     height: 'auto',
     keepSource: true,
+    pagerConfig,
     proxyConfig: {
+      autoLoad: !shouldDeferGridAutoLoad,
       ajax: {
         query: async (
           { page }: { page: { currentPage: number; pageSize: number } },
           formValues: Recordable<any>,
         ) => {
+          trackPage(page);
           const result = await getMyCompletedTasks({
             pageIndex: page.currentPage,
             pageSize: page.pageSize,
@@ -134,6 +172,7 @@ const [Grid] = useVbenVxeGrid<WorkflowApi.MyCompletedTask>({
     rowConfig: {
       keyField: 'taskId',
     },
+    rowClassName: () => 'vxe-row-clickable',
     toolbarConfig: {
       custom: true,
       export: false,
@@ -144,9 +183,16 @@ const [Grid] = useVbenVxeGrid<WorkflowApi.MyCompletedTask>({
   },
 });
 
-function onViewDetail(row: WorkflowApi.MyCompletedTask) {
-  router.push(`/workflow/instance/${row.workflowInstanceId}`);
+async function onViewDetail(row: WorkflowApi.MyCompletedTask) {
+  void router.push({
+    path: `/workflow/instance/${row.workflowInstanceId}`,
+    query: await buildReturnQuery(gridApi),
+  });
 }
+
+onMounted(async () => {
+  await restoreOnMount(gridApi);
+});
 </script>
 <template>
   <Page auto-content-height>

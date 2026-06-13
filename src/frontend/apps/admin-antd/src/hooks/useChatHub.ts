@@ -5,6 +5,8 @@ import { message as antMessage } from 'ant-design-vue';
 import { useAppConfig } from '@vben/hooks';
 import { useAccessStore } from '@vben/stores';
 
+import { resolveSignalRHubUrl } from '#/utils/signalr-hub-url';
+
 export interface ChatMessagePushDto {
   id: string;
   chatGroupId: string;
@@ -30,8 +32,7 @@ export function useChatHub(onMessage?: (msg: ChatMessagePushDto) => void) {
     const token = accessStore.accessToken;
     if (!token) return;
 
-    const baseUrl = apiURL.replace(/\/api\/admin\/?$/, '') || apiURL.split('/api')[0];
-    const hubUrl = `${baseUrl}/chat`;
+    const hubUrl = resolveSignalRHubUrl('chat', apiURL);
 
     connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {

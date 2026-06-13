@@ -3,15 +3,15 @@ using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
 /// <summary>
-/// 用户角色值对象
+/// 用户-角色关联子实体
 /// 表示用户与角色的多对多关系中的角色信息，RoleName 冗余存储以避免关联查询。
 /// </summary>
 public class UserRole
 {
     protected UserRole() { }
 
-    public UserId UserId { get; private set; } = default!;
-    public RoleId RoleId { get; private set; } = default!;
+    public UserId UserId { get; internal set; } = UserId.Unassigned;
+    public RoleId RoleId { get; private set; } = RoleId.Unassigned;
     public string RoleName { get; private set; } = string.Empty;
 
     /// <summary>

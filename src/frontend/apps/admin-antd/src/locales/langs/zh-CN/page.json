@@ -9,8 +9,22 @@
   },
   "dashboard": {
     "title": "概览",
-    "analytics": "分析页",
-    "workspace": "工作台"
+    "analytics": "首页",
+    "workspace": "工作台",
+    "home": {
+      "workflowPendingTitle": "待办 {count} 条",
+      "workflowPendingSubtitle": "点击查看工作流待办",
+      "unreadNotificationsTitle": "未读 {count} 条",
+      "unreadNotificationsSubtitle": "点击查看站内通知",
+      "layoutSaveFailed": "卡片排序保存失败，请稍后重试",
+      "memoTitle": "{date}便签",
+      "memoPlaceholder": "请记录便签内容~",
+      "memoPastDateNotAllowed": "不能为过去的日期添加便签",
+      "cards": {
+        "process": "流程通知",
+        "calendar": "行事历"
+      }
+    }
   },
   "ui": {
     "widgets": {
@@ -22,6 +36,7 @@
       "viewAll": "查看所有消息",
       "clearNotifications": "清空",
       "markAllAsRead": "全部已读",
+      "notificationPublisher": "发送人",
       "document": "文档",
       "qa": "问答"
     }

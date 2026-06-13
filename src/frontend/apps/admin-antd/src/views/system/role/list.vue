@@ -6,6 +6,9 @@ import type { SystemRoleApi } from '#/api/system/role';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { Plus } from '@vben/icons';
+import { useAccessStore } from '@vben/stores';
+
+import { ref } from 'vue';
 
 import { Button, message, Modal } from 'ant-design-vue';
 
@@ -16,13 +19,30 @@ import {
   deleteRole,
   getRoleList,
 } from '#/api/system/role';
+import { PermissionCodes } from '#/constants/permission-codes';
 import { $t } from '#/locales';
+import { handleVxeCellDblclick } from '#/utils/vxe-row-navigation';
+import { hasAppPermission } from '#/utils/app-permission';
 
 import { useColumns, useGridFormSchema } from './data';
+import BatchPermissionDrawer from './modules/batch-permission-drawer.vue';
+import ChangeHistoryModal from './modules/change-history-modal.vue';
 import Form from './modules/form.vue';
+
+const changeHistoryOpen = ref(false);
+const changeHistoryRow = ref<SystemRoleApi.SystemRole | null>(null);
+const accessStore = useAccessStore();
+
+const canBatchUpdatePermissions = () =>
+  hasAppPermission(accessStore.accessCodes, PermissionCodes.RoleUpdatePermissions);
 
 const [FormDrawer, formDrawerApi] = useVbenDrawer({
   connectedComponent: Form,
+  destroyOnClose: true,
+});
+
+const [BatchPermissionDrawerRef, batchPermissionDrawerApi] = useVbenDrawer({
+  connectedComponent: BatchPermissionDrawer,
   destroyOnClose: true,
 });
 
@@ -32,7 +52,12 @@ const [Grid, gridApi] = useVbenVxeGrid<SystemRoleApi.SystemRole>({
     schema: useGridFormSchema(),
     submitOnChange: true,
   },
+    gridEvents: {
+    'cell-dblclick': (event: any) => handleVxeCellDblclick(event, onRowDblclick),
+  } as any,
+
   gridOptions: {
+    checkboxConfig: { highlight: true },
     columns: useColumns(onActionClick, onStatusChange),
     height: 'auto',
     keepSource: true,
@@ -58,6 +83,8 @@ const [Grid, gridApi] = useVbenVxeGrid<SystemRoleApi.SystemRole>({
         },
       },
     },
+    rowClassName: () => 'vxe-row-clickable',
+
     rowConfig: {
       keyField: 'roleId',
     },
@@ -74,6 +101,10 @@ const [Grid, gridApi] = useVbenVxeGrid<SystemRoleApi.SystemRole>({
 
 function onActionClick(e: OnActionClickParams<SystemRoleApi.SystemRole>) {
   switch (e.code) {
+    case 'changeHistory': {
+      onChangeHistory(e.row);
+      break;
+    }
     case 'delete': {
       onDelete(e.row);
       break;
@@ -83,6 +114,11 @@ function onActionClick(e: OnActionClickParams<SystemRoleApi.SystemRole>) {
       break;
     }
   }
+}
+
+function onChangeHistory(row: SystemRoleApi.SystemRole) {
+  changeHistoryRow.value = row;
+  changeHistoryOpen.value = true;
 }
 
 /**
@@ -165,20 +201,41 @@ function onRefresh() {
   gridApi.query();
 }
 
+function onRowDblclick(row: SystemRoleApi.SystemRole) {
+  onEdit(row);
+}
+
 function onCreate() {
   formDrawerApi.setData({}).open();
+}
+
+function getSelectedRows(): SystemRoleApi.SystemRole[] {
+  return (((gridApi as any)?.grid?.getCheckboxRecords?.() ?? []) as SystemRoleApi.SystemRole[]) ?? [];
+}
+
+function onBatchPermission() {
+  batchPermissionDrawerApi
+    .setData({
+      roles: getSelectedRows(),
+    })
+    .open();
 }
 </script>
 <template>
   <Page auto-content-height>
     <FormDrawer @success="onRefresh" />
+    <BatchPermissionDrawerRef @success="onRefresh" />
     <Grid :table-title="$t('system.role.list')">
       <template #toolbar-tools>
+        <Button v-if="canBatchUpdatePermissions()" class="mr-2" @click="onBatchPermission">
+          {{ $t('system.role.batchPermissionTitle') }}
+        </Button>
         <Button type="primary" class="inline-flex items-center gap-1" @click="onCreate">
           <Plus class="size-5 shrink-0" />
           {{ $t('ui.actionTitle.create', [$t('system.role.name')]) }}
         </Button>
       </template>
     </Grid>
+    <ChangeHistoryModal v-model:open="changeHistoryOpen" :row="changeHistoryRow" />
   </Page>
 </template>

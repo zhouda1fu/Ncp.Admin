@@ -6,7 +6,13 @@ namespace Ncp.Admin.Domain.AggregatesModel.PositionAggregate;
 /// <summary>
 /// 岗位ID（强类型ID）
 /// </summary>
-public partial record PositionId : IInt64StronglyTypedId;
+public partial record PositionId : IInt64StronglyTypedId
+{
+    /// <summary>
+    /// 未分配岗位（哨兵值）
+    /// </summary>
+    public static PositionId Unassigned { get; } = new(0);
+}
 
 /// <summary>
 /// 岗位聚合根
@@ -36,7 +42,7 @@ public class Position : Entity<PositionId>, IAggregateRoot
     /// <summary>
     /// 所属部门ID
     /// </summary>
-    public DeptId DeptId { get; private set; } = default!;
+    public DeptId DeptId { get; private set; } = DeptId.Unassigned;
 
     /// <summary>
     /// 排序号（越小越靠前）

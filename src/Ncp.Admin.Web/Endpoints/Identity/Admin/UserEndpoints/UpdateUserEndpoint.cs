@@ -26,7 +26,6 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 /// <param name="BirthDate">出生日期</param>
 /// <param name="DeptId">部门ID</param>
 /// <param name="DeptName">部门名称</param>
-/// <param name="IsDeptManager">是否为该部门主管</param>
 /// <param name="PositionId">岗位ID（可选，null 表示清除岗位）</param>
 /// <param name="PositionName">岗位名称（可选）</param>
 /// <param name="Password">密码（可选，为空则不更新）</param>
@@ -35,11 +34,14 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 /// <param name="Education">学历</param>
 /// <param name="GraduateSchool">毕业院校</param>
 /// <param name="AvatarUrl">头像地址</param>
-/// <param name="NotOrderMeal">是否订餐（true=不订餐，false=订餐）</param>
+/// <param name="NotOrderMeal">不订餐：true 为不参与订餐，false 为参与订餐。</param>
 /// <param name="OrderMealSort">订餐排序（可选）</param>
+/// <param name="AttendanceRequired">是否需要参与考勤计算；false 表示不参与考勤。</param>
 /// <param name="WechatGuid">唯一码</param>
 /// <param name="IsResigned">是否离职</param>
 /// <param name="ResignedTime">离职时间（可选）</param>
+/// <param name="SetAsDeptResponsibleUser">是否为所属部门负责人；null 表示不修改负责人关系</param>
+/// <param name="SetAsDefaultDeptResponsibleUser">是否为所属部门默认负责人；null 表示不修改默认负责人关系</param>
 public record UpdateUserRequest(
     UserId UserId,
     string Name,
@@ -52,7 +54,6 @@ public record UpdateUserRequest(
     DateTimeOffset BirthDate,
     DeptId DeptId,
     string DeptName,
-    bool IsDeptManager,
     PositionId? PositionId,
     string? PositionName,
     string Password,
@@ -63,9 +64,12 @@ public record UpdateUserRequest(
     string AvatarUrl,
     bool NotOrderMeal,
     int OrderMealSort,
+    bool AttendanceRequired,
     string WechatGuid,
     bool IsResigned,
-    DateTimeOffset ResignedTime);
+    DateTimeOffset ResignedTime,
+    bool? SetAsDeptResponsibleUser = null,
+    bool? SetAsDefaultDeptResponsibleUser = null);
 
 /// <summary>
 /// 更新用户信息的响应模型
@@ -92,7 +96,7 @@ public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHash
 
     public override async Task HandleAsync(UpdateUserRequest request, CancellationToken ct)
     {
-        var modifierId = User.GetUserIdOrNull() ?? new UserId(0);
+        var modifierId = User.GetUserIdOrNull() ?? UserId.Unassigned;
         var passwordHash = string.Empty;
         if (!string.IsNullOrWhiteSpace(request.Password))
         {
@@ -110,7 +114,6 @@ public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHash
             request.BirthDate,
             request.DeptId,
             request.DeptName,
-            request.IsDeptManager,
             request.PositionId,
             request.PositionName,
             passwordHash,
@@ -121,9 +124,12 @@ public class UpdateUserEndpoint(IMediator mediator, IPasswordHasher passwordHash
             request.AvatarUrl,
             request.NotOrderMeal,
             request.OrderMealSort,
+            request.AttendanceRequired,
             request.WechatGuid,
             request.IsResigned,
             request.ResignedTime,
+            request.SetAsDeptResponsibleUser,
+            request.SetAsDefaultDeptResponsibleUser,
             modifierId
         );
         var userId = await mediator.Send(cmd, ct);

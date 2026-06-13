@@ -36,6 +36,8 @@ function resetForm() {
       parentId: formData.value.parentId,
       status: formData.value.status,
       remark: formData.value.remark ?? '',
+      responsibleUserIds: formData.value.responsibleUsers?.map((x) => String(x.userId)) ?? [],
+      defaultResponsibleUserId: formData.value.responsibleUsers?.find((x) => x.isDefault)?.userId,
     });
   }
 }
@@ -48,26 +50,31 @@ const [Modal, modalApi] = useVbenModal({
       const data = await formApi.getValues();
       try {
         // 处理 parentId：如果是 '0' 或空字符串，设置为 undefined
-        // 部门主管由用户管理页维护，新建传 0，编辑沿用当前部门的主管 ID
         const submitData: {
           name: string;
           remark?: string;
           parentId?: string;
           status: 0 | 1;
-          managerId: string;
+          sortOrder?: number;
+          responsibleUserIds?: string[];
+          defaultResponsibleUserId?: string;
         } = {
           name: data.name,
           remark: data.remark || '',
           status: data.status ?? 1,
-          managerId: formData.value?.id ? String(formData.value.managerId ?? '0') : '0',
+          responsibleUserIds: data.responsibleUserIds ?? [],
+          defaultResponsibleUserId: data.defaultResponsibleUserId || undefined,
           parentId:
             data.parentId === '0' || data.parentId === '' || !data.parentId
               ? undefined
               : data.parentId,
         };
-        await (formData.value?.id
-          ? updateDept(formData.value.id, submitData)
-          : createDept(submitData));
+        if (formData.value?.id) {
+          submitData.sortOrder = formData.value.sortOrder ?? 0;
+          await updateDept(formData.value.id, submitData);
+        } else {
+          await createDept(submitData);
+        }
         modalApi.close();
         emit('success');
       } finally {
@@ -83,16 +90,14 @@ const [Modal, modalApi] = useVbenModal({
         if (data.parentId === '0' || data.parentId === '') {
           data.parentId = undefined;
         }
-        if (data.managerId != null) {
-          data.managerId = String(data.managerId);
-        }
         formData.value = data;
-        // 仅设置表单中展示的字段（部门主管由用户管理页维护，不在此展示）
         formApi.setValues({
           name: data.name,
           parentId: data.parentId,
           status: data.status,
           remark: data.remark ?? '',
+          responsibleUserIds: data.responsibleUsers?.map((x) => String(x.userId)) ?? [],
+          defaultResponsibleUserId: data.responsibleUsers?.find((x) => x.isDefault)?.userId,
         });
       } else {
         formData.value = undefined;

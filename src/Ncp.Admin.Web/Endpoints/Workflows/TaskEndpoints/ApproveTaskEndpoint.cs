@@ -1,9 +1,9 @@
-using System.Security.Claims;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using Ncp.Admin.Domain;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
@@ -18,7 +18,9 @@ namespace Ncp.Admin.Web.Endpoints.Workflows.TaskEndpoints;
 public record ApproveTaskRequest(
     WorkflowInstanceId WorkflowInstanceId,
     WorkflowTaskId TaskId,
-    string Comment);
+    string Comment,
+    /// <summary>审批动作扩展负载。通用工作流不解释该字段，由对应业务适配器读取。</summary>
+    IReadOnlyDictionary<string, JsonElement>? ActionPayload = null);
 
 /// <summary>
 /// 审批通过端点
@@ -36,16 +38,17 @@ public class ApproveTaskEndpoint(IMediator mediator) : Endpoint<ApproveTaskReque
 
     public override async System.Threading.Tasks.Task HandleAsync(ApproveTaskRequest req, CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userIdValue))
-        {
-            throw new KnownException("无效的用户身份", ErrorCodes.InvalidUserIdentity);
-        }
+        if (!User.TryGetUserId(out var userIdValue))
+        {
+            throw new KnownException("无效的用户身份", ErrorCodes.InvalidUserIdentity);
+        }
 
         var cmd = new ApproveTaskCommand(
             req.WorkflowInstanceId,
             req.TaskId,
             userIdValue,
-            req.Comment);
+            req.Comment,
+            req.ActionPayload);
 
         try
         {

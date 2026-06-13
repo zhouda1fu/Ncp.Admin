@@ -4,17 +4,18 @@ import type { SystemRoleApi } from '#/api/system/role';
 
 import { computed, nextTick, ref } from 'vue';
 
-import { Tree, useVbenDrawer } from '@vben/common-ui';
-import { IconifyIcon } from '@vben/icons';
+import { useVbenDrawer } from '@vben/common-ui';
 
-import { Spin } from 'ant-design-vue';
+import { Spin, Select, message } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
-import { createRole, updateRole } from '#/api/system/role';
+import { createRole, updateRole, getRole, getRoleList } from '#/api/system/role';
 import { buildPermissionTree } from '#/utils/permission-tree';
+import { stripSyntheticPermissionTreeKeys } from '#/constants/module-menu-categories';
 import { $t } from '#/locales';
 
 import { useFormSchema } from '../data';
+import PermissionCodesTree from './permission-codes-tree.vue';
 
 const emits = defineEmits(['success']);
 
@@ -26,6 +27,43 @@ const [Form, formApi] = useVbenForm({
 });
 
 const permissions = ref<PermissionTreeNode[]>([]);
+
+/** 复制授权：可选角色（排除当前编辑中的角色） */
+const copyRoleOptions = ref<{ label: string; value: string }[]>([]);
+const copyFromRoleId = ref<string | undefined>();
+
+async function loadCopyRoleOptions() {
+  try {
+    const res = await getRoleList({
+      pageIndex: 1,
+      pageSize: 500,
+      countTotal: true,
+    });
+    const items = res.items ?? [];
+    const currentId = id.value ? String(id.value) : '';
+    copyRoleOptions.value = items
+      .filter((r) => String(r.roleId) !== currentId)
+      .map((r) => ({ label: r.name, value: String(r.roleId) }));
+  } catch {
+    copyRoleOptions.value = [];
+  }
+}
+
+async function onCopyPermissionRoleChange(roleId: unknown) {
+  const roleIdValue = String(roleId ?? '').trim();
+  if (!roleIdValue) return;
+  try {
+    const detail = await getRole(roleIdValue);
+    const raw = detail.permissionCodes;
+    const codes = Array.isArray(raw) ? [...raw] : [];
+    await formApi.setValues({ permissionCodes: codes });
+    message.success($t('system.role.copyPermissionsSuccess'));
+  } catch {
+    message.error($t('system.role.copyPermissionsFailed'));
+  } finally {
+    copyFromRoleId.value = undefined;
+  }
+}
 
 const id = ref<string>();
 const [Drawer, drawerApi] = useVbenDrawer({
@@ -45,7 +83,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           dataScope: values.dataScope ?? 0,
           customDeptIds:
             (values.dataScope ?? 0) === 4 ? (values.customDeptIds ?? []) : [],
-          permissionCodes: values.permissionCodes || [],
+          permissionCodes: stripSyntheticPermissionTreeKeys(values.permissionCodes || []),
         });
       } else {
         if ((values.dataScope ?? 0) !== 4) {
@@ -57,7 +95,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           dataScope: values.dataScope ?? 0,
           customDeptIds:
             (values.dataScope ?? 0) === 4 ? (values.customDeptIds ?? []) : [],
-          permissionCodes: values.permissionCodes || [],
+          permissionCodes: stripSyntheticPermissionTreeKeys(values.permissionCodes || []),
         });
       }
       emits('success');
@@ -80,21 +118,24 @@ const [Drawer, drawerApi] = useVbenDrawer({
         formData.value = undefined;
       }
 
-      // 加载权限树数据（使用静态数据，不需要 API 调用）
       if (permissions.value.length === 0) {
         permissions.value = buildPermissionTree();
       }
 
-      // Wait for Vue to flush DOM updates (form fields mounted)
+      copyFromRoleId.value = undefined;
+      await loadCopyRoleOptions();
+
       await nextTick();
       if (data && data.roleId) {
+        const detail = await getRole(String(data.roleId));
+        const permissionCodes = detail.permissionCodes || [];
         formApi.setValues({
-          name: data.name,
-          description: data.description || '',
-          isActive: data.isActive,
-          dataScope: data.dataScope ?? 0,
-          customDeptIds: data.customDeptIds ?? [],
-          permissionCodes: data.permissionCodes || [],
+          name: detail.name,
+          description: detail.description || '',
+          isActive: detail.isActive,
+          dataScope: detail.dataScope ?? 0,
+          customDeptIds: detail.customDeptIds ?? [],
+          permissionCodes,
         });
       }
     }
@@ -108,25 +149,30 @@ const getDrawerTitle = computed(() => {
 });
 </script>
 <template>
-  <Drawer :title="getDrawerTitle">
+  <Drawer :title="getDrawerTitle" class="!w-[760px] max-w-[96vw]" destroyOnClose>
     <Form>
       <template #permissionCodes="slotProps">
         <Spin :spinning="false" wrapper-class-name="w-full">
-          <Tree
-            :tree-data="permissions"
-            multiple
-            bordered
-            :default-expanded-level="2"
-            v-bind="slotProps"
-            value-field="value"
-            label-field="label"
-            icon-field="icon"
-          >
-            <template #node="{ value }">
-              <IconifyIcon v-if="value.icon" :icon="value.icon" />
-              {{ value.label }}
-            </template>
-          </Tree>
+          <div class="mb-4 flex w-full max-w-full flex-col gap-1">
+            <span class="text-muted-foreground text-sm leading-snug">
+              {{ $t('system.role.copyPermissionsHint') }}
+            </span>
+            <Select
+              v-model:value="copyFromRoleId"
+              allow-clear
+              show-search
+              option-filter-prop="label"
+              class="max-w-md w-full"
+              :options="copyRoleOptions"
+              :placeholder="$t('system.role.copyPermissionsPlaceholder')"
+              @change="onCopyPermissionRoleChange"
+            />
+          </div>
+          <PermissionCodesTree
+            :permissions="permissions"
+            :model-value="slotProps.componentField?.modelValue"
+            @update:model-value="slotProps.componentField?.['onUpdate:modelValue']"
+          />
         </Spin>
       </template>
     </Form>

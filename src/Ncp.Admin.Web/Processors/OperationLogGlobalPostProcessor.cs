@@ -37,10 +37,10 @@ public sealed class OperationLogGlobalPostProcessor : IGlobalPostProcessor
         ["Meeting"] = "会议管理",
         ["Attendance"] = "考勤管理",
         ["Announcement"] = "公告管理",
-        ["Leave"] = "请假管理",
+        ["Leave"] = "流程管理",
         ["Expense"] = "费用管理",
-        ["Document"] = "文档管理",
-        ["Vehicle"] = "车辆管理",
+        ["Drive"] = "文件管理",
+        ["Car"] = "车辆申请管理",
         ["Task"] = "任务管理",
         ["Contact"] = "联系人管理",
         ["Product"] = "产品管理",
@@ -79,8 +79,24 @@ public sealed class OperationLogGlobalPostProcessor : IGlobalPostProcessor
         if (http.Items.TryGetValue("__oplog_sw", out var swObj) && swObj is Stopwatch sw)
             durationMs = sw.ElapsedMilliseconds;
 
-        var requestBody = OperationLogPayloadSerializer.SerializeMasked(ctx.Request, 4000);
-        var responseBody = OperationLogPayloadSerializer.SerializeMasked(ctx.Response, 4000);
+        string requestBody;
+        string responseBody;
+        try
+        {
+            requestBody = OperationLogPayloadSerializer.SerializeMasked(ctx.Request, 4000);
+        }
+        catch
+        {
+            requestBody = "[request-serialization-failed]";
+        }
+        try
+        {
+            responseBody = OperationLogPayloadSerializer.SerializeMasked(ctx.Response, 4000);
+        }
+        catch
+        {
+            responseBody = "[response-serialization-failed]";
+        }
 
         // 默认模块/类型（不依赖路径映射表）
         var module = GetModuleName(endpoint) ?? "API";
@@ -152,4 +168,3 @@ public sealed class OperationLogGlobalPostProcessor : IGlobalPostProcessor
         return s.Length <= maxLen ? s : s[..maxLen];
     }
 }
-

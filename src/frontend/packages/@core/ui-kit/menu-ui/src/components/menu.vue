@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { UseResizeObserverReturn } from '@vueuse/core';
 
-import type { SetupContext, VNodeArrayChildren } from 'vue';
+import type { SetupContext, VNode, VNodeArrayChildren } from 'vue';
 
 import type {
   MenuItemClicked,
@@ -12,6 +12,7 @@ import type {
 
 import {
   computed,
+  isVNode,
   nextTick,
   reactive,
   ref,
@@ -66,6 +67,10 @@ const activePath = ref<MenuProvider['activePath']>(props.defaultActive);
 const items = ref<MenuProvider['items']>({});
 const subMenus = ref<MenuProvider['subMenus']>({});
 const mouseInChild = ref(false);
+/** 用户手动折叠过的 defaultOpeneds 项，避免路由切换时被再次强制展开 */
+const userClosedDefaultPaths = ref<Set<string>>(new Set());
+/** defaultOpeneds 是否已在首次菜单就绪时应用过 */
+const defaultOpenedsApplied = ref(false);
 
 const isMenuPopup = computed<MenuProvider['isMenuPopup']>(() => {
   return (
@@ -89,6 +94,18 @@ const getSlot = computed(() => {
   return { showSlotMore: slotMore.length > 0, slotDefault, slotMore };
 });
 
+function toVNodeChildren(children: VNodeArrayChildren): VNode[] {
+  return children.filter((item): item is VNode => isVNode(item));
+}
+
+const horizontalSlotDefault = computed(() =>
+  toVNodeChildren(getSlot.value.slotDefault),
+);
+
+const horizontalSlotMore = computed(() =>
+  toVNodeChildren(getSlot.value.slotMore),
+);
+
 watch(
   () => props.collapse,
   (value) => {
@@ -99,12 +116,21 @@ watch(
 watch(items.value, initMenu);
 
 watch(
+  () => Object.keys(subMenus.value).length,
+  () => {
+    expandActiveItemPath();
+    applyDefaultOpeneds();
+  },
+);
+
+watch(
   () => props.defaultActive,
   (currentActive = '') => {
     if (!items.value[currentActive]) {
       activePath.value = '';
     }
     updateActiveName(currentActive);
+    expandActiveItemPath();
   },
 );
 
@@ -222,16 +248,50 @@ watch(activePath, () => {
   scrollToActiveItem();
 });
 
-// 默认展开菜单
-function initMenu() {
-  const parentPaths = getActivePaths();
+/** 侧栏配置的默认展开项（如行政 / CRM / 系统大模块），仅在首次菜单就绪时应用 */
+function applyDefaultOpeneds() {
+  if (
+    defaultOpenedsApplied.value ||
+    !props.defaultOpeneds?.length ||
+    props.collapse
+  ) {
+    return;
+  }
+  for (const path of props.defaultOpeneds) {
+    if (
+      !userClosedDefaultPaths.value.has(path) &&
+      !openedMenus.value.includes(path)
+    ) {
+      openedMenus.value.push(path);
+    }
+  }
+  defaultOpenedsApplied.value = true;
+}
 
-  // 展开该菜单项的路径上所有子菜单
-  // expand all subMenus of the menu item
+/** 展开当前激活菜单项的祖先链路，保证路由切换后子菜单仍可见 */
+function expandActiveItemPath() {
+  if (props.mode === 'horizontal' || props.collapse) {
+    return;
+  }
+  const parentPaths = getActivePaths();
   parentPaths.forEach((path) => {
     const subMenu = subMenus.value[path];
-    subMenu && openMenu(path, subMenu.parentPaths);
+    subMenu && openMenu(path, subMenu.parentPaths, { userInitiated: false });
   });
+}
+
+function getAccordionParentKey(parentPaths: string[]) {
+  // 顶级分组（仅含自身 path）不参与同级折叠，允许多个大模块同时展开
+  if (parentPaths.length <= 1) {
+    return null;
+  }
+  return parentPaths.slice(0, -1).join('\0');
+}
+
+// 默认展开菜单
+function initMenu() {
+  expandActiveItemPath();
+  applyDefaultOpeneds();
 }
 
 function updateActiveName(val: string) {
@@ -285,25 +345,51 @@ function closeMenu(path: string, parentPaths: string[]) {
 
   close(path);
 
+  if (props.defaultOpeneds?.includes(path)) {
+    userClosedDefaultPaths.value.add(path);
+  }
+
   emit('close', path, parentPaths);
+}
+
+interface OpenMenuOptions {
+  userInitiated?: boolean;
 }
 
 /**
  * 点击展开菜单
  */
-function openMenu(path: string, parentPaths: string[]) {
+function openMenu(
+  path: string,
+  parentPaths: string[],
+  options: OpenMenuOptions = {},
+) {
   if (openedMenus.value.includes(path)) {
     return;
   }
-  // 手风琴模式菜单
+  if (options.userInitiated !== false && props.defaultOpeneds?.includes(path)) {
+    userClosedDefaultPaths.value.delete(path);
+  }
+  // 手风琴模式：仅折叠同级子菜单，不关闭其它层级（如三大模块分类可同时展开）
   if (props.accordion) {
     const activeParentPaths = getActivePaths();
     if (activeParentPaths.includes(path)) {
       parentPaths = activeParentPaths;
     }
-    openedMenus.value = openedMenus.value.filter((path: string) =>
-      parentPaths.includes(path),
-    );
+    const parentKey = getAccordionParentKey(parentPaths);
+    if (parentKey !== null) {
+      openedMenus.value = openedMenus.value.filter((openedPath: string) => {
+        if (openedPath === path) {
+          return false;
+        }
+        const openedSubMenu = subMenus.value[openedPath];
+        if (!openedSubMenu) {
+          return true;
+        }
+        const openedParentKey = getAccordionParentKey(openedSubMenu.parentPaths);
+        return openedParentKey !== parentKey;
+      });
+    }
   }
   openedMenus.value.push(path);
   emit('open', path, parentPaths);
@@ -351,14 +437,14 @@ function getActivePaths() {
     role="menu"
   >
     <template v-if="mode === 'horizontal' && getSlot.showSlotMore">
-      <template v-for="item in getSlot.slotDefault" :key="item.key">
+      <template v-for="item in horizontalSlotDefault" :key="item.key">
         <component :is="item" />
       </template>
       <SubMenu is-sub-menu-more path="sub-menu-more">
         <template #title>
           <Ellipsis class="size-4" />
         </template>
-        <template v-for="item in getSlot.slotMore" :key="item.key">
+        <template v-for="item in horizontalSlotMore" :key="item.key">
           <component :is="item" />
         </template>
       </SubMenu>

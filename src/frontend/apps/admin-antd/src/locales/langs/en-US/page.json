@@ -3,25 +3,40 @@
     "login": "Login",
     "register": "Register",
     "codeLogin": "Code Login",
-    "qrcodeLogin": "Qr Code Login",
+    "qrcodeLogin": "QR Code Login",
     "forgetPassword": "Forget Password",
     "profile": "Profile"
   },
   "dashboard": {
     "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
+    "analytics": "Home",
+    "workspace": "Workspace",
+    "home": {
+      "workflowPendingTitle": "{count} pending tasks",
+      "workflowPendingSubtitle": "Open workflow inbox",
+      "unreadNotificationsTitle": "{count} unread",
+      "unreadNotificationsSubtitle": "Open notifications",
+      "layoutSaveFailed": "Failed to save card order. Please try again.",
+      "memoTitle": "Memo for {date}",
+      "memoPlaceholder": "Write a memo…",
+      "memoPastDateNotAllowed": "Cannot add memos for past dates",
+      "cards": {
+        "process": "Workflow",
+        "calendar": "Calendar"
+      }
+    }
   },
   "ui": {
     "widgets": {
       "justNow": "Just now",
-      "minutesAgo": " min ago",
-      "hoursAgo": " hours ago",
-      "daysAgo": " days ago",
+      "minutesAgo": "minutes ago",
+      "hoursAgo": "hours ago",
+      "daysAgo": "days ago",
       "notifications": "Notifications",
-      "viewAll": "View all messages",
+      "viewAll": "View all",
       "clearNotifications": "Clear",
-      "markAllAsRead": "Mark all as read",
+      "markAllAsRead": "Mark all read",
+      "notificationPublisher": "Sender",
       "document": "Document",
       "qa": "Q&A"
     }

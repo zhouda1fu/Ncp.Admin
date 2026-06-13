@@ -29,7 +29,7 @@ public class MarkWorkflowInstanceFaultedCommandHandler(IWorkflowInstanceReposito
 {
     public async Task Handle(MarkWorkflowInstanceFaultedCommand request, CancellationToken cancellationToken)
     {
-        var instance = await instanceRepository.GetAsync(request.Id, cancellationToken)
+        var instance = await instanceRepository.GetWithTasksIgnoringQueryFiltersAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到流程实例", ErrorCodes.WorkflowInstanceNotFound);
 
         instance.MarkFaulted(request.FailureReason);

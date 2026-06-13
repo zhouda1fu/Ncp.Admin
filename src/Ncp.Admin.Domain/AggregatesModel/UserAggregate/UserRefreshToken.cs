@@ -1,7 +1,13 @@
 using Ncp.Admin.Domain;
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
-public partial record UserRefreshTokenId : IInt64StronglyTypedId;
+public partial record UserRefreshTokenId : IInt64StronglyTypedId
+{
+    /// <summary>
+    /// 未分配标识（哨兵值）
+    /// </summary>
+    public static UserRefreshTokenId Unassigned { get; } = new(0);
+}
 
 public class UserRefreshToken : Entity<UserRefreshTokenId>
 {
@@ -16,7 +22,7 @@ public class UserRefreshToken : Entity<UserRefreshTokenId>
         ExpiresTime = CreatedTime.AddDays(1);
     }
 
-    public UserId UserId { get; private set; } = null!;
+    public UserId UserId { get; private set; } = UserId.Unassigned;
     public string Token { get; private set; } = string.Empty;
     public DateTimeOffset CreatedTime { get; init; }
     public DateTimeOffset ExpiresTime { get; init; }

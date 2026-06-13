@@ -6,7 +6,7 @@ public class RolePermission
     {
     }
 
-    public RoleId RoleId { get; internal set; } = default!;
+    public RoleId RoleId { get; internal set; } = RoleId.Unassigned;
     public string PermissionCode { get; private set; } = string.Empty;
     public string PermissionName { get; private set; } = string.Empty;
     public string PermissionDescription { get; private set; } = string.Empty;

@@ -1,103 +1,119 @@
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Application.Services.Workflow.Graph;
+using System.Text.Json;
 
 namespace Ncp.Admin.Web.Application.Services.Workflow;
 
 /// <summary>
-/// 保存/发布流程定义时校验：审批/抄送「指定成员」须可选中有效用户；「角色」须每个已选角色下至少有一名用户。
+/// 保存/发布流程定义时校验审批/抄送节点配置。
+/// 结构校验委托 <see cref="WorkflowGraphCompiler"/>，此处仅补充需查库的业务校验。
 /// </summary>
-public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser treeTraverser, UserQuery userQuery)
+public class WorkflowDefinitionAssigneeConfigValidator(WorkflowGraphCompiler graphCompiler, UserQuery userQuery)
 {
-    public async Task ValidateAsync(string? definitionJson, CancellationToken cancellationToken = default)
+    private static readonly JsonSerializerOptions GraphJsonOptions = new()
     {
-        foreach (var node in treeTraverser.EnumerateAllNodes(definitionJson))
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
+    public Task ValidateAsync(string? definitionJson, CancellationToken cancellationToken = default) =>
+        ValidateAsync(definitionJson, category: null, cancellationToken);
+
+    public async Task ValidateAsync(string? definitionJson, string? category, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(definitionJson))
         {
-            if (node.Type == 2)
+            throw InvalidDefinition("流程定义不能为空，请先在设计器中配置流程节点");
+        }
+
+        var compileResult = graphCompiler.Compile(definitionJson, category);
+        var graph = JsonSerializer.Deserialize<WorkflowGraph>(compileResult.GraphSnapshotJson, GraphJsonOptions)
+            ?? throw InvalidDefinition("流程定义未包含有效节点，请检查设计器配置");
+
+        ValidateOfficeTaskParticipantNodes(graph);
+        ValidateEmptyApproverPolicies(graph);
+        await ValidateRoleMembershipAsync(graph, cancellationToken);
+    }
+
+    private static void ValidateOfficeTaskParticipantNodes(WorkflowGraph graph)
+    {
+        var nodes = graph.Nodes.ToDictionary(n => n.NodeId, StringComparer.Ordinal);
+        foreach (var node in graph.Nodes.Where(n => n.OfficeTaskParticipantNode()))
+        {
+            if (node.Type != WorkflowGraphNodeType.Approval)
             {
-                if (node.SetType == 3)
-                {
-                    await EnsureEachRoleHasUsersAsync(node, isApproval: false, cancellationToken);
-                }
-                else
-                {
-                    EnsureHasMemberUsers(node, isApproval: false);
-                }
+                throw InvalidDefinition($"办公任务参与人节点「{DisplayName(node)}」必须是审批节点");
             }
-            else if (node.Type == 1)
+
+            if (string.IsNullOrWhiteSpace(node.NextNodeId)
+                || !nodes.TryGetValue(node.NextNodeId, out var next)
+                || next.Type != WorkflowGraphNodeType.CarbonCopy)
             {
-                switch (node.SetType)
-                {
-                    case 1:
-                        EnsureHasMemberUsers(node, isApproval: true);
-                        break;
-                    case 3:
-                        await EnsureEachRoleHasUsersAsync(node, isApproval: true, cancellationToken);
-                        break;
-                    case 2:
-                    case 5:
-                        break;
-                    case 4:
-                    case 7:
-                        throw new KnownException(
-                            $"审批节点「{node.NodeName}」使用了暂不支持的审批人类型，请改为指定成员、主管、角色或发起人自己",
-                            ErrorCodes.WorkflowUnsupportedAssigneeType);
-                    default:
-                        throw new KnownException(
-                            $"审批节点「{node.NodeName}」未正确配置审批人类型",
-                            ErrorCodes.WorkflowUnsupportedAssigneeType);
-                }
+                throw InvalidDefinition($"办公任务参与人节点「{DisplayName(node)}」后必须紧跟一个抄送节点");
             }
         }
     }
 
-    private static void EnsureHasMemberUsers(DesignerNodeConfig node, bool isApproval)
+    private static void ValidateEmptyApproverPolicies(WorkflowGraph graph)
     {
-        if (HasAtLeastOneParsableUserId(node))
+        foreach (var node in graph.Nodes.Where(n => n.Type == WorkflowGraphNodeType.Approval))
         {
-            return;
+            if (node.EmptyApproverPolicy.Mode == WorkflowGraphEmptyApproverPolicyMode.SpecifiedMembers
+                && !HasAtLeastOneParsableUserId(node.EmptyApproverPolicy.Users))
+            {
+                throw new KnownException(
+                    $"审批节点「{node.Name}」审批人为空时指定成员缺少有效用户",
+                    ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
+            }
         }
-
-        var kind = isApproval ? "审批" : "抄送";
-        throw new KnownException(
-            $"{kind}节点「{node.NodeName}」请选择成员，且成员须为有效用户",
-            ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
     }
 
-    private static bool HasAtLeastOneParsableUserId(DesignerNodeConfig node)
+    private async Task ValidateRoleMembershipAsync(WorkflowGraph graph, CancellationToken cancellationToken)
     {
-        var list = node.NodeAssigneeList;
+        foreach (var node in graph.Nodes)
+        {
+            var rules = node.Type switch
+            {
+                WorkflowGraphNodeType.Approval => node.AssigneeRules,
+                WorkflowGraphNodeType.CarbonCopy => node.CopyRules,
+                _ => [],
+            };
+
+            var kind = node.Type == WorkflowGraphNodeType.CarbonCopy ? "抄送" : "审批";
+            foreach (var rule in rules.Where(r => r.Source == WorkflowGraphAssigneeSource.Role))
+            {
+                await EnsureEachRoleHasUsersAsync(rule.Roles, node.Name, kind, cancellationToken);
+            }
+        }
+    }
+
+    private static string DisplayName(WorkflowGraphNode node) =>
+        string.IsNullOrWhiteSpace(node.Name) ? node.NodeId : node.Name;
+
+    private static KnownException InvalidDefinition(string message) =>
+        new(message, ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
+
+    private static bool HasAtLeastOneParsableUserId(IReadOnlyList<WorkflowGraphOption>? list)
+    {
         if (list == null || list.Count == 0)
         {
             return false;
         }
 
-        foreach (var item in list)
-        {
-            if (string.IsNullOrWhiteSpace(item.Id))
-            {
-                continue;
-            }
-
-            if (long.TryParse(item.Id, out _))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return list.Any(item => !string.IsNullOrWhiteSpace(item.Id) && long.TryParse(item.Id, out _));
     }
 
     private async Task EnsureEachRoleHasUsersAsync(
-        DesignerNodeConfig node,
-        bool isApproval,
+        IReadOnlyList<WorkflowGraphOption>? list,
+        string nodeName,
+        string kind,
         CancellationToken cancellationToken)
     {
-        var kind = isApproval ? "审批" : "抄送";
-        var list = node.NodeAssigneeList;
         if (list == null || list.Count == 0)
         {
             throw new KnownException(
-                $"{kind}节点「{node.NodeName}」请选择角色",
+                $"{kind}节点「{nodeName}」请选择角色",
                 ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
         }
 
@@ -116,7 +132,7 @@ public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser tre
             {
                 var roleLabel = string.IsNullOrWhiteSpace(item.Name) ? item.Id : item.Name;
                 throw new KnownException(
-                    $"{kind}节点「{node.NodeName}」中的角色「{roleLabel}」下暂无成员，请分配用户后再保存",
+                    $"{kind}节点「{nodeName}」中的角色「{roleLabel}」下暂无成员，请分配用户后再保存",
                     ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
             }
         }
@@ -124,7 +140,7 @@ public class WorkflowDefinitionAssigneeConfigValidator(WorkflowTreeTraverser tre
         if (!parsedAny)
         {
             throw new KnownException(
-                $"{kind}节点「{node.NodeName}」请选择有效的角色",
+                $"{kind}节点「{nodeName}」请选择有效的角色",
                 ErrorCodes.WorkflowDefinitionInvalidAssigneeConfig);
         }
     }

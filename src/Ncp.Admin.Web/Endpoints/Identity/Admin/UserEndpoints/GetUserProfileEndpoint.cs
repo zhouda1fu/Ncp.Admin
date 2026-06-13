@@ -6,6 +6,7 @@ using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.AppPermissions;
+using Ncp.Admin.Web.Extensions;
 
 namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 
@@ -31,13 +32,14 @@ public record GetUserProfileRequest(UserId UserId);
 /// <param name="BirthDate">出生日期</param>
 /// <param name="DeptId">部门ID（可为空）</param>
 /// <param name="DeptName">部门名称</param>
-public record UserProfileResponse(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, DeptId? DeptId, string DeptName);
+/// <param name="AvatarUrl">头像地址</param>
+public record UserProfileResponse(UserId UserId, string Name, string Phone, IEnumerable<string> Roles, string RealName, int Status, string Email, DateTimeOffset CreatedAt, string Gender, int Age, DateTimeOffset BirthDate, DeptId? DeptId, string DeptName, string AvatarUrl);
 
 /// <summary>
 /// 获取用户资料
 /// </summary>
 /// <param name="userQuery"></param>
-public class GetUserProfileEndpoint(UserQuery userQuery) : Endpoint<GetUserProfileRequest, ResponseData<UserProfileResponse?>>
+public class GetUserProfileEndpoint(UserQuery userQuery) : Endpoint<GetUserProfileRequest, ResponseData<UserProfileResponse>>
 {
     public override void Configure()
     {
@@ -50,7 +52,7 @@ public class GetUserProfileEndpoint(UserQuery userQuery) : Endpoint<GetUserProfi
 
     public override async Task HandleAsync(GetUserProfileRequest req, CancellationToken ct)
     {
-        var userInfo = await userQuery.GetUserByIdAsync(req.UserId, ct);
+        var userInfo = await userQuery.GetUserByIdAsync(req.UserId, ct, includeResigned: true);
         if (userInfo == null)
         {
             throw new KnownException("无效的用户", ErrorCodes.InvalidUser);
@@ -68,9 +70,13 @@ public class GetUserProfileEndpoint(UserQuery userQuery) : Endpoint<GetUserProfi
             userInfo.Age,
             userInfo.BirthDate,
             userInfo.DeptId,
-            userInfo.DeptName
+            userInfo.DeptName,
+            userInfo.AvatarUrl
         );
         await Send.OkAsync(response.AsResponseData(), cancellation: ct);
     }
 }
 
+/// <summary>
+/// 获取当前登录用户资料。
+/// </summary>

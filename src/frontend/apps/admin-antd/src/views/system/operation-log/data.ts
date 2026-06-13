@@ -117,13 +117,10 @@ export function useColumns(): VxeTableGridOptions<OperationLogApi.OperationLogIt
       align: 'center',
       field: 'operation',
       fixed: 'right',
+      showOverflow: false,
       title: $t('system.workflow.instance.operation'),
       width: 100,
       slots: { default: 'action' },
-    },
-    {
-      field: '_flex',
-      title: '',
     },
   ];
 }

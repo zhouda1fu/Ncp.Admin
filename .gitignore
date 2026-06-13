@@ -200,6 +200,15 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+
+# Frontend (pnpm workspace) packages must be tracked
+!src/frontend/packages/
+!src/frontend/packages/**
+
+# turbo-run CLI 需纳入版本控制（否则克隆后 pnpm dev 报 turbo-run 找不到）
+!src/frontend/scripts/turbo-run/bin/
+!src/frontend/scripts/turbo-run/bin/**
+
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
@@ -395,3 +404,30 @@ src/frontend/internal/**/dist/
 src/frontend/packages/**/dist/
 src/frontend/scripts/**/dist/
 /docs/project.txt
+/test/Ncp.Admin.Domain.Tests/GeneralCertificateTests.cs
+tools
+_build_out_inf
+_cursor_build_out
+temp-db-script
+/.tmp-build-domain
+/.tmp-build-infra
+/cloud-conf-snapshots
+
+# Agent / local dotnet build scratch dirs (repo root and parent workspace)
+.build-*/
+_build_check*/
+_build-check*/
+_buildcheck/
+_build_verify*/
+_agent_build_out*/
+_compile_out/
+_ef_*_out/
+_projscope_build*/
+_touch_build_out/
+_verify_build_out/
+_debug_build/
+/.tmp-clear-task
+/src/Ncp.Admin.Web/wwwroot/Files
+/tmp_build_out
+/_build_out
+/tmp_userid_null_check

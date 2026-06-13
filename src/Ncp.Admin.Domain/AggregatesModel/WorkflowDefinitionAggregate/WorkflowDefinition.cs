@@ -7,11 +7,17 @@ namespace Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 /// <summary>
 /// 流程定义ID（强类型ID）
 /// </summary>
-public partial record WorkflowDefinitionId : IGuidStronglyTypedId;
+public partial record WorkflowDefinitionId : IGuidStronglyTypedId
+{
+    /// <summary>
+    /// 未分配标识（哨兵值）
+    /// </summary>
+    public static WorkflowDefinitionId Unassigned { get; } = new(Guid.Empty);
+}
 
 /// <summary>
 /// 流程定义聚合根
-/// 用于管理工作流模板的定义、版本和发布状态。流程结构存储在 DefinitionJson（设计器树形 JSON）中。
+/// 用于管理工作流模板的定义、版本和发布状态。流程结构存储在 DesignerSchemaJson（当前设计器 JSON）中。
 /// </summary>
 public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
 {
@@ -45,19 +51,19 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     public WorkflowDefinitionStatus Status { get; private set; } = WorkflowDefinitionStatus.Draft;
 
     /// <summary>
-    /// 流程定义JSON（设计器树形结构）
+    /// 设计器 Schema JSON
     /// </summary>
-    public string DefinitionJson { get; private set; } = string.Empty;
+    public string DesignerSchemaJson { get; private set; } = string.Empty;
 
     /// <summary>
     /// 基于哪条流程定义创建（通过「基于此创建新版本」产生时为源定义ID，否则为 Guid.Empty）
     /// </summary>
-    public WorkflowDefinitionId BasedOnId { get; private set; } = new WorkflowDefinitionId(Guid.Empty);
+    public WorkflowDefinitionId BasedOnId { get; private set; } = WorkflowDefinitionId.Unassigned;
 
     /// <summary>
     /// 创建人ID
     /// </summary>
-    public UserId CreatedBy { get; private set; } = default!;
+    public UserId CreatedBy { get; private set; } = UserId.Unassigned;
 
     /// <summary>
     /// 创建时间
@@ -80,10 +86,15 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
 
     /// <summary>
+    /// 流程定义版本集合。
+    /// </summary>
+    public virtual ICollection<WorkflowDefinitionVersion> Versions { get; } = [];
+
+    /// <summary>
     /// 创建流程定义（非基于已有定义复制）
     /// </summary>
-    public WorkflowDefinition(string name, string description, string category, string definitionJson, UserId createdBy)
-        : this(name, description, category, definitionJson, createdBy, new WorkflowDefinitionId(Guid.Empty))
+    public WorkflowDefinition(string name, string description, string category, string designerSchemaJson, UserId createdBy)
+        : this(name, description, category, designerSchemaJson, createdBy, new WorkflowDefinitionId(Guid.Empty))
     {
     }
 
@@ -91,13 +102,13 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     /// 创建流程定义
     /// </summary>
     /// <param name="basedOnId">基于哪条流程定义创建，仅「基于此创建新版本」时传入</param>
-    public WorkflowDefinition(string name, string description, string category, string definitionJson, UserId createdBy, WorkflowDefinitionId basedOnId)
+    public WorkflowDefinition(string name, string description, string category, string designerSchemaJson, UserId createdBy, WorkflowDefinitionId basedOnId)
     {
         CreatedAt = DateTimeOffset.UtcNow;
         Name = name;
         Description = description;
         Category = category;
-        DefinitionJson = definitionJson ?? string.Empty;
+        DesignerSchemaJson = designerSchemaJson;
         CreatedBy = createdBy;
         BasedOnId = basedOnId;
         Status = WorkflowDefinitionStatus.Draft;
@@ -106,7 +117,7 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     /// <summary>
     /// 更新流程定义信息
     /// </summary>
-    public void UpdateInfo(string name, string description, string category, string definitionJson)
+    public void UpdateInfo(string name, string description, string category, string designerSchemaJson)
     {
         if (Status == WorkflowDefinitionStatus.Published)
         {
@@ -116,10 +127,72 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
         Name = name;
         Description = description;
         Category = category;
-        DefinitionJson = definitionJson ?? string.Empty;
+        DesignerSchemaJson = designerSchemaJson;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
 
         AddDomainEvent(new WorkflowDefinitionInfoChangedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// 添加草稿版本。
+    /// </summary>
+    public WorkflowDefinitionVersion AddDraftVersion(string designerSchemaJson)
+    {
+        var nextVersion = Versions.Count == 0 ? Version : Versions.Max(v => v.Version) + 1;
+        var version = new WorkflowDefinitionVersion(Id, nextVersion, designerSchemaJson);
+        Versions.Add(version);
+        return version;
+    }
+
+    /// <summary>
+    /// 获取最新版本。
+    /// </summary>
+    public WorkflowDefinitionVersion? GetLatestVersion()
+    {
+        return Versions.OrderByDescending(v => v.Version).FirstOrDefault();
+    }
+
+    /// <summary>
+    /// 获取最新已发布版本。
+    /// </summary>
+    public WorkflowDefinitionVersion? GetLatestPublishedVersion()
+    {
+        return Versions
+            .Where(v => v.Status == WorkflowDefinitionVersionStatus.Published)
+            .OrderByDescending(v => v.Version)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// 获取最新草稿版本；不存在时创建。
+    /// </summary>
+    public WorkflowDefinitionVersion EnsureDraftVersion()
+    {
+        var latest = GetLatestVersion();
+        if (latest is { Status: WorkflowDefinitionVersionStatus.Draft })
+        {
+            return latest;
+        }
+
+        return AddDraftVersion(DesignerSchemaJson);
+    }
+
+    /// <summary>
+    /// 更新最新草稿版本。
+    /// </summary>
+    public void UpdateLatestDraftVersion(string designerSchemaJson)
+    {
+        EnsureDraftVersion().UpdateDraftSchema(designerSchemaJson);
+    }
+
+    /// <summary>
+    /// 发布最新草稿版本。
+    /// </summary>
+    public WorkflowDefinitionVersion PublishLatestDraftVersion(string graphSnapshotJson, UserId publishedBy)
+    {
+        var draft = EnsureDraftVersion();
+        draft.Publish(graphSnapshotJson, publishedBy);
+        return draft;
     }
 
     /// <summary>
@@ -162,7 +235,7 @@ public class WorkflowDefinition : Entity<WorkflowDefinitionId>, IAggregateRoot
     /// </summary>
     public WorkflowDefinition CreateNewVersion()
     {
-        var newDefinition = new WorkflowDefinition(Name, Description, Category, DefinitionJson, CreatedBy, Id)
+        var newDefinition = new WorkflowDefinition(Name, Description, Category, DesignerSchemaJson, CreatedBy, Id)
         {
             Version = Version + 1
         };

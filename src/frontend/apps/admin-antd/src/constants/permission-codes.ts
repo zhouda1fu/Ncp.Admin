@@ -1,9 +1,12 @@
 /**
  * 权限码常量定义
- * 与后端 PermissionCodes.cs 保持一致
+ * 与后端 PermissionCodes.cs 保持一致（平台脚手架）
  */
 export const PermissionCodes = {
-  // 角色管理权限
+  AllApiAccess: 'AllApiAccess',
+
+  SystemModule: 'SystemModule',
+
   RoleManagement: 'RoleManagement',
   RoleCreate: 'RoleCreate',
   RoleEdit: 'RoleEdit',
@@ -11,7 +14,6 @@ export const PermissionCodes = {
   RoleView: 'RoleView',
   RoleUpdatePermissions: 'RoleUpdatePermissions',
 
-  // 用户管理权限
   UserManagement: 'UserManagement',
   UserCreate: 'UserCreate',
   UserEdit: 'UserEdit',
@@ -21,27 +23,26 @@ export const PermissionCodes = {
   UserResetPassword: 'UserResetPassword',
   UserExport: 'UserExport',
   UserImport: 'UserImport',
+  UserChangeHistoryView: 'UserChangeHistoryView',
 
-  // 部门管理权限
   DeptManagement: 'DeptManagement',
   DeptCreate: 'DeptCreate',
   DeptEdit: 'DeptEdit',
   DeptDelete: 'DeptDelete',
   DeptView: 'DeptView',
 
-  // 岗位管理权限
   PositionManagement: 'PositionManagement',
   PositionCreate: 'PositionCreate',
   PositionEdit: 'PositionEdit',
   PositionDelete: 'PositionDelete',
   PositionView: 'PositionView',
 
-  // 工作流管理权限
   WorkflowManagement: 'WorkflowManagement',
   WorkflowDefinitionView: 'WorkflowDefinitionView',
   WorkflowDefinitionCreate: 'WorkflowDefinitionCreate',
   WorkflowDefinitionEdit: 'WorkflowDefinitionEdit',
   WorkflowDefinitionDelete: 'WorkflowDefinitionDelete',
+  WorkflowDefinitionDeletePublished: 'WorkflowDefinitionDeletePublished',
   WorkflowDefinitionPublish: 'WorkflowDefinitionPublish',
   WorkflowStart: 'WorkflowStart',
   WorkflowCancel: 'WorkflowCancel',
@@ -49,179 +50,19 @@ export const PermissionCodes = {
   WorkflowInstanceView: 'WorkflowInstanceView',
   WorkflowMonitor: 'WorkflowMonitor',
 
-  // 通知管理权限
   NotificationManagement: 'NotificationManagement',
   NotificationView: 'NotificationView',
   NotificationSend: 'NotificationSend',
 
-  // 报销管理权限
-  ExpenseManagement: 'ExpenseManagement',
-  ExpenseClaimView: 'ExpenseClaimView',
-  ExpenseClaimCreate: 'ExpenseClaimCreate',
-  ExpenseClaimSubmit: 'ExpenseClaimSubmit',
-
-  // 会议管理权限
-  MeetingManagement: 'MeetingManagement',
-  MeetingRoomView: 'MeetingRoomView',
-  MeetingRoomEdit: 'MeetingRoomEdit',
-  MeetingBookingView: 'MeetingBookingView',
-  MeetingBookingCreate: 'MeetingBookingCreate',
-
-  // 资产管理权限
-  AssetManagement: 'AssetManagement',
-  AssetView: 'AssetView',
-  AssetCreate: 'AssetCreate',
-  AssetEdit: 'AssetEdit',
-  AssetAllocate: 'AssetAllocate',
-  AssetReturn: 'AssetReturn',
-  AssetScrap: 'AssetScrap',
-  AssetAllocationView: 'AssetAllocationView',
-
-  // 车辆管理权限
-  VehicleManagement: 'VehicleManagement',
-  VehicleView: 'VehicleView',
-  VehicleEdit: 'VehicleEdit',
-  VehicleBookingView: 'VehicleBookingView',
-  VehicleBookingCreate: 'VehicleBookingCreate',
-  VehicleBookingCancel: 'VehicleBookingCancel',
-  VehicleBookingComplete: 'VehicleBookingComplete',
-
-  // 合同管理权限
-  ContractManagement: 'ContractManagement',
-  ContractView: 'ContractView',
-  ContractCreate: 'ContractCreate',
-  ContractEdit: 'ContractEdit',
-  ContractDelete: 'ContractDelete',
-  ContractSubmit: 'ContractSubmit',
-  ContractApprove: 'ContractApprove',
-  ContractArchive: 'ContractArchive',
-  ContractTypeView: 'ContractTypeView',
-  ContractTypeCreate: 'ContractTypeCreate',
-  ContractTypeEdit: 'ContractTypeEdit',
-  ContractTypeDelete: 'ContractTypeDelete',
-  IncomeExpenseTypeView: 'IncomeExpenseTypeView',
-  IncomeExpenseTypeCreate: 'IncomeExpenseTypeCreate',
-  IncomeExpenseTypeEdit: 'IncomeExpenseTypeEdit',
-  IncomeExpenseTypeDelete: 'IncomeExpenseTypeDelete',
-
-  // 客户管理权限
-  CustomerManagement: 'CustomerManagement',
-  CustomerView: 'CustomerView',
-  CustomerCreate: 'CustomerCreate',
-  CustomerEdit: 'CustomerEdit',
-  CustomerDelete: 'CustomerDelete',
-  CustomerContactEdit: 'CustomerContactEdit',
-  CustomerContactRecordView: 'CustomerContactRecordView',
-  CustomerContactRecordCreate: 'CustomerContactRecordCreate',
-  CustomerContactRecordEdit: 'CustomerContactRecordEdit',
-  CustomerReleaseToSea: 'CustomerReleaseToSea',
-  CustomerClaimFromSea: 'CustomerClaimFromSea',
-  CustomerSeaVoid: 'CustomerSeaVoid',
-  CustomerSeaConsultationEdit: 'CustomerSeaConsultationEdit',
-  CustomerShare: 'CustomerShare',
-  CustomerSeaRegionAssignView: 'CustomerSeaRegionAssignView',
-  CustomerSeaRegionAssignEdit: 'CustomerSeaRegionAssignEdit',
-  IndustryView: 'IndustryView',
-  IndustryCreate: 'IndustryCreate',
-  IndustryEdit: 'IndustryEdit',
-  CustomerSourceView: 'CustomerSourceView',
-  CustomerSourceCreate: 'CustomerSourceCreate',
-  CustomerSourceEdit: 'CustomerSourceEdit',
-
-  // 考勤管理权限
-  AttendanceManagement: 'AttendanceManagement',
-  AttendanceRecordView: 'AttendanceRecordView',
-  AttendanceCheckIn: 'AttendanceCheckIn',
-  ScheduleView: 'ScheduleView',
-  ScheduleEdit: 'ScheduleEdit',
-
-  // 公告管理权限
-  AnnouncementManagement: 'AnnouncementManagement',
-  AnnouncementView: 'AnnouncementView',
-  AnnouncementCreate: 'AnnouncementCreate',
-  AnnouncementEdit: 'AnnouncementEdit',
-  AnnouncementPublish: 'AnnouncementPublish',
-
-  // 项目管理权限
-  ProjectManagement: 'ProjectManagement',
-  ProjectView: 'ProjectView',
-  ProjectCreate: 'ProjectCreate',
-  ProjectEdit: 'ProjectEdit',
-  ProjectTypeView: 'ProjectTypeView',
-  ProjectTypeCreate: 'ProjectTypeCreate',
-  ProjectTypeEdit: 'ProjectTypeEdit',
-  ProjectStatusOptionView: 'ProjectStatusOptionView',
-  ProjectStatusOptionCreate: 'ProjectStatusOptionCreate',
-  ProjectStatusOptionEdit: 'ProjectStatusOptionEdit',
-  ProjectIndustryView: 'ProjectIndustryView',
-  ProjectIndustryCreate: 'ProjectIndustryCreate',
-  ProjectIndustryEdit: 'ProjectIndustryEdit',
-
-  // 任务管理权限
-  TaskManagement: 'TaskManagement',
-  TaskView: 'TaskView',
-  TaskCreate: 'TaskCreate',
-  TaskEdit: 'TaskEdit',
-
-  // 即时通讯权限
-  ChatManagement: 'ChatManagement',
-  ChatView: 'ChatView',
-  ChatCreate: 'ChatCreate',
-
-  // 文档管理权限
-  DocumentManagement: 'DocumentManagement',
-  DocumentView: 'DocumentView',
-  DocumentCreate: 'DocumentCreate',
-  DocumentEdit: 'DocumentEdit',
-  DocumentShare: 'DocumentShare',
-
-  // 通讯录管理权限
-  ContactManagement: 'ContactManagement',
-  ContactGroupView: 'ContactGroupView',
-  ContactGroupCreate: 'ContactGroupCreate',
-  ContactGroupEdit: 'ContactGroupEdit',
-  ContactView: 'ContactView',
-  ContactCreate: 'ContactCreate',
-  ContactEdit: 'ContactEdit',
-
-  // 订单管理权限
-  OrderManagement: 'OrderManagement',
-  OrderView: 'OrderView',
-  OrderCreate: 'OrderCreate',
-  OrderEdit: 'OrderEdit',
-  OrderDelete: 'OrderDelete',
-  OrderSubmit: 'OrderSubmit',
-  OrderSpecialDataDisplay: 'OrderSpecialDataDisplay',
-  OrderContractUpload: 'OrderContractUpload',
-  OrderContractSelect: 'OrderContractSelect',
-  OrderContractNotCompanyTemplate: 'OrderContractNotCompanyTemplate',
-  OrderNeedInvoice: 'OrderNeedInvoice',
-  OrderContractAmount: 'OrderContractAmount',
-  OrderTechnicalStatus: 'OrderTechnicalStatus',
-  OrderDiscountPointsDescriptionView: 'OrderDiscountPointsDescriptionView',
-  OrderDiscountPointsCreate: 'OrderDiscountPointsCreate',
-
-  // 产品管理权限
-  ProductManagement: 'ProductManagement',
-  ProductView: 'ProductView',
-  ProductCreate: 'ProductCreate',
-  ProductEdit: 'ProductEdit',
-  ProductDelete: 'ProductDelete',
-
-  // 请假管理权限
-  LeaveManagement: 'LeaveManagement',
-  LeaveRequestView: 'LeaveRequestView',
-  LeaveRequestCreate: 'LeaveRequestCreate',
-  LeaveRequestEdit: 'LeaveRequestEdit',
-  LeaveRequestSubmit: 'LeaveRequestSubmit',
-  LeaveRequestCancel: 'LeaveRequestCancel',
-  LeaveBalanceView: 'LeaveBalanceView',
-  LeaveBalanceEdit: 'LeaveBalanceEdit',
-
-  // 操作日志权限
   OperationLogManagement: 'OperationLogManagement',
   OperationLogView: 'OperationLogView',
 
-  // 所有接口访问权限
-  AllApiAccess: 'AllApiAccess',
+  SystemLogManagement: 'SystemLogManagement',
+  SystemLogView: 'SystemLogView',
+
+  BackgroundJobManagement: 'BackgroundJobManagement',
+  BackgroundJobView: 'BackgroundJobView',
+  BackgroundJobTrigger: 'BackgroundJobTrigger',
+
+  HomeDashboard: 'HomeDashboard',
 } as const;

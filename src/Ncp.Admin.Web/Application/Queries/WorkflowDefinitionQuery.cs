@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
+using Ncp.Admin.Web.Application.Commands.Workflows;
 using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Queries;
@@ -18,7 +19,7 @@ public record WorkflowDefinitionQueryDto(
     WorkflowDefinitionStatus Status,
     UserId CreatedBy,
     DateTimeOffset CreatedAt,
-    string DefinitionJson);
+    string DesignerSchemaJson);
 
 /// <summary>
 /// 流程定义查询输入
@@ -49,7 +50,9 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
             .WhereIf(!string.IsNullOrWhiteSpace(query.Name), d => d.Name.Contains(query.Name!))
             .WhereIf(!string.IsNullOrWhiteSpace(query.Category), d => d.Category.Contains(query.Category!))
             .WhereIf(query.Status.HasValue, d => d.Status == query.Status)
-            .OrderByDescending(d => d.CreatedAt)
+            .OrderBy(d => d.Status)
+            .ThenByDescending(d => d.UpdateTime)
+            .ThenByDescending(d => d.CreatedAt)
             .Select(d => new WorkflowDefinitionQueryDto(
                 d.Id,
                 d.Name,
@@ -59,7 +62,7 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                 d.Status,
                 d.CreatedBy,
                 d.CreatedAt,
-                d.DefinitionJson))
+                d.DesignerSchemaJson))
             .ToPagedDataAsync(query, cancellationToken);
     }
 
@@ -86,7 +89,7 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                     d.Status,
                     d.CreatedBy,
                     d.CreatedAt,
-                    d.DefinitionJson))
+                    d.DesignerSchemaJson))
                 .FirstOrDefaultAsync(cancellationToken);
         });
     }
@@ -113,7 +116,7 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                     d.Status,
                     d.CreatedBy,
                     d.CreatedAt,
-                    d.DefinitionJson))
+                    d.DesignerSchemaJson))
                 .ToListAsync(cancellationToken);
         }))!;
     }
@@ -138,7 +141,22 @@ public class WorkflowDefinitionQuery(ApplicationDbContext applicationDbContext, 
                 d.Status,
                 d.CreatedBy,
                 d.CreatedAt,
-                d.DefinitionJson))
+                d.DesignerSchemaJson))
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// 获取流程定义最新已发布版本的运行图快照 JSON。
+    /// </summary>
+    public async Task<string?> GetPublishedGraphSnapshotJsonAsync(
+        WorkflowDefinitionId definitionId,
+        CancellationToken cancellationToken = default)
+    {
+        return await applicationDbContext.WorkflowDefinitionVersions.AsNoTracking()
+            .Where(v => v.WorkflowDefinitionId == definitionId && v.Status == WorkflowDefinitionVersionStatus.Published)
+            .OrderByDescending(v => v.Version)
+            .Select(v => v.GraphSnapshotJson)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
 }

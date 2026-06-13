@@ -5,6 +5,8 @@ using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.AppPermissions;
+using Ncp.Admin.Web.Services;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Ncp.Admin.Web.Application.Commands.Identity.Admin.RoleCommands;
 
@@ -43,7 +45,10 @@ public class UpdateRoleInfoCommandValidator : AbstractValidator<UpdateRoleInfoCo
 /// <summary>
 /// 更新角色信息命令处理器
 /// </summary>
-public class UpdateRoleInfoCommandHandler(IRoleRepository roleRepository) : ICommandHandler<UpdateRoleInfoCommand>
+public class UpdateRoleInfoCommandHandler(
+    IRoleRepository roleRepository,
+    UserQuery userQuery,
+    IMemoryCache memoryCache) : ICommandHandler<UpdateRoleInfoCommand>
 {
     public async Task Handle(UpdateRoleInfoCommand request, CancellationToken cancellationToken)
     {
@@ -55,12 +60,22 @@ public class UpdateRoleInfoCommandHandler(IRoleRepository roleRepository) : ICom
         else if (request.DataScope.HasValue)
             role.ClearCustomDataDepts();
 
-        var permissions = request.PermissionCodes.Select(perm =>
+        var permissions = request.PermissionCodes
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .Select(perm =>
         {
             var (name, description) = PermissionMapper.GetPermissionInfo(perm);
             return new RolePermission(perm, name, description);
         });
         role.UpdateRolePermissions(permissions);
+
+        memoryCache.Remove(RoleQuery.GetRoleCacheKey(request.RoleId));
+
+        var affectedUserIds = await userQuery.GetUserIdsByRoleIdAsync(request.RoleId, cancellationToken);
+        foreach (var userId in affectedUserIds)
+        {
+            memoryCache.Remove(PermissionClaimsTransformation.GetPermissionCodesCacheKey(userId));
+        }
     }
 }
-

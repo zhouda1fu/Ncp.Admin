@@ -102,6 +102,14 @@ interface RouteMeta {
    */
   menuVisibleWithForbidden?: boolean;
   /**
+   * 顶级业务路由归属的模块入口权限码，用于生成一级模块菜单。
+   */
+  moduleCode?: string;
+  /**
+   * 为 true 时，该路由的子项直接挂到所属模块下，不显示本层菜单。
+   */
+  flattenInModule?: boolean;
+  /**
    * 不使用基础布局（仅在顶级生效）
    */
   noBasicLayout?: boolean;

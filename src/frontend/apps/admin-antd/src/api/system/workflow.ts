@@ -2,6 +2,67 @@ import type { Recordable } from '@vben/types';
 
 import { requestClient } from '#/api/request';
 
+/** 与后端 WorkflowBusinessTypes.CustomerCollaboration 一致 */
+export const WORKFLOW_BUSINESS_TYPE_CUSTOMER_COLLABORATION = 'CustomerCollaboration';
+
+/** 与后端 WorkflowDefinitionExportService 一致 */
+export const WORKFLOW_DEFINITION_EXPORT_FORMAT = 'ncp-workflow-definition-export' as const;
+export const WORKFLOW_DEFINITION_EXPORT_VERSION = 2;
+/** 仍支持导入 v1 导出文件 */
+export const WORKFLOW_DEFINITION_EXPORT_LEGACY_VERSION = 1;
+
+export interface WorkflowDefinitionIdentityCatalogEntry {
+  exportedId: string;
+  name: string;
+  accountName?: string;
+}
+
+export interface WorkflowDefinitionIdentityCatalogNodeEntry {
+  nodeId: string;
+  name: string;
+  type: string;
+}
+
+/** 流程定义导出/导入 JSON 根结构（v2 含 identityCatalog，导入时按名称重映射 ID） */
+export interface WorkflowDefinitionExportDocument {
+  format: string;
+  version: number;
+  exportedAt: string;
+  /** byName：导入时按用户/角色/部门名称匹配当前库 ID */
+  remapStrategy?: string;
+  definition: {
+    name: string;
+    description: string;
+    category: string;
+    designerSchemaJson: string;
+  };
+  identityCatalog?: {
+    users: WorkflowDefinitionIdentityCatalogEntry[];
+    roles: WorkflowDefinitionIdentityCatalogEntry[];
+    depts: WorkflowDefinitionIdentityCatalogEntry[];
+    nodes: WorkflowDefinitionIdentityCatalogNodeEntry[];
+  };
+}
+
+export interface ImportWorkflowDefinitionResult {
+  id: string;
+  name: string;
+  action: 'Created' | 'Updated';
+  remapReport?: {
+    usersRemapped: number;
+    usersKept: number;
+    usersUnresolved: number;
+    rolesRemapped: number;
+    rolesKept: number;
+    rolesUnresolved: number;
+    deptsRemapped: number;
+    deptsKept: number;
+    deptsUnresolved: number;
+    warnings: string[];
+  };
+  warnings?: string[];
+}
+
 /** 条件字段可选值（有 options 时前端用下拉框选值） */
 export interface ConditionFieldOption {
   value: string;
@@ -12,13 +73,13 @@ export interface ConditionFieldOption {
 export interface ConditionFieldDef {
   key: string;
   label: string;
-  type: 'number' | 'string' | 'boolean' | 'enum';
-  /** 有值时「条件值」用下拉框，value 须与流程 Variables JSON 一致 */
+  type: 'number' | 'string' | 'boolean' | 'enum' | 'enumMulti';
+  /** 有值时「条件值」用下拉框；enumMulti 为多选，存逗号分隔 value */
   options?: ConditionFieldOption[];
 }
 
 export namespace WorkflowApi {
-  /** 流程定义：节点树存于 definitionJson，前端按需解析 */
+  /** 流程定义：节点树存于 designerSchemaJson，前端按需解析 */
   export interface WorkflowDefinition {
     [key: string]: any;
     id: string;
@@ -29,7 +90,7 @@ export namespace WorkflowApi {
     status: number;
     createdBy: string;
     createdAt: string;
-    definitionJson: string;
+    designerSchemaJson: string;
   }
 
   export interface WorkflowInstance {
@@ -37,6 +98,7 @@ export namespace WorkflowApi {
     id: string;
     workflowDefinitionId: string;
     workflowDefinitionName: string;
+    workflowDefinitionCategory?: string;
     businessKey: string;
     businessType: string;
     title: string;
@@ -45,6 +107,7 @@ export namespace WorkflowApi {
     status: number;
     currentNodeName: string;
     startedAt: string;
+    dueAt?: string;
     completedAt?: string;
     remark: string;
   }
@@ -55,11 +118,57 @@ export namespace WorkflowApi {
     nodeKey?: string;
   }
 
+  /** 退回时可勾选的业务字段 */
+  export interface WorkflowReturnField {
+    /** 后端业务白名单 key，退回提交和业务保存校验都按该值匹配 */
+    key: string;
+    /** 给审批人展示的字段名称 */
+    label: string;
+    /** 可选分组名称，仅用于弹窗分组展示 */
+    group?: string | null;
+  }
+
+  /** 当前任务退回字段选择配置 */
+  export interface WorkflowReturnOptions {
+    /** Disabled 只填写退回说明；Required 必须勾选至少一个业务字段 */
+    fieldMode: 'Disabled' | 'Required' | string;
+    /** 业务字段方案编码，当前订单使用 orderApprovalReturnFields */
+    fieldSetCode?: string | null;
+    /** 后端按节点配置和业务适配器返回的可选字段白名单 */
+    fields: WorkflowReturnField[];
+  }
+
+  /** 退回上下文，保存在被退回节点的新待办上 */
+  export interface WorkflowTaskReturnContext {
+    /** 退回发生时的字段选择模式，用于详情展示和业务编辑上下文判断 */
+    fieldMode?: 'Disabled' | 'Required' | string;
+    /** 退回发生时使用的业务字段方案编码 */
+    fieldSetCode?: string | null;
+    /** 本次退回审批人实际勾选的字段 */
+    returnFields: WorkflowReturnField[];
+    /** 审批人填写的退回说明 */
+    comment: string;
+    /** 执行退回的来源节点 key */
+    returnFromNodeKey: string;
+    /** 执行退回的来源节点名称 */
+    returnFromNodeName: string;
+    /** 退回目标节点 key */
+    returnToNodeKey: string;
+    /** 退回目标节点名称 */
+    returnToNodeName: string;
+    /** 退回发生时间 */
+    returnedAt: string;
+  }
+
   export interface WorkflowInstanceDetail extends WorkflowInstance {
     variables: string;
     /** 当前节点 nodeKey，与流程定义一致，用于进度条精确匹配 */
     currentNodeKey?: string;
-    /** 条件分支仅展示命中路径上的节点（新接口；缺省则前端回退解析 definitionJson） */
+    /** 最近一次挂起时间，用于详情时间线 */
+    suspendedAt?: string | null;
+    /** 最近一次恢复时间，用于详情时间线 */
+    resumedAt?: string | null;
+    /** 条件分支仅展示命中路径上的节点 */
     progressSteps?: WorkflowProgressStep[];
     tasks: WorkflowTask[];
   }
@@ -79,6 +188,14 @@ export namespace WorkflowApi {
     comment: string;
     createdAt: string;
     completedAt?: string;
+    /** 审批通过时的实际操作人（角色任务等） */
+    completedByUserId?: string;
+    completedByUserDisplayName?: string;
+    /** 意见表展示用：实际操作人或待办处理人的部门 */
+    actorDeptName?: string;
+    /** 意见表展示用：实际操作人或待办处理人的角色（多角色以「、」连接） */
+    actorRoleNames?: string;
+    returnContext?: WorkflowTaskReturnContext | null;
   }
 
   export interface MyPendingTask {
@@ -105,6 +222,7 @@ export namespace WorkflowApi {
     createdAt: string;
     completedAt?: string;
   }
+
 }
 
 // ==================== 流程定义 API ====================
@@ -144,9 +262,34 @@ async function createDefinition(data: {
   name: string;
   description: string;
   category: string;
-  definitionJson: string;
+  designerSchemaJson: string;
 }) {
   return requestClient.post('/workflow/definitions', data);
+}
+
+/**
+ * 导出流程定义 JSON（含身份名称目录，v2）
+ */
+async function exportWorkflowDefinition(id: string) {
+  return requestClient.get<WorkflowDefinitionExportDocument>(
+    `/workflow/definitions/${id}/export`,
+  );
+}
+
+/**
+ * 从导出 JSON 导入流程定义（按名称重映射 ID，默认 upsert 草稿）
+ */
+async function importWorkflowDefinition(
+  body: WorkflowDefinitionExportDocument,
+  options?: { upsertByName?: boolean },
+) {
+  return requestClient.post<ImportWorkflowDefinitionResult>(
+    '/workflow/definitions/import',
+    {
+      ...body,
+      upsertByName: options?.upsertByName ?? true,
+    },
+  );
 }
 
 /**
@@ -157,7 +300,7 @@ async function updateDefinition(data: {
   name: string;
   description: string;
   category: string;
-  definitionJson: string;
+  designerSchemaJson: string;
 }) {
   return requestClient.put('/workflow/definitions', data);
 }
@@ -277,6 +420,8 @@ async function approveTask(data: {
   workflowInstanceId: string;
   taskId: string;
   comment: string;
+  /** 审批动作扩展负载，由对应业务适配器解释 */
+  actionPayload?: Record<string, unknown>;
 }) {
   return requestClient.post(
     `/workflow/tasks/${data.taskId}/approve`,
@@ -293,6 +438,31 @@ async function rejectTask(data: {
   comment: string;
 }) {
   return requestClient.post(`/workflow/tasks/${data.taskId}/reject`, data);
+}
+
+/**
+ * 获取任务退回字段
+ */
+async function getTaskReturnFields(data: {
+  workflowInstanceId: string;
+  taskId: string;
+}) {
+  return requestClient.get<WorkflowApi.WorkflowReturnOptions>(
+    `/workflow/tasks/${data.taskId}/return-fields`,
+    { params: data },
+  );
+}
+
+/**
+ * 退回上一审批节点
+ */
+async function returnTask(data: {
+  workflowInstanceId: string;
+  taskId: string;
+  comment: string;
+  returnFields: WorkflowApi.WorkflowReturnField[];
+}) {
+  return requestClient.post(`/workflow/tasks/${data.taskId}/return`, data);
 }
 
 /**
@@ -322,9 +492,31 @@ async function delegateTask(data: {
   comment: string;
 }) {
   return requestClient.post<{ data: string }>(
-    '/workflow/delegate',
+    `/workflow/tasks/${data.taskId}/delegate`,
     data,
   );
+}
+
+/**
+ * 抄送已读
+ */
+async function readTask(data: {
+  workflowInstanceId: string;
+  taskId: string;
+  comment?: string;
+}) {
+  return requestClient.post(`/workflow/tasks/${data.taskId}/read`, data);
+}
+
+/**
+ * 通知/确认任务完成
+ */
+async function completeTask(data: {
+  workflowInstanceId: string;
+  taskId: string;
+  comment?: string;
+}) {
+  return requestClient.post(`/workflow/tasks/${data.taskId}/complete`, data);
 }
 
 export {
@@ -342,10 +534,16 @@ export {
   getMyPendingTasks,
   getMyWorkflows,
   getPublishedDefinitions,
+  importWorkflowDefinition,
   publishDefinition,
+  readTask,
   rejectTask,
+  getTaskReturnFields,
+  returnTask,
   startWorkflow,
   transferTask,
+  completeTask,
   createDefinitionNewVersion,
+  exportWorkflowDefinition,
   updateDefinition,
 };

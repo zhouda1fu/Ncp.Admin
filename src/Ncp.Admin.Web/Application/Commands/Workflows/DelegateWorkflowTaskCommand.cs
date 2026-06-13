@@ -1,8 +1,10 @@
 using Ncp.Admin.Domain;
+using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
@@ -32,14 +34,19 @@ public class DelegateWorkflowTaskCommandValidator : AbstractValidator<DelegateWo
 /// </summary>
 public class DelegateWorkflowTaskCommandHandler(
     IWorkflowInstanceRepository workflowInstanceRepository,
-    UserQuery userQuery) : ICommandHandler<DelegateWorkflowTaskCommand, WorkflowTaskId>
+    WorkflowTaskOperationAuthorizer taskOperationAuthorizer,
+    WorkflowRuntimeRecordService runtimeRecordService) : ICommandHandler<DelegateWorkflowTaskCommand, WorkflowTaskId>
 {
     public async Task<WorkflowTaskId> Handle(DelegateWorkflowTaskCommand request, CancellationToken cancellationToken)
     {
-        var instance = await workflowInstanceRepository.GetAsync(request.InstanceId, cancellationToken)
+        var instance = await workflowInstanceRepository.GetWithTasksIgnoringQueryFiltersAsync(request.InstanceId, cancellationToken)
             ?? throw new KnownException("未找到流程实例", ErrorCodes.WorkflowInstanceNotFound);
 
-        var operatorRoleIds = await userQuery.GetRoleIdsByUserIdAsync(request.OperatorId, cancellationToken);
+        var operatorRoleIds = await taskOperationAuthorizer.EnsureCanOperateAsync(
+            instance,
+            request.TaskId,
+            request.OperatorId,
+            cancellationToken);
         var newTask = instance.DelegateTask(
             request.TaskId,
             request.OperatorId,
@@ -47,6 +54,22 @@ public class DelegateWorkflowTaskCommandHandler(
             request.DelegateToUserId,
             request.DelegateToUserName,
             request.Comment);
+        await runtimeRecordService.RecordTaskCreatedAsync(
+            instance,
+            [new WorkflowCreatedTask(
+                newTask,
+                new WorkflowAssigneeResult(
+                    request.DelegateToUserId,
+                    RoleId.Unassigned,
+                    request.DelegateToUserName,
+                    true,
+                    WorkflowAssignmentSource.Delegated,
+                    request.TaskId.ToString(),
+                    WorkflowTaskVisibilityMode.ExplicitUser,
+                    WorkflowTaskInitiatorDeptScopeMode.All,
+                    "[]"))],
+            "delegate",
+            cancellationToken);
 
         return newTask.Id;
     }

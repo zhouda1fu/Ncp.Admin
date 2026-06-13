@@ -2,6 +2,8 @@ import type { RouteRecordRaw } from 'vue-router';
 
 import { $t } from '#/locales';
 
+import { workflowRoute } from './workflow';
+
 const routes: RouteRecordRaw[] = [
   {
     meta: {
@@ -19,18 +21,20 @@ const routes: RouteRecordRaw[] = [
         meta: {
           affixTab: true,
           icon: 'lucide:area-chart',
+          order: 0,
           title: $t('page.dashboard.analytics'),
         },
       },
-      {
-        name: 'Workspace',
-        path: '/workspace',
-        component: () => import('#/views/dashboard/workspace/index.vue'),
-        meta: {
-          icon: 'carbon:workspace',
-          title: $t('page.dashboard.workspace'),
-        },
-      },
+      workflowRoute,
+      // {
+      //   name: 'Workspace',
+      //   path: '/workspace',
+      //   component: () => import('#/views/dashboard/workspace/index.vue'),
+      //   meta: {
+      //     icon: 'carbon:workspace',
+      //     title: $t('page.dashboard.workspace'),
+      //   },
+      // },
     ],
   },
 ];

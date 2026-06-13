@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Services.Workflow;
+using Ncp.Admin.Web.Application.Services.Workflow.Graph;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
@@ -26,8 +26,9 @@ public class PublishWorkflowDefinitionCommandValidator : AbstractValidator<Publi
 /// </summary>
 public class PublishWorkflowDefinitionCommandHandler(
     IWorkflowDefinitionRepository repository,
-    IMemoryCache memoryCache,
-    WorkflowDefinitionAssigneeConfigValidator assigneeConfigValidator)
+    WorkflowDefinitionCacheInvalidator cacheInvalidator,
+    WorkflowDefinitionAssigneeConfigValidator assigneeConfigValidator,
+    WorkflowGraphCompiler graphCompiler)
     : ICommandHandler<PublishWorkflowDefinitionCommand>
 {
     public async Task Handle(PublishWorkflowDefinitionCommand request, CancellationToken cancellationToken)
@@ -35,22 +36,13 @@ public class PublishWorkflowDefinitionCommandHandler(
         var definition = await repository.GetAsync(request.Id, cancellationToken)
             ?? throw new KnownException("未找到流程定义", ErrorCodes.WorkflowDefinitionNotFound);
 
-        await assigneeConfigValidator.ValidateAsync(definition.DefinitionJson, cancellationToken);
+        await assigneeConfigValidator.ValidateAsync(definition.DesignerSchemaJson, definition.Category, cancellationToken);
 
-        // 若当前定义是基于某条流程创建的新版本（BasedOnId != Guid.Empty），发布时将该源定义归档
-        if (definition.BasedOnId != new WorkflowDefinitionId(Guid.Empty))
-        {
-            var source = await repository.GetAsync(definition.BasedOnId, cancellationToken);
-            if (source != null && source.Status == WorkflowDefinitionStatus.Published)
-            {
-                source.Archive();
-                memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(definition.BasedOnId));
-            }
-        }
-
+        var compiled = graphCompiler.Compile(definition.DesignerSchemaJson, definition.Category);
+        definition.UpdateLatestDraftVersion(compiled.DesignerSchemaJson);
+        definition.PublishLatestDraftVersion(compiled.GraphSnapshotJson, definition.CreatedBy);
         definition.Publish();
 
-        memoryCache.Remove(WorkflowCacheKeys.DefinitionKey(request.Id));
-        memoryCache.Remove(WorkflowCacheKeys.PublishedListKey);
+        cacheInvalidator.InvalidateDefinitionWrite(request.Id);
     }
 }

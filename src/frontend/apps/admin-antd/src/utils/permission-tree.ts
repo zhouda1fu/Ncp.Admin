@@ -1,37 +1,127 @@
 import type { DataNode } from 'ant-design-vue/es/tree';
 
 import { PermissionCodes } from '#/constants/permission-codes';
+import {
+  MODULE_CATEGORY_DEFINITIONS,
+  MODULE_TOP_LEVEL_PERMISSION_ROOTS,
+  PERMISSION_ROOT_CATEGORY_MAP,
+  SYSTEM_GROUP_VALUE_PREFIX,
+  isSyntheticPermissionTreeKey,
+  type ModuleCategoryId,
+} from '#/constants/module-menu-categories';
 
-/**
- * 权限树节点接口
- */
 export interface PermissionTreeNode extends DataNode {
   value: string;
   label: string;
   icon?: string;
+  hint?: string;
+  nodeType?: 'group' | 'permission';
   children?: PermissionTreeNode[];
 }
 
-/** 构建时的节点类型（不含 key，由 ensureTreeKeys 补充） */
 type PermissionTreeNodeInput = Omit<PermissionTreeNode, 'key' | 'children'> & {
   children?: PermissionTreeNodeInput[];
 };
 
-/**
- * 为树节点补充 key（Ant Design Vue Tree 依赖 key 识别节点，否则可能无法正确勾选）
- */
-function ensureTreeKeys(nodes: PermissionTreeNodeInput[]): PermissionTreeNode[] {
-  return nodes.map((node) => ({
-    ...node,
-    key: node.value,
-    children: node.children ? ensureTreeKeys(node.children) : undefined,
-  } as PermissionTreeNode));
+function ensureTreeKeys(
+  nodes: PermissionTreeNodeInput[],
+): PermissionTreeNode[] {
+  return nodes.map(
+    (node) =>
+      ({
+        ...node,
+        key: node.value,
+        children: node.children ? ensureTreeKeys(node.children) : undefined,
+      }) as PermissionTreeNode,
+  );
 }
 
-/**
- * 构建权限树结构
- * 基于 PermissionDefinitionContext 的层级结构
- */
+type PermissionPageGroupDefinition = {
+  codes: string[];
+  icon: string;
+  hint?: string;
+  key: string;
+  label: string;
+};
+
+const PERMISSION_PAGE_GROUP_VALUE_PREFIX = `${SYSTEM_GROUP_VALUE_PREFIX}page:`;
+
+const PERMISSION_PAGE_GROUPS: Record<string, PermissionPageGroupDefinition[]> = {
+  [PermissionCodes.WorkflowManagement]: [
+    {
+      key: 'task',
+      label: '任务中心',
+      icon: 'mdi:clipboard-text-clock',
+      hint: '我的待办 / 我的已办 / 我发起的',
+      codes: [
+        PermissionCodes.WorkflowInstanceView,
+        PermissionCodes.WorkflowTaskApprove,
+        PermissionCodes.WorkflowStart,
+        PermissionCodes.WorkflowCancel,
+      ],
+    },
+    {
+      key: 'definition',
+      label: '流程定义',
+      icon: 'mdi:file-tree',
+      hint: '流程定义列表',
+      codes: [
+        PermissionCodes.WorkflowDefinitionView,
+        PermissionCodes.WorkflowDefinitionCreate,
+        PermissionCodes.WorkflowDefinitionEdit,
+        PermissionCodes.WorkflowDefinitionPublish,
+        PermissionCodes.WorkflowDefinitionDelete,
+        PermissionCodes.WorkflowDefinitionDeletePublished,
+      ],
+    },
+    {
+      key: 'monitor',
+      label: '流程监控',
+      icon: 'mdi:monitor-dashboard',
+      hint: '流程实例监控',
+      codes: [PermissionCodes.WorkflowMonitor],
+    },
+  ],
+};
+
+function groupPermissionTreePages(
+  nodes: PermissionTreeNodeInput[],
+): PermissionTreeNodeInput[] {
+  return nodes.map((node) => {
+    const children = node.children ? groupPermissionTreePages(node.children) : undefined;
+    const pageGroups = PERMISSION_PAGE_GROUPS[node.value];
+    if (!children || !pageGroups) {
+      return { ...node, children };
+    }
+
+    const childMap = new Map(children.map((child) => [child.value, child]));
+    const groupedCodes = new Set<string>();
+    const groupedChildren: PermissionTreeNodeInput[] = [];
+
+    for (const group of pageGroups) {
+      const items = group.codes
+        .map((code) => childMap.get(code))
+        .filter((child): child is PermissionTreeNodeInput => !!child);
+      if (items.length === 0) continue;
+      group.codes.forEach((code) => groupedCodes.add(code));
+      groupedChildren.push({
+        value: `${PERMISSION_PAGE_GROUP_VALUE_PREFIX}${node.value}:${group.key}`,
+        label: group.label,
+        icon: group.icon,
+        hint: group.hint,
+        nodeType: 'group',
+        children: items,
+      });
+    }
+
+    const ungroupedChildren = children.filter((child) => !groupedCodes.has(child.value));
+    return {
+      ...node,
+      children: [...groupedChildren, ...ungroupedChildren],
+    };
+  });
+}
+
 export function buildPermissionTree(): PermissionTreeNode[] {
   const tree: PermissionTreeNodeInput[] = [
     {
@@ -39,46 +129,15 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       label: '用户管理',
       icon: 'mdi:account',
       children: [
-        {
-          value: PermissionCodes.UserView,
-          label: '查看用户',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.UserCreate,
-          label: '创建用户',
-          icon: 'mdi:account-plus',
-        },
-        {
-          value: PermissionCodes.UserEdit,
-          label: '编辑用户',
-          icon: 'mdi:account-edit',
-        },
-        {
-          value: PermissionCodes.UserDelete,
-          label: '删除用户',
-          icon: 'mdi:account-remove',
-        },
-        {
-          value: PermissionCodes.UserRoleAssign,
-          label: '分配用户角色',
-          icon: 'mdi:account-group',
-        },
-        {
-          value: PermissionCodes.UserResetPassword,
-          label: '重置用户密码',
-          icon: 'mdi:lock-reset',
-        },
-        {
-          value: PermissionCodes.UserExport,
-          label: '导出用户',
-          icon: 'mdi:file-excel',
-        },
-        {
-          value: PermissionCodes.UserImport,
-          label: '导入用户',
-          icon: 'mdi:upload',
-        },
+        { value: PermissionCodes.UserView, label: '查看用户', icon: 'mdi:eye' },
+        { value: PermissionCodes.UserCreate, label: '创建用户', icon: 'mdi:account-plus' },
+        { value: PermissionCodes.UserEdit, label: '编辑用户', icon: 'mdi:account-edit' },
+        { value: PermissionCodes.UserDelete, label: '删除用户', icon: 'mdi:account-remove' },
+        { value: PermissionCodes.UserRoleAssign, label: '分配用户角色', icon: 'mdi:account-group' },
+        { value: PermissionCodes.UserResetPassword, label: '重置用户密码', icon: 'mdi:lock-reset' },
+        { value: PermissionCodes.UserExport, label: '导出用户', icon: 'mdi:file-excel' },
+        { value: PermissionCodes.UserImport, label: '导入用户', icon: 'mdi:upload' },
+        { value: PermissionCodes.UserChangeHistoryView, label: '用户修改记录', icon: 'mdi:history' },
       ],
     },
     {
@@ -86,31 +145,11 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       label: '角色管理',
       icon: 'mdi:account-group',
       children: [
-        {
-          value: PermissionCodes.RoleView,
-          label: '查看角色',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.RoleCreate,
-          label: '创建角色',
-          icon: 'mdi:account-plus',
-        },
-        {
-          value: PermissionCodes.RoleEdit,
-          label: '编辑角色',
-          icon: 'mdi:account-edit',
-        },
-        {
-          value: PermissionCodes.RoleDelete,
-          label: '删除角色',
-          icon: 'mdi:account-remove',
-        },
-        {
-          value: PermissionCodes.RoleUpdatePermissions,
-          label: '更新角色权限',
-          icon: 'mdi:shield-edit',
-        },
+        { value: PermissionCodes.RoleView, label: '查看角色', icon: 'mdi:eye' },
+        { value: PermissionCodes.RoleCreate, label: '创建角色', icon: 'mdi:account-plus' },
+        { value: PermissionCodes.RoleEdit, label: '编辑角色', icon: 'mdi:account-edit' },
+        { value: PermissionCodes.RoleDelete, label: '删除角色', icon: 'mdi:account-remove' },
+        { value: PermissionCodes.RoleUpdatePermissions, label: '更新角色权限', icon: 'mdi:shield-edit' },
       ],
     },
     {
@@ -118,26 +157,10 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       label: '部门管理',
       icon: 'charm:organisation',
       children: [
-        {
-          value: PermissionCodes.DeptView,
-          label: '查看部门',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.DeptCreate,
-          label: '创建部门',
-          icon: 'mdi:account-plus',
-        },
-        {
-          value: PermissionCodes.DeptEdit,
-          label: '编辑部门',
-          icon: 'mdi:account-edit',
-        },
-        {
-          value: PermissionCodes.DeptDelete,
-          label: '删除部门',
-          icon: 'mdi:account-remove',
-        },
+        { value: PermissionCodes.DeptView, label: '查看部门', icon: 'mdi:eye' },
+        { value: PermissionCodes.DeptCreate, label: '创建部门', icon: 'mdi:account-plus' },
+        { value: PermissionCodes.DeptEdit, label: '编辑部门', icon: 'mdi:account-edit' },
+        { value: PermissionCodes.DeptDelete, label: '删除部门', icon: 'mdi:account-remove' },
       ],
     },
     {
@@ -145,38 +168,10 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       label: '岗位管理',
       icon: 'mdi:briefcase',
       children: [
-        {
-          value: PermissionCodes.PositionView,
-          label: '查看岗位',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.PositionCreate,
-          label: '创建岗位',
-          icon: 'mdi:plus',
-        },
-        {
-          value: PermissionCodes.PositionEdit,
-          label: '编辑岗位',
-          icon: 'mdi:pencil',
-        },
-        {
-          value: PermissionCodes.PositionDelete,
-          label: '删除岗位',
-          icon: 'mdi:delete',
-        },
-      ],
-    },
-    {
-      value: PermissionCodes.OperationLogManagement,
-      label: '操作日志',
-      icon: 'mdi:history',
-      children: [
-        {
-          value: PermissionCodes.OperationLogView,
-          label: '查看操作日志',
-          icon: 'mdi:eye',
-        },
+        { value: PermissionCodes.PositionView, label: '查看岗位', icon: 'mdi:eye' },
+        { value: PermissionCodes.PositionCreate, label: '创建岗位', icon: 'mdi:plus' },
+        { value: PermissionCodes.PositionEdit, label: '编辑岗位', icon: 'mdi:pencil' },
+        { value: PermissionCodes.PositionDelete, label: '删除岗位', icon: 'mdi:delete' },
       ],
     },
     {
@@ -184,56 +179,17 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       label: '工作流管理',
       icon: 'mdi:workflow',
       children: [
-        {
-          value: PermissionCodes.WorkflowDefinitionView,
-          label: '查看流程定义',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.WorkflowDefinitionCreate,
-          label: '创建流程定义',
-          icon: 'mdi:plus',
-        },
-        {
-          value: PermissionCodes.WorkflowDefinitionEdit,
-          label: '编辑流程定义',
-          icon: 'mdi:pencil',
-        },
-        {
-          value: PermissionCodes.WorkflowDefinitionDelete,
-          label: '删除流程定义',
-          icon: 'mdi:delete',
-        },
-        {
-          value: PermissionCodes.WorkflowDefinitionPublish,
-          label: '发布流程定义',
-          icon: 'mdi:publish',
-        },
-        {
-          value: PermissionCodes.WorkflowStart,
-          label: '发起流程',
-          icon: 'mdi:play',
-        },
-        {
-          value: PermissionCodes.WorkflowCancel,
-          label: '撤销流程',
-          icon: 'mdi:stop',
-        },
-        {
-          value: PermissionCodes.WorkflowTaskApprove,
-          label: '审批任务',
-          icon: 'mdi:check-decagram',
-        },
-        {
-          value: PermissionCodes.WorkflowInstanceView,
-          label: '查看流程实例',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.WorkflowMonitor,
-          label: '流程监控',
-          icon: 'mdi:monitor',
-        },
+        { value: PermissionCodes.WorkflowDefinitionView, label: '查看流程定义', icon: 'mdi:eye' },
+        { value: PermissionCodes.WorkflowDefinitionCreate, label: '创建流程定义', icon: 'mdi:plus' },
+        { value: PermissionCodes.WorkflowDefinitionEdit, label: '编辑流程定义', icon: 'mdi:pencil' },
+        { value: PermissionCodes.WorkflowDefinitionDelete, label: '删除流程定义', icon: 'mdi:delete' },
+        { value: PermissionCodes.WorkflowDefinitionDeletePublished, label: '删除已发布流程定义', icon: 'mdi:delete-alert' },
+        { value: PermissionCodes.WorkflowDefinitionPublish, label: '发布流程定义', icon: 'mdi:publish' },
+        { value: PermissionCodes.WorkflowStart, label: '发起流程', icon: 'mdi:play' },
+        { value: PermissionCodes.WorkflowCancel, label: '撤销流程', icon: 'mdi:stop' },
+        { value: PermissionCodes.WorkflowTaskApprove, label: '审批任务', icon: 'mdi:check-decagram' },
+        { value: PermissionCodes.WorkflowInstanceView, label: '查看流程实例', icon: 'mdi:eye' },
+        { value: PermissionCodes.WorkflowMonitor, label: '流程监控', icon: 'mdi:monitor' },
       ],
     },
     {
@@ -241,287 +197,39 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       label: '通知管理',
       icon: 'mdi:bell',
       children: [
-        {
-          value: PermissionCodes.NotificationView,
-          label: '查看通知',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.NotificationSend,
-          label: '发送通知',
-          icon: 'mdi:send',
-        },
+        { value: PermissionCodes.NotificationView, label: '查看通知', icon: 'mdi:eye' },
+        { value: PermissionCodes.NotificationSend, label: '发送通知', icon: 'mdi:send' },
       ],
     },
     {
-      value: PermissionCodes.ExpenseManagement,
-      label: '报销管理',
-      icon: 'mdi:receipt',
+      value: PermissionCodes.OperationLogManagement,
+      label: '操作日志',
+      icon: 'mdi:history',
       children: [
-        { value: PermissionCodes.ExpenseClaimView, label: '查看报销单', icon: 'mdi:eye' },
-        { value: PermissionCodes.ExpenseClaimCreate, label: '创建报销单', icon: 'mdi:plus' },
-        { value: PermissionCodes.ExpenseClaimSubmit, label: '提交报销单', icon: 'mdi:send' },
+        { value: PermissionCodes.OperationLogView, label: '查看操作日志', icon: 'mdi:eye' },
       ],
     },
     {
-      value: PermissionCodes.MeetingManagement,
-      label: '会议管理',
-      icon: 'mdi:calendar-month',
+      value: PermissionCodes.SystemLogManagement,
+      label: '系统日志',
+      icon: 'mdi:alert-circle-outline',
       children: [
-        { value: PermissionCodes.MeetingRoomView, label: '查看会议室', icon: 'mdi:eye' },
-        { value: PermissionCodes.MeetingRoomEdit, label: '管理会议室', icon: 'mdi:cog' },
-        { value: PermissionCodes.MeetingBookingView, label: '查看预订', icon: 'mdi:calendar' },
-        { value: PermissionCodes.MeetingBookingCreate, label: '预订会议室', icon: 'mdi:plus' },
+        { value: PermissionCodes.SystemLogView, label: '查看系统日志', icon: 'mdi:eye' },
       ],
     },
     {
-      value: PermissionCodes.AssetManagement,
-      label: '资产管理',
-      icon: 'mdi:package-variant',
+      value: PermissionCodes.BackgroundJobManagement,
+      label: '后台任务',
+      icon: 'mdi:timer-cog-outline',
       children: [
-        { value: PermissionCodes.AssetView, label: '查看资产', icon: 'mdi:eye' },
-        { value: PermissionCodes.AssetCreate, label: '创建资产', icon: 'mdi:plus' },
-        { value: PermissionCodes.AssetEdit, label: '编辑资产', icon: 'mdi:pencil' },
-        { value: PermissionCodes.AssetAllocate, label: '领用资产', icon: 'mdi:hand-extended' },
-        { value: PermissionCodes.AssetReturn, label: '归还资产', icon: 'mdi:key-return' },
-        { value: PermissionCodes.AssetScrap, label: '报废资产', icon: 'mdi:delete' },
-        { value: PermissionCodes.AssetAllocationView, label: '查看领用记录', icon: 'mdi:format-list-bulleted' },
+        { value: PermissionCodes.BackgroundJobView, label: '查看后台任务', icon: 'mdi:eye' },
+        { value: PermissionCodes.BackgroundJobTrigger, label: '触发后台任务', icon: 'mdi:cog-play-outline' },
       ],
     },
     {
-      value: PermissionCodes.VehicleManagement,
-      label: '车辆管理',
-      icon: 'mdi:car',
-      children: [
-        { value: PermissionCodes.VehicleView, label: '查看车辆', icon: 'mdi:eye' },
-        { value: PermissionCodes.VehicleEdit, label: '管理车辆', icon: 'mdi:cog' },
-        { value: PermissionCodes.VehicleBookingView, label: '查看预订', icon: 'mdi:calendar' },
-        { value: PermissionCodes.VehicleBookingCreate, label: '预订用车', icon: 'mdi:plus' },
-        { value: PermissionCodes.VehicleBookingCancel, label: '取消预订', icon: 'mdi:close' },
-        { value: PermissionCodes.VehicleBookingComplete, label: '完成预订', icon: 'mdi:check' },
-      ],
-    },
-    {
-      value: PermissionCodes.ContractManagement,
-      label: '合同管理',
-      icon: 'mdi:file-document-edit',
-      children: [
-        { value: PermissionCodes.ContractView, label: '查看合同', icon: 'mdi:eye' },
-        { value: PermissionCodes.ContractCreate, label: '创建合同', icon: 'mdi:plus' },
-        { value: PermissionCodes.ContractEdit, label: '编辑合同', icon: 'mdi:pencil' },
-        { value: PermissionCodes.ContractDelete, label: '删除合同', icon: 'mdi:delete' },
-        { value: PermissionCodes.ContractSubmit, label: '提交审批', icon: 'mdi:send' },
-        { value: PermissionCodes.ContractApprove, label: '审批合同', icon: 'mdi:check' },
-        { value: PermissionCodes.ContractArchive, label: '归档合同', icon: 'mdi:archive' },
-        { value: PermissionCodes.ContractTypeView, label: '查看合同类型', icon: 'mdi:eye' },
-        { value: PermissionCodes.ContractTypeCreate, label: '创建合同类型', icon: 'mdi:plus' },
-        { value: PermissionCodes.ContractTypeEdit, label: '编辑合同类型', icon: 'mdi:pencil' },
-        { value: PermissionCodes.ContractTypeDelete, label: '删除合同类型', icon: 'mdi:delete' },
-        { value: PermissionCodes.IncomeExpenseTypeView, label: '查看收支类型', icon: 'mdi:eye' },
-        { value: PermissionCodes.IncomeExpenseTypeCreate, label: '创建收支类型', icon: 'mdi:plus' },
-        { value: PermissionCodes.IncomeExpenseTypeEdit, label: '编辑收支类型', icon: 'mdi:pencil' },
-        { value: PermissionCodes.IncomeExpenseTypeDelete, label: '删除收支类型', icon: 'mdi:delete' },
-      ],
-    },
-    {
-      value: PermissionCodes.CustomerManagement,
-      label: '客户管理',
-      icon: 'mdi:account-group',
-      children: [
-        { value: PermissionCodes.CustomerView, label: '查看客户', icon: 'mdi:eye' },
-        { value: PermissionCodes.CustomerCreate, label: '创建客户', icon: 'mdi:plus' },
-        { value: PermissionCodes.CustomerEdit, label: '编辑客户', icon: 'mdi:pencil' },
-        { value: PermissionCodes.CustomerDelete, label: '删除客户', icon: 'mdi:delete' },
-        { value: PermissionCodes.CustomerContactEdit, label: '编辑客户联系人', icon: 'mdi:account-edit' },
-        { value: PermissionCodes.CustomerContactRecordView, label: '查看客户联络记录', icon: 'mdi:eye' },
-        { value: PermissionCodes.CustomerContactRecordCreate, label: '创建客户联络记录', icon: 'mdi:plus' },
-        { value: PermissionCodes.CustomerContactRecordEdit, label: '编辑客户联络记录', icon: 'mdi:pencil' },
-        { value: PermissionCodes.CustomerReleaseToSea, label: '释放到公海', icon: 'mdi:share' },
-        { value: PermissionCodes.CustomerClaimFromSea, label: '公海领用', icon: 'mdi:hand-extended' },
-        { value: PermissionCodes.CustomerSeaVoid, label: '公海作废', icon: 'mdi:cancel' },
-        {
-          value: PermissionCodes.CustomerSeaConsultationEdit,
-          label: '公海咨询内容编辑',
-          icon: 'mdi:message-text',
-        },
-        { value: PermissionCodes.CustomerShare, label: '共享客户', icon: 'mdi:account-multiple' },
-        {
-          value: PermissionCodes.CustomerSeaRegionAssignView,
-          label: '客户公海片区分配',
-          icon: 'mdi:map',
-          children: [{ value: PermissionCodes.CustomerSeaRegionAssignEdit, label: '编辑', icon: 'mdi:pencil' }],
-        },
-        { value: PermissionCodes.IndustryView, label: '查看行业', icon: 'mdi:eye' },
-        { value: PermissionCodes.IndustryCreate, label: '创建行业', icon: 'mdi:plus' },
-        { value: PermissionCodes.IndustryEdit, label: '编辑行业', icon: 'mdi:pencil' },
-        { value: PermissionCodes.CustomerSourceView, label: '查看客户来源', icon: 'mdi:eye' },
-        { value: PermissionCodes.CustomerSourceCreate, label: '创建客户来源', icon: 'mdi:plus' },
-        { value: PermissionCodes.CustomerSourceEdit, label: '编辑客户来源', icon: 'mdi:pencil' },
-      ],
-    },
-    {
-      value: PermissionCodes.OrderManagement,
-      label: '订单管理',
-      icon: 'mdi:clipboard-list-outline',
-      children: [
-        { value: PermissionCodes.OrderView, label: '查看订单', icon: 'mdi:eye' },
-        { value: PermissionCodes.OrderCreate, label: '创建订单', icon: 'mdi:plus' },
-        { value: PermissionCodes.OrderEdit, label: '编辑订单', icon: 'mdi:pencil' },
-        { value: PermissionCodes.OrderDelete, label: '删除订单', icon: 'mdi:delete' },
-        { value: PermissionCodes.OrderSubmit, label: '提交订单审批', icon: 'mdi:send' },
-        {
-          value: PermissionCodes.OrderSpecialDataDisplay,
-          label: '特殊数据展示',
-          icon: 'mdi:shield-lock',
-          children: [
-            { value: PermissionCodes.OrderContractUpload, label: '合同上传', icon: 'mdi:upload' },
-            { value: PermissionCodes.OrderContractSelect, label: '选择合同', icon: 'mdi:file-select' },
-            { value: PermissionCodes.OrderContractNotCompanyTemplate, label: '合同非公司模版', icon: 'mdi:file-document-outline' },
-            { value: PermissionCodes.OrderNeedInvoice, label: '是否需要发票', icon: 'mdi:receipt' },
-            { value: PermissionCodes.OrderContractAmount, label: '合同金额', icon: 'mdi:currency-cny' },
-            { value: PermissionCodes.OrderTechnicalStatus, label: '技术状态', icon: 'mdi:cog' },
-            { value: PermissionCodes.OrderDiscountPointsDescriptionView, label: '查看优惠点数说明', icon: 'mdi:information-outline' },
-            { value: PermissionCodes.OrderDiscountPointsCreate, label: '优惠点数新增', icon: 'mdi:plus-circle-outline' },
-          ],
-        },
-      ],
-    },
-    {
-      value: PermissionCodes.ProductManagement,
-      label: '产品管理',
-      icon: 'mdi:package-variant',
-      children: [
-        { value: PermissionCodes.ProductView, label: '查看产品/分类/供应商', icon: 'mdi:eye' },
-        { value: PermissionCodes.ProductCreate, label: '创建产品', icon: 'mdi:plus' },
-        { value: PermissionCodes.ProductEdit, label: '编辑产品/分类/供应商', icon: 'mdi:pencil' },
-        { value: PermissionCodes.ProductDelete, label: '删除产品', icon: 'mdi:delete' },
-      ],
-    },
-    {
-      value: PermissionCodes.AttendanceManagement,
-      label: '考勤管理',
-      icon: 'mdi:clock-check',
-      children: [
-        { value: PermissionCodes.AttendanceRecordView, label: '查看考勤记录', icon: 'mdi:eye' },
-        { value: PermissionCodes.AttendanceCheckIn, label: '打卡/签退', icon: 'mdi:clock-outline' },
-        { value: PermissionCodes.ScheduleView, label: '查看排班', icon: 'mdi:calendar' },
-        { value: PermissionCodes.ScheduleEdit, label: '编辑排班', icon: 'mdi:pencil' },
-      ],
-    },
-    {
-      value: PermissionCodes.AnnouncementManagement,
-      label: '公告管理',
-      icon: 'mdi:bullhorn',
-      children: [
-        { value: PermissionCodes.AnnouncementView, label: '查看公告', icon: 'mdi:eye' },
-        { value: PermissionCodes.AnnouncementCreate, label: '创建公告', icon: 'mdi:plus' },
-        { value: PermissionCodes.AnnouncementEdit, label: '编辑公告', icon: 'mdi:pencil' },
-        { value: PermissionCodes.AnnouncementPublish, label: '发布公告', icon: 'mdi:send' },
-      ],
-    },
-    {
-      value: PermissionCodes.ProjectManagement,
-      label: '项目管理',
-      icon: 'mdi:folder',
-      children: [
-        { value: PermissionCodes.ProjectView, label: '查看项目', icon: 'mdi:eye' },
-        { value: PermissionCodes.ProjectCreate, label: '创建项目', icon: 'mdi:plus' },
-        { value: PermissionCodes.ProjectEdit, label: '编辑项目', icon: 'mdi:pencil' },
-        { value: PermissionCodes.ProjectTypeView, label: '查看项目类型', icon: 'mdi:eye' },
-        { value: PermissionCodes.ProjectTypeCreate, label: '创建项目类型', icon: 'mdi:plus' },
-        { value: PermissionCodes.ProjectTypeEdit, label: '编辑项目类型', icon: 'mdi:pencil' },
-        { value: PermissionCodes.ProjectStatusOptionView, label: '查看项目状态', icon: 'mdi:eye' },
-        { value: PermissionCodes.ProjectStatusOptionCreate, label: '创建项目状态', icon: 'mdi:plus' },
-        { value: PermissionCodes.ProjectStatusOptionEdit, label: '编辑项目状态', icon: 'mdi:pencil' },
-        { value: PermissionCodes.ProjectIndustryView, label: '查看项目行业', icon: 'mdi:eye' },
-        { value: PermissionCodes.ProjectIndustryCreate, label: '创建项目行业', icon: 'mdi:plus' },
-        { value: PermissionCodes.ProjectIndustryEdit, label: '编辑项目行业', icon: 'mdi:pencil' },
-      ],
-    },
-    {
-      value: PermissionCodes.TaskManagement,
-      label: '任务管理',
-      icon: 'mdi:clipboard-list',
-      children: [
-        { value: PermissionCodes.TaskView, label: '查看任务', icon: 'mdi:eye' },
-        { value: PermissionCodes.TaskCreate, label: '创建任务', icon: 'mdi:plus' },
-        { value: PermissionCodes.TaskEdit, label: '编辑任务', icon: 'mdi:pencil' },
-      ],
-    },
-    {
-      value: PermissionCodes.ChatManagement,
-      label: '即时通讯',
-      icon: 'mdi:message-text',
-      children: [
-        { value: PermissionCodes.ChatView, label: '查看会话与消息', icon: 'mdi:eye' },
-        { value: PermissionCodes.ChatCreate, label: '创建会话', icon: 'mdi:plus' },
-      ],
-    },
-    {
-      value: PermissionCodes.DocumentManagement,
-      label: '文档管理',
-      icon: 'mdi:file-document-multiple',
-      children: [
-        { value: PermissionCodes.DocumentView, label: '查看文档', icon: 'mdi:eye' },
-        { value: PermissionCodes.DocumentCreate, label: '上传文档', icon: 'mdi:upload' },
-        { value: PermissionCodes.DocumentEdit, label: '编辑文档', icon: 'mdi:pencil' },
-        { value: PermissionCodes.DocumentShare, label: '创建共享链接', icon: 'mdi:link' },
-      ],
-    },
-    {
-      value: PermissionCodes.ContactManagement,
-      label: '通讯录管理',
-      icon: 'mdi:card-account-details',
-      children: [
-        { value: PermissionCodes.ContactGroupView, label: '查看联系组', icon: 'mdi:eye' },
-        { value: PermissionCodes.ContactGroupCreate, label: '创建联系组', icon: 'mdi:plus' },
-        { value: PermissionCodes.ContactGroupEdit, label: '编辑联系组', icon: 'mdi:pencil' },
-        { value: PermissionCodes.ContactView, label: '查看联系人', icon: 'mdi:eye' },
-        { value: PermissionCodes.ContactCreate, label: '创建联系人', icon: 'mdi:plus' },
-        { value: PermissionCodes.ContactEdit, label: '编辑联系人', icon: 'mdi:pencil' },
-      ],
-    },
-    {
-      value: PermissionCodes.LeaveManagement,
-      label: '请假管理',
-      icon: 'mdi:calendar-account',
-      children: [
-        {
-          value: PermissionCodes.LeaveRequestView,
-          label: '查看请假申请',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.LeaveRequestCreate,
-          label: '创建请假申请',
-          icon: 'mdi:plus',
-        },
-        {
-          value: PermissionCodes.LeaveRequestEdit,
-          label: '编辑请假申请',
-          icon: 'mdi:pencil',
-        },
-        {
-          value: PermissionCodes.LeaveRequestSubmit,
-          label: '提交请假申请',
-          icon: 'mdi:send',
-        },
-        {
-          value: PermissionCodes.LeaveRequestCancel,
-          label: '撤销请假申请',
-          icon: 'mdi:close',
-        },
-        {
-          value: PermissionCodes.LeaveBalanceView,
-          label: '查看请假余额',
-          icon: 'mdi:eye',
-        },
-        {
-          value: PermissionCodes.LeaveBalanceEdit,
-          label: '设置请假余额',
-          icon: 'mdi:counter',
-        },
-      ],
+      value: PermissionCodes.HomeDashboard,
+      label: '首页工作台',
+      icon: 'mdi:view-dashboard-outline',
     },
     {
       value: PermissionCodes.AllApiAccess,
@@ -529,19 +237,72 @@ export function buildPermissionTree(): PermissionTreeNode[] {
       icon: 'mdi:shield-check',
     },
   ];
-  return ensureTreeKeys(tree);
+  return groupPermissionTreeByModuleCategory(ensureTreeKeys(groupPermissionTreePages(tree)));
 }
 
-/**
- * 获取所有权限码（扁平列表）
- */
+function groupPermissionTreeByModuleCategory(
+  nodes: PermissionTreeNode[],
+): PermissionTreeNode[] {
+  const globalNodes: PermissionTreeNode[] = [];
+  const topLevelSiblingNodes: PermissionTreeNode[] = [];
+  const systemNodes: PermissionTreeNode[] = [];
+
+  for (const node of nodes) {
+    if (node.value === PermissionCodes.AllApiAccess) {
+      globalNodes.push(node);
+      continue;
+    }
+
+    const category = PERMISSION_ROOT_CATEGORY_MAP[
+      node.value as keyof typeof PERMISSION_ROOT_CATEGORY_MAP
+    ] as ModuleCategoryId | undefined;
+
+    if (
+      MODULE_TOP_LEVEL_PERMISSION_ROOTS.includes(
+        node.value as (typeof MODULE_TOP_LEVEL_PERMISSION_ROOTS)[number],
+      )
+    ) {
+      topLevelSiblingNodes.push(node);
+      continue;
+    }
+
+    if (!category) {
+      globalNodes.push(node);
+      continue;
+    }
+
+    if (category === 'system') {
+      systemNodes.push(node);
+    }
+  }
+
+  const groupedCategories: PermissionTreeNode[] = [];
+
+  for (const definition of MODULE_CATEGORY_DEFINITIONS) {
+    const children = definition.id === 'system' ? systemNodes : [];
+    if (children.length === 0) continue;
+
+    groupedCategories.push({
+      key: definition.permissionCode,
+      value: definition.permissionCode,
+      label: definition.title,
+      icon: definition.icon,
+      children,
+    });
+  }
+
+  return [...topLevelSiblingNodes, ...groupedCategories, ...globalNodes];
+}
+
 export function getAllPermissionCodes(): string[] {
   const tree = buildPermissionTree();
   const codes: string[] = [];
 
   function traverse(nodes: PermissionTreeNode[]) {
     for (const node of nodes) {
-      codes.push(node.value);
+      if (!isSyntheticPermissionTreeKey(node.value)) {
+        codes.push(node.value);
+      }
       if (node.children) {
         traverse(node.children);
       }
@@ -550,4 +311,37 @@ export function getAllPermissionCodes(): string[] {
 
   traverse(tree);
   return codes;
+}
+
+export function expandLegacyPermissionSelection(codes: readonly string[]): string[] {
+  return [...new Set(codes)];
+}
+
+export function enrichPermissionTreeSelection(
+  selectedCodes: readonly string[],
+  tree: readonly PermissionTreeNode[],
+): string[] {
+  const selected = new Set(selectedCodes);
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+    const visit = (nodes: readonly PermissionTreeNode[]) => {
+      for (const node of nodes) {
+        const children = node.children ?? [];
+        if (children.length === 0) continue;
+        visit(children);
+        const allChildrenSelected = children.every((child) =>
+          selected.has(child.value),
+        );
+        if (allChildrenSelected && !selected.has(node.value)) {
+          selected.add(node.value);
+          changed = true;
+        }
+      }
+    };
+    visit(tree);
+  }
+
+  return [...selected];
 }

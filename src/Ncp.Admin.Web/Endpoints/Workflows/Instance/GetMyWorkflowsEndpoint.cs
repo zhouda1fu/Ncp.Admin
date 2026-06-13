@@ -24,10 +24,10 @@ public class GetMyWorkflowsEndpoint(WorkflowInstanceQuery query) : Endpoint<Work
 
     public override async Task HandleAsync(WorkflowInstanceQueryInput req, CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userIdValue))
-        {
-            throw new KnownException("无效的用户身份", ErrorCodes.InvalidUserIdentity);
-        }
+        if (!User.TryGetUserId(out var userIdValue))
+        {
+            throw new KnownException("无效的用户身份", ErrorCodes.InvalidUserIdentity);
+        }
 
         var result = await query.GetMyInitiatedWorkflowsAsync(userIdValue, req, ct);
         await Send.OkAsync(result.AsResponseData(), cancellation: ct);

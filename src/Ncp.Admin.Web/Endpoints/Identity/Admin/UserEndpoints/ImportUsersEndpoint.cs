@@ -73,7 +73,7 @@ public class ImportUsersEndpoint(IMediator mediator) : Endpoint<ImportUsersReque
             throw new KnownException("Excel 中没有有效数据行", ErrorCodes.InvalidExcelFile);
         }
 
-        var creatorId = User.GetUserIdOrNull() ?? new UserId(0);
+        var creatorId = User.GetUserIdOrNull() ?? UserId.Unassigned;
 
         var result = await mediator.Send(new ImportUsersCommand(rows, creatorId), ct);
         await Send.OkAsync(result.AsResponseData(), cancellation: ct);

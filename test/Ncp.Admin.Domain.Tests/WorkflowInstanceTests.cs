@@ -22,6 +22,7 @@ public class WorkflowInstanceTests
     {
         return new WorkflowInstance(
             DefId,
+            WorkflowDefinitionVersionId.Unassigned,
             "测试流程",
             "biz-001",
             "LeaveRequest",
@@ -71,10 +72,12 @@ public class WorkflowInstanceTests
     {
         var instance = CreateRunningInstance();
         var task = instance.CreateTaskForRole("node1", "角色审批", WorkflowTaskType.Approval, TestRoleId, "财务");
+        var operatorId = new UserId(999);
 
-        instance.ApproveTask(task.Id, new UserId(999), new[] { TestRoleId }, "同意");
+        instance.ApproveTask(task.Id, operatorId, new[] { TestRoleId }, "同意");
 
         Assert.Equal(WorkflowTaskStatus.Approved, task.Status);
+        Assert.Equal(operatorId, task.CompletedByUserId);
     }
 
     [Fact]
@@ -99,6 +102,7 @@ public class WorkflowInstanceTests
 
         Assert.Equal(WorkflowTaskStatus.Approved, task.Status);
         Assert.Equal("同意", task.Comment);
+        Assert.Equal(AssigneeId, task.CompletedByUserId);
     }
 
     [Fact]
@@ -118,7 +122,7 @@ public class WorkflowInstanceTests
         var instance = CreateRunningInstance();
         var task = instance.CreateTask("node1", "审批", WorkflowTaskType.Approval, AssigneeId, "李四");
 
-        instance.RejectTask(task.Id, AssigneeId, operatorRoleIds: null, "不同意");
+        instance.RejectTask(task.Id, AssigneeId, null, "不同意");
 
         Assert.Equal(WorkflowInstanceStatus.Rejected, instance.Status);
         Assert.NotNull(instance.CompletedAt);
@@ -132,7 +136,7 @@ public class WorkflowInstanceTests
         var t1 = instance.CreateTask("node1", "或签A", WorkflowTaskType.Approval, AssigneeId, "A");
         var t2 = instance.CreateTask("node1", "或签B", WorkflowTaskType.Approval, new UserId(3), "B");
 
-        instance.RejectTask(t1.Id, AssigneeId, operatorRoleIds: null, "不同意");
+        instance.RejectTask(t1.Id, AssigneeId, null, "不同意");
 
         Assert.Equal(WorkflowTaskStatus.Rejected, t1.Status);
         Assert.Equal(WorkflowTaskStatus.Cancelled, t2.Status);
@@ -171,6 +175,19 @@ public class WorkflowInstanceTests
         instance.ApproveTask(firstTask.Id, AssigneeId, operatorRoleIds: null, "同意");
 
         Assert.False(instance.AreAllCounterSignTasksApproved("node1"));
+    }
+
+    [Fact]
+    public void CancelPendingTasksForSameNodeExcept_ShouldCancelOtherPendingTasksOnSameNode()
+    {
+        var instance = CreateRunningInstance();
+        var approved = instance.CreateTask("node1", "或签A", WorkflowTaskType.Approval, AssigneeId, "A");
+        var sibling = instance.CreateTask("node1", "或签B", WorkflowTaskType.Approval, new UserId(3), "B");
+
+        instance.CancelPendingTasksForSameNodeExcept("node1", approved);
+
+        Assert.Equal(WorkflowTaskStatus.Pending, approved.Status);
+        Assert.Equal(WorkflowTaskStatus.Cancelled, sibling.Status);
     }
 
     [Fact]

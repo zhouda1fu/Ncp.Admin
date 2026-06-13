@@ -23,6 +23,8 @@ export namespace NotificationApi {
     readAt?: string;
     businessId?: string;
     businessType?: string;
+    linkPath?: string | null;
+    linkQuery?: Record<string, string> | null;
     createdAt: string;
   }
 }
@@ -35,7 +37,9 @@ async function getNotificationList(params?: Recordable<any>) {
     items: NotificationApi.NotificationItem[];
     total: number;
     unreadCount: number;
-  }>(NOTIFICATION_BASE, { params });
+  }>(NOTIFICATION_BASE, {
+    params: { includeUnreadCount: true, ...params },
+  });
 }
 
 /**

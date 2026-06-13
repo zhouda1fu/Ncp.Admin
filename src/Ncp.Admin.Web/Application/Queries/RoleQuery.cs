@@ -3,6 +3,8 @@ using Microsoft.Extensions.Caching.Memory;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 
+using Ncp.Admin.Web.Application.Services.Workflow;
+
 namespace Ncp.Admin.Web.Application.Queries;
 
 public record RoleQueryDto(
@@ -37,6 +39,8 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
     private const string RoleCacheKeyPrefix = "role:";
     private static readonly TimeSpan RoleCacheExpiry = TimeSpan.FromMinutes(10);
 
+    public static string GetRoleCacheKey(RoleId roleId) => $"{RoleCacheKeyPrefix}{roleId}";
+
     public async Task<bool> DoesRoleExist(string name, CancellationToken cancellationToken)
     {
         return await RoleSet.AsNoTracking()
@@ -45,15 +49,20 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
 
     public async Task<List<AssignAdminUserRoleQueryDto>> GetAdminRolesForAssignmentAsync(IEnumerable<RoleId> ids, CancellationToken cancellationToken)
     {
-        return await RoleSet.AsNoTracking()
-            .Where(r => ids.Contains(r.Id))
-            .Select(r => new AssignAdminUserRoleQueryDto(
-                r.Id,
-                r.Name,
-                r.DataScope,
-                r.Permissions.Select(rp => rp.PermissionCode),
-                r.DataDepts.Select(d => d.DeptId)))
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+            return [];
+
+        // 勿在 Select 中直接投影 r.DataDepts：部分提供程序/查询下自定义部门集合会物化为空，
+        // 导致 DataScope.CustomDeptAndSub 在公海片区上级解析等场景中无法展开部门。
+        var roles = await RoleSet.AsNoTracking()
+            .AsSplitQuery()
+            .Where(r => idList.Contains(r.Id))
+            .Include(r => r.DataDepts)
+            .Include(r => r.Permissions)
             .ToListAsync(cancellationToken);
+
+        return roles.Select(MapRoleToAssignDto).ToList();
     }
 
     /// <summary>
@@ -74,17 +83,16 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
         }
 
         var found = await RoleSet.AsNoTracking()
+            .AsSplitQuery()
             .Where(r => names.Contains(r.Name))
-            .Select(r => new AssignAdminUserRoleQueryDto(
-                r.Id,
-                r.Name,
-                r.DataScope,
-                r.Permissions.Select(rp => rp.PermissionCode),
-                r.DataDepts.Select(d => d.DeptId)))
+            .Include(r => r.DataDepts)
+            .Include(r => r.Permissions)
             .ToListAsync(cancellationToken);
-        var foundNameSet = found.Select(r => r.RoleName).ToHashSet(StringComparer.Ordinal);
+
+        var dtos = found.Select(MapRoleToAssignDto).ToList();
+        var foundNameSet = dtos.Select(r => r.RoleName).ToHashSet(StringComparer.Ordinal);
         var missing = names.Where(n => !foundNameSet.Contains(n)).ToList();
-        return (found, missing);
+        return (dtos, missing);
     }
 
     public async Task<IEnumerable<string>> GetAssignedPermissionCodesAsync(IEnumerable<RoleId> ids, CancellationToken cancellationToken)
@@ -108,24 +116,19 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
 
     public async Task<RoleQueryDto?> GetRoleByIdAsync(RoleId id, CancellationToken cancellationToken = default)
     {
-        var cacheKey = $"{RoleCacheKeyPrefix}{id}";
+        var cacheKey = GetRoleCacheKey(id);
         
         return await memoryCache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = RoleCacheExpiry;
             
-            return await RoleSet.AsNoTracking()
+            var entity = await RoleSet.AsNoTracking()
+                .AsSplitQuery()
                 .Where(r => r.Id == id)
-                .Select(r => new RoleQueryDto(
-                    r.Id,
-                    r.Name,
-                    r.Description,
-                    r.DataScope,
-                    r.IsActive,
-                    r.CreatedAt,
-                    r.Permissions.Select(rp => rp.PermissionCode),
-                    r.DataDepts.Select(d => d.DeptId)))
+                .Include(r => r.DataDepts)
+                .Include(r => r.Permissions)
                 .FirstOrDefaultAsync(cancellationToken);
+            return entity is null ? null : MapRoleToRoleQueryDto(entity);
         });
     }
 
@@ -159,9 +162,46 @@ public class RoleQuery(ApplicationDbContext applicationDbContext, IMemoryCache m
                 r.DataScope,
                 r.IsActive,
                 r.CreatedAt,
-                r.Permissions.Select(rp => rp.PermissionCode),
-                r.DataDepts.Select(d => d.DeptId)))
+                r.Permissions.Select(rp => rp.PermissionCode).ToList(),
+                r.DataDepts.Select(d => d.DeptId).ToList()))
             .ToPagedDataAsync(query, cancellationToken);
     }
-}
 
+    private static AssignAdminUserRoleQueryDto MapRoleToAssignDto(Role r) =>
+        new(
+            r.Id,
+            r.Name,
+            r.DataScope,
+            r.Permissions.Select(rp => rp.PermissionCode).ToList(),
+            r.DataDepts.Select(d => d.DeptId).ToList());
+
+    private static RoleQueryDto MapRoleToRoleQueryDto(Role r) =>
+        new(
+            r.Id,
+            r.Name,
+            r.Description,
+            r.DataScope,
+            r.IsActive,
+            r.CreatedAt,
+            r.Permissions.Select(rp => rp.PermissionCode).ToList(),
+            r.DataDepts.Select(d => d.DeptId).ToList());
+
+    /// <summary>
+    /// 构建流程定义导入时的角色 ID 重映射索引（按角色名称）。
+    /// </summary>
+    public async Task<WorkflowRemapRoleIndex> BuildWorkflowRemapRoleIndexAsync(CancellationToken cancellationToken = default)
+    {
+        var rows = await RoleSet.AsNoTracking()
+            .Where(r => r.IsActive)
+            .Select(r => new { r.Id, r.Name })
+            .ToListAsync(cancellationToken);
+
+        var index = new WorkflowRemapRoleIndex();
+        foreach (var row in rows)
+        {
+            index.Add(row.Id, row.Name);
+        }
+
+        return index;
+    }
+}

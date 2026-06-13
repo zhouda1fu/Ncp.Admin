@@ -44,6 +44,8 @@ const maskRef = ref<HTMLDivElement | null>(null);
 const maskViewRef = ref<HTMLDivElement | null>(null);
 const cropperRef = ref<HTMLDivElement | null>(null);
 const cropperViewRef = ref<HTMLDivElement | null>(null);
+void maskRef;
+void cropperViewRef;
 
 // 响应式数据
 const isCropperVisible = ref<boolean>(false);

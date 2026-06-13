@@ -35,7 +35,10 @@ public class CreateRoleCommandHandler(IRoleRepository roleRepository) : ICommand
 {
     public async Task<RoleId> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
-        var permissions = request.PermissionCodes.Select(perm =>
+        var permissions = request.PermissionCodes
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .Select(perm =>
         {
             var (name, description) = PermissionMapper.GetPermissionInfo(perm);
             return new RolePermission(perm, name, description);

@@ -40,11 +40,21 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
+// scWorkflow is an Options API Vue component maintained as the designer canvas renderer.
+// vue-tsc cannot infer a declaration for this local .vue module in the current workspace setup.
+// @ts-expect-error local Vue component declaration is supplied by the Vue compiler at runtime
 import scWorkflow from './scWorkflow/index.vue';
 
+import { createWorkflowRootNodeKey } from '../utils/createWorkflowNodeKey';
+import {
+  createDefaultWorkflowSchema,
+  designerTreeToWorkflowSchema,
+  workflowSchemaToDesignerTree,
+  type WorkflowDesignerSchema,
+} from '../utils/workflow-schema';
+
 const props = defineProps<{
-  modelValue?: Record<string, any> | null;
-  initialConfig?: Record<string, any>;
+  modelValue?: WorkflowDesignerSchema | null;
   category?: string;
   viewOnly?: boolean;
 }>();
@@ -52,13 +62,14 @@ const category = computed(() => props.category ?? '');
 const viewOnly = computed(() => props.viewOnly ?? false);
 
 const emit = defineEmits<{
-  'update:modelValue': [value: Record<string, any> | null];
+  'update:modelValue': [value: WorkflowDesignerSchema];
 }>();
 
 const zoom = ref(1);
 const pan = ref({ x: 0, y: 0 });
 const isPanning = ref(false);
 const spacePressed = ref(false);
+const syncingFromSchema = ref(false);
 const panViewportRef = ref<HTMLElement | null>(null);
 
 const panDrag = ref<{
@@ -198,29 +209,34 @@ function onWindowKeyup(e: KeyboardEvent) {
 
 const defaultRoot = () => ({
   nodeName: '发起人',
-  nodeKey: 'root_' + Date.now(),
+  nodeKey: createWorkflowRootNodeKey(),
   type: 0,
   nodeAssigneeList: [],
   childNode: null,
 });
 
+function schemaToDesignerTree(schema?: WorkflowDesignerSchema | null) {
+  return schema ? workflowSchemaToDesignerTree(schema) : null;
+}
+
+function createDefaultTree() {
+  return schemaToDesignerTree(createDefaultWorkflowSchema(createWorkflowRootNodeKey())) ?? defaultRoot();
+}
+
 const innerConfig = ref<Record<string, any> | undefined>(
-  props.modelValue ?? props.initialConfig ?? defaultRoot(),
+  schemaToDesignerTree(props.modelValue) ?? createDefaultTree(),
 );
 
 watch(
   () => props.modelValue,
   (val) => {
-    if (val != null) innerConfig.value = val;
-  },
-  { immediate: true },
-);
-watch(
-  () => props.initialConfig,
-  (val) => {
-    if (innerConfig.value === undefined && val != null) {
-      innerConfig.value = val;
-      emit('update:modelValue', val);
+    const tree = schemaToDesignerTree(val);
+    if (tree != null) {
+      syncingFromSchema.value = true;
+      innerConfig.value = tree;
+      nextTick(() => {
+        syncingFromSchema.value = false;
+      });
     }
   },
   { immediate: true },
@@ -228,7 +244,10 @@ watch(
 
 function onConfigUpdate(val: Record<string, any> | null) {
   innerConfig.value = val ?? undefined;
-  emit('update:modelValue', val ?? null);
+  if (syncingFromSchema.value) return;
+  if (val != null) {
+    emit('update:modelValue', designerTreeToWorkflowSchema(val));
+  }
 }
 
 onMounted(() => {
@@ -236,7 +255,7 @@ onMounted(() => {
   window.addEventListener('keyup', onWindowKeyup);
   nextTick(() => {
     if (props.modelValue == null && innerConfig.value != null) {
-      emit('update:modelValue', innerConfig.value);
+      emit('update:modelValue', designerTreeToWorkflowSchema(innerConfig.value));
     }
   });
 });

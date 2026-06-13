@@ -34,6 +34,11 @@ public record WorkflowInstanceCompletedDomainEvent(WorkflowInstance WorkflowInst
 public record WorkflowInstanceRejectedDomainEvent(WorkflowInstance WorkflowInstance) : IDomainEvent;
 
 /// <summary>
+/// 流程实例撤销领域事件
+/// </summary>
+public record WorkflowInstanceCancelledDomainEvent(WorkflowInstance WorkflowInstance) : IDomainEvent;
+
+/// <summary>
 /// 工作流任务创建领域事件
 /// </summary>
 public record WorkflowTaskCreatedDomainEvent(WorkflowInstance WorkflowInstance, WorkflowTask WorkflowTask) : IDomainEvent;

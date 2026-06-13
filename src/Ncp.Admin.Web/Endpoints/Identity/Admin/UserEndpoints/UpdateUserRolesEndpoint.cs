@@ -14,7 +14,7 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 /// 更新用户角色的请求模型
 /// </summary>
 /// <param name="UserId">要更新角色的用户ID</param>
-/// <param name="RoleIds">要分配给用户的角色ID列表</param>
+/// <param name="RoleIds">要分配给用户的角色 ID 列表</param>
 public record UpdateUserRolesRequest(UserId UserId, IEnumerable<RoleId> RoleIds);
 
 /// <summary>

@@ -18,10 +18,10 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
         builder.Property(b => b.Name).HasMaxLength(50).IsRequired().HasComment("用户名");
         builder.Property(b => b.Email).HasMaxLength(100).IsRequired().HasComment("邮箱");
         builder.Property(b => b.PasswordHash).HasMaxLength(255).IsRequired().HasComment("密码哈希");
-        builder.Property(b => b.Phone).HasMaxLength(20).HasComment("手机号");
+        builder.Property(b => b.Phone).HasMaxLength(50).HasComment("手机号");
         builder.Property(b => b.RealName).HasMaxLength(50).HasComment("真实姓名");
         builder.Property(b => b.Gender).HasMaxLength(10).HasComment("性别");
-        builder.Property(b => b.Age).HasComment("年龄");
+        builder.Ignore(b => b.Age);
         builder.Property(b => b.BirthDate).HasComment("出生日期");
         builder.Property(b => b.IsActive).HasComment("是否启用");
         builder.Property(b => b.CreatedAt).HasComment("创建时间");
@@ -44,6 +44,12 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
         builder.Property(b => b.WechatGuid).HasMaxLength(64).IsRequired().HasComment("唯一码");
         builder.Property(b => b.IsResigned).HasComment("是否离职");
         builder.Property(b => b.ResignedTime).HasComment("离职时间");
+        builder.Property(b => b.AttendanceRequired)
+            .HasDefaultValue(true)
+            .HasComment("是否需要参与考勤计算");
+        builder.Property(b => b.AttendanceRuleCode)
+            .HasDefaultValue(0)
+            .HasComment("考勤规则业务编码");
 
         builder.HasIndex(b => b.Name);
         builder.HasIndex(b => b.Email);
@@ -84,7 +90,6 @@ internal class UserDeptEntityTypeConfiguration : IEntityTypeConfiguration<UserDe
 
         builder.Property(ud => ud.DeptId);
         builder.Property(ud => ud.DeptName).HasMaxLength(100);
-        builder.Property(ud => ud.IsDeptManager).HasComment("是否为该部门主管");
         builder.Property(ud => ud.AssignedAt)
             .IsRequired();
 

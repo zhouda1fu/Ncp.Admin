@@ -1,9 +1,12 @@
+using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
 using Ncp.Admin.Web.Application.Services.Workflow;
+using Ncp.Admin.Web.Application.Services.Workflow.Graph;
+using Npgsql;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
@@ -62,18 +65,20 @@ public class StartWorkflowCommandValidator : AbstractValidator<StartWorkflowComm
 
 /// <summary>
 /// 发起流程命令处理器
-/// 使用 WorkflowTreeTraverser 从设计器树 JSON 解析首个审批节点，审批人由 WorkflowAssigneeResolverQuery 解析。
+/// 使用已发布的 GraphSnapshotJson 解析首个待办节点，避免运行时依赖可编辑的设计器 JSON。
 /// </summary>
 public class StartWorkflowCommandHandler(
     IWorkflowDefinitionRepository definitionRepository,
     IWorkflowInstanceRepository instanceRepository,
     WorkflowInstanceQuery instanceQuery,
     UserQuery userQuery,
-    WorkflowTreeTraverser treeTraverser,
-    WorkflowAssigneeResolverQuery assigneeResolverQuery,
-    WorkflowTaskVisibilityPolicy taskVisibilityPolicy)
+    IWorkflowApprovalAssignmentService approvalAssignmentService,
+    WorkflowRuntimeRecordService runtimeRecordService,
+    WorkflowGraphRuntimeService graphRuntimeService)
     : ICommandHandler<StartWorkflowCommand, WorkflowInstanceId>
 {
+    private const string DuplicateBusinessWorkflowMessage = "同一业务已有审批中的流程，请勿重复发起";
+
     public async Task<WorkflowInstanceId> Handle(StartWorkflowCommand request, CancellationToken cancellationToken)
     {
         var existsRunning = await instanceQuery.ExistsRunningInstanceByBusinessKeyAsync(
@@ -82,7 +87,7 @@ public class StartWorkflowCommandHandler(
             cancellationToken);
         if (existsRunning)
         {
-            throw new KnownException("同一业务已有审批中的流程，请勿重复发起", ErrorCodes.WorkflowDuplicateBusinessKey);
+            throw new KnownException(DuplicateBusinessWorkflowMessage, ErrorCodes.WorkflowDuplicateBusinessKey);
         }
 
         var definition = await definitionRepository.GetAsync(request.WorkflowDefinitionId, cancellationToken)
@@ -93,6 +98,9 @@ public class StartWorkflowCommandHandler(
             throw new KnownException("流程定义未发布，无法发起流程", ErrorCodes.WorkflowDefinitionAlreadyArchived);
         }
 
+        var definitionVersion = definition.GetLatestPublishedVersion()
+            ?? throw new KnownException("流程定义缺少已发布版本，无法发起流程", ErrorCodes.WorkflowDefinitionNotFound);
+
         var initiator = await userQuery.GetUserByIdAsync(request.InitiatorId, cancellationToken)
             ?? throw new KnownException("未找到发起人", ErrorCodes.UserNotFound);
 
@@ -100,6 +108,7 @@ public class StartWorkflowCommandHandler(
 
         var instance = new WorkflowInstance(
             request.WorkflowDefinitionId,
+            definitionVersion.Id,
             definition.Name,
             request.BusinessKey,
             request.BusinessType,
@@ -110,35 +119,91 @@ public class StartWorkflowCommandHandler(
             request.Variables,
             request.Remark);
 
-        var node = treeTraverser.FindFirstTaskNode(definition.DefinitionJson, request.Variables);
+        await instanceRepository.AddAsync(instance, cancellationToken);
+
+        var graphSnapshotJson = definitionVersion.GraphSnapshotJson;
+        if (string.IsNullOrWhiteSpace(graphSnapshotJson))
+        {
+            throw new KnownException("流程定义缺少已发布的运行图快照，无法发起流程", ErrorCodes.WorkflowDefinitionNotFound);
+        }
+
+        var node = graphRuntimeService.FindFirstTaskNode(graphSnapshotJson, request.Variables);
         while (node != null)
         {
-            var ordered = await assigneeResolverQuery.ResolveOrderedAssigneesAsync(node, instance, cancellationToken);
-            ordered = await taskVisibilityPolicy.FilterAssigneesByDataPermissionAsync(instance, ordered, cancellationToken);
-            if (node.Type == 1 && ordered.Count == 0)
+            if (WorkflowStartAssigneeGate.IsOfficeTaskParticipantConfigNode(node))
             {
-                throw new KnownException("无法解析审批节点的处理人，请检查流程配置", ErrorCodes.WorkflowAssigneeResolutionFailed);
+                node = graphRuntimeService.FindNextTaskNode(graphSnapshotJson, node.NodeId, request.Variables);
+                continue;
             }
 
-            var toCreate = WorkflowDesignerTaskHelper.SelectAssigneesForNodeEntry(node, ordered);
-            var taskType = node.Type == 2 ? WorkflowTaskType.CarbonCopy : WorkflowTaskType.Approval;
-            WorkflowDesignerTaskHelper.AddTasksToInstance(instance, node, taskType, toCreate);
+            var resolution = await approvalAssignmentService.ResolveForTaskCreationAsync(
+                node,
+                instance,
+                graphSnapshotJson,
+                cancellationToken);
+            var toCreate = WorkflowDesignerTaskHelper.SelectAssigneesForNodeEntry(node, resolution.Assignees);
+            var taskType = node.Type == WorkflowGraphNodeType.CarbonCopy
+                ? WorkflowTaskType.CarbonCopy
+                : WorkflowTaskType.Approval;
+            var createdTasks = WorkflowDesignerTaskHelper.AddTaskAssignmentsToInstance(instance, node, taskType, toCreate);
+            await runtimeRecordService.RecordTaskCreatedAsync(
+                instance,
+                createdTasks,
+                "start",
+                cancellationToken);
 
-            if (node.Type == 1)
+            if (node.Type == WorkflowGraphNodeType.Approval && !resolution.AutoPassed)
             {
                 break;
             }
 
-            node = treeTraverser.FindNextTaskNode(definition.DefinitionJson, node.NodeKey, request.Variables);
+            node = graphRuntimeService.FindNextTaskNode(graphSnapshotJson, node.NodeId, request.Variables);
         }
 
         if (instance.Tasks.Count == 0)
         {
-            throw new KnownException("流程未生成任何待办任务，请检查流程定义是否包含审批或抄送节点", ErrorCodes.WorkflowNoTasksOnStart);
+            if (!graphRuntimeService.AllowsAutoCompleteWithoutTasks(graphSnapshotJson))
+            {
+                throw new KnownException("流程未产生任何待办，请检查流程定义审批/抄送配置", ErrorCodes.WorkflowAssigneeResolutionFailed);
+            }
+
+            instance.Complete();
         }
 
-        await instanceRepository.AddAsync(instance, cancellationToken);
-
         return instance.Id;
+    }
+}
+
+/// <summary>
+/// 将并发发起时数据库唯一索引兜底转换成业务异常。
+/// </summary>
+public class StartWorkflowDuplicateBusinessKeyBehavior : IPipelineBehavior<StartWorkflowCommand, WorkflowInstanceId>
+{
+    private const string DuplicateBusinessWorkflowMessage = "同一业务已有审批中的流程，请勿重复发起";
+    private const string UniqueViolationSqlState = "23505";
+    private const string ActiveBusinessIndexName = "ix_workflow_instance_active_business";
+
+    public async Task<WorkflowInstanceId> Handle(
+        StartWorkflowCommand request,
+        RequestHandlerDelegate<WorkflowInstanceId> next,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await next();
+        }
+        catch (DbUpdateException ex) when (IsActiveBusinessUniqueViolation(ex))
+        {
+            throw new KnownException(DuplicateBusinessWorkflowMessage, ErrorCodes.WorkflowDuplicateBusinessKey);
+        }
+    }
+
+    private static bool IsActiveBusinessUniqueViolation(DbUpdateException exception)
+    {
+        return exception.InnerException is PostgresException
+        {
+            SqlState: UniqueViolationSqlState,
+            ConstraintName: var constraintName
+        } && string.Equals(constraintName, ActiveBusinessIndexName, StringComparison.OrdinalIgnoreCase);
     }
 }

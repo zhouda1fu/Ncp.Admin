@@ -13,8 +13,14 @@ public sealed class DataPermissionContextMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context, IContextAccessor accessor)
     {
-        if (accessor.GetContext<DataPermissionContext>() == null)
-            accessor.SetContext(context.User.ParseFromClaims());
+        // HTTP 请求始终以当前 JWT 为准，避免沿用 HttpClient/CAP 传入的上下文导致数据权限失效。
+        if (context.User.Identity?.IsAuthenticated == true)
+        {
+            var parsed = context.User.ParseFromClaims();
+            if (parsed != null)
+                accessor.SetContext(parsed);
+        }
+
         await next(context);
     }
 }

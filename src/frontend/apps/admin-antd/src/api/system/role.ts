@@ -6,6 +6,8 @@ import { requestClient } from '#/api/request';
 export type DataScope = 0 | 1 | 2 | 3 | 4;
 
 export namespace SystemRoleApi {
+  export type RolePermissionBatchOperation = 0 | 1;
+
   export interface SystemRole {
     [key: string]: any;
     roleId: string;
@@ -16,6 +18,14 @@ export namespace SystemRoleApi {
     isActive: boolean;
     createdAt: string;
     permissionCodes: string[];
+  }
+
+  export interface RoleFieldChangeRow {
+    fieldKey: string;
+    oldDisplay: string;
+    newDisplay: string;
+    operatorUserName: string;
+    changedAt: string;
   }
 }
 
@@ -84,6 +94,16 @@ async function updateRole(
   });
 }
 
+async function batchUpdateRolePermissions(data: {
+  roleIds: string[];
+  operation: SystemRoleApi.RolePermissionBatchOperation;
+  permissionCodes: string[];
+}) {
+  return requestClient.put('/roles/permissions/batch', data, {
+    timeout: 120_000,
+  });
+}
+
 /**
  * 删除角色
  * @param id 角色 ID
@@ -112,12 +132,31 @@ async function deactivateRole(id: string) {
   });
 }
 
+/** 角色字段级修改历史（操作日志对比） */
+async function getRoleChangeHistory(
+  roleId: string,
+  params: { pageIndex?: number; pageSize?: number; keyword?: string },
+) {
+  return requestClient.get<{ items: SystemRoleApi.RoleFieldChangeRow[]; total: number }>(
+    `/roles/${roleId}/change-history`,
+    {
+      params: {
+        pageIndex: params.pageIndex ?? 1,
+        pageSize: params.pageSize ?? 20,
+        keyword: params.keyword,
+      },
+    },
+  );
+}
+
 export {
   activateRole,
+  batchUpdateRolePermissions,
   createRole,
   deactivateRole,
   deleteRole,
   getRole,
+  getRoleChangeHistory,
   getRoleList,
   updateRole,
 };

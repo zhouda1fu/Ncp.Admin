@@ -1,11 +1,17 @@
 namespace Ncp.Admin.Web.AppPermissions;
 
 /// <summary>
-/// 权限常量定义
+/// 平台脚手架权限常量（IAM + 工作流 + 平台基础设施）。
 /// </summary>
 public static class PermissionCodes
 {
-    #region 角色管理权限
+    public const string AllApiAccess = nameof(AllApiAccess);
+
+    #region 模块入口
+    public const string SystemModule = nameof(SystemModule);
+    #endregion
+
+    #region 角色
     public const string RoleManagement = nameof(RoleManagement);
     public const string RoleCreate = nameof(RoleCreate);
     public const string RoleEdit = nameof(RoleEdit);
@@ -14,7 +20,7 @@ public static class PermissionCodes
     public const string RoleUpdatePermissions = nameof(RoleUpdatePermissions);
     #endregion
 
-    #region 用户管理权限
+    #region 用户
     public const string UserManagement = nameof(UserManagement);
     public const string UserCreate = nameof(UserCreate);
     public const string UserEdit = nameof(UserEdit);
@@ -24,9 +30,10 @@ public static class PermissionCodes
     public const string UserResetPassword = nameof(UserResetPassword);
     public const string UserExport = nameof(UserExport);
     public const string UserImport = nameof(UserImport);
+    public const string UserChangeHistoryView = nameof(UserChangeHistoryView);
     #endregion
 
-    #region 部门管理权限
+    #region 部门
     public const string DeptManagement = nameof(DeptManagement);
     public const string DeptCreate = nameof(DeptCreate);
     public const string DeptEdit = nameof(DeptEdit);
@@ -34,12 +41,21 @@ public static class PermissionCodes
     public const string DeptView = nameof(DeptView);
     #endregion
 
-    #region 工作流管理权限
+    #region 岗位
+    public const string PositionManagement = nameof(PositionManagement);
+    public const string PositionCreate = nameof(PositionCreate);
+    public const string PositionEdit = nameof(PositionEdit);
+    public const string PositionDelete = nameof(PositionDelete);
+    public const string PositionView = nameof(PositionView);
+    #endregion
+
+    #region 工作流
     public const string WorkflowManagement = nameof(WorkflowManagement);
     public const string WorkflowDefinitionView = nameof(WorkflowDefinitionView);
     public const string WorkflowDefinitionCreate = nameof(WorkflowDefinitionCreate);
     public const string WorkflowDefinitionEdit = nameof(WorkflowDefinitionEdit);
     public const string WorkflowDefinitionDelete = nameof(WorkflowDefinitionDelete);
+    public const string WorkflowDefinitionDeletePublished = nameof(WorkflowDefinitionDeletePublished);
     public const string WorkflowDefinitionPublish = nameof(WorkflowDefinitionPublish);
     public const string WorkflowStart = nameof(WorkflowStart);
     public const string WorkflowCancel = nameof(WorkflowCancel);
@@ -48,220 +64,29 @@ public static class PermissionCodes
     public const string WorkflowMonitor = nameof(WorkflowMonitor);
     #endregion
 
-    #region 岗位管理权限
-    public const string PositionManagement = nameof(PositionManagement);
-    public const string PositionCreate = nameof(PositionCreate);
-    public const string PositionEdit = nameof(PositionEdit);
-    public const string PositionDelete = nameof(PositionDelete);
-    public const string PositionView = nameof(PositionView);
-    #endregion
-
-    #region 通知管理权限
+    #region 通知
     public const string NotificationManagement = nameof(NotificationManagement);
     public const string NotificationView = nameof(NotificationView);
     public const string NotificationSend = nameof(NotificationSend);
     #endregion
 
-    #region 公告管理权限
-    public const string AnnouncementManagement = nameof(AnnouncementManagement);
-    public const string AnnouncementView = nameof(AnnouncementView);
-    public const string AnnouncementCreate = nameof(AnnouncementCreate);
-    public const string AnnouncementEdit = nameof(AnnouncementEdit);
-    public const string AnnouncementPublish = nameof(AnnouncementPublish);
-    #endregion
-
-    #region 会议/预订管理权限
-    public const string MeetingManagement = nameof(MeetingManagement);
-    public const string MeetingRoomView = nameof(MeetingRoomView);
-    public const string MeetingRoomEdit = nameof(MeetingRoomEdit);
-    public const string MeetingBookingView = nameof(MeetingBookingView);
-    public const string MeetingBookingCreate = nameof(MeetingBookingCreate);
-    #endregion
-
-    #region 报销管理权限
-    public const string ExpenseManagement = nameof(ExpenseManagement);
-    public const string ExpenseClaimView = nameof(ExpenseClaimView);
-    public const string ExpenseClaimCreate = nameof(ExpenseClaimCreate);
-    public const string ExpenseClaimSubmit = nameof(ExpenseClaimSubmit);
-    #endregion
-
-    #region 考勤管理权限
-    public const string AttendanceManagement = nameof(AttendanceManagement);
-    public const string AttendanceRecordView = nameof(AttendanceRecordView);
-    public const string AttendanceCheckIn = nameof(AttendanceCheckIn);
-    public const string ScheduleView = nameof(ScheduleView);
-    public const string ScheduleEdit = nameof(ScheduleEdit);
-    #endregion
-
-    #region 项目管理权限
-    public const string ProjectManagement = nameof(ProjectManagement);
-    public const string ProjectView = nameof(ProjectView);
-    public const string ProjectCreate = nameof(ProjectCreate);
-    public const string ProjectEdit = nameof(ProjectEdit);
-    public const string ProjectTypeView = nameof(ProjectTypeView);
-    public const string ProjectTypeCreate = nameof(ProjectTypeCreate);
-    public const string ProjectTypeEdit = nameof(ProjectTypeEdit);
-    public const string ProjectStatusOptionView = nameof(ProjectStatusOptionView);
-    public const string ProjectStatusOptionCreate = nameof(ProjectStatusOptionCreate);
-    public const string ProjectStatusOptionEdit = nameof(ProjectStatusOptionEdit);
-    public const string ProjectIndustryView = nameof(ProjectIndustryView);
-    public const string ProjectIndustryCreate = nameof(ProjectIndustryCreate);
-    public const string ProjectIndustryEdit = nameof(ProjectIndustryEdit);
-    #endregion
-
-    #region 任务管理权限
-    public const string TaskManagement = nameof(TaskManagement);
-    public const string TaskView = nameof(TaskView);
-    public const string TaskCreate = nameof(TaskCreate);
-    public const string TaskEdit = nameof(TaskEdit);
-    #endregion
-
-    #region 文档管理权限
-    public const string DocumentManagement = nameof(DocumentManagement);
-    public const string DocumentView = nameof(DocumentView);
-    public const string DocumentCreate = nameof(DocumentCreate);
-    public const string DocumentEdit = nameof(DocumentEdit);
-    public const string DocumentShare = nameof(DocumentShare);
-    #endregion
-
-    #region 即时通讯权限
-    public const string ChatManagement = nameof(ChatManagement);
-    public const string ChatView = nameof(ChatView);
-    public const string ChatCreate = nameof(ChatCreate);
-    #endregion
-
-    #region 通讯录管理权限
-    public const string ContactManagement = nameof(ContactManagement);
-    public const string ContactGroupView = nameof(ContactGroupView);
-    public const string ContactGroupCreate = nameof(ContactGroupCreate);
-    public const string ContactGroupEdit = nameof(ContactGroupEdit);
-    public const string ContactView = nameof(ContactView);
-    public const string ContactCreate = nameof(ContactCreate);
-    public const string ContactEdit = nameof(ContactEdit);
-    #endregion
-
-    #region 资产管理权限
-    public const string AssetManagement = nameof(AssetManagement);
-    public const string AssetView = nameof(AssetView);
-    public const string AssetCreate = nameof(AssetCreate);
-    public const string AssetEdit = nameof(AssetEdit);
-    public const string AssetAllocate = nameof(AssetAllocate);
-    public const string AssetReturn = nameof(AssetReturn);
-    public const string AssetScrap = nameof(AssetScrap);
-    public const string AssetAllocationView = nameof(AssetAllocationView);
-    #endregion
-
-    #region 车辆管理权限
-    public const string VehicleManagement = nameof(VehicleManagement);
-    public const string VehicleView = nameof(VehicleView);
-    public const string VehicleEdit = nameof(VehicleEdit);
-    public const string VehicleBookingView = nameof(VehicleBookingView);
-    public const string VehicleBookingCreate = nameof(VehicleBookingCreate);
-    public const string VehicleBookingCancel = nameof(VehicleBookingCancel);
-    public const string VehicleBookingComplete = nameof(VehicleBookingComplete);
-    #endregion
-
-    #region 合同管理权限
-    public const string ContractManagement = nameof(ContractManagement);
-    public const string ContractView = nameof(ContractView);
-    public const string ContractCreate = nameof(ContractCreate);
-    public const string ContractEdit = nameof(ContractEdit);
-    public const string ContractDelete = nameof(ContractDelete);
-    public const string ContractSubmit = nameof(ContractSubmit);
-    public const string ContractApprove = nameof(ContractApprove);
-    public const string ContractArchive = nameof(ContractArchive);
-    public const string ContractTypeView = nameof(ContractTypeView);
-    public const string ContractTypeCreate = nameof(ContractTypeCreate);
-    public const string ContractTypeEdit = nameof(ContractTypeEdit);
-    public const string ContractTypeDelete = nameof(ContractTypeDelete);
-    public const string IncomeExpenseTypeView = nameof(IncomeExpenseTypeView);
-    public const string IncomeExpenseTypeCreate = nameof(IncomeExpenseTypeCreate);
-    public const string IncomeExpenseTypeEdit = nameof(IncomeExpenseTypeEdit);
-    public const string IncomeExpenseTypeDelete = nameof(IncomeExpenseTypeDelete);
-    #endregion
-
-    #region 客户管理权限
-    public const string CustomerManagement = nameof(CustomerManagement);
-    public const string CustomerView = nameof(CustomerView);
-    public const string CustomerCreate = nameof(CustomerCreate);
-    public const string CustomerEdit = nameof(CustomerEdit);
-    public const string CustomerDelete = nameof(CustomerDelete);
-    public const string CustomerContactEdit = nameof(CustomerContactEdit);
-    public const string CustomerContactRecordView = nameof(CustomerContactRecordView);
-    public const string CustomerContactRecordCreate = nameof(CustomerContactRecordCreate);
-    public const string CustomerContactRecordEdit = nameof(CustomerContactRecordEdit);
-    public const string CustomerReleaseToSea = nameof(CustomerReleaseToSea);
-    public const string CustomerClaimFromSea = nameof(CustomerClaimFromSea);
-    public const string CustomerSeaVoid = nameof(CustomerSeaVoid);
-    public const string CustomerSeaConsultationEdit = nameof(CustomerSeaConsultationEdit);
-    public const string CustomerShare = nameof(CustomerShare);
-    public const string CustomerSeaRegionAssignView = nameof(CustomerSeaRegionAssignView);
-    public const string CustomerSeaRegionAssignEdit = nameof(CustomerSeaRegionAssignEdit);
-    public const string IndustryView = nameof(IndustryView);
-    /// <summary>创建行业</summary>
-    public const string IndustryCreate = nameof(IndustryCreate);
-    /// <summary>编辑行业</summary>
-    public const string IndustryEdit = nameof(IndustryEdit);
-    /// <summary>删除行业</summary>
-    public const string IndustryDelete = nameof(IndustryDelete);
-    /// <summary>查看客户来源（列表/下拉）</summary>
-    public const string CustomerSourceView = nameof(CustomerSourceView);
-    /// <summary>创建客户来源</summary>
-    public const string CustomerSourceCreate = nameof(CustomerSourceCreate);
-    /// <summary>编辑客户来源</summary>
-    public const string CustomerSourceEdit = nameof(CustomerSourceEdit);
-    /// <summary>查看区域（列表/下拉）</summary>
-    public const string RegionView = nameof(RegionView);
-    /// <summary>创建区域</summary>
-    public const string RegionCreate = nameof(RegionCreate);
-    /// <summary>编辑区域</summary>
-    public const string RegionEdit = nameof(RegionEdit);
-    #endregion
-
-    #region 订单管理权限
-    public const string OrderManagement = nameof(OrderManagement);
-    public const string OrderView = nameof(OrderView);
-    public const string OrderCreate = nameof(OrderCreate);
-    public const string OrderEdit = nameof(OrderEdit);
-    public const string OrderDelete = nameof(OrderDelete);
-    public const string OrderSubmit = nameof(OrderSubmit);
-    public const string OrderSpecialDataDisplay = nameof(OrderSpecialDataDisplay);
-    public const string OrderContractUpload = nameof(OrderContractUpload);
-    public const string OrderContractSelect = nameof(OrderContractSelect);
-    public const string OrderContractNotCompanyTemplate = nameof(OrderContractNotCompanyTemplate);
-    public const string OrderNeedInvoice = nameof(OrderNeedInvoice);
-    public const string OrderContractAmount = nameof(OrderContractAmount);
-    public const string OrderTechnicalStatus = nameof(OrderTechnicalStatus);
-    public const string OrderDiscountPointsDescriptionView = nameof(OrderDiscountPointsDescriptionView);
-    public const string OrderDiscountPointsCreate = nameof(OrderDiscountPointsCreate);
-    #endregion
-
-    #region 产品管理权限
-    public const string ProductManagement = nameof(ProductManagement);
-    public const string ProductView = nameof(ProductView);
-    public const string ProductCreate = nameof(ProductCreate);
-    public const string ProductEdit = nameof(ProductEdit);
-    public const string ProductDelete = nameof(ProductDelete);
-    #endregion
-
-    #region 请假管理权限
-    public const string LeaveManagement = nameof(LeaveManagement);
-    public const string LeaveRequestView = nameof(LeaveRequestView);
-    public const string LeaveRequestCreate = nameof(LeaveRequestCreate);
-    public const string LeaveRequestEdit = nameof(LeaveRequestEdit);
-    public const string LeaveRequestSubmit = nameof(LeaveRequestSubmit);
-    public const string LeaveRequestCancel = nameof(LeaveRequestCancel);
-    public const string LeaveBalanceView = nameof(LeaveBalanceView);
-    public const string LeaveBalanceEdit = nameof(LeaveBalanceEdit);
-    #endregion
-
-    #region 操作日志权限
+    #region 操作日志
     public const string OperationLogManagement = nameof(OperationLogManagement);
     public const string OperationLogView = nameof(OperationLogView);
     #endregion
 
-    #region 所有接口访问权限
-    public const string AllApiAccess = nameof(AllApiAccess);
+    #region 系统日志
+    public const string SystemLogManagement = nameof(SystemLogManagement);
+    public const string SystemLogView = nameof(SystemLogView);
+    #endregion
+
+    #region 后台任务
+    public const string BackgroundJobManagement = nameof(BackgroundJobManagement);
+    public const string BackgroundJobView = nameof(BackgroundJobView);
+    public const string BackgroundJobTrigger = nameof(BackgroundJobTrigger);
+    #endregion
+
+    #region 首页
+    public const string HomeDashboard = nameof(HomeDashboard);
     #endregion
 }
-

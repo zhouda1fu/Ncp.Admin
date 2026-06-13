@@ -6,7 +6,13 @@ using Ncp.Admin.Domain.DomainEvents;
 
 namespace Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 
-public partial record UserId : IInt64StronglyTypedId;
+public partial record UserId : IInt64StronglyTypedId
+{
+    /// <summary>
+    /// 未分配标识（哨兵值）
+    /// </summary>
+    public static UserId Unassigned { get; } = new(0);
+}
 
 public class User : Entity<UserId>, IAggregateRoot
 {
@@ -33,15 +39,15 @@ public class User : Entity<UserId>, IAggregateRoot
     /// <summary>
     /// 创建人用户ID
     /// </summary>
-    public UserId CreatorId { get; private set; } = default!;
+    public UserId CreatorId { get; private set; } = UserId.Unassigned;
     /// <summary>最后修改人用户ID</summary>
-    public UserId ModifierId { get; private set; } = default!;
+    public UserId ModifierId { get; private set; } = UserId.Unassigned;
     /// <summary>删除人用户ID（软删时写入）</summary>
-    public UserId DeleterId { get; private set; } = default!;
+    public UserId DeleterId { get; private set; } = UserId.Unassigned;
     /// <summary>最后登录时间</summary>
-    public DateTimeOffset? LastLoginTime { get; private set; }
+    public DateTimeOffset LastLoginTime { get; private set; } = DateTimeOffset.MinValue;
     /// <summary>最后登录IP</summary>
-    public string? LastLoginIp { get; private set; }
+    public string LastLoginIp { get; private set; } = string.Empty;
     /// <summary>最后更新时间（UTC）</summary>
     public UpdateTime UpdateTime { get; private set; } = new UpdateTime(DateTimeOffset.UtcNow);
     /// <summary>行版本（并发）</summary>
@@ -52,10 +58,8 @@ public class User : Entity<UserId>, IAggregateRoot
     public DeletedTime DeletedAt { get; private set; } = new DeletedTime(DateTimeOffset.UtcNow);
     /// <summary>性别</summary>
     public string Gender { get; private set; } = string.Empty;
-    /// <summary>年龄（按出生日期计算）</summary>
-    public int Age { get; private set; }
     /// <summary>出生日期</summary>
-    public DateTimeOffset BirthDate { get; private set; } = default!;
+    public DateTimeOffset BirthDate { get; private set; } = DateTimeOffset.MinValue;
     /// <summary>身份证号</summary>
     public string IdCardNumber { get; private set; } = string.Empty;
     /// <summary>地址</summary>
@@ -75,7 +79,18 @@ public class User : Entity<UserId>, IAggregateRoot
     /// <summary>是否离职</summary>
     public bool IsResigned { get; private set; }
     /// <summary>离职时间</summary>
-    public DateTimeOffset? ResignedTime { get; private set; }
+    public DateTimeOffset ResignedTime { get; private set; } = DateTimeOffset.MinValue;
+    /// <summary>
+    /// 是否需要参与考勤计算。
+    /// 老 OA User_List.Height=-1 表示“不记录考勤”，迁移后会写成 false。
+    /// </summary>
+    public bool AttendanceRequired { get; private set; } = true;
+    /// <summary>
+    /// 考勤规则业务编码。
+    /// 老 OA User_List.Height 大于 0 时对应 AttendanceSetting_List.pk_AttendanceSettings；
+    /// 新 OA 通过该值和 AttendanceRule.LegacyCode 关联，按用户原规则计算迟到、踩点、早退和旷工。
+    /// </summary>
+    public int AttendanceRuleCode { get; private set; }
 
     /// <summary>用户拥有的角色集合</summary>
     public virtual ICollection<UserRole> Roles { get; } = [];
@@ -108,7 +123,9 @@ public class User : Entity<UserId>, IAggregateRoot
         bool notOrderMeal = false,
         string wechatGuid = "",
         bool isResigned = false,
-        DateTimeOffset? resignedTime = null)
+        DateTimeOffset? resignedTime = null,
+        bool attendanceRequired = true,
+        int attendanceRuleCode = 0)
     {
         CreatedAt = DateTimeOffset.UtcNow;
         Name = name;
@@ -118,21 +135,22 @@ public class User : Entity<UserId>, IAggregateRoot
         Status = status;
         Email = email;
         Gender = gender;
-        Age = CalculateAge(birthDate);
         BirthDate = birthDate;
         CreatorId = creatorId;
         ModifierId = creatorId;
-        DeleterId = new UserId(0); // 未删除时置为 0，软删时由 SoftDelete 写入实际删除人
-        IdCardNumber = idCardNumber ?? string.Empty;
-        Address = address ?? string.Empty;
-        Education = education ?? string.Empty;
-        GraduateSchool = graduateSchool ?? string.Empty;
-        AvatarUrl = avatarUrl ?? string.Empty;
+        DeleterId = UserId.Unassigned; // 未删除时置为 0，软删时由 SoftDelete 写入实际删除人
+        IdCardNumber = idCardNumber;
+        Address = address;
+        Education = education;
+        GraduateSchool = graduateSchool;
+        AvatarUrl = avatarUrl;
         NotOrderMeal = notOrderMeal;
         OrderMealSort = 0;
-        WechatGuid = wechatGuid ?? string.Empty;
+        WechatGuid = wechatGuid;
         IsResigned = isResigned;
-        ResignedTime = resignedTime;
+        ResignedTime = resignedTime ?? DateTimeOffset.MinValue;
+        AttendanceRequired = attendanceRequired;
+        AttendanceRuleCode = attendanceRuleCode;
         foreach (var userRole in roles)
         {
             Roles.Add(userRole);
@@ -149,7 +167,7 @@ public class User : Entity<UserId>, IAggregateRoot
         DeleterId = deleterId;
         ModifierId = deleterId;
         UpdateTime = new UpdateTime(now);
-        AddDomainEvent(new UserResignedOrDeletedDomainEvent(Id));
+        AddDomainEvent(new UserSoftDeletedDomainEvent(Id));
     }
 
     public void PasswordReset(string password)
@@ -165,12 +183,19 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public void UpdateLastLoginTime(DateTimeOffset loginTime, string? loginIp = null)
     {
+        var isFirstLogin = LastLoginTime == DateTimeOffset.MinValue;
         LastLoginTime = loginTime;
         if (!string.IsNullOrWhiteSpace(loginIp))
         {
-            LastLoginIp = loginIp;
+            LastLoginIp = loginIp ?? string.Empty;
         }
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+
+        if (isFirstLogin)
+        {
+            // LastLoginTime 的哨兵值只会在首次成功登录前出现，因此这里作为入职通知的唯一触发点。
+            AddDomainEvent(new UserFirstLoggedInDomainEvent(Id, loginTime));
+        }
     }
 
     public static int CalculateAge(DateTimeOffset birthDate)
@@ -183,6 +208,11 @@ public class User : Entity<UserId>, IAggregateRoot
         }
         return age;
     }
+
+    /// <summary>
+    /// 年龄（派生属性；由 <see cref="BirthDate"/> 计算，不持久化）
+    /// </summary>
+    public int Age => CalculateAge(BirthDate);
 
     public void UpdateUserInfo(
         string name,
@@ -202,7 +232,9 @@ public class User : Entity<UserId>, IAggregateRoot
         string wechatGuid,
         bool isResigned,
         DateTimeOffset? resignedTime,
-        UserId modifierId)
+        UserId modifierId,
+        bool attendanceRequired = true,
+        int attendanceRuleCode = 0)
     {
         Name = name;
         Phone = phone;
@@ -210,27 +242,58 @@ public class User : Entity<UserId>, IAggregateRoot
         Status = status;
         Email = email;
         Gender = gender;
-        Age = CalculateAge(birthDate);
         BirthDate = birthDate;
-        IdCardNumber = idCardNumber ?? string.Empty;
-        Address = address ?? string.Empty;
-        Education = education ?? string.Empty;
-        GraduateSchool = graduateSchool ?? string.Empty;
-        AvatarUrl = avatarUrl ?? string.Empty;
+        IdCardNumber = idCardNumber;
+        Address = address;
+        Education = education;
+        GraduateSchool = graduateSchool;
+        AvatarUrl = avatarUrl;
         NotOrderMeal = notOrderMeal;
         if (orderMealSort.HasValue)
         {
             OrderMealSort = orderMealSort.Value;
         }
-        WechatGuid = wechatGuid ?? string.Empty;
+        WechatGuid = wechatGuid;
         IsResigned = isResigned;
-        ResignedTime = isResigned ? resignedTime : null;
+        ResignedTime = isResigned ? resignedTime ?? DateTimeOffset.MinValue : DateTimeOffset.MinValue;
+        AttendanceRequired = attendanceRequired;
+        AttendanceRuleCode = attendanceRuleCode;
         ModifierId = modifierId;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
         if (isResigned)
         {
-            AddDomainEvent(new UserResignedOrDeletedDomainEvent(Id));
+            AddDomainEvent(new UserResignedDomainEvent(Id));
         }
+    }
+
+    /// <summary>
+    /// 更新月订餐汇总显示排序（与用户列表排序无关）。
+    /// </summary>
+    public void UpdateOrderMealSort(int orderMealSort, UserId modifierId)
+    {
+        OrderMealSort = orderMealSort;
+        ModifierId = modifierId;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 绑定微信公众号 OpenID。
+    /// </summary>
+    public void BindWechat(string openId, UserId modifierId)
+    {
+        WechatGuid = string.IsNullOrWhiteSpace(openId) ? string.Empty : openId.Trim();
+        ModifierId = modifierId;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 解除微信公众号绑定。
+    /// </summary>
+    public void UnbindWechat(UserId modifierId)
+    {
+        WechatGuid = string.Empty;
+        ModifierId = modifierId;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 
     public void UpdateRoleInfo(RoleId roleId, string roleName)
@@ -249,10 +312,22 @@ public class User : Entity<UserId>, IAggregateRoot
         }
     }
 
+    /// <summary>
+    /// 更新当前用户头像。
+    /// </summary>
+    public void UpdateAvatar(string avatarUrl, UserId modifierId)
+    {
+        AvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? string.Empty : avatarUrl.Trim();
+        ModifierId = modifierId;
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
     public void UpdateRoles(IEnumerable<UserRole> rolesToBeAssigned)
     {
         var currentRoleMap = Roles.ToDictionary(r => r.RoleId);
-        var targetRoleMap = rolesToBeAssigned.ToDictionary(r => r.RoleId);
+        var targetRoleMap = (rolesToBeAssigned ?? Enumerable.Empty<UserRole>())
+            .GroupBy(r => r.RoleId)
+            .ToDictionary(g => g.Key, g => g.First());
 
         var roleIdsToRemove = currentRoleMap.Keys.Except(targetRoleMap.Keys);
         foreach (var roleId in roleIdsToRemove)
@@ -273,15 +348,35 @@ public class User : Entity<UserId>, IAggregateRoot
     /// </summary>
     /// <param name="deptId">部门 ID</param>
     /// <param name="deptName">部门名称</param>
-    /// <param name="isDeptManager">是否为该部门主管</param>
-    public void AssignDept(DeptId deptId, string deptName, bool isDeptManager = false)
+    public void AssignDept(DeptId deptId, string deptName)
     {
-        var dept = new UserDept(Id, deptId, deptName, isDeptManager);
+        var dept = new UserDept(deptId, deptName);
         Dept = dept;
-        if (dept.DeptId != new DeptId(0))
+    }
+
+    /// <summary>
+    /// 请求把当前用户追加为指定部门负责人。
+    /// 该方法只发布跨聚合协作事件，负责人集合仍由部门聚合负责校验和写入。
+    /// </summary>
+    /// <param name="deptId">目标部门 ID。</param>
+    /// <param name="setAsDefault">是否同步设为默认负责人。</param>
+    public void RequestDeptResponsibleUserAssignment(DeptId deptId, bool setAsDefault)
+    {
+        if (deptId == DeptId.Unassigned)
         {
-            AddDomainEvent(new UserDeptManagerChangedDomainEvent(Id, dept.DeptId, dept.IsDeptManager));
+            throw new KnownException("设为部门负责人时必须选择部门", ErrorCodes.DeptNotFound);
         }
+
+        AddDomainEvent(new UserDeptResponsibleUserAssignmentRequestedDomainEvent(Id, deptId, setAsDefault));
+    }
+
+    /// <summary>
+    /// 请求清理当前用户的部门负责人关联。
+    /// 该方法只发布协作事件，由应用层事件处理器转为部门负责人清理命令。
+    /// </summary>
+    public void RequestDeptResponsibleUserClear()
+    {
+        AddDomainEvent(new UserDeptResponsibleUserClearRequestedDomainEvent(Id));
     }
 
     /// <summary>
@@ -302,10 +397,20 @@ public class User : Entity<UserId>, IAggregateRoot
     /// <summary>
     /// 分配岗位
     /// </summary>
-    /// <param name="position">岗位关系，null 表示清除岗位（规则要求聚合属性不写 ?，故用 default!；此处入参可为 null）</param>
-    public void AssignPosition(UserPosition? position)
+    /// <param name="positionId">岗位 ID</param>
+    /// <param name="positionName">岗位名称</param>
+    public void AssignPosition(PositionId positionId, string positionName)
     {
-        Position = position ?? default!;
+        Position = new UserPosition(positionId, positionName);
+        UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// 清除岗位
+    /// </summary>
+    public void ClearPosition()
+    {
+        Position = default!;
         UpdateTime = new UpdateTime(DateTimeOffset.UtcNow);
     }
 

@@ -1,7 +1,9 @@
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
@@ -36,21 +38,42 @@ public class TransferTaskCommandValidator : AbstractValidator<TransferTaskComman
 /// </summary>
 public class TransferTaskCommandHandler(
     IWorkflowInstanceRepository instanceRepository,
-    UserQuery userQuery)
+    WorkflowTaskOperationAuthorizer taskOperationAuthorizer,
+    WorkflowRuntimeRecordService runtimeRecordService)
     : ICommandHandler<TransferTaskCommand>
 {
     public async Task Handle(TransferTaskCommand request, CancellationToken cancellationToken)
     {
-        var instance = await instanceRepository.GetAsync(request.WorkflowInstanceId, cancellationToken)
+        var instance = await instanceRepository.GetWithTasksIgnoringQueryFiltersAsync(request.WorkflowInstanceId, cancellationToken)
             ?? throw new KnownException("未找到流程实例", ErrorCodes.WorkflowInstanceNotFound);
 
-        var operatorRoleIds = await userQuery.GetRoleIdsByUserIdAsync(request.OperatorId, cancellationToken);
-        instance.TransferTask(
+        var operatorRoleIds = await taskOperationAuthorizer.EnsureCanOperateAsync(
+            instance,
+            request.TaskId,
+            request.OperatorId,
+            cancellationToken);
+        var newTask = instance.TransferTask(
             request.TaskId,
             request.OperatorId,
             operatorRoleIds,
             request.NewAssigneeId,
             request.NewAssigneeName,
             request.Comment);
+        await runtimeRecordService.RecordTaskCreatedAsync(
+            instance,
+            [new WorkflowCreatedTask(
+                newTask,
+                new WorkflowAssigneeResult(
+                    request.NewAssigneeId,
+                    RoleId.Unassigned,
+                    request.NewAssigneeName,
+                    true,
+                    WorkflowAssignmentSource.Transferred,
+                    request.TaskId.ToString(),
+                    WorkflowTaskVisibilityMode.ExplicitUser,
+                    WorkflowTaskInitiatorDeptScopeMode.All,
+                    "[]"))],
+            "transfer",
+            cancellationToken);
     }
 }

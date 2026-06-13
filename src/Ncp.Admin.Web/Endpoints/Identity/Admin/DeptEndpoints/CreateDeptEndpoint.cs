@@ -16,8 +16,17 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.DeptEndpoints;
 /// <param name="Remark">备注</param>
 /// <param name="ParentId">父级部门ID，可为空表示顶级部门</param>
 /// <param name="Status">状态（0=禁用，1=启用）</param>
-/// <param name="ManagerId">部门主管用户ID</param>
-public record CreateDeptRequest(string Name, string Remark, DeptId? ParentId, int Status, UserId ManagerId);
+/// <param name="SortOrder">排序号</param>
+/// <param name="ResponsibleUserIds">部门负责人用户 ID 列表</param>
+/// <param name="DefaultResponsibleUserId">默认负责人用户 ID；仅用于单人兜底场景</param>
+public record CreateDeptRequest(
+    string Name,
+    string Remark,
+    DeptId? ParentId,
+    int Status,
+    int SortOrder = 0,
+    IReadOnlyList<UserId>? ResponsibleUserIds = null,
+    UserId? DefaultResponsibleUserId = null);
 
 /// <summary>
 /// 创建部门的响应模型
@@ -44,7 +53,14 @@ public class CreateDeptEndpoint(IMediator mediator) : Endpoint<CreateDeptRequest
 
     public override async Task HandleAsync(CreateDeptRequest req, CancellationToken ct)
     {
-        var cmd = new CreateDeptCommand(req.Name, req.Remark, req.ParentId, req.Status, req.ManagerId);
+        var cmd = new CreateDeptCommand(
+            req.Name,
+            req.Remark,
+            req.ParentId,
+            req.Status,
+            req.SortOrder,
+            req.ResponsibleUserIds ?? [],
+            req.DefaultResponsibleUserId);
         var deptId = await mediator.Send(cmd, ct);
         var response = new CreateDeptResponse(deptId, req.Name, req.Remark);
         await Send.OkAsync(response.AsResponseData(), cancellation: ct);

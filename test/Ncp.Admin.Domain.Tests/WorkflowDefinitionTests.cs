@@ -36,7 +36,7 @@ public class WorkflowDefinitionTests
         Assert.Equal("新名称", def.Name);
         Assert.Equal("新描述", def.Description);
         Assert.Equal("新分类", def.Category);
-        Assert.Equal("{\"node\":1}", def.DefinitionJson);
+        Assert.Equal("{\"node\":1}", def.DesignerSchemaJson);
     }
 
     [Fact]

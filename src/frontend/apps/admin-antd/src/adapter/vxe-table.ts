@@ -24,6 +24,8 @@ setupVbenVxeTable({
           resizable: true,
         },
         minHeight: 180,
+        /** 占满 Page 可视区域，仅表格 body 滚动（与通知列表等标准列表页一致） */
+        height: 'auto',
         formConfig: {
           // 全局禁用vxe-table的表单配置，使用formOptions
           enabled: false,
@@ -121,8 +123,16 @@ setupVbenVxeTable({
      * 注册表格的操作按钮渲染器
      */
     vxeUI.renderer.add('CellOperation', {
-      renderTableDefault({ attrs, options, props }, { column, row }) {
-        const defaultProps = { size: 'small', type: 'link', ...props };
+      renderTableDefault({ attrs, options }, { column, row }) {
+        const defaultProps = { size: 'small', type: 'link' as const };
+        const onActionClick = attrs?.onClick as
+          | ((payload: { code: string; row: Recordable<any> }) => void)
+          | undefined;
+
+        function fireAction(code: string | undefined) {
+          if (!code || !onActionClick) return;
+          onActionClick({ code, row });
+        }
         let align = 'end';
         switch (column.align) {
           case 'center': {
@@ -173,37 +183,46 @@ setupVbenVxeTable({
           .filter((opt) => opt.show !== false);
 
         function renderBtn(opt: Recordable<any>, listen = true) {
+          const {
+            text: label,
+            code,
+            icon: optIcon,
+            show: _show,
+            size,
+            type,
+            danger,
+          } = opt;
+          const children: Array<string | ReturnType<typeof h>> = [];
+          if (optIcon) {
+            children.push(
+              h(IconifyIcon, { class: 'size-5', icon: optIcon }),
+            );
+          }
+          if (label) {
+            children.push(label);
+          }
           return h(
             Button,
             {
-              ...props,
-              ...opt,
-              icon: undefined,
+              size: size ?? 'small',
+              type: type ?? 'link',
+              danger: danger === true,
               onClick: listen
-                ? () =>
-                    attrs?.onClick?.({
-                      code: opt.code,
-                      row,
-                    })
+                ? (event: MouseEvent) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    fireAction(code);
+                  }
                 : undefined,
             },
-            {
-              default: () => {
-                const content = [];
-                if (opt.icon) {
-                  content.push(
-                    h(IconifyIcon, { class: 'size-5', icon: opt.icon }),
-                  );
-                }
-                content.push(opt.text);
-                return content;
-              },
-            },
+            { default: () => children },
           );
         }
 
         function renderConfirm(opt: Recordable<any>) {
           let viewportWrapper: HTMLElement | null = null;
+          const { code, text: _label, icon: _icon, show: _show, ...confirmProps } =
+            opt;
           return h(
             Popconfirm,
             {
@@ -220,9 +239,7 @@ setupVbenVxeTable({
               },
               placement: 'topLeft',
               title: $t('ui.actionTitle.delete', [attrs?.nameTitle || '']),
-              ...props,
-              ...opt,
-              icon: undefined,
+              ...confirmProps,
               onOpenChange: (open: boolean) => {
                 // 当弹窗打开时，禁止表格的滚动
                 if (open) {
@@ -232,10 +249,7 @@ setupVbenVxeTable({
                 }
               },
               onConfirm: () => {
-                attrs?.onClick?.({
-                  code: opt.code,
-                  row,
-                });
+                fireAction(code);
               },
             },
             {
@@ -259,7 +273,8 @@ setupVbenVxeTable({
           'div',
           {
             class: 'flex table-operations',
-            style: { justifyContent: align },
+            style: { justifyContent: align, position: 'relative', zIndex: 1 },
+            onClick: (event: MouseEvent) => event.stopPropagation(),
           },
           btns,
         );
@@ -282,5 +297,12 @@ export type OnActionClickParams<T = Recordable<any>> = {
 export type OnActionClickFn<T = Recordable<any>> = (
   params: OnActionClickParams<T>,
 ) => void;
+
+/** 列表横向滚动时，操作列前的弹性占位列（参考 technology-management/assignment-data.ts） */
+export const VXE_FLEX_COLUMN = {
+  field: '_flex',
+  minWidth: 1,
+  title: '',
+} as const;
 
 export type * from '@vben/plugins/vxe-table';

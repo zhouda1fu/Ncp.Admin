@@ -31,4 +31,9 @@ public class MinioFileStorageOptions
     /// 是否使用 SSL
     /// </summary>
     public bool UseSSL { get; set; }
+
+    /// <summary>
+    /// 首次上传前是否检查并自动创建 Bucket。默认关闭：Bucket 通常由运维预建，且 MinIO SDK 7.0 在 BucketExistsAsync 存在已知 NRE 问题。
+    /// </summary>
+    public bool EnsureBucketOnFirstUse { get; set; }
 }

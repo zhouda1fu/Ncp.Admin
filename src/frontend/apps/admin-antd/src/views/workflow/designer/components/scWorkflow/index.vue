@@ -1,11 +1,12 @@
 <template>
-  <div class="sc-workflow-design sc-workflow-design--v2">
+  <div class="sc-workflow-design sc-workflow-design--current">
     <div class="box-scale">
       <node-wrap
         v-if="nodeConfig"
-        v-model="nodeConfig"
+        :model-value="nodeConfig"
         :category="category"
-        :view-only="viewOnly"></node-wrap>
+        :view-only="viewOnly"
+        @update:model-value="updateNodeConfig"></node-wrap>
       <div class="end-node">
         <div class="end-node-circle"></div>
         <div class="end-node-text">流程结束</div>
@@ -25,6 +26,10 @@ import useSelect from './select.vue'
 export default {
   provide() {
     return {
+      copyWorkflowNodeConfig: this.copyWorkflowNodeConfig,
+      getWorkflowNodeConfigClipboard: this.getWorkflowNodeConfigClipboard,
+      copyWorkflowFragment: this.copyWorkflowFragment,
+      getWorkflowFragmentClipboard: this.getWorkflowFragmentClipboard,
       select: this.selectHandle,
       readonly: this.viewOnly,
     }
@@ -41,26 +46,47 @@ export default {
   data() {
     return {
       nodeConfig: this.modelValue,
+      nodeConfigClipboard: null,
+      workflowFragmentClipboard: null,
       selectVisible: false
     }
   },
   watch: {
     modelValue(val) {
       this.nodeConfig = val
-    },
-    nodeConfig(val) {
-      this.$emit('update:modelValue', val)
     }
   },
   mounted() {},
   methods: {
+    // 子节点可能只替换了深层对象，必须显式向外同步，不能只依赖 nodeConfig 引用变化。
+    updateNodeConfig(val) {
+      this.nodeConfig = val
+      this.$emit('update:modelValue', this.nodeConfig)
+    },
     selectHandle(type, data) {
       if (this.viewOnly) return
       this.selectVisible = true
       this.$nextTick(() => {
         this.$refs.useselect.open(type, data)
       })
-    }
+    },
+    cloneValue(value) {
+      return JSON.parse(JSON.stringify(value))
+    },
+    copyWorkflowNodeConfig(clipboard) {
+      if (this.viewOnly) return
+      this.nodeConfigClipboard = this.cloneValue(clipboard)
+    },
+    getWorkflowNodeConfigClipboard() {
+      return this.nodeConfigClipboard ? this.cloneValue(this.nodeConfigClipboard) : null
+    },
+    copyWorkflowFragment(clipboard) {
+      if (this.viewOnly) return
+      this.workflowFragmentClipboard = this.cloneValue(clipboard)
+    },
+    getWorkflowFragmentClipboard() {
+      return this.workflowFragmentClipboard ? this.cloneValue(this.workflowFragmentClipboard) : null
+    },
   }
 }
 </script>
@@ -69,7 +95,7 @@ export default {
 .sc-workflow-design {
   width: 100%;
 }
-.sc-workflow-design--v2 .box-scale {
+.sc-workflow-design--current .box-scale {
   padding: 4px 0 8px;
 }
 .sc-workflow-design .box-scale {
@@ -487,17 +513,6 @@ export default {
 }
 .node-wrap-drawer__title {
   padding-right: 40px;
-}
-.node-wrap-drawer__title label {
-  cursor: pointer;
-}
-.node-wrap-drawer__title label:hover {
-  border-bottom: 1px dashed hsl(var(--primary));
-}
-.node-wrap-drawer__title .node-wrap-drawer__title-edit {
-  color: hsl(var(--primary));
-  margin-left: 10px;
-  vertical-align: middle;
 }
 
 .dark .sc-workflow-design {

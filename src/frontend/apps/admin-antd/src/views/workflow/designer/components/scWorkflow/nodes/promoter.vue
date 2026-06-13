@@ -9,27 +9,18 @@
         <span>{{ toText(nodeConfig) }}</span>
       </div>
     </div>
-    <add-node v-model="nodeConfig.childNode" />
-    <a-drawer
+    <add-node
+      :model-value="nodeConfig.childNode"
+      @update:model-value="updateChildNode"
+    />
+    <workflow-node-config-drawer
       v-model:open="drawer"
       title="发起人"
       :width="500"
-      destroy-on-close
-      get-container="body">
+      :show-confirm-button="!viewOnly"
+      @confirm="save">
       <template #title>
-        <div class="node-wrap-drawer__title">
-          <label v-if="!isEditTitle" @click="editTitle">
-            {{ form.nodeName }}
-            <IconifyIcon icon="lucide:pencil" class="node-wrap-drawer__title-edit" />
-          </label>
-          <a-input
-            v-else
-            ref="nodeTitleRef"
-            v-model:value="form.nodeName"
-            allow-clear
-            @blur="saveTitle"
-            @press-enter="saveTitle" />
-        </div>
+        <workflow-node-drawer-title v-model:name="form.nodeName" :disabled="viewOnly" />
       </template>
       <div class="drawer-body">
         <a-form layout="vertical">
@@ -62,48 +53,56 @@
             show-icon />
         </a-form>
       </div>
-      <template #footer>
-        <a-button v-if="!viewOnly" type="primary" @click="save">保存</a-button>
-        <a-button @click="drawer = false">取消</a-button>
-      </template>
-    </a-drawer>
+    </workflow-node-config-drawer>
   </div>
 </template>
 
 <script>
 import { IconifyIcon, Plus } from '@vben/icons';
-import { Alert, Button, Drawer, Form, Input, Tag } from 'ant-design-vue';
+import { Alert, Button, Form, Input, Tag } from 'ant-design-vue';
 import addNode from './addNode.vue';
+import WorkflowNodeConfigDrawer from '../WorkflowNodeConfigDrawer.vue';
+import WorkflowNodeDrawerTitle from '../WorkflowNodeDrawerTitle.vue';
 
 export default {
   name: 'PromoterNode',
-  components: { addNode, AAlert: Alert, AButton: Button, ADrawer: Drawer, AForm: Form, AFormItem: Form.Item, AInput: Input, ATag: Tag, IconifyIcon, Plus },
+  components: { addNode, AAlert: Alert, AButton: Button, AForm: Form, AFormItem: Form.Item, AInput: Input, ATag: Tag, IconifyIcon, Plus, WorkflowNodeConfigDrawer, WorkflowNodeDrawerTitle },
   inject: ['select'],
   props: {
     modelValue: { type: Object, default: () => ({}) },
     viewOnly: { type: Boolean, default: false },
   },
   data() {
-    return { nodeConfig: {}, drawer: false, isEditTitle: false, form: {} };
+    return { nodeConfig: {}, drawer: false, form: {} };
   },
   watch: { modelValue() { this.nodeConfig = this.modelValue; } },
   mounted() { this.nodeConfig = this.modelValue; },
   methods: {
     show() {
       this.form = JSON.parse(JSON.stringify(this.nodeConfig));
-      this.isEditTitle = false;
+      this.normalizeForm();
       this.drawer = true;
     },
-    editTitle() {
-      this.isEditTitle = true;
-      this.$nextTick(() => this.$refs.nodeTitleRef?.focus());
+    selectHandle(type, data) {
+      if (!Array.isArray(data)) {
+        this.form.nodeAssigneeList = [];
+        data = this.form.nodeAssigneeList;
+      }
+      this.select(type, data);
     },
-    saveTitle() { this.isEditTitle = false; },
-    selectHandle(type, data) { this.select(type, data); },
     delRole(index) { this.form.nodeAssigneeList.splice(index, 1); },
     save() {
-      this.$emit('update:modelValue', this.form);
+      this.normalizeForm();
+      this.nodeConfig = this.form;
+      this.$emit('update:modelValue', this.nodeConfig);
       this.drawer = false;
+    },
+    normalizeForm() {
+      if (!Array.isArray(this.form.nodeAssigneeList)) this.form.nodeAssigneeList = [];
+    },
+    updateChildNode(childNode) {
+      this.nodeConfig.childNode = childNode;
+      this.$emit('update:modelValue', this.nodeConfig);
     },
     toText(nodeConfig) {
       if (nodeConfig.nodeAssigneeList?.length > 0)
@@ -118,7 +117,4 @@ export default {
 .promoter-title { background: #576a95; }
 .drawer-body { padding: 0 20px 20px; }
 .tags-list { margin-top: 8px; }
-.node-wrap-drawer__title label { cursor: pointer; }
-.node-wrap-drawer__title label:hover { border-bottom: 1px dashed hsl(var(--primary)); }
-.node-wrap-drawer__title-edit { margin-left: 8px; color: hsl(var(--primary)); }
 </style>

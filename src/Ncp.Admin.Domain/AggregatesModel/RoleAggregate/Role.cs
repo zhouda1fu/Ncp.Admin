@@ -31,7 +31,13 @@ public enum DataScope
     CustomDeptAndSub = 4,
 }
 
-public partial record RoleId : IGuidStronglyTypedId;
+public partial record RoleId : IGuidStronglyTypedId
+{
+    /// <summary>
+    /// 未分配标识（哨兵值）
+    /// </summary>
+    public static RoleId Unassigned { get; } = new(Guid.Empty);
+}
 
 public class Role : Entity<RoleId>, IAggregateRoot
 {
@@ -79,7 +85,9 @@ public class Role : Entity<RoleId>, IAggregateRoot
     public void UpdateRolePermissions(IEnumerable<RolePermission> newPermissions)
     {
         var currentPermissionMap = Permissions.ToDictionary(p => p.PermissionCode);
-        var newPermissionMap = newPermissions.ToDictionary(p => p.PermissionCode);
+        var newPermissionMap = newPermissions
+            .GroupBy(p => p.PermissionCode, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
 
         var permissionsToRemove = currentPermissionMap.Keys.Except(newPermissionMap.Keys).ToList();
         foreach (var permissionCode in permissionsToRemove)
@@ -102,7 +110,7 @@ public class Role : Entity<RoleId>, IAggregateRoot
         DataDepts.Clear();
         foreach (var deptId in distinct)
         {
-            DataDepts.Add(new RoleDataDept(Id, deptId));
+            DataDepts.Add(new RoleDataDept(deptId));
         }
     }
 
@@ -139,5 +147,45 @@ public class Role : Entity<RoleId>, IAggregateRoot
     public bool HasPermission(string permissionCode)
     {
         return Permissions.Any(p => p.PermissionCode == permissionCode);
+    }
+
+    /// <summary>
+    /// 确保角色包含指定的权限集合（仅追加缺失项，不移除已有权限）。
+    /// </summary>
+    public void EnsureIncludesPermissions(IEnumerable<RolePermission> requiredPermissions)
+    {
+        var existingCodes = Permissions
+            .Select(p => p.PermissionCode)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var permission in requiredPermissions ?? [])
+        {
+            if (string.IsNullOrWhiteSpace(permission.PermissionCode))
+                continue;
+
+            if (existingCodes.Add(permission.PermissionCode))
+                Permissions.Add(permission);
+        }
+    }
+
+    /// <summary>
+    /// 移除指定权限码，忽略角色当前未包含的权限。
+    /// </summary>
+    public void RemovePermissions(IEnumerable<string> permissionCodes)
+    {
+        var codes = (permissionCodes ?? [])
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Select(code => code.Trim())
+            .ToHashSet(StringComparer.Ordinal);
+        if (codes.Count == 0)
+            return;
+
+        var permissionsToRemove = Permissions
+            .Where(permission => codes.Contains(permission.PermissionCode))
+            .ToList();
+        foreach (var permission in permissionsToRemove)
+        {
+            Permissions.Remove(permission);
+        }
     }
 }

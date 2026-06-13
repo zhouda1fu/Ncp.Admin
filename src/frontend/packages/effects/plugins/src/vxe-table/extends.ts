@@ -41,9 +41,11 @@ function extendProxyOption(
     ...args: Recordable<any>[]
   ) => {
     const formValues = getFormValues();
+    const pageValues = getBackendPageValues(params);
     const data = await configFn(
       params,
       {
+        ...pageValues,
         /**
          * 开启toolbarConfig.refresh功能
          * 点击刷新按钮 这里的值为PointerEvent 会携带错误参数
@@ -64,6 +66,19 @@ function extendProxyOption(
       },
     },
   });
+}
+
+function getBackendPageValues(params: Recordable<any>) {
+  const currentPage = Number(params?.page?.currentPage);
+  const pageSize = Number(params?.page?.pageSize);
+  if (!Number.isFinite(currentPage) || !Number.isFinite(pageSize)) {
+    return {};
+  }
+  return {
+    countTotal: true,
+    pageIndex: currentPage,
+    pageSize,
+  };
 }
 
 export function extendsDefaultFormatter(vxeUI: VxeUIExport) {

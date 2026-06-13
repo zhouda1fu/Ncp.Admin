@@ -1,14 +1,14 @@
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
 /// <summary>
-/// 工作流业务类型常量（BusinessType），集中管理所有与工作流关联的业务分类标识
+/// 工作流业务类型常量（BusinessType）。
 /// </summary>
 public static class WorkflowBusinessTypes
 {
-    public const string CreateUser = "CreateUser";
-    public const string LeaveRequest = "LeaveRequest";
-    public const string Order = "Order";
+    /// <summary>创建用户审批（平台示范流程）。</summary>
+    public const string CreateUser = nameof(CreateUser);
 
-    /// <summary>客户作废审批（流程定义 Category 常量与此一致，界面展示名「客户作废」）</summary>
-    public const string CustomerSeaVoid = "CustomerSeaVoid";
+    /// <summary>流程设计器条件分支是否提供「路由角色」字段。</summary>
+    public static bool SupportsWorkflowRoutingRoleConditionField(string? category) =>
+        string.Equals(category, CreateUser, StringComparison.Ordinal);
 }

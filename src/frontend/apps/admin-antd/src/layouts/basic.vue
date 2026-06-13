@@ -1,13 +1,11 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import type { NotificationItem } from '@vben/layouts';
 
-import { computed, ref, watch } from 'vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
-import { VBEN_DOC_URL, VBEN_GITHUB_URL } from '@vben/constants';
 import { useWatermark } from '@vben/hooks';
-import { BookOpenText, CircleHelp, SvgGithubIcon } from '@vben/icons';
 import {
   BasicLayout,
   LockScreen,
@@ -16,24 +14,32 @@ import {
 } from '@vben/layouts';
 import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
-import { openWindow } from '@vben/utils';
-
+import { message } from 'ant-design-vue';
 import {
   deleteNotification,
   getNotificationList,
+  getUnreadCount,
   markAllNotificationsRead,
   markNotificationRead,
 } from '#/api/notification';
 import { useNotificationHub } from '#/hooks/useNotificationHub';
 import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
+import { notificationLinkFromItem } from '#/utils/notification-navigation';
+import {
+  buildNotificationPublisherLine,
+  formatNotificationDateTime,
+} from '#/utils/notification-display';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
 const notifications = ref<NotificationItem[]>([]);
 /** 未读总数（与列表分页无关，用于角标） */
 const unreadCount = ref(0);
 const loading = ref(false);
-
+/** 头部通知下拉显隐（有未读时首次进入 / SignalR 新通知时主动展开） */
+const notificationPopoverOpen = ref(false);
+/** 避免 accessToken 静默续期时反复自动弹出：仅「本轮未登录→已登录」视为新会话拉取 */
+const wasLoggedIn = ref(false);
 function formatNotificationDate(createdAt: string) {
   if (!createdAt) return '';
   const date = new Date(createdAt);
@@ -49,42 +55,63 @@ function formatNotificationDate(createdAt: string) {
   return date.toLocaleDateString();
 }
 
-function notificationLinkFromBusiness(
-  businessId?: string,
-  businessType?: string,
-): Pick<NotificationItem, 'link' | 'query'> {
-  if (!businessId || !businessType) return {};
-  if (businessType === 'WorkflowInstance') {
-    return { link: `/workflow/instance/${businessId}` };
-  }
-  if (businessType === 'CustomerSea') {
-    return { link: '/customer/sea' };
-  }
-  return {};
-}
-
 function mapToLayoutItem(item: {
   id: string | number;
   title: string;
   content: string;
   isRead: boolean;
   createdAt: string;
+  senderName?: string;
   businessId?: string;
   businessType?: string;
+  linkPath?: string | null;
+  linkQuery?: Record<string, string> | null;
 }): NotificationItem {
   return {
     id: item.id,
     title: item.title,
     message: item.content,
+    publisherLine: buildNotificationPublisherLine(item.senderName),
+    dateTime: formatNotificationDateTime(item.createdAt),
     date: formatNotificationDate(item.createdAt),
     isRead: item.isRead,
     avatar: preferences.app.defaultAvatar,
-    ...notificationLinkFromBusiness(item.businessId, item.businessType),
+    ...notificationLinkFromItem(item),
   };
 }
 
-async function loadNotifications() {
-  if (loading.value) return;
+let loadNotificationsPending = false;
+
+/** SignalR 推送可能略早于读库可见，带退避重试拉取未读列表 */
+async function loadNotificationsWithRetry(
+  options?: { autoOpenIfUnread?: boolean },
+  maxAttempts = 5,
+) {
+  const previousCount = unreadCount.value;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    await loadNotifications(
+      attempt === 0 ? options : { autoOpenIfUnread: false },
+    );
+    if (unreadCount.value > previousCount) {
+      if (
+        options?.autoOpenIfUnread
+        && unreadCount.value > 0
+      ) {
+        notificationPopoverOpen.value = true;
+      }
+      return;
+    }
+    if (attempt < maxAttempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+    }
+  }
+}
+
+async function loadNotifications(options?: { autoOpenIfUnread?: boolean }) {
+  if (loading.value) {
+    loadNotificationsPending = true;
+    return;
+  }
   loading.value = true;
   try {
     const res = await getNotificationList({
@@ -92,11 +119,43 @@ async function loadNotifications() {
       pageSize: 20,
       /** 头部下拉仅展示未读；已读后由接口排除 */
       isRead: false,
+      includeUnreadCount: true,
     });
     unreadCount.value = res.unreadCount ?? 0;
     notifications.value = (res.items || []).map(mapToLayoutItem);
+    if (
+      options?.autoOpenIfUnread
+      && unreadCount.value > 0
+    ) {
+      notificationPopoverOpen.value = true;
+    }
   } finally {
     loading.value = false;
+    if (loadNotificationsPending) {
+      loadNotificationsPending = false;
+      await loadNotifications(options);
+    }
+  }
+}
+
+/** Hub 未连接时轮询未读数，避免 WebSocket/反向代理异常时角标不更新 */
+async function refreshUnreadBadge() {
+  if (!accessStore.accessToken || !accessStore.isAccessChecked) {
+    return;
+  }
+  try {
+    const res = await getUnreadCount();
+    const count = res.count ?? 0;
+    if (count !== unreadCount.value) {
+      unreadCount.value = count;
+      if (count > 0) {
+        await loadNotifications();
+      } else {
+        notifications.value = [];
+      }
+    }
+  } catch {
+    // ignore
   }
 }
 
@@ -106,22 +165,70 @@ const authStore = useAuthStore();
 const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
 const showDot = computed(() => unreadCount.value > 0);
-
 watch(
-  () => accessStore.accessToken,
-  (token) => {
-    if (token) {
-      loadNotifications();
-    } else {
+  () => [accessStore.accessToken, accessStore.isAccessChecked] as const,
+  async ([token, accessChecked]) => {
+    if (token && accessChecked) {
+      const isFreshLogin = !wasLoggedIn.value;
+      wasLoggedIn.value = true;
+      await loadNotifications({
+        autoOpenIfUnread: isFreshLogin,
+      });
+    } else if (!token) {
+      wasLoggedIn.value = false;
       notifications.value = [];
       unreadCount.value = 0;
+      notificationPopoverOpen.value = false;
     }
   },
   { immediate: true },
 );
 
-// SignalR 实时推送：收到新通知时刷新列表
-useNotificationHub(loadNotifications);
+// SignalR 实时推送：收到新通知时刷新列表与弹窗队列；有待弹窗时不自动展开通知下拉
+useNotificationHub(async () => {
+  await loadNotificationsWithRetry({
+    autoOpenIfUnread: true,
+  });
+}, async () => {
+  message.warning('账号已在其他设备登录，当前会话已退出');
+  await authStore.forceLogout();
+});
+
+/** 登录后定期轮询未读数（Hub 失败或生产未配置 WebSocket 代理时的兜底） */
+const NOTIFICATION_POLL_MS = 10_000;
+let notificationPollTimer: ReturnType<typeof setInterval> | null = null;
+
+function stopNotificationPoll() {
+  if (notificationPollTimer) {
+    clearInterval(notificationPollTimer);
+    notificationPollTimer = null;
+  }
+}
+
+function startNotificationPoll() {
+  stopNotificationPoll();
+  if (!accessStore.accessToken || !accessStore.isAccessChecked) {
+    return;
+  }
+  notificationPollTimer = setInterval(() => {
+    void refreshUnreadBadge();
+  }, NOTIFICATION_POLL_MS);
+}
+
+watch(
+  () => [accessStore.accessToken, accessStore.isAccessChecked] as const,
+  ([token, accessChecked]) => {
+    stopNotificationPoll();
+    if (token && accessChecked) {
+      startNotificationPoll();
+    }
+  },
+  { immediate: true },
+);
+
+onUnmounted(() => {
+  stopNotificationPoll();
+});
 
 const menus = computed(() => [
   {
@@ -131,45 +238,39 @@ const menus = computed(() => [
     icon: 'lucide:user',
     text: $t('page.auth.profile'),
   },
-  {
-    handler: () => {
-      openWindow(VBEN_DOC_URL, {
-        target: '_blank',
-      });
-    },
-    icon: BookOpenText,
-    text: $t('ui.widgets.document'),
-  },
-  {
-    handler: () => {
-      openWindow(VBEN_GITHUB_URL, {
-        target: '_blank',
-      });
-    },
-    icon: SvgGithubIcon,
-    text: 'GitHub',
-  },
-  {
-    handler: () => {
-      openWindow(`${VBEN_GITHUB_URL}/issues`, {
-        target: '_blank',
-      });
-    },
-    icon: CircleHelp,
-    text: $t('ui.widgets.qa'),
-  },
 ]);
 
 const avatar = computed(() => {
-  return userStore.userInfo?.avatar ?? preferences.app.defaultAvatar;
+  const info = userStore.userInfo as Record<string, unknown> | undefined;
+  const url = (info?.avatar as string | undefined) ?? '';
+  if (
+    url.startsWith('blob:')
+    || url.startsWith('data:')
+    || url.startsWith('http://')
+    || url.startsWith('https://')
+  ) {
+    return url;
+  }
+  return preferences.app.defaultAvatar;
+});
+
+const userDescription = computed(() => {
+  const info = userStore.userInfo as Record<string, unknown> | undefined;
+  return (
+    (info?.email as string | undefined) ||
+    (info?.username as string | undefined) ||
+    (userStore.userInfo?.username as string | undefined) ||
+    ''
+  );
 });
 
 async function handleLogout() {
   await authStore.logout(false);
 }
 
-function handleNoticeClear() {
-  notifications.value = [];
+/** 清空：将所有未读通知标为已读（与信封「全部标已读」一致），并同步角标 */
+async function handleNoticeClear() {
+  await handleMakeAll();
 }
 
 async function markRead(id: number | string) {
@@ -210,6 +311,7 @@ async function handleMakeAll() {
     // ignore
   }
 }
+
 watch(
   () => ({
     enable: preferences.app.watermark,
@@ -234,18 +336,21 @@ watch(
 
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
+    <template #logo-text>
+      <span></span>
+    </template>
     <template #user-dropdown>
       <UserDropdown
         :avatar
         :menus
         :text="userStore.userInfo?.realName"
-        description="ann.vben@gmail.com"
-        tag-text="Pro"
-        @logout="handleLogout"
+        :description="userDescription"
+        :on-logout="handleLogout"
       />
     </template>
     <template #notification>
       <Notification
+        v-model:open="notificationPopoverOpen"
         :dot="showDot"
         :notifications="notifications"
         @clear="handleNoticeClear"
@@ -267,4 +372,5 @@ watch(
       <LockScreen :avatar @to-login="handleLogout" />
     </template>
   </BasicLayout>
+  <!-- 须在 BasicLayout 外渲染：未放入具名插槽的子节点不会挂载，弹窗逻辑不会执行 -->
 </template>

@@ -3,7 +3,13 @@ namespace Ncp.Admin.Domain.AggregatesModel.OperationLogAggregate;
 /// <summary>
 /// 操作日志ID（强类型ID，雪花）
 /// </summary>
-public partial record OperationLogId : IInt64StronglyTypedId;
+public partial record OperationLogId : IInt64StronglyTypedId
+{
+    /// <summary>
+    /// 未分配标识（哨兵值）
+    /// </summary>
+    public static OperationLogId Unassigned { get; } = new(0);
+}
 
 /// <summary>
 /// 操作类型
@@ -80,17 +86,17 @@ public class OperationLog : Entity<OperationLogId>, IAggregateRoot
         DateTimeOffset createdAt)
     {
         OperatorUserId = operatorUserId;
-        OperatorUserName = operatorUserName ?? string.Empty;
-        Module = module ?? string.Empty;
+        OperatorUserName = operatorUserName;
+        Module = module;
         OperationType = operationType;
-        RequestPath = requestPath ?? string.Empty;
-        RequestMethod = requestMethod ?? string.Empty;
+        RequestPath = requestPath;
+        RequestMethod = requestMethod;
         HttpStatusCode = httpStatusCode;
         IsSuccess = isSuccess;
-        IpAddress = ipAddress ?? string.Empty;
-        UserAgent = userAgent ?? string.Empty;
-        RequestBody = requestBody ?? string.Empty;
-        ResponseBody = responseBody ?? string.Empty;
+        IpAddress = ipAddress;
+        UserAgent = userAgent;
+        RequestBody = requestBody;
+        ResponseBody = responseBody;
         DurationMs = durationMs;
         CreatedAt = createdAt;
     }

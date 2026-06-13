@@ -2,7 +2,7 @@ using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
-using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
@@ -34,19 +34,24 @@ public class RejectTaskCommandValidator : AbstractValidator<RejectTaskCommand>
 /// </summary>
 public class RejectTaskCommandHandler(
     IWorkflowInstanceRepository instanceRepository,
-    UserQuery userQuery)
+    WorkflowTaskOperationAuthorizer taskOperationAuthorizer)
     : ICommandHandler<RejectTaskCommand>
 {
     public async Task Handle(RejectTaskCommand request, CancellationToken cancellationToken)
     {
-        var instance = await instanceRepository.GetAsync(request.WorkflowInstanceId, cancellationToken)
+        var instance = await instanceRepository.GetWithTasksIgnoringQueryFiltersAsync(request.WorkflowInstanceId, cancellationToken)
             ?? throw new KnownException("未找到流程实例", ErrorCodes.WorkflowInstanceNotFound);
 
         if (instance.Status != WorkflowInstanceStatus.Running)
         {
             throw new KnownException("流程未在运行中", ErrorCodes.WorkflowInstanceNotRunning);
         }
-        var operatorRoleIds = await userQuery.GetRoleIdsByUserIdAsync(request.OperatorId, cancellationToken);
+
+        var operatorRoleIds = await taskOperationAuthorizer.EnsureCanOperateAsync(
+            instance,
+            request.TaskId,
+            request.OperatorId,
+            cancellationToken);
         instance.RejectTask(request.TaskId, request.OperatorId, operatorRoleIds, request.Comment);
     }
 }

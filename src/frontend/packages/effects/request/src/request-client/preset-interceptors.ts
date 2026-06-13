@@ -6,6 +6,18 @@ import { isFunction } from '@vben/utils';
 
 import axios from 'axios';
 
+const authenticationErrorCodes = new Set([100_004, 100_005, 100_006, 100_007]);
+const sessionReplacedReason = 'session-replaced';
+
+function isAuthenticationError(error: any) {
+  const { response } = error;
+  if (response?.status === 401) {
+    return true;
+  }
+  const code = Number(response?.data?.code);
+  return authenticationErrorCodes.has(code);
+}
+
 export const defaultResponseInterceptor = ({
   codeField = 'code',
   dataField = 'data',
@@ -59,9 +71,12 @@ export const authenticateResponseInterceptor = ({
 }): ResponseInterceptorConfig => {
   return {
     rejected: async (error) => {
-      const { config, response } = error;
-      // 如果不是 401 错误，直接抛出异常
-      if (response?.status !== 401) {
+      const { config } = error;
+      // 如果不是身份失效错误，直接抛出异常
+      if (!isAuthenticationError(error)) {
+        throw error;
+      }
+      if (error?.response?.headers?.['x-auth-reason'] === sessionReplacedReason) {
         throw error;
       }
       // 判断是否启用了 refreshToken 功能

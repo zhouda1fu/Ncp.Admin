@@ -2,24 +2,35 @@ import type { RouteRecordRaw } from 'vue-router';
 
 import { PermissionCodes } from '#/constants/permission-codes';
 import { $t } from '#/locales';
+import { listReturnListRouteMeta } from '#/router/list-return-route-meta';
 
-const routes: RouteRecordRaw[] = [
-  {
-    meta: {
-      icon: 'mdi:workflow',
-      order: 9996,
-      title: $t('system.workflow.title'),
-      authority: [PermissionCodes.WorkflowManagement],
-    },
-    name: 'Workflow',
-    path: '/workflow',
-    children: [
+/** 流程侧栏入口：拥有任一子菜单相关权限即显示；WorkflowManagement 为权限树分组码，通常不会单独勾选。 */
+const workflowMenuAccess = [
+  PermissionCodes.WorkflowManagement,
+  PermissionCodes.WorkflowInstanceView,
+  PermissionCodes.WorkflowDefinitionView,
+  PermissionCodes.WorkflowMonitor,
+  PermissionCodes.WorkflowTaskApprove,
+];
+
+export const workflowRoute: RouteRecordRaw = {
+  meta: {
+    icon: 'mdi:workflow',
+    order: 1,
+    title: $t('system.workflow.title'),
+    authority: workflowMenuAccess,
+  },
+  name: 'Workflow',
+  path: '/workflow',
+  children: [
       {
         path: '/workflow/pending',
         name: 'WorkflowPending',
         meta: {
           icon: 'mdi:clipboard-text-clock',
           title: $t('system.workflow.task.pendingTitle'),
+          ...listReturnListRouteMeta,
+          authority: [PermissionCodes.WorkflowInstanceView],
         },
         component: () => import('#/views/workflow/task/pending.vue'),
       },
@@ -29,6 +40,8 @@ const routes: RouteRecordRaw[] = [
         meta: {
           icon: 'mdi:clipboard-check',
           title: $t('system.workflow.task.completedTitle'),
+          ...listReturnListRouteMeta,
+          authority: [PermissionCodes.WorkflowInstanceView],
         },
         component: () => import('#/views/workflow/task/completed.vue'),
       },
@@ -38,8 +51,10 @@ const routes: RouteRecordRaw[] = [
         meta: {
           icon: 'mdi:clipboard-account',
           title: $t('system.workflow.task.myWorkflows'),
+          ...listReturnListRouteMeta,
+          authority: [PermissionCodes.WorkflowInstanceView],
         },
-        component: () => import('#/views/workflow/instance/my-workflows.vue'),
+        component: () => import('#/views/workflow/instance/my-started.vue'),
       },
       {
         path: '/workflow/definitions',
@@ -47,6 +62,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           icon: 'mdi:file-tree',
           title: $t('system.workflow.definition.title'),
+          ...listReturnListRouteMeta,
           authority: [PermissionCodes.WorkflowDefinitionView],
         },
         component: () => import('#/views/workflow/definition/list.vue'),
@@ -67,6 +83,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           icon: 'mdi:monitor-dashboard',
           title: $t('system.workflow.instance.title'),
+          ...listReturnListRouteMeta,
           authority: [PermissionCodes.WorkflowMonitor],
         },
         component: () => import('#/views/workflow/instance/list.vue'),
@@ -82,7 +99,8 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/workflow/instance/detail.vue'),
       },
     ],
-  },
-];
+};
+
+const routes: RouteRecordRaw[] = [];
 
 export default routes;

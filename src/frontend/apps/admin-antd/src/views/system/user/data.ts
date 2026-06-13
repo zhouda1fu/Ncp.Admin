@@ -19,17 +19,26 @@ async function getAllRolesForSelect() {
   });
   return result.items.map((role) => ({
     label: role.name,
-    value: role.roleId,
-  }));
+    value: String(role.roleId ?? '').trim(),
+  })).filter((item) => item.value);
 }
 
 /** 上传成功后写入 path 到 avatarUrl 的回调，由 form.vue 传入 */
 export type SetAvatarUrlPathFn = (path: string) => void;
+export type UserDeptChangeFn = (deptId?: string) => void;
+export type SetAsDeptResponsibleUserChangeFn = (checked: boolean) => void;
+
+export type UserFormMode = 'create' | 'edit';
 
 /**
  * 获取编辑表单的字段配置
  */
-export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSchema[] {
+export function useFormSchema(
+  mode: UserFormMode,
+  setAvatarUrlPath?: SetAvatarUrlPathFn,
+  onDeptChange?: UserDeptChangeFn,
+  onSetAsDeptResponsibleUserChange?: SetAsDeptResponsibleUserChangeFn,
+): VbenFormSchema[] {
   return [
     {
       component: 'Input',
@@ -41,15 +50,11 @@ export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSc
       component: 'Input',
       fieldName: 'email',
       label: $t('system.user.email'),
-      rules: z.string().email($t('ui.formRules.email')),
     },
     {
       component: 'Input',
       fieldName: 'phone',
       label: $t('system.user.phone'),
-      rules: z.string().refine((val) => !val || /^1[3-9]\d{9}$/.test(val), {
-        message: $t('ui.formRules.phone'),
-      }).optional(),
     },
     {
       component: 'Input',
@@ -64,7 +69,6 @@ export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSc
         options: [
           { label: $t('system.user.male'), value: '男' },
           { label: $t('system.user.female'), value: '女' },
-          { label: $t('system.user.other'), value: '其他' },
         ],
       },
       fieldName: 'gender',
@@ -148,6 +152,7 @@ export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSc
       component: 'RadioGroup',
       componentProps: {
         buttonStyle: 'solid',
+        // 与 API 字段 notOrderMeal 一致：true=不订餐，false=订餐；文案为「不订餐」故「是」提交 true。
         options: [
           { label: $t('common.yes'), value: true },
           { label: $t('common.no'), value: false },
@@ -158,6 +163,15 @@ export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSc
       fieldName: 'notOrderMeal',
       formItemClass: 'sm:col-span-1',
       label: $t('system.user.notOrderMeal'),
+      rules: z.boolean().optional().default(false),
+    },
+    {
+      component: 'Checkbox',
+      componentProps: { class: 'w-full' },
+      defaultValue: false,
+      fieldName: 'notAttendanceRequired',
+      formItemClass: 'sm:col-span-1',
+      label: $t('system.user.notAttendanceRequired'),
       rules: z.boolean().optional().default(false),
     },
     {
@@ -185,10 +199,34 @@ export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSc
         labelField: 'name',
         valueField: 'id',
         childrenField: 'children',
+        onChange: onDeptChange,
       },
       fieldName: 'deptId',
       formItemClass: 'sm:col-span-1',
       label: $t('system.user.dept'),
+    },
+    {
+      component: 'RadioGroup',
+      componentProps: {
+        buttonStyle: 'solid',
+        onChange: (event: unknown) => {
+          const value =
+            typeof event === 'boolean'
+              ? event
+              : (event as { target?: { value?: unknown } })?.target?.value;
+          onSetAsDeptResponsibleUserChange?.(value === true || value === 'true');
+        },
+        options: [
+          { label: $t('common.yes'), value: true },
+          { label: $t('common.no'), value: false },
+        ],
+        optionType: 'button',
+      },
+      defaultValue: false,
+      fieldName: 'setAsDeptResponsibleUser',
+      formItemClass: 'sm:col-span-1',
+      label: $t('system.user.setAsDeptResponsibleUser'),
+      rules: z.boolean().optional().default(false),
     },
     {
       component: 'RadioGroup',
@@ -201,9 +239,15 @@ export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSc
         optionType: 'button',
       },
       defaultValue: false,
-      fieldName: 'isDeptManager',
+      dependencies: {
+        if(values: Record<string, unknown>) {
+          return Boolean(values.setAsDeptResponsibleUser);
+        },
+        triggerFields: ['setAsDeptResponsibleUser'],
+      },
+      fieldName: 'setAsDefaultDeptResponsibleUser',
       formItemClass: 'sm:col-span-1',
-      label: $t('system.dept.manager'),
+      label: $t('system.user.setAsDefaultDeptResponsibleUser'),
       rules: z.boolean().optional().default(false),
     },
     {
@@ -215,20 +259,41 @@ export function useFormSchema(setAvatarUrlPath?: SetAvatarUrlPathFn): VbenFormSc
         labelField: 'label',
         valueField: 'value',
         mode: 'multiple',
+        showSearch: true,
+        optionFilterProp: 'label',
       },
       fieldName: 'roleIds',
       formItemClass: 'sm:col-span-1',
       label: $t('system.user.roles'),
     },
     {
-      component: 'InputPassword',
+      component: 'Input',
+      componentProps: { type: 'hidden', class: 'hidden' },
       fieldName: 'password',
-      formItemClass: 'sm:col-span-1',
+      formItemClass: 'hidden',
       label: $t('system.user.password'),
-      rules: z.string().refine((val) => !val || val.length >= 6, {
-        message: $t('ui.formRules.minLength', [$t('system.user.password'), 6]),
-      }).optional(),
+      rules:
+        mode === 'create'
+          ? z
+              .string()
+              .min(1, { message: $t('ui.formRules.required', [$t('system.user.password')]) })
+          : z.string().refine((val) => !val || val.length >= 6, {
+              message: $t('ui.formRules.minLength', [$t('system.user.password'), 6]),
+            }).optional(),
     },
+    ...(mode === 'edit'
+      ? ([
+          {
+            component: 'Checkbox',
+            componentProps: { class: 'w-full' },
+            defaultValue: false,
+            fieldName: 'resetPassword',
+            formItemClass: 'sm:col-span-2',
+            label: $t('system.user.resetPassword'),
+            rules: z.boolean().optional().default(false),
+          },
+        ] as VbenFormSchema[])
+      : []),
   ];
 }
 
@@ -239,6 +304,9 @@ export function useGridFormSchema(): VbenFormSchema[] {
   return [
     {
       component: 'Input',
+      componentProps: {
+        class: 'w-full',
+      },
       fieldName: 'keyword',
       label: $t('system.user.keyword'),
     },
@@ -246,6 +314,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
       component: 'Select',
       componentProps: {
         allowClear: true,
+        class: 'w-full',
         options: [
           { label: $t('common.enabled'), value: 1 },
           { label: $t('common.disabled'), value: 0 },
@@ -258,11 +327,13 @@ export function useGridFormSchema(): VbenFormSchema[] {
       component: 'Select',
       componentProps: {
         allowClear: true,
+        class: 'w-full',
         options: [
           { label: $t('system.user.employmentActive'), value: false },
           { label: $t('system.user.employmentResigned'), value: true },
         ],
       },
+      defaultValue: false,
       fieldName: 'isResigned',
       label: $t('system.user.employmentStatus'),
     },
@@ -274,16 +345,20 @@ export function useGridFormSchema(): VbenFormSchema[] {
  */
 export function useColumns<T = SystemUserApi.SystemUser>(
   onActionClick: OnActionClickFn<T>,
-  onStatusChange?: (
-    newStatus: any,
-    row: T,
-  ) => PromiseLike<boolean | undefined>,
+  onStatusChange?: (newStatus: any, row: T) => PromiseLike<boolean | undefined>,
+  onResignedChange?: (isResigned: any, row: T) => PromiseLike<boolean | undefined>,
+  perms?: {
+    canDelete?: () => boolean;
+    canEdit?: () => boolean;
+  },
 ): VxeTableGridOptions['columns'] {
   return [
+    { type: 'checkbox', width: 48 },
     {
       field: 'name',
       title: $t('system.user.userName'),
-      width: 150,
+      minWidth: 180,
+      slots: { default: 'userListUserName' },
     },
     {
       field: 'realName',
@@ -308,18 +383,29 @@ export function useColumns<T = SystemUserApi.SystemUser>(
     {
       field: 'age',
       title: $t('system.user.age'),
+      visible: false,
       width: 80,
     },
     {
       field: 'deptName',
       title: $t('system.user.dept'),
-      width: 150,
+      minWidth: 170,
+      slots: { header: 'columnFilterHeader' },
     },
     {
+      cellRender: {
+        attrs: { beforeChange: onResignedChange },
+        name: onResignedChange ? 'CellSwitch' : 'CellTag',
+        props: {
+          checkedChildren: $t('common.yes'),
+          checkedValue: true,
+          unCheckedChildren: $t('common.no'),
+          unCheckedValue: false,
+        },
+      },
       field: 'isResigned',
       title: $t('system.user.isResigned'),
       width: 110,
-      formatter: ({ cellValue }) => (cellValue ? $t('common.yes') : $t('common.no')),
     },
     {
       field: 'roles',
@@ -331,6 +417,7 @@ export function useColumns<T = SystemUserApi.SystemUser>(
         }
         return cellValue || '';
       },
+      slots: { header: 'columnFilterHeader' },
     },
     {
       cellRender: {
@@ -347,6 +434,7 @@ export function useColumns<T = SystemUserApi.SystemUser>(
       title: $t('system.user.createTime'),
       width: 180,
     },
+    { field: '_flex', minWidth: 1, title: '' },
     {
       align: 'center',
       cellRender: {
@@ -356,9 +444,22 @@ export function useColumns<T = SystemUserApi.SystemUser>(
           onClick: onActionClick,
         },
         name: 'CellOperation',
+        options: [
+          {
+            code: 'edit',
+            show: () => perms?.canEdit?.() ?? true,
+            text: $t('common.edit'),
+          },
+          {
+            code: 'delete',
+            show: () => perms?.canDelete?.() ?? true,
+            text: $t('common.delete'),
+          },
+        ],
       },
       field: 'operation',
       fixed: 'right',
+      showOverflow: false,
       title: $t('system.user.operation'),
       width: 130,
     },

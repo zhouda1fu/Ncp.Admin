@@ -157,6 +157,8 @@ interface NavigationPreferences {
   split: boolean;
   /** 导航菜单风格 */
   styleType: NavigationStyleType;
+  /** 侧栏默认展开的子菜单 path（如大模块分类） */
+  defaultOpeneds?: string[];
 }
 
 interface SidebarPreferences {

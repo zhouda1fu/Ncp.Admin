@@ -26,13 +26,13 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 /// <param name="DeptName">部门名称（可选）</param>
 /// <param name="PositionId">岗位ID（可选）</param>
 /// <param name="PositionName">岗位名称（可选）</param>
-/// <param name="RoleIds">要分配的角色ID列表</param>
+/// <param name="RoleIds">要分配的角色 ID 列表</param>
 /// <param name="IdCardNumber">身份证</param>
 /// <param name="Address">地址</param>
 /// <param name="Education">学历</param>
 /// <param name="GraduateSchool">毕业院校</param>
 /// <param name="AvatarUrl">头像地址</param>
-/// <param name="NotOrderMeal">是否订餐（true=不订餐，false=订餐）</param>
+/// <param name="NotOrderMeal">不订餐：true 为不参与订餐，false 为参与订餐。</param>
 /// <param name="WechatGuid">唯一码</param>
 /// <param name="IsResigned">是否离职</param>
 /// <param name="ResignedTime">离职时间（可选）</param>
@@ -98,11 +98,10 @@ public class RegisterEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpoin
             request.BirthDate,
             request.DeptId,
             request.DeptName,
-            false,
             request.PositionId,
             request.PositionName,
             rolesToBeAssigned,
-            new UserId(0),
+            UserId.Unassigned,
             request.IdCardNumber,
             request.Address,
             request.Education,
@@ -111,7 +110,8 @@ public class RegisterEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpoin
             request.NotOrderMeal,
             request.WechatGuid,
             request.IsResigned,
-            request.ResignedTime
+            request.ResignedTime,
+            AttendanceRequired: true
         );
         var userId = await mediator.Send(cmd, ct);
         var response = new RegisterResponse(userId, request.Name, request.Email);

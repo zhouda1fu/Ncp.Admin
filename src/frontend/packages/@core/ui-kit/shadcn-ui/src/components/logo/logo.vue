@@ -72,8 +72,19 @@ const logoSrc = computed(() => {
       :href="href"
       class="flex h-full items-center gap-2 overflow-hidden px-3 text-lg leading-normal transition-all duration-500"
     >
+      <img
+        v-if="logoSrc && fit === 'contain'"
+        :alt="text"
+        :src="logoSrc"
+        :style="{
+          height: `${logoSize}px`,
+          maxWidth: collapsed ? `${logoSize}px` : '170px',
+          objectFit: fit,
+        }"
+        class="relative flex-shrink-0 rounded-none bg-transparent"
+      />
       <VbenAvatar
-        v-if="logoSrc"
+        v-else-if="logoSrc"
         :alt="text"
         :src="logoSrc"
         :size="logoSize"

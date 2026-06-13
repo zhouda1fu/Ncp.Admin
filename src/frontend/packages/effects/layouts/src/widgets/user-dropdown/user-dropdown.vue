@@ -64,6 +64,8 @@ interface Props {
   trigger?: 'both' | 'click' | 'hover';
   /** hover触发时，延迟响应的时间 */
   hoverDelay?: number;
+  /** 确认退出后的回调（优先于 emit logout，便于 await 异步登出） */
+  onLogout?: () => Promise<void> | void;
 }
 
 defineOptions({
@@ -91,8 +93,8 @@ const [LockModal, lockModalApi] = useVbenModal({
   connectedComponent: LockScreenModal,
 });
 const [LogoutModal, logoutModalApi] = useVbenModal({
-  onConfirm() {
-    handleSubmitLogout();
+  async onConfirm() {
+    await handleSubmitLogout();
   },
 });
 
@@ -146,9 +148,19 @@ function handleLogout() {
   openPopover.value = false;
 }
 
-function handleSubmitLogout() {
-  emit('logout');
-  logoutModalApi.close();
+async function handleSubmitLogout() {
+  logoutModalApi.setState({ submitting: true });
+  try {
+    if (props.onLogout) {
+      await props.onLogout();
+    } else {
+      emit('logout');
+    }
+    openPopover.value = false;
+    logoutModalApi.close();
+  } finally {
+    logoutModalApi.setState({ submitting: false });
+  }
 }
 
 if (enableShortcutKey.value) {
@@ -228,7 +240,7 @@ if (enableShortcutKey.value) {
           v-for="menu in menus"
           :key="menu.text"
           class="mx-1 flex cursor-pointer items-center rounded-sm py-1 leading-8"
-          @click="menu.handler"
+          @select="menu.handler"
         >
           <VbenIcon :icon="menu.icon" class="mr-2 size-4" />
           {{ menu.text }}
@@ -237,7 +249,7 @@ if (enableShortcutKey.value) {
         <DropdownMenuItem
           v-if="preferences.widget.lockScreen"
           class="mx-1 flex cursor-pointer items-center rounded-sm py-1 leading-8"
-          @click="handleOpenLock"
+          @select="handleOpenLock"
         >
           <LockKeyhole class="mr-2 size-4" />
           {{ $t('ui.widgets.lockScreen.title') }}
@@ -248,7 +260,7 @@ if (enableShortcutKey.value) {
         <DropdownMenuSeparator v-if="preferences.widget.lockScreen" />
         <DropdownMenuItem
           class="mx-1 flex cursor-pointer items-center rounded-sm py-1 leading-8"
-          @click="handleLogout"
+          @select="handleLogout"
         >
           <LogOut class="mr-2 size-4" />
           {{ $t('common.logout') }}

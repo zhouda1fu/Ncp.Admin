@@ -12,7 +12,7 @@ namespace Ncp.Admin.Web.Application.Services.Workflow;
 public class WorkflowTaskVisibilityPolicy(
     UserQuery userQuery,
     RoleQuery roleQuery,
-    DeptQuery deptQuery)
+    DeptQuery deptQuery) : IWorkflowTaskVisibilityPolicy
 {
     /// <summary>
     /// 对候选审批人列表按“任务归属 + 数据权限交集”做过滤。
@@ -28,7 +28,7 @@ public class WorkflowTaskVisibilityPolicy(
         }
 
         var uniqueAssigneeIds = assignees
-            .Where(a => a.AssigneeId != new UserId(0))
+            .Where(a => a.AssigneeId != UserId.Unassigned && !a.BypassDataPermissionFilter)
             .Select(a => a.AssigneeId)
             .Distinct()
             .ToList();
@@ -44,7 +44,9 @@ public class WorkflowTaskVisibilityPolicy(
             cancellationToken);
 
         return assignees
-            .Where(a => a.AssigneeId == new UserId(0) || visibilityMap.GetValueOrDefault(a.AssigneeId))
+            .Where(a => a.AssigneeId == UserId.Unassigned
+                || a.BypassDataPermissionFilter
+                || visibilityMap.GetValueOrDefault(a.AssigneeId))
             .ToList();
     }
 
@@ -57,7 +59,7 @@ public class WorkflowTaskVisibilityPolicy(
         DeptId initiatorDeptId,
         CancellationToken cancellationToken = default)
     {
-        if (userId == new UserId(0))
+        if (userId == UserId.Unassigned)
         {
             return false;
         }
@@ -143,7 +145,7 @@ public class WorkflowTaskVisibilityPolicy(
             case DataScope.Self:
                 return userId == initiatorId;
             case DataScope.Dept:
-                return userDeptId != new DeptId(0) && userDeptId == initiatorDeptId;
+                return userDeptId != DeptId.Unassigned && userDeptId == initiatorDeptId;
             case DataScope.DeptAndSub:
                 return await DeptTreeContainsAsync(userDeptId, initiatorDeptId, deptChildrenCache, cancellationToken);
             case DataScope.CustomDeptAndSub:
@@ -167,7 +169,7 @@ public class WorkflowTaskVisibilityPolicy(
         Dictionary<DeptId, HashSet<DeptId>> deptChildrenCache,
         CancellationToken cancellationToken)
     {
-        if (rootDeptId == new DeptId(0) || targetDeptId == new DeptId(0))
+        if (rootDeptId == DeptId.Unassigned || targetDeptId == DeptId.Unassigned)
         {
             return false;
         }

@@ -5,6 +5,7 @@ using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Infrastructure.Services;
 using Ncp.Admin.Web.Application.Services.Workflow;
+using Ncp.Admin.Web.Application.Services.Workflow.Graph;
 using NetCorePal.Context;
 
 namespace Ncp.Admin.Web.Application.Queries;
@@ -16,6 +17,7 @@ public record WorkflowInstanceQueryDto(
     WorkflowInstanceId Id,
     WorkflowDefinitionId WorkflowDefinitionId,
     string WorkflowDefinitionName,
+    string WorkflowDefinitionCategory,
     string BusinessKey,
     string BusinessType,
     string Title,
@@ -24,6 +26,7 @@ public record WorkflowInstanceQueryDto(
     WorkflowInstanceStatus Status,
     string CurrentNodeName,
     DateTimeOffset StartedAt,
+    DateTimeOffset DueAt,
     DateTimeOffset? CompletedAt,
     string Remark);
 
@@ -44,6 +47,8 @@ public record WorkflowInstanceDetailQueryDto(
     string CurrentNodeKey,
     DateTimeOffset StartedAt,
     DateTimeOffset? CompletedAt,
+    DateTimeOffset? SuspendedAt,
+    DateTimeOffset? ResumedAt,
     string Variables,
     IReadOnlyList<WorkflowProgressStepItem> ProgressSteps,
     string Remark,
@@ -66,7 +71,12 @@ public record WorkflowTaskQueryDto(
     bool CanOperate,
     string Comment,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? CompletedAt);
+    DateTimeOffset? CompletedAt,
+    UserId CompletedByUserId,
+    string? CompletedByUserDisplayName,
+    string ActorDeptName,
+    string ActorRoleNames,
+    WorkflowTaskReturnContextDto? ReturnContext);
 
 /// <summary>
 /// 我的待办任务查询DTO（包含流程信息）
@@ -102,8 +112,11 @@ public record MyCompletedTaskQueryDto(
 /// </summary>
 public class WorkflowInstanceQueryInput : PageRequest
 {
+    public string? Keyword { get; set; }
     public string? Title { get; set; }
     public string? BusinessType { get; set; }
+    public WorkflowDefinitionId? WorkflowDefinitionId { get; set; }
+    public string? Category { get; set; }
     public WorkflowInstanceStatus? Status { get; set; }
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
@@ -131,10 +144,13 @@ public class CompletedTaskQueryInput : PageRequest
 public class WorkflowInstanceQuery(
     ApplicationDbContext applicationDbContext,
     UserQuery userQuery,
-    IContextAccessor contextAccessor) : IQuery
+    IContextAccessor contextAccessor,
+    WorkflowGraphRuntimeService graphRuntimeService,
+    IWorkflowVisibilityService workflowVisibilityService) : IQuery
 {
     private DbSet<WorkflowInstance> InstanceSet { get; } = applicationDbContext.WorkflowInstances;
     private DbSet<WorkflowTask> TaskSet { get; } = applicationDbContext.WorkflowTasks;
+    private DbSet<WorkflowTaskAssignmentSnapshot> SnapshotSet { get; } = applicationDbContext.WorkflowTaskAssignmentSnapshots;
 
     /// <summary>
     /// 是否存在相同 businessType + businessKey 且状态为运行中的流程实例（用于防重复发起）
@@ -159,16 +175,16 @@ public class WorkflowInstanceQuery(
         WorkflowInstanceQueryInput query, CancellationToken cancellationToken)
     {
         return await InstanceSet.AsNoTracking()
-            .WhereIf(!string.IsNullOrWhiteSpace(query.Title), i => i.Title.Contains(query.Title!))
-            .WhereIf(!string.IsNullOrWhiteSpace(query.BusinessType), i => i.BusinessType == query.BusinessType)
-            .WhereIf(query.Status.HasValue, i => i.Status == query.Status)
-            .WhereIf(query.StartTime.HasValue, i => i.StartedAt >= query.StartTime!.Value)
-            .WhereIf(query.EndTime.HasValue, i => i.StartedAt <= query.EndTime!.Value)
+            .ApplyWorkflowInstanceFilters(applicationDbContext, query)
             .OrderByDescending(i => i.StartedAt)
             .Select(i => new WorkflowInstanceQueryDto(
                 i.Id,
                 i.WorkflowDefinitionId,
                 i.WorkflowDefinitionName,
+                applicationDbContext.WorkflowDefinitions
+                    .Where(d => d.Id == i.WorkflowDefinitionId)
+                    .Select(d => d.Category)
+                    .FirstOrDefault() ?? string.Empty,
                 i.BusinessKey,
                 i.BusinessType,
                 i.Title,
@@ -177,6 +193,7 @@ public class WorkflowInstanceQuery(
                 i.Status,
                 i.CurrentNodeName,
                 i.StartedAt,
+                i.StartedAt.AddDays(3),
                 i.CompletedAt,
                 i.Remark))
             .ToPagedDataAsync(query, cancellationToken);
@@ -192,7 +209,8 @@ public class WorkflowInstanceQuery(
     {
         var userRoleIds = await userQuery.GetRoleIdsByUserIdAsync(operatorId, cancellationToken);
 
-        var instance = await InstanceSet.AsNoTracking()
+        var instance = await applicationDbContext.WorkflowInstances.AsNoTracking()
+            .IgnoreQueryFilters()
             .Include(i => i.Tasks)
             .Where(i => i.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
@@ -201,17 +219,68 @@ public class WorkflowInstanceQuery(
             return null;
         }
 
-        var definitionJson = await applicationDbContext.WorkflowDefinitions.AsNoTracking()
-            .Where(d => d.Id == instance.WorkflowDefinitionId)
-            .Select(d => d.DefinitionJson)
+        var taskIds = instance.Tasks.Select(t => t.Id).ToList();
+        var snapshots = await SnapshotSet.AsNoTracking()
+            .Where(s => taskIds.Contains(s.WorkflowTaskId))
+            .ToListAsync(cancellationToken);
+        var snapshotsByTaskId = snapshots
+            .GroupBy(s => s.WorkflowTaskId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<WorkflowTaskAssignmentSnapshot>)g.ToList());
+
+        if (!await workflowVisibilityService.CanViewInstanceDetailAsync(
+                instance,
+                snapshotsByTaskId,
+                operatorId,
+                userRoleIds,
+                cancellationToken))
+        {
+            return null;
+        }
+
+        var graphSnapshotJson = await applicationDbContext.WorkflowDefinitionVersions.AsNoTracking()
+            .Where(v => v.Id == instance.WorkflowDefinitionVersionId)
+            .Select(v => v.GraphSnapshotJson)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var traverser = new WorkflowTreeTraverser();
-        var progressSteps = traverser.CollectProgressSteps(definitionJson, instance.Variables);
+        var progressSteps = graphRuntimeService.CollectProgressSteps(graphSnapshotJson, instance.Variables);
 
-        var tasks = instance.Tasks
-            .OrderBy(t => t.CreatedAt)
-            .Select(t => new WorkflowTaskQueryDto(
+        var orderedTasks = instance.Tasks.OrderBy(t => t.CreatedAt).ToList();
+        var completedByIds = orderedTasks
+            .Select(t => t.CompletedByUserId)
+            .Where(id => id != UserId.Unassigned)
+            .Distinct()
+            .ToList();
+
+        var completedByDisplayName = new Dictionary<UserId, string>();
+        foreach (var uid in completedByIds)
+        {
+            var u = await userQuery.GetUserByIdAsync(uid, cancellationToken);
+            completedByDisplayName[uid] = u == null
+                ? uid.ToString()
+                : (!string.IsNullOrWhiteSpace(u.RealName) ? u.RealName : u.Name);
+        }
+
+        var actorUserIds = orderedTasks
+            .SelectMany(t =>
+            {
+                if (t.CompletedByUserId != UserId.Unassigned)
+                    return new[] { t.CompletedByUserId, t.AssigneeId };
+                return new[] { t.AssigneeId };
+            })
+            .Distinct()
+            .ToList();
+        var userDeptPositions = await userQuery.GetUserDeptPositionsByIdsAsync(
+            actorUserIds,
+            cancellationToken);
+
+        var tasks = orderedTasks
+            .Select(t =>
+            {
+                var actorUserId = t.CompletedByUserId != UserId.Unassigned
+                    ? t.CompletedByUserId
+                    : t.AssigneeId;
+                var actorOrg = userDeptPositions.GetValueOrDefault(actorUserId);
+                return new WorkflowTaskQueryDto(
                 t.Id,
                 t.WorkflowInstanceId,
                 t.NodeKey,
@@ -222,12 +291,18 @@ public class WorkflowInstanceQuery(
                 t.AssigneeRoleId,
                 t.AssigneeName,
                 t.Status,
-                t.Status == WorkflowTaskStatus.Pending
-                && ((t.AssigneeId != new UserId(0) && t.AssigneeId == operatorId)
-                    || (t.AssigneeRoleId != new RoleId(Guid.Empty) && userRoleIds.Contains(t.AssigneeRoleId))),
+                workflowVisibilityService.CanOperateTask(t, snapshotsByTaskId, operatorId, userRoleIds),
                 t.Comment,
                 t.CreatedAt,
-                t.CompletedAt))
+                t.CompletedAt,
+                t.CompletedByUserId,
+                t.CompletedByUserId != UserId.Unassigned
+                    ? completedByDisplayName.GetValueOrDefault(t.CompletedByUserId)
+                    : null,
+                actorOrg?.DeptName ?? string.Empty,
+                actorOrg?.RoleNames ?? string.Empty,
+                WorkflowTaskExtraData.TryReadReturnContext(t.ExtraDataJson));
+            })
             .ToList();
 
         return new WorkflowInstanceDetailQueryDto(
@@ -243,7 +318,9 @@ public class WorkflowInstanceQuery(
             instance.CurrentNodeName,
             instance.CurrentNodeKey,
             instance.StartedAt,
-            instance.CompletedAt,
+            instance.CompletedAt == DateTimeOffset.MinValue ? null : instance.CompletedAt,
+            instance.SuspendedAt,
+            instance.ResumedAt,
             instance.Variables,
             progressSteps,
             instance.Remark,
@@ -258,13 +335,16 @@ public class WorkflowInstanceQuery(
     {
         return await InstanceSet.AsNoTracking()
             .Where(i => i.InitiatorId == initiatorId)
-            .WhereIf(!string.IsNullOrWhiteSpace(query.Title), i => i.Title.Contains(query.Title!))
-            .WhereIf(query.Status.HasValue, i => i.Status == query.Status)
+            .ApplyWorkflowInstanceFilters(applicationDbContext, query)
             .OrderByDescending(i => i.StartedAt)
             .Select(i => new WorkflowInstanceQueryDto(
                 i.Id,
                 i.WorkflowDefinitionId,
                 i.WorkflowDefinitionName,
+                applicationDbContext.WorkflowDefinitions
+                    .Where(d => d.Id == i.WorkflowDefinitionId)
+                    .Select(d => d.Category)
+                    .FirstOrDefault() ?? string.Empty,
                 i.BusinessKey,
                 i.BusinessType,
                 i.Title,
@@ -273,6 +353,7 @@ public class WorkflowInstanceQuery(
                 i.Status,
                 i.CurrentNodeName,
                 i.StartedAt,
+                i.StartedAt.AddDays(3),
                 i.CompletedAt,
                 i.Remark))
             .ToPagedDataAsync(query, cancellationToken);
@@ -280,66 +361,32 @@ public class WorkflowInstanceQuery(
 
     /// <summary>
     /// 获取我的待办任务（分页）
-    /// 指定用户：AssigneeId == 当前用户；指定角色：AssigneeRoleId 属于当前用户所属角色
+    /// 指定用户：授权快照用户 == 当前用户；指定角色：授权快照角色属于当前用户所属角色。
+    /// 数据权限：仅约束按角色生成的授权快照；指名到人的节点不受发起人数据范围限制。
     /// </summary>
     public async Task<PagedData<MyPendingTaskQueryDto>> GetMyPendingTasksAsync(
         UserId assigneeId, PendingTaskQueryInput query, CancellationToken cancellationToken)
     {
         var userRoleIds = await userQuery.GetRoleIdsByUserIdAsync(assigneeId, cancellationToken);
 
-        // “我的待办”按任务归属 + 数据权限交集过滤。
+        // 「我的待办」从授权快照读取处理权限，避免角色和部门配置变动影响已创建任务的归属。
         var baseQuery = from t in TaskSet.AsNoTracking()
-                        join i in InstanceSet.AsNoTracking()
+                        join s in SnapshotSet.AsNoTracking()
+                            on t.Id equals s.WorkflowTaskId
+                        join i in applicationDbContext.WorkflowInstances.AsNoTracking().IgnoreQueryFilters()
                             on t.WorkflowInstanceId equals i.Id
                         where i.Status == WorkflowInstanceStatus.Running
                               && t.Status == WorkflowTaskStatus.Pending
-                              && ((t.AssigneeId != new UserId(0) && t.AssigneeId == assigneeId)
-                                  || (t.AssigneeRoleId != new RoleId(Guid.Empty) && userRoleIds.Contains(t.AssigneeRoleId)))
-                        select new { Instance = i, Task = t };
+                              && ((s.AssigneeType == AssigneeType.User && s.AssigneeUserId == assigneeId)
+                                  || (s.AssigneeType == AssigneeType.Role && userRoleIds.Contains(s.AssigneeRoleId)))
+                        select new WorkflowTaskSnapshotProjection
+                        {
+                            Instance = i,
+                            Task = t,
+                            Snapshot = s
+                        };
         var dataPermission = contextAccessor.GetContext<DataPermissionContext>();
-        if (dataPermission is { Scope: not DataScope.All })
-        {
-            switch (dataPermission.Scope)
-            {
-                case DataScope.Self:
-                {
-                    if (dataPermission.UserId == null)
-                    {
-                        baseQuery = baseQuery.Where(_ => false);
-                    }
-                    else
-                    {
-                        var currentUserId = dataPermission.UserId;
-                        baseQuery = baseQuery.Where(x => x.Instance.InitiatorId == currentUserId);
-                    }
-
-                    break;
-                }
-                case DataScope.Dept:
-                {
-                    if (dataPermission.DeptId == null)
-                    {
-                        baseQuery = baseQuery.Where(_ => false);
-                    }
-                    else
-                    {
-                        var currentDeptId = dataPermission.DeptId;
-                        baseQuery = baseQuery.Where(x => x.Instance.InitiatorDeptId == currentDeptId);
-                    }
-
-                    break;
-                }
-                case DataScope.DeptAndSub:
-                case DataScope.CustomDeptAndSub:
-                {
-                    var deptIds = dataPermission.AuthorizedDeptIds ?? [];
-                    baseQuery = deptIds.Count == 0
-                        ? baseQuery.Where(_ => false)
-                        : baseQuery.Where(x => deptIds.Contains(x.Instance.InitiatorDeptId));
-                    break;
-                }
-            }
-        }
+        baseQuery = workflowVisibilityService.ApplyTaskDisplayFilter(baseQuery, dataPermission, assigneeId, userRoleIds);
         if (!string.IsNullOrWhiteSpace(query.Title))
         {
             baseQuery = baseQuery.Where(x => x.Instance.Title.Contains(query.Title));
@@ -361,65 +408,31 @@ public class WorkflowInstanceQuery(
 
     /// <summary>
     /// 获取我的已办任务（分页）
-    /// 指定用户：AssigneeId == 当前用户；指定角色：AssigneeRoleId 属于当前用户所属角色
+    /// 指定用户：授权快照用户 == 当前用户；指定角色：授权快照角色属于当前用户所属角色。
+    /// 数据权限与「我的待办」一致。
     /// </summary>
     public async Task<PagedData<MyCompletedTaskQueryDto>> GetMyCompletedTasksAsync(
         UserId assigneeId, CompletedTaskQueryInput query, CancellationToken cancellationToken)
     {
         var userRoleIds = await userQuery.GetRoleIdsByUserIdAsync(assigneeId, cancellationToken);
 
-        // “我的已办”同理按任务归属 + 数据权限交集过滤。
+        // 「我的已办」与待办相同，从授权快照读取任务归属。
         var baseQuery = from t in TaskSet.AsNoTracking()
-                        join i in InstanceSet.AsNoTracking()
+                        join s in SnapshotSet.AsNoTracking()
+                            on t.Id equals s.WorkflowTaskId
+                        join i in applicationDbContext.WorkflowInstances.AsNoTracking().IgnoreQueryFilters()
                             on t.WorkflowInstanceId equals i.Id
                         where t.Status != WorkflowTaskStatus.Pending
-                              && ((t.AssigneeId != new UserId(0) && t.AssigneeId == assigneeId)
-                                  || (t.AssigneeRoleId != new RoleId(Guid.Empty) && userRoleIds.Contains(t.AssigneeRoleId)))
-                        select new { Instance = i, Task = t };
+                              && ((s.AssigneeType == AssigneeType.User && s.AssigneeUserId == assigneeId)
+                                  || (s.AssigneeType == AssigneeType.Role && userRoleIds.Contains(s.AssigneeRoleId)))
+                        select new WorkflowTaskSnapshotProjection
+                        {
+                            Instance = i,
+                            Task = t,
+                            Snapshot = s
+                        };
         var dataPermission = contextAccessor.GetContext<DataPermissionContext>();
-        if (dataPermission is { Scope: not DataScope.All })
-        {
-            switch (dataPermission.Scope)
-            {
-                case DataScope.Self:
-                {
-                    if (dataPermission.UserId == null)
-                    {
-                        baseQuery = baseQuery.Where(_ => false);
-                    }
-                    else
-                    {
-                        var currentUserId = dataPermission.UserId;
-                        baseQuery = baseQuery.Where(x => x.Instance.InitiatorId == currentUserId);
-                    }
-
-                    break;
-                }
-                case DataScope.Dept:
-                {
-                    if (dataPermission.DeptId == null)
-                    {
-                        baseQuery = baseQuery.Where(_ => false);
-                    }
-                    else
-                    {
-                        var currentDeptId = dataPermission.DeptId;
-                        baseQuery = baseQuery.Where(x => x.Instance.InitiatorDeptId == currentDeptId);
-                    }
-
-                    break;
-                }
-                case DataScope.DeptAndSub:
-                case DataScope.CustomDeptAndSub:
-                {
-                    var deptIds = dataPermission.AuthorizedDeptIds ?? [];
-                    baseQuery = deptIds.Count == 0
-                        ? baseQuery.Where(_ => false)
-                        : baseQuery.Where(x => deptIds.Contains(x.Instance.InitiatorDeptId));
-                    break;
-                }
-            }
-        }
+        baseQuery = workflowVisibilityService.ApplyTaskDisplayFilter(baseQuery, dataPermission, assigneeId, userRoleIds);
         if (!string.IsNullOrWhiteSpace(query.Title))
         {
             baseQuery = baseQuery.Where(x => x.Instance.Title.Contains(query.Title));
@@ -440,5 +453,40 @@ public class WorkflowInstanceQuery(
                 x.Task.CreatedAt,
                 x.Task.CompletedAt))
             .ToPagedDataAsync(query, cancellationToken);
+    }
+
+}
+
+public sealed class WorkflowTaskSnapshotProjection
+{
+    public WorkflowInstance Instance { get; init; } = null!;
+    public WorkflowTask Task { get; init; } = null!;
+    public WorkflowTaskAssignmentSnapshot Snapshot { get; init; } = null!;
+}
+
+internal static class WorkflowInstanceQueryableExtensions
+{
+    public static IQueryable<WorkflowInstance> ApplyWorkflowInstanceFilters(
+        this IQueryable<WorkflowInstance> source,
+        ApplicationDbContext dbContext,
+        WorkflowInstanceQueryInput query)
+    {
+        var keyword = !string.IsNullOrWhiteSpace(query.Keyword) ? query.Keyword : query.Title;
+        source = source
+            .WhereIf(!string.IsNullOrWhiteSpace(keyword),
+                i => i.Title.Contains(keyword!) || i.BusinessKey.Contains(keyword!))
+            .WhereIf(!string.IsNullOrWhiteSpace(query.BusinessType), i => i.BusinessType == query.BusinessType)
+            .WhereIf(query.WorkflowDefinitionId != null, i => i.WorkflowDefinitionId == query.WorkflowDefinitionId)
+            .WhereIf(query.Status.HasValue, i => i.Status == query.Status)
+            .WhereIf(query.StartTime.HasValue, i => i.StartedAt >= query.StartTime!.Value)
+            .WhereIf(query.EndTime.HasValue, i => i.StartedAt <= query.EndTime!.Value);
+
+        if (!string.IsNullOrWhiteSpace(query.Category))
+        {
+            source = source.Where(i => dbContext.WorkflowDefinitions
+                .Any(d => d.Id == i.WorkflowDefinitionId && d.Category == query.Category));
+        }
+
+        return source;
     }
 }

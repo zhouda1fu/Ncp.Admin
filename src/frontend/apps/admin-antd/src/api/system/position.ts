@@ -51,7 +51,7 @@ async function getPosition(id: string) {
  */
 async function createPosition(data: {
   name: string;
-  code: string;
+  code?: string;
   description: string;
   deptId: string;
   sortOrder: number;

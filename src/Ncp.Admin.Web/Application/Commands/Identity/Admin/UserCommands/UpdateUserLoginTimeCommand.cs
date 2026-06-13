@@ -14,6 +14,7 @@ public class UpdateUserLoginTimeCommandHandler(IUserRepository userRepository) :
                    ?? throw new KnownException($"未找到用户，UserId = {request.UserId}", ErrorCodes.UserNotFound);
 
         user.UpdateLastLoginTime(request.LoginTime, request.LoginIp);
+        user.RevokeAllRefreshTokens();
         user.SetUserRefreshToken(request.RefreshToken);
     }
 }

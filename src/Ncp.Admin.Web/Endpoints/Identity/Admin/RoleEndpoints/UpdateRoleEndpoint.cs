@@ -16,7 +16,7 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.RoleEndpoints;
 /// <param name="Name">新的角色名称</param>
 /// <param name="Description">新的角色描述</param>
 /// <param name="PermissionCodes">新的权限代码列表</param>
-/// <param name="CustomDeptIds">自定义部门ID列表（当 DataScope=CustomDeptAndSub 时必填）</param>
+/// <param name="CustomDeptIds">自定义部门 ID 列表（当 DataScope=CustomDeptAndSub 时必填）</param>
 public record UpdateRoleInfoRequest(
     RoleId RoleId,
     string Name,

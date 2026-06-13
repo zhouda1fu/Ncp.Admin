@@ -24,7 +24,6 @@ public record UpdateUserCommand(
     DateTimeOffset BirthDate,
     DeptId DeptId,
     string DeptName,
-    bool IsDeptManager,
     PositionId? PositionId,
     string? PositionName,
     string PasswordHash,
@@ -35,9 +34,12 @@ public record UpdateUserCommand(
     string AvatarUrl,
     bool NotOrderMeal,
     int OrderMealSort,
+    bool AttendanceRequired,
     string WechatGuid,
     bool IsResigned,
     DateTimeOffset ResignedTime,
+    bool? SetAsDeptResponsibleUser,
+    bool? SetAsDefaultDeptResponsibleUser,
     UserId ModifierId) : ICommand<UserId>;
 
 /// <summary>
@@ -65,6 +67,7 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, IMemoryCac
     {
         var user = await userRepository.GetAsync(request.UserId, cancellationToken) ??
                    throw new KnownException($"未找到用户，UserId = {request.UserId}", ErrorCodes.UserNotFound);
+        var originalUserName = user.Name;
 
         user.UpdateUserInfo(
             request.Name,
@@ -84,7 +87,8 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, IMemoryCac
             request.WechatGuid ?? string.Empty,
             request.IsResigned,
             request.ResignedTime,
-            request.ModifierId);
+            request.ModifierId,
+            request.AttendanceRequired);
 
         // 如果提供了新密码，则更新密码
         if (!string.IsNullOrEmpty(request.PasswordHash))
@@ -93,20 +97,42 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, IMemoryCac
         }
 
         // 分配部门
-        if (request.DeptId != new DeptId(0) && !string.IsNullOrEmpty(request.DeptName))
+        if (request.DeptId != DeptId.Unassigned && !string.IsNullOrEmpty(request.DeptName))
         {
-            user.AssignDept(request.DeptId, request.DeptName, request.IsDeptManager);
+            user.AssignDept(request.DeptId, request.DeptName);
         }
 
         // 分配岗位（null 或空表示清除岗位）
         if (request.PositionId != null && !string.IsNullOrEmpty(request.PositionName))
         {
-            var position = new UserPosition(user.Id, request.PositionId!, request.PositionName);
-            user.AssignPosition(position);
+            user.AssignPosition(request.PositionId, request.PositionName);
         }
         else
         {
-            user.AssignPosition(null);
+            user.ClearPosition();
+        }
+
+        if (request.SetAsDeptResponsibleUser.HasValue || request.SetAsDefaultDeptResponsibleUser.HasValue)
+        {
+            var setAsDeptResponsibleUser =
+                request.SetAsDeptResponsibleUser == true || request.SetAsDefaultDeptResponsibleUser == true;
+            if (!setAsDeptResponsibleUser)
+            {
+                user.RequestDeptResponsibleUserClear();
+            }
+            else
+            {
+                if (request.DeptId == DeptId.Unassigned)
+                {
+                    throw new KnownException("部门负责人必须选择部门", ErrorCodes.DeptNotFound);
+                }
+
+                // 编辑页提交的是“当前所属部门负责人”状态。先清理旧部门关系，再把当前部门交给部门聚合追加。
+                user.RequestDeptResponsibleUserClear();
+                user.RequestDeptResponsibleUserAssignment(
+                    request.DeptId,
+                    request.SetAsDefaultDeptResponsibleUser == true);
+            }
         }
 
         memoryCache.Remove(UserQuery.GetUserCacheKey(request.UserId));

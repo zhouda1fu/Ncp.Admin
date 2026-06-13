@@ -1,4 +1,8 @@
 :root .vxe-grid {
+  --vxe-ui-font-size-default: calc(var(--font-size-base, 16px) * 0.875);
+  --vxe-ui-font-size-medium: calc(var(--font-size-base, 16px) * 0.875);
+  --vxe-ui-font-size-small: calc(var(--font-size-base, 16px) * 0.8125);
+  --vxe-ui-font-size-mini: calc(var(--font-size-base, 16px) * 0.75);
   --vxe-ui-font-color: hsl(var(--foreground));
   --vxe-ui-font-primary-color: hsl(var(--primary));
 
@@ -114,4 +118,17 @@
 
 .vxe-grid--layout-body-content-wrapper {
   overflow: hidden;
+}
+
+.vxe-body--row.vxe-row-clickable,
+.vxe-body--row.vxe-row-clickable .vxe-body--column,
+.vxe-body--row.vxe-row-clickable .vxe-cell,
+.vxe-body--row.vxe-row-clickable .vxe-cell * {
+  cursor: pointer;
+}
+
+/* 右侧工具栏：插槽内容与内置搜索按钮之间保持间距，避免被父级 flex 压成「文字连在一起」 */
+.vxe-tools--wrapper [data-vxe-toolbar-tools-wrap] {
+  flex: 1 1 auto;
+  min-width: 0;
 }

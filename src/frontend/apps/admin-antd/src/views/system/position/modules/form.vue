@@ -41,7 +41,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
       try {
         const payload = {
           name: data.name,
-          code: data.code,
           description: data.description ?? '',
           deptId: String(data.deptId),
           sortOrder: Number(data.sortOrder) ?? 0,
@@ -50,6 +49,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         if (formData.value?.id) {
           await updatePosition({
             id: String(formData.value.id),
+            code: data.code,
             ...payload,
           });
         } else {

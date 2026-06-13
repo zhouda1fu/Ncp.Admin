@@ -11,7 +11,19 @@ const config = {
     },
     parseData(res: { data?: Array<{ id?: string; name?: string; key?: string; label?: string; children?: any[] }> }) {
       const raw = res?.data ?? [];
-      const toTree = (arr: typeof raw) =>
+      type DeptTreeNode = {
+        id?: string;
+        name?: string;
+        key?: string;
+        label?: string;
+        children?: DeptTreeNode[];
+      };
+      type SelectTreeNode = {
+        key: string;
+        label?: string;
+        children?: SelectTreeNode[];
+      };
+      const toTree = (arr: DeptTreeNode[]): SelectTreeNode[] =>
         arr.map((n) => ({
           key: (n as any).key ?? String(n.id),
           label: (n as any).label ?? n.name,
@@ -29,6 +41,7 @@ const config = {
           pageSize: params?.pageSize ?? 20,
           deptId: params?.groupId ?? undefined,
           keyword: params?.keyword ?? undefined,
+          isResigned: false,
         });
         return { data: { rows: result.items, total: result.total } };
       },
@@ -41,7 +54,8 @@ const config = {
       const rows = raw.map((r: any) => ({
         ...r,
         key: r.userId ?? r.id ?? '',
-        label: r.name ?? r.label ?? '',
+        label: r.realName || r.name || r.label || '',
+        accountName: r.name ?? '',
       }));
       return {
         rows,

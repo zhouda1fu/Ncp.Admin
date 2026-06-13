@@ -1,12 +1,39 @@
 import type {
   ComponentRecordType,
   GenerateMenuAndRoutesOptions,
+  MenuRecordRaw,
 } from '@vben/types';
 
 import { generateAccessible } from '@vben/access';
 import { preferences } from '@vben/preferences';
-
+import { MODULE_CATEGORY_DEFINITIONS } from '#/constants/module-menu-categories';
 import { BasicLayout, IFrameView } from '#/layouts';
+import { normalizeDynamicListMenuPaths } from '#/utils/normalize-dynamic-list-menu-paths';
+
+import {
+  pruneEmptyModuleCategoryRoutes,
+  wrapRoutesByModule,
+} from './wrap-routes-by-module';
+
+function pruneEmptyModuleCategoryMenus(menus: MenuRecordRaw[]): MenuRecordRaw[] {
+  const modulePaths = new Set(
+    MODULE_CATEGORY_DEFINITIONS.map((item) => `/${item.permissionCode}`),
+  );
+
+  return menus
+    .filter((menu) => {
+      if (!modulePaths.has(menu.path)) {
+        return true;
+      }
+      return (menu.children?.length ?? 0) > 0;
+    })
+    .map((menu) => ({
+      ...menu,
+      children: menu.children?.length
+        ? pruneEmptyModuleCategoryMenus(menu.children)
+        : menu.children,
+    }));
+}
 
 const forbiddenComponent = () => import('#/views/_core/fallback/forbidden.vue');
 
@@ -18,18 +45,26 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
     IFrameView,
   };
 
-  // 使用前端访问控制模式，不再调用后端菜单接口
-  // 所有路由通过静态配置（router/routes/modules/*.ts）定义
-  // 权限控制通过 meta.authority 中的 PermissionCodes 实现
-  return await generateAccessible(preferences.app.accessMode, {
-    ...options,
-    // 移除 fetchMenuListAsync，不再调用菜单 API
-    // 可以指定没有权限跳转403页面
-    forbiddenComponent,
-    // 如果 route.meta.menuVisibleWithForbidden = true
-    layoutMap,
-    pageMap,
-  });
+  const { accessibleMenus, accessibleRoutes } = await generateAccessible(
+    preferences.app.accessMode,
+    {
+      ...options,
+      forbiddenComponent,
+      layoutMap,
+      pageMap,
+      routes: wrapRoutesByModule(options.routes),
+    },
+  );
+
+  const prunedRoutes = pruneEmptyModuleCategoryRoutes(accessibleRoutes);
+  const groupedMenus = normalizeDynamicListMenuPaths(
+    pruneEmptyModuleCategoryMenus(accessibleMenus),
+  );
+
+  return {
+    accessibleRoutes: prunedRoutes,
+    accessibleMenus: groupedMenus,
+  };
 }
 
 export { generateAccess };

@@ -43,7 +43,7 @@ interface AuthenticationProps {
   showRegister?: boolean;
 
   /**
-   * @zh_CN 是否显示记住账号
+   * @zh_CN 是否显示记住密码
    */
   showRememberMe?: boolean;
 

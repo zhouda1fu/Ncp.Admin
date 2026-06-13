@@ -54,6 +54,8 @@ const wrapperRef = ref<HTMLElement>();
 const dialogRef = ref();
 const headerRef = ref();
 const footerRef = ref();
+void wrapperRef;
+void footerRef;
 
 const id = useId();
 

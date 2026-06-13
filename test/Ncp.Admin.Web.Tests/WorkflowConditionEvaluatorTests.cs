@@ -117,4 +117,132 @@ public class WorkflowConditionEvaluatorTests
         };
         Assert.True(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
     }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_StringEqualsAny_WhenCommaSeparated_ReturnsTrue()
+    {
+        var vars = """{"RoutingRoleId":"role-a"}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "RoutingRoleId", "==", "role-x, role-a, role-b") }
+        };
+        Assert.True(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_StringNotEqualsAny_WhenCommaSeparated_ReturnsTrue()
+    {
+        var vars = """{"RoutingRoleId":"role-a"}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "RoutingRoleId", "!=", "role-x, role-b") }
+        };
+        Assert.True(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_ApplicantDeptId_EqualsAny_WhenCommaSeparated_ReturnsTrue()
+    {
+        var vars = """{"ApplicantDeptId":"dept-a"}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "ApplicantDeptId", "==", "dept-x, dept-a, dept-b") }
+        };
+        Assert.True(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_StringEqualsAny_WhenNoneMatch_ReturnsFalse()
+    {
+        var vars = """{"RoutingRoleId":"role-c"}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "RoutingRoleId", "==", "role-a, role-b") }
+        };
+        Assert.False(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_CategoryDiscountPointsMissingCategory_TreatedAsZero_ForAndGroup()
+    {
+        var yang = "11111111-1111-1111-1111-111111111111";
+        var wei = "22222222-2222-2222-2222-222222222222";
+        var vars = "{\"CategoryDiscountPoints\":{\"" + yang + "\":5}}";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new()
+            {
+                new DesignerConditionRule(null, $"CategoryDiscountPoints.{yang}", ">", "2"),
+                new DesignerConditionRule(null, $"CategoryDiscountPoints.{wei}", "==", "0"),
+            },
+        };
+        Assert.True(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_CategoryDiscountPointsMissingCategory_GreaterThanZero_ReturnsFalse()
+    {
+        var wei = "22222222-2222-2222-2222-222222222222";
+        var vars = """{"CategoryDiscountPoints":{}}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, $"CategoryDiscountPoints.{wei}", ">", "0") },
+        };
+        Assert.False(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_OfficeTaskOrderId_NotEmpty_WhenOrderLinked_ReturnsTrue()
+    {
+        var vars = """{"OrderId":"11111111-1111-1111-1111-111111111111","OrderNumber":"SO-2026-001"}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "OrderId", "==", "notempty") },
+        };
+        Assert.True(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_OfficeTaskOrderId_Empty_WhenNoOrder_ReturnsTrue()
+    {
+        var vars = """{"OrderId":"","OrderNumber":""}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "OrderId", "==", "empty") },
+        };
+        Assert.True(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_OfficeTaskOrderId_Empty_WhenOrderLinked_ReturnsFalse()
+    {
+        var vars = """{"OrderId":"11111111-1111-1111-1111-111111111111","OrderNumber":"SO-2026-001"}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "OrderId", "==", "empty") },
+        };
+        Assert.False(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_OfficeTaskOrderId_NotEmpty_WhenOnlyOrderNumberInVars_ReturnsFalse()
+    {
+        var vars = """{"OrderId":"","OrderNumber":"SO-2026-001"}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "OrderId", "==", "notempty") },
+        };
+        Assert.False(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
+
+    [Fact]
+    public void EvaluateDesignerConditionList_OfficeTaskOrderNumberField_IsNotRecognized()
+    {
+        var vars = """{"OrderId":"11111111-1111-1111-1111-111111111111","OrderNumber":"SO-2026-001"}""";
+        var rules = new List<List<DesignerConditionRule>>
+        {
+            new() { new DesignerConditionRule(null, "OrderNumber", "==", "notempty") },
+        };
+        Assert.False(WorkflowConditionEvaluator.EvaluateDesignerConditionList(vars, rules));
+    }
 }

@@ -35,6 +35,7 @@ public class DownloadFileEndpoint(IFileStorageService fileStorage) : Endpoint<Do
             await Send.NotFoundAsync(ct);
             return;
         }
+
         var stream = await fileStorage.DownloadAsync(path, ct);
         if (stream == null)
         {
@@ -42,11 +43,11 @@ public class DownloadFileEndpoint(IFileStorageService fileStorage) : Endpoint<Do
             return;
         }
         var fileName = System.IO.Path.GetFileName(path);
-        var contentType = GetContentType(fileName);
+        var contentType = GetContentTypeForPreview(fileName);
         await Send.StreamAsync(stream, fileName, stream.Length, contentType, cancellation: ct);
     }
 
-    private static string GetContentType(string fileName)
+    internal static string GetContentTypeForPreview(string fileName)
     {
         var ext = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
         return ext switch
@@ -58,10 +59,20 @@ public class DownloadFileEndpoint(IFileStorageService fileStorage) : Endpoint<Do
             ".bmp" => "image/bmp",
             ".svg" => "image/svg+xml",
             ".pdf" => "application/pdf",
+            ".txt" or ".log" => "text/plain",
+            ".csv" => "text/csv",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".doc" => "application/msword",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".xls" => "application/vnd.ms-excel",
+            ".zip" => "application/zip",
+            ".rar" => "application/vnd.rar",
+            ".7z" => "application/x-7z-compressed",
             _ => "application/octet-stream"
         };
     }
 }
 
 /// <summary>按存储 path 下载（query：path）</summary>
+
 public record DownloadFileRequest(string? Path = null);

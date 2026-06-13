@@ -3,6 +3,21 @@ import type { Recordable } from '@vben/types';
 import { requestClient } from '#/api/request';
 
 export namespace SystemUserApi {
+  export interface UserColumnFacet {
+    value: string;
+    count: number;
+    displayLabel?: string | null;
+  }
+
+  /** 用户修改记录（与后端 UserFieldChangeRowDto 对齐） */
+  export interface UserFieldChangeRow {
+    fieldKey: string;
+    oldDisplay: string;
+    newDisplay: string;
+    operatorUserName: string;
+    changedAt: string;
+  }
+
   export interface SystemUser {
     [key: string]: any;
     userId: string;
@@ -16,7 +31,6 @@ export namespace SystemUserApi {
     birthDate: string;
     deptId?: string;
     deptName?: string;
-    isDeptManager?: boolean;
     roles: string[];
     createdAt: string;
     idCardNumber?: string;
@@ -26,9 +40,12 @@ export namespace SystemUserApi {
     avatarUrl?: string;
     notOrderMeal?: boolean;
     orderMealSort?: number | null;
+    attendanceRequired?: boolean;
     wechatGuid?: string;
     isResigned?: boolean;
     resignedTime?: string | null;
+    setAsDeptResponsibleUser?: boolean;
+    setAsDefaultDeptResponsibleUser?: boolean;
     creatorId?: string;
     modifierId?: string | null;
     deleterId?: string | null;
@@ -51,6 +68,25 @@ export interface GetUserListParams extends Recordable<any> {
   deptId?: string;
   /** 按岗位筛选（与 deptId 二选一） */
   positionId?: string;
+  /** 表头筛选：部门名称（精确多选） */
+  filterDeptNames?: string[];
+  /** 表头筛选：角色名称（精确多选；拥有任一角色即命中） */
+  filterRoleNames?: string[];
+  /**
+   * 仅「营销中心」及其下级部门用户（与 deptId/positionId 互斥：后端在开启本项时忽略部门/岗位筛选）。
+   * 用于客户协作转交/分享选人等场景。
+   */
+  onlyMarketingCenterDeptSubtree?: boolean;
+  /**
+   * 仅「技术部」及其下级部门用户（与 deptId/positionId 互斥：后端在开启本项时忽略部门/岗位筛选）。
+   * 用于技术分配选人等场景。
+   */
+  onlyTechnologyDeptSubtree?: boolean;
+  /**
+   * 仅值日可选部门且参与考勤的用户：「产品研发中心」「网络推广组」及其下级（与 deptId/positionId 互斥）。
+   * 用于值日安排选人等场景。
+   */
+  onlyProductResearchCenterDeptSubtree?: boolean;
 }
 
 /**
@@ -70,7 +106,6 @@ async function getUserList(params: GetUserListParams) {
       birthDate: string;
       deptId?: string;
       deptName?: string;
-      isDeptManager?: boolean;
       roles: string[];
       createdAt: string;
       idCardNumber?: string;
@@ -83,6 +118,8 @@ async function getUserList(params: GetUserListParams) {
       wechatGuid?: string;
       isResigned?: boolean;
       resignedTime?: string | null;
+      setAsDeptResponsibleUser?: boolean;
+      setAsDefaultDeptResponsibleUser?: boolean;
       creatorId?: string;
       modifierId?: string | null;
       deleterId?: string | null;
@@ -92,16 +129,24 @@ async function getUserList(params: GetUserListParams) {
     total: number;
     page: number;
     pageSize: number;
-  }>('/users', { params });
+  }>('/users', { params, paramsSerializer: 'repeat' });
   return result;
+}
+
+/** 用户列表表头分面（不含当前列自身的表头多选条件） */
+async function getUserColumnFacets(params: Recordable<any>, facetColumn: string) {
+  return requestClient.get<SystemUserApi.UserColumnFacet[]>('/users/column-facets', {
+    params: { ...params, facetColumn },
+    paramsSerializer: 'repeat',
+  });
 }
 
 /**
  * 获取单个用户信息
  * @param id 用户 ID
  */
-async function getUser(id: string) {
-  return requestClient.get<SystemUserApi.SystemUser>(`/users/${id}`);
+async function getUser(id: string, config?: Recordable<any>) {
+  return requestClient.get<SystemUserApi.SystemUser>(`/users/${id}`, config);
 }
 
 /**
@@ -119,7 +164,6 @@ async function createUser(data: {
   birthDate: string;
   deptId?: string;
   deptName?: string;
-  isDeptManager?: boolean;
   roleIds: string[];
   idCardNumber?: string;
   address?: string;
@@ -127,9 +171,12 @@ async function createUser(data: {
   graduateSchool?: string;
   avatarUrl?: string;
   notOrderMeal?: boolean;
+  attendanceRequired?: boolean;
   wechatGuid?: string;
   isResigned?: boolean;
   resignedTime?: string;
+  setAsDeptResponsibleUser?: boolean;
+  setAsDefaultDeptResponsibleUser?: boolean;
 }) {
   return requestClient.post('/users', data);
 }
@@ -153,7 +200,6 @@ async function updateUser(
     birthDate: string;
     deptId: string;
     deptName: string;
-    isDeptManager?: boolean;
     password?: string;
     idCardNumber?: string;
     address?: string;
@@ -161,9 +207,12 @@ async function updateUser(
     graduateSchool?: string;
     avatarUrl?: string;
     notOrderMeal?: boolean;
+    attendanceRequired?: boolean;
     wechatGuid?: string;
     isResigned?: boolean;
     resignedTime?: string;
+    setAsDeptResponsibleUser?: boolean;
+    setAsDefaultDeptResponsibleUser?: boolean;
   },
 ) {
   return requestClient.put('/user/update', {
@@ -212,6 +261,7 @@ function triggerBlobDownload(blob: Blob, fileName: string) {
 async function exportUsersExcel(params: Omit<GetUserListParams, 'pageIndex' | 'pageSize' | 'countTotal'>) {
   const blob = (await requestClient.get<Blob>('/users/excel/export', {
     params,
+    paramsSerializer: 'repeat',
     responseType: 'blob',
     responseReturn: 'body',
   })) as Blob;
@@ -247,6 +297,21 @@ async function importUsersExcel(file: File) {
   });
 }
 
+/** 用户字段级修改历史（操作日志对比）；与后端 GET /api/admin/user/log 对齐（兼容旧路径 page 参数） */
+async function getUserChangeHistory(
+  userId: string,
+  params: { pageIndex?: number; pageSize?: number; keyword?: string },
+) {
+  return requestClient.get<{ items: SystemUserApi.UserFieldChangeRow[]; total: number }>('/user/log', {
+    params: {
+      userId,
+      page: params.pageIndex ?? 1,
+      pageSize: params.pageSize ?? 20,
+      keyword: params.keyword,
+    },
+  });
+}
+
 export {
   createUser,
   deleteUser,
@@ -254,6 +319,8 @@ export {
   exportUsersExcel,
   getCurrentUserWorkflowRoutingRoles,
   getUser,
+  getUserChangeHistory,
+  getUserColumnFacets,
   getUserList,
   importUsersExcel,
   updateUser,

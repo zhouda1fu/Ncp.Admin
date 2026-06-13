@@ -26,20 +26,22 @@ namespace Ncp.Admin.Web.Endpoints.Identity.Admin.UserEndpoints;
 /// <param name="BirthDate">出生日期</param>
 /// <param name="DeptId">部门ID（可选）</param>
 /// <param name="DeptName">部门名称（可选）</param>
-/// <param name="IsDeptManager">是否为该部门主管</param>
 /// <param name="PositionId">岗位ID（可选）</param>
 /// <param name="PositionName">岗位名称（可选）</param>
-/// <param name="RoleIds">要分配的角色ID列表</param>
+/// <param name="RoleIds">要分配的角色 ID 列表</param>
 /// <param name="IdCardNumber">身份证</param>
 /// <param name="Address">地址</param>
 /// <param name="Education">学历</param>
 /// <param name="GraduateSchool">毕业院校</param>
 /// <param name="AvatarUrl">头像地址</param>
-/// <param name="NotOrderMeal">是否订餐（true=不订餐，false=订餐）</param>
+/// <param name="NotOrderMeal">不订餐：true 为不参与订餐，false 为参与订餐。</param>
 /// <param name="OrderMealSort">订餐排序（可选）</param>
+/// <param name="AttendanceRequired">是否需要参与考勤计算；false 表示不参与考勤。</param>
 /// <param name="WechatGuid">唯一码</param>
 /// <param name="IsResigned">是否离职</param>
 /// <param name="ResignedTime">离职时间（可选）</param>
+/// <param name="SetAsDeptResponsibleUser">是否在创建后追加为所属部门负责人</param>
+/// <param name="SetAsDefaultDeptResponsibleUser">是否同时设为所属部门默认负责人</param>
 public record CreateUserRequest(
     string Name,
     string Email,
@@ -51,7 +53,6 @@ public record CreateUserRequest(
     DateTimeOffset BirthDate,
     DeptId? DeptId,
     string? DeptName,
-    bool IsDeptManager,
     PositionId? PositionId,
     string? PositionName,
     IEnumerable<RoleId> RoleIds,
@@ -64,7 +65,10 @@ public record CreateUserRequest(
     int OrderMealSort,
     string WechatGuid,
     bool IsResigned,
-    DateTimeOffset ResignedTime);
+    DateTimeOffset ResignedTime,
+    bool SetAsDeptResponsibleUser = false,
+    bool SetAsDefaultDeptResponsibleUser = false,
+    bool AttendanceRequired = true);
 
 /// <summary>
 /// 创建用户的响应模型
@@ -92,7 +96,7 @@ public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpo
 
     public override async Task HandleAsync(CreateUserRequest request, CancellationToken ct)
     {
-        var creatorId = User.GetUserIdOrNull() ?? new UserId(0);
+        var creatorId = User.GetUserIdOrNull() ?? UserId.Unassigned;
         var rolesToBeAssigned = await roleQuery.GetAdminRolesForAssignmentAsync(request.RoleIds, ct);
         var cmd = new CreateUserCommand(
             request.Name,
@@ -105,7 +109,6 @@ public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpo
             request.BirthDate,
             request.DeptId,
             request.DeptName,
-            request.IsDeptManager,
             request.PositionId,
             request.PositionName,
             rolesToBeAssigned,
@@ -118,7 +121,10 @@ public class CreateUserEndpoint(IMediator mediator, RoleQuery roleQuery) : Endpo
             request.NotOrderMeal,
             request.WechatGuid,
             request.IsResigned,
-            request.ResignedTime
+            request.ResignedTime,
+            request.AttendanceRequired,
+            request.SetAsDeptResponsibleUser,
+            request.SetAsDefaultDeptResponsibleUser
         );
         var userId = await mediator.Send(cmd, ct);
         var response = new CreateUserResponse(userId, request.Name, request.Email);

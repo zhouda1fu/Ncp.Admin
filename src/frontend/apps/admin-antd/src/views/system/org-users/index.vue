@@ -233,7 +233,14 @@ onMounted(loadTree);
       <Grid
         v-else
         :table-title="$t('system.orgUsers.userList')"
-      />
+      >
+        <template #userListUserName="{ row }">
+          <span>{{ (row as SystemUserApi.SystemUser).name }}</span>
+        </template>
+        <template #userListDeptName="{ row }">
+          <span>{{ (row as SystemUserApi.SystemUser).deptName }}</span>
+        </template>
+      </Grid>
     </div>
   </ColPage>
 </template>

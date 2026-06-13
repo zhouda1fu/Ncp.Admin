@@ -23,6 +23,7 @@ public class GetAllRolesEndpoint(RoleQuery roleQuery) : Endpoint<RoleQueryInput,
 
     public override async Task HandleAsync(RoleQueryInput req, CancellationToken ct)
     {
+        req.CountTotal = true;
         var roleInfo = await roleQuery.GetAllRolesAsync(req, ct);
         await Send.OkAsync(roleInfo.AsResponseData(), cancellation: ct);
     }

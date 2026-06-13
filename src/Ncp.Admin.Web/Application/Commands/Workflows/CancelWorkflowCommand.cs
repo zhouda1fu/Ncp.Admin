@@ -31,7 +31,7 @@ public class CancelWorkflowCommandHandler(IWorkflowInstanceRepository instanceRe
 {
     public async Task Handle(CancelWorkflowCommand request, CancellationToken cancellationToken)
     {
-        var instance = await instanceRepository.GetAsync(request.WorkflowInstanceId, cancellationToken)
+        var instance = await instanceRepository.GetWithTasksIgnoringQueryFiltersAsync(request.WorkflowInstanceId, cancellationToken)
             ?? throw new KnownException("未找到流程实例", ErrorCodes.WorkflowInstanceNotFound);
 
         instance.Cancel(request.OperatorId);

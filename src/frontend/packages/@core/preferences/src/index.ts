@@ -10,7 +10,7 @@ export const {
   initPreferences,
 } = preferencesManager;
 
-export const preferences: Preferences = getPreferences();
+export const preferences: Preferences = getPreferences() as unknown as Preferences;
 
 export { preferencesManager };
 

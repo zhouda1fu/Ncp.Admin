@@ -30,7 +30,7 @@ public class GetUserEndpoint(UserQuery userQuery) : Endpoint<GetUserRequest, Res
 
     public override async Task HandleAsync(GetUserRequest req, CancellationToken ct)
     {
-        var userInfo = await userQuery.GetUserByIdAsync(req.Id, ct);
+        var userInfo = await userQuery.GetUserByIdAsync(req.Id, ct, includeResigned: true);
         if (userInfo == null)
             await Send.NotFoundAsync(ct);
         else

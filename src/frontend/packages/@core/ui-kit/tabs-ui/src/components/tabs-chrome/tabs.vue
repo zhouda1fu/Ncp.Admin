@@ -30,6 +30,8 @@ const active = defineModel<string>('active');
 
 const contentRef = ref();
 const tabRef = ref();
+void contentRef;
+void tabRef;
 
 const style = computed(() => {
   const { gap } = props;
@@ -47,7 +49,7 @@ const tabsView = computed(() => {
       closable: Reflect.has(meta, 'tabClosable') ? !!tabClosable : true,
       fullPath,
       icon: icon as string,
-      key,
+      key: key ?? fullPath ?? path,
       meta,
       name,
       path,

@@ -13,8 +13,6 @@ import {
   VbenScrollbar,
 } from '@vben-core/shadcn-ui';
 
-import { useToggle } from '@vueuse/core';
-
 interface Props {
   /**
    * 显示圆点
@@ -33,6 +31,9 @@ withDefaults(defineProps<Props>(), {
   notifications: () => [],
 });
 
+/** 与 VbenPopover 同步；父级可 v-model:open 以在「有未读 / 新通知」时主动展开 */
+const open = defineModel<boolean>('open', { default: false });
+
 const emit = defineEmits<{
   clear: [];
   makeAll: [];
@@ -42,10 +43,13 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-const [open, toggle] = useToggle();
 
 function close() {
   open.value = false;
+}
+
+function toggleOpen() {
+  open.value = !open.value;
 }
 
 function handleViewAll() {
@@ -104,10 +108,10 @@ function handleAvatarError(e: Event) {
 <template>
   <VbenPopover
     v-model:open="open"
-    content-class="relative right-2 w-[360px] p-0"
+    content-class="relative right-2 w-[380px] p-0"
   >
     <template #trigger>
-      <div class="flex-center mr-2 h-full" @click.stop="toggle()">
+      <div class="flex-center mr-2 h-full" @click.stop="toggleOpen">
         <VbenIconButton class="bell-button text-foreground relative">
           <span
             v-if="dot"
@@ -120,7 +124,7 @@ function handleAvatarError(e: Event) {
 
     <div class="relative">
       <div class="flex items-center justify-between p-4 py-3">
-        <div class="text-foreground">{{ $t('ui.widgets.notifications') }}</div>
+        <div class="text-foreground text-sm font-medium">{{ $t('ui.widgets.notifications') }}</div>
         <VbenIconButton
           :disabled="notifications.length <= 0"
           :tooltip="$t('ui.widgets.markAllAsRead')"
@@ -150,12 +154,23 @@ function handleAvatarError(e: Event) {
                   @error="handleAvatarError"
                 />
               </span>
-              <div class="flex flex-col gap-1 leading-none">
-                <p class="font-semibold">{{ item.title }}</p>
-                <p class="text-muted-foreground my-1 line-clamp-2 text-xs">
+              <div class="flex min-w-0 flex-1 flex-col gap-1.5 pr-10 leading-normal">
+                <div
+                  v-if="item.publisherLine || item.dateTime"
+                  class="text-muted-foreground flex items-start justify-between gap-2 text-sm"
+                >
+                  <span class="truncate">{{ item.publisherLine }}</span>
+                  <span class="shrink-0 whitespace-nowrap">{{ item.dateTime }}</span>
+                </div>
+                <p class="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
+                  <span v-if="item.title" class="font-semibold text-foreground">{{ item.title }}</span>
+                  <template v-if="item.title && item.message">&nbsp;</template>
                   {{ item.message }}
                 </p>
-                <p class="text-muted-foreground line-clamp-2 text-xs">
+                <p
+                  v-if="!item.publisherLine && !item.dateTime"
+                  class="text-muted-foreground line-clamp-2 text-sm"
+                >
                   {{ item.date }}
                 </p>
               </div>

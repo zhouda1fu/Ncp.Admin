@@ -31,7 +31,7 @@ public class DeleteUserEndpoint(IMediator mediator) : Endpoint<DeleteUserRequest
 
     public override async Task HandleAsync(DeleteUserRequest request, CancellationToken ct)
     {
-        var deleterId = User.GetUserIdOrNull() ?? new UserId(0);
+        var deleterId = User.GetUserIdOrNull() ?? UserId.Unassigned;
         await mediator.Send(new DeleteUserCommand(request.UserId, deleterId), ct);
         await Send.OkAsync(true.AsResponseData(), cancellation: ct);
     }

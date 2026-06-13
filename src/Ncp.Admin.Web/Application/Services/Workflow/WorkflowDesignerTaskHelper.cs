@@ -2,16 +2,19 @@ using Ncp.Admin.Domain.AggregatesModel.RoleAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
 using Ncp.Admin.Domain.AggregatesModel.WorkflowInstanceAggregate;
 using Ncp.Admin.Web.Application.Queries;
+using Ncp.Admin.Web.Application.Services.Workflow.Graph;
 
 namespace Ncp.Admin.Web.Application.Services.Workflow;
 
+public sealed record WorkflowCreatedTask(WorkflowTask Task, WorkflowAssigneeResult Assignee);
+
 /// <summary>
-/// 根据设计器节点与解析出的处理人列表，决定要创建的任务条数并写入实例。
+/// 根据运行图节点与解析出的处理人列表，决定要创建的任务条数并写入实例。
 /// </summary>
 public static class WorkflowDesignerTaskHelper
 {
     public static IReadOnlyList<WorkflowAssigneeResult> SelectAssigneesForNodeEntry(
-        DesignerNodeConfig node,
+        WorkflowGraphNode node,
         IReadOnlyList<WorkflowAssigneeResult> ordered)
     {
         if (ordered.Count == 0)
@@ -19,12 +22,12 @@ public static class WorkflowDesignerTaskHelper
             return [];
         }
 
-        if (node.Type != 1)
+        if (node.Type != WorkflowGraphNodeType.Approval)
         {
             return ordered.ToList();
         }
 
-        if (node.IsCounterSign || node.IsOrSign)
+        if (node.ApprovalMode is WorkflowGraphApprovalMode.All or WorkflowGraphApprovalMode.Any)
         {
             return ordered.ToList();
         }
@@ -32,22 +35,38 @@ public static class WorkflowDesignerTaskHelper
         return ordered.Take(1).ToList();
     }
 
-    public static void AddTasksToInstance(
+    public static IReadOnlyList<WorkflowTask> AddTasksToInstance(
         WorkflowInstance instance,
-        DesignerNodeConfig node,
+        WorkflowGraphNode node,
         WorkflowTaskType taskType,
         IReadOnlyList<WorkflowAssigneeResult> assignees)
     {
+        return AddTaskAssignmentsToInstance(instance, node, taskType, assignees)
+            .Select(x => x.Task)
+            .ToList();
+    }
+
+    public static IReadOnlyList<WorkflowCreatedTask> AddTaskAssignmentsToInstance(
+        WorkflowInstance instance,
+        WorkflowGraphNode node,
+        WorkflowTaskType taskType,
+        IReadOnlyList<WorkflowAssigneeResult> assignees)
+    {
+        var created = new List<WorkflowCreatedTask>();
         foreach (var a in assignees)
         {
-            if (a.AssigneeId != new UserId(0))
+            if (a.AssigneeId != UserId.Unassigned)
             {
-                instance.CreateTask(node.NodeKey, node.NodeName, taskType, a.AssigneeId, a.DisplayName);
+                var task = instance.CreateTask(node.NodeId, node.Name, taskType, a.AssigneeId, a.DisplayName);
+                created.Add(new WorkflowCreatedTask(task, a));
             }
-            else if (a.AssigneeRoleId != new RoleId(Guid.Empty))
+            else if (a.AssigneeRoleId != RoleId.Unassigned)
             {
-                instance.CreateTaskForRole(node.NodeKey, node.NodeName, taskType, a.AssigneeRoleId, a.DisplayName);
+                var task = instance.CreateTaskForRole(node.NodeId, node.Name, taskType, a.AssigneeRoleId, a.DisplayName);
+                created.Add(new WorkflowCreatedTask(task, a));
             }
         }
+
+        return created;
     }
 }

@@ -1,3 +1,5 @@
+import './polyfills/chrome109';
+
 import { initPreferences } from '@vben/preferences';
 import { unmountGlobalLoading } from '@vben/utils';
 

@@ -1,6 +1,17 @@
 # Ncp.Admin
 
-基于 [NetCorePal Cloud Framework](https://github.com/netcorepal/netcorepal-cloud-framework) 的后台管理模板，后端采用 ASP.NET Core + DDD，前端基于 [Vben Admin](https://github.com/vbenjs/vue-vben-admin)（Vue 3 + Vite + TypeScript + Ant Design Vue）。
+基于 [NetCorePal Cloud Framework](https://github.com/netcorepal/netcorepal-cloud-framework) 的 **平台脚手架**：IAM（用户/角色/部门/岗位）+ 工作流引擎 + 平台基础设施（通知、日志、文件、首页），后端 ASP.NET Core + DDD，前端 [Vben Admin](https://github.com/vbenjs/vue-vben-admin)（Vue 3 + Vite + TypeScript + Ant Design Vue）。
+
+> **说明**：本分支已移除原 CRM / 行政 OA 等业务模块。扩展业务时请参考 Git 历史中的完整版实现。
+
+### 默认管理员（空库首次启动自动种子）
+
+| 项 | 值 |
+|---|---|
+| 用户名 | `admin` |
+| 密码 | `Admin@123456` |
+
+生产环境请立即修改密码。数据库使用单条基线迁移 `InitPlatform`（与旧业务库不兼容，请新建库）。
 
 ---
 
@@ -323,4 +334,126 @@ netcorepal-codeanalysis generate --output architecture.html
 
 更多信息请参见：[https://github.com/prometheus-net/prometheus-net](https://github.com/prometheus-net/prometheus-net)
 
+## Cursor 提示词示例（可复制）
 
+在 Cursor 输入框输入 **`/`**，从列表选择本仓库 [`.cursor/skills/`](.cursor/skills/) 下的技能（如 `cleanddd-requirements-analysis`），**在同一条消息里**写清任务与上下文。需要叠加仓库约定时，再 **`@`** [`.cursor/rules/project-conventions.mdc`](.cursor/rules/project-conventions.mdc) 或 [`.cursor/rules/frontend-vben.mdc`](.cursor/rules/frontend-vben.mdc)。
+
+### `.cursor/skills` 选用指南（`/ ` 里该点哪个）
+
+| 技能 | 路径 | 用来做什么 | 典型使用时机 |
+|------|------|------------|--------------|
+| **cleanddd-requirements-analysis** | [SKILL.md](.cursor/skills/cleanddd-requirements-analysis/SKILL.md) | 把业务需求拆成结构化描述（干系人、条目、归属对象），**不直接建模** | 有新功能/改需求，需要先澄清「做什么」 |
+| **cleanddd-modeling** | [SKILL.md](.cursor/skills/cleanddd-modeling/SKILL.md) | 产出聚合、命令、查询、事件、Endpoints 等 **建模蓝图** | 需求已清楚，要定边界与接口形态再写代码 |
+| **cleanddd-dotnet-coding** | [SKILL.md](.cursor/skills/cleanddd-dotnet-coding/SKILL.md) | 在 **本仓库** 落地 Domain / Infrastructure / Web（命令、查询、端点、配置、测试） | 按建模补代码、改后端、审 DDD 分层 |
+| **cleanddd-coach** | [SKILL.md](.cursor/skills/cleanddd-coach/SKILL.md) | **学习与陪练**：聚合边界、CQRS、事件、反模式（微课/小测/清单） | 想理解概念、团队对齐术语，而非立刻写功能 |
+| **ncp-admin-frontend** | [SKILL.md](.cursor/skills/ncp-admin-frontend/SKILL.md) | **Vben Admin 前端**（Vue3 + Ant Design）：页面、API、路由、国际化、权限对齐 | 改 `src/frontend/apps/admin-antd` 或对接后端权限码 |
+
+**记忆口诀**：先 **requirements** 澄清 → **modeling** 画蓝图 → **dotnet-coding** 写后端；前端找 **ncp-admin-frontend**；学理论用 **coach**。
+
+### 各技能示例提示词（可复制）
+
+**用法（统一用斜杠）**：输入 **`/`** → 选择技能名 → 在**同一条消息**的正文里粘贴或改写下方模板。若需仓库规范，另起一行或同条消息里 **`@`** `project-conventions.mdc` 等。
+
+---
+
+**需求拆解（`cleanddd-requirements-analysis`）— 标准范式**
+
+1. 输入 **`/cleanddd-requirements-analysis`**（或在 `/` 列表中选该项）。
+2. 正文使用下面模板（将括号内换成你的真实信息；没有可写「无」或删掉该段）。
+
+```text
+【范围与背景】
+- 系统/模块：（例如：管理后台 · 订单相关）
+- 本次目标：（例如：新增「延迟发货登记」能力）
+- 非目标 / 不做：（例如：不改支付、不接第三方物流下单）
+
+【业务叙述】
+（用自然语言写清：谁、在什么情况下、要做什么、看到什么结果；可列要点。）
+
+【已知约束】
+- 角色与权限：（已知则写，未知写「待确认」）
+- 与现有功能关系：（例如：仅允许订单状态为「已下单」时操作）
+- 外部系统 / 数据依赖：（无则写无）
+
+【交付要求】
+请严格按 cleanddd-requirements-analysis 技能的输出格式给出结构化 Markdown，且：
+- 只做需求级拆解，不要使用聚合 / 命令 / 领域事件等建模术语；
+- 必须包含：干系人表、需求条目表、业务实体视图、触发/后续动作表、假设与待确认清单；
+- 文末附「参数汇总 + 是否进入下游建模」的确认提示。
+```
+
+---
+
+**领域建模（`cleanddd-modeling`）**
+
+```text
+/cleanddd-modeling
+
+【输入】下列内容为已确认的需求拆解（可粘贴 analysis/requirements.md 或会话中的表格）。
+
+（粘贴：干系人表、需求条目表等）
+
+请按技能约定输出：聚合、命令、查询、领域事件、Endpoints、（如有）定时任务；文末列未决问题。
+```
+
+**本仓库后端实现（`cleanddd-dotnet-coding`）**
+
+```text
+/cleanddd-dotnet-coding
+@.cursor/rules/project-conventions.mdc
+
+【任务】（说明要改的聚合、端点或新建能力）
+【依据】（可粘贴建模摘要或接口清单）
+```
+
+**前端（`ncp-admin-frontend`）**
+
+```text
+/ncp-admin-frontend
+@.cursor/rules/frontend-vben.mdc
+
+【页面/菜单】……
+【对接接口】……
+```
+
+**CleanDDD 教练（`cleanddd-coach`）**
+
+```text
+/cleanddd-coach 请用「聚合与不变式」模块，结合我们订单场景，帮我划边界并给检查清单。
+```
+
+### 审查某模块是否符合 DDD / CleanDDD
+
+```text
+/cleanddd-dotnet-coding
+@.cursor/rules/project-conventions.mdc
+@某模块路径
+
+请按上述约定审查该模块是否符合 DDD/CleanDDD：
+
+- 聚合边界与不变式是否在聚合内维护
+- 是否存在跨聚合直接改状态（应通过领域事件等）
+- 命令 / 查询 / 端点 / 仓储 / 实体配置是否分层正确
+- 命令处理器是否未显式 SaveChanges、异常是否使用 KnownException 等
+
+请输出：符合项、风险项、建议重构点（如有）。
+```
+
+### 新增聚合（示例：Order）
+
+```text
+/cleanddd-dotnet-coding
+@.cursor/rules/project-conventions.mdc
+
+在本仓库新增聚合 Order（订单）。若已有建模结论，可先粘贴在下文【建模依据】。
+
+- Domain：聚合根、强类型 OrderId、必要实体 / 值对象、领域事件
+- Infrastructure：IOrderRepository 实现、实体配置、DbContext 注册
+- Web：相关 Command / Query / Validator / Handler、Endpoints
+
+若端点需鉴权，请列出须同步的权限相关位置（参见 project-conventions 中「后端 5 处」）。
+
+【建模依据】（可选，来自 /cleanddd-modeling 的输出摘要）
+```
+
+（更推荐流程：先 `/cleanddd-requirements-analysis` → 再 `/cleanddd-modeling` → 最后 `/cleanddd-dotnet-coding`。）

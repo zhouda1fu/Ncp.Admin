@@ -3,10 +3,11 @@ import type { ZodType } from 'zod';
 
 import type { FormSchema, MaybeComponentProps } from '../types';
 
-import { computed, nextTick, onUnmounted, useTemplateRef, watch } from 'vue';
+import { computed, inject, nextTick, onUnmounted, useTemplateRef, watch } from 'vue';
 
 import { CircleAlert } from '@vben-core/icons';
 import {
+  FORM_ITEM_INJECTION_KEY,
   FormControl,
   FormDescription,
   FormField,
@@ -55,6 +56,10 @@ const {
 >();
 
 const { componentBindEventMap, componentMap, isVertical } = useFormContext();
+const fieldItemContextId = inject(FORM_ITEM_INJECTION_KEY, undefined);
+const formItemControlId = computed(() =>
+  fieldItemContextId ? `${fieldItemContextId}-form-item` : undefined,
+);
 const formRenderProps = injectRenderFormProps();
 const values = useFormValues();
 const errors = useFieldError(fieldName);
@@ -250,6 +255,9 @@ function createComponentProps(slotProps: Record<string, any>) {
     ...slotProps.componentField,
     ...computedProps.value,
     ...bindEvents,
+    ...(formItemControlId.value && !computedProps.value?.id
+      ? { id: formItemControlId.value }
+      : {}),
     ...(Reflect.has(computedProps.value, 'onChange')
       ? { onChange: computedProps.value.onChange }
       : {}),

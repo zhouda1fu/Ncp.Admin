@@ -21,27 +21,39 @@ import { refreshTokenApi } from './core';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
+/** 与 VITE_GLOB_API_URL（…/api/admin）对齐的根地址，用于 /api/public/* 等匿名接口 */
+const publicApiBaseURL = apiURL.replace(/\/admin\/?$/i, '').replace(/\/$/, '');
+
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
     baseURL,
   });
+  let isReAuthenticating = false;
 
   /**
    * 重新认证逻辑
    */
   async function doReAuthenticate() {
     console.warn('Access token or refresh token is invalid or expired. ');
+    if (isReAuthenticating) {
+      return;
+    }
+    isReAuthenticating = true;
     const accessStore = useAccessStore();
     const authStore = useAuthStore();
-    accessStore.setAccessToken(null);
-    if (
-      preferences.app.loginExpiredMode === 'modal' &&
-      accessStore.isAccessChecked
-    ) {
-      accessStore.setLoginExpired(true);
-    } else {
-      await authStore.logout();
+    try {
+      accessStore.setAccessToken(null);
+      if (
+        preferences.app.loginExpiredMode === 'modal' &&
+        accessStore.isAccessChecked
+      ) {
+        accessStore.setLoginExpired(true);
+      } else {
+        await authStore.logout();
+      }
+    } finally {
+      isReAuthenticating = false;
     }
   }
 
@@ -80,6 +92,24 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     }),
   );
 
+  client.addResponseInterceptor({
+    rejected: async (error) => {
+      if (error?.response?.headers?.['x-auth-reason'] !== 'session-replaced') {
+        throw error;
+      }
+      if (!isReAuthenticating) {
+        isReAuthenticating = true;
+        try {
+          message.warning('账号已在其他设备登录，当前会话已退出');
+          await useAuthStore().forceLogout();
+        } finally {
+          isReAuthenticating = false;
+        }
+      }
+      throw error;
+    },
+  });
+
   // token过期的处理
   client.addResponseInterceptor(
     authenticateResponseInterceptor({
@@ -94,6 +124,9 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   // 通用的错误处理,如果没有进入上面的错误处理逻辑，就会进入这里
   client.addResponseInterceptor(
     errorMessageResponseInterceptor((msg: string, error) => {
+      if ((error?.config as { silentError?: boolean } | undefined)?.silentError) {
+        return;
+      }
       // 这里可以根据业务进行定制,你可以拿到 error 内的信息进行定制化处理，根据不同的 code 做不同的提示，而不是直接使用 message.error 提示 msg
       // 当前mock接口返回的错误字段是 error 或者 message
       const responseData = error?.response?.data ?? {};
@@ -106,8 +139,35 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   return client;
 }
 
+/**
+ * 匿名公开 API（如董事长信箱）：与后台管理不同前缀，且不附加 Authorization、不做 token 刷新。
+ */
+function createPublicRequestClient() {
+  const client = new RequestClient({
+    baseURL: publicApiBaseURL,
+    responseReturn: 'data',
+  });
+  client.addRequestInterceptor({
+    fulfilled: async (config) => {
+      config.headers['Accept-Language'] = preferences.app.locale;
+      delete config.headers.Authorization;
+      return config;
+    },
+  });
+  client.addResponseInterceptor(
+    defaultResponseInterceptor({
+      codeField: 'code',
+      dataField: 'data',
+      successCode: 0,
+    }),
+  );
+  return client;
+}
+
 export const requestClient = createRequestClient(apiURL, {
   responseReturn: 'data',
 });
+
+export const publicRequestClient = createPublicRequestClient();
 
 export const baseRequestClient = new RequestClient({ baseURL: apiURL });

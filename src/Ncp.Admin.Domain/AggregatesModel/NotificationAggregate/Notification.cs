@@ -3,7 +3,13 @@ namespace Ncp.Admin.Domain.AggregatesModel.NotificationAggregate;
 /// <summary>
 /// 通知ID（强类型ID）
 /// </summary>
-public partial record NotificationId : IInt64StronglyTypedId;
+public partial record NotificationId : IInt64StronglyTypedId
+{
+    /// <summary>
+    /// 未分配标识（哨兵值）
+    /// </summary>
+    public static NotificationId Unassigned { get; } = new(0);
+}
 
 /// <summary>
 /// 通知聚合根
@@ -38,7 +44,7 @@ public class Notification : Entity<NotificationId>, IAggregateRoot
     /// <summary>
     /// 发送人ID（系统通知时为空）
     /// </summary>
-    public long? SenderId { get; private set; }
+    public long SenderId { get; private set; }
 
     /// <summary>
     /// 发送人名称
@@ -58,17 +64,17 @@ public class Notification : Entity<NotificationId>, IAggregateRoot
     /// <summary>
     /// 阅读时间
     /// </summary>
-    public DateTimeOffset? ReadAt { get; private set; }
+    public DateTimeOffset ReadAt { get; private set; } = DateTimeOffset.MinValue;
 
     /// <summary>
     /// 关联业务ID（如工作流实例ID）
     /// </summary>
-    public string? BusinessId { get; private set; }
+    public string BusinessId { get; private set; } = string.Empty;
 
     /// <summary>
     /// 关联业务类型
     /// </summary>
-    public string? BusinessType { get; private set; }
+    public string BusinessType { get; private set; } = string.Empty;
 
     /// <summary>
     /// 创建时间
@@ -96,11 +102,11 @@ public class Notification : Entity<NotificationId>, IAggregateRoot
         Content = content;
         Type = type;
         Level = level;
-        SenderId = senderId;
+        SenderId = senderId ?? 0;
         SenderName = senderName;
         ReceiverId = receiverId;
-        BusinessId = businessId;
-        BusinessType = businessType;
+        BusinessId = businessId ?? string.Empty;
+        BusinessType = businessType ?? string.Empty;
         IsRead = false;
     }
 

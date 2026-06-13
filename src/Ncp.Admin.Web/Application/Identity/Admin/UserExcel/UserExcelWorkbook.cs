@@ -98,7 +98,7 @@ public static class UserExcelWorkbook
                 u.Gender,
                 u.BirthDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 u.DeptName,
-                u.IsDeptManager ? "是" : "否",
+                u.SetAsDeptResponsibleUser ? "是" : "否",
                 u.PositionName,
                 string.Join(',', u.Roles),
                 u.IdCardNumber,

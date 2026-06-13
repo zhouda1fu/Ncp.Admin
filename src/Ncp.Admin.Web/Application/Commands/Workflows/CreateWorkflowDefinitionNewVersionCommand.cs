@@ -1,5 +1,6 @@
 using Ncp.Admin.Domain.AggregatesModel.WorkflowDefinitionAggregate;
 using Ncp.Admin.Infrastructure.Repositories;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Commands.Workflows;
 
@@ -28,7 +29,8 @@ public class CreateWorkflowDefinitionNewVersionCommandValidator
 /// 基于已存在的流程定义创建新版本命令处理器
 /// </summary>
 public class CreateWorkflowDefinitionNewVersionCommandHandler(
-    IWorkflowDefinitionRepository repository)
+    IWorkflowDefinitionRepository repository,
+    WorkflowDefinitionCacheInvalidator cacheInvalidator)
     : ICommandHandler<CreateWorkflowDefinitionNewVersionCommand, WorkflowDefinitionId>
 {
     public async Task<WorkflowDefinitionId> Handle(
@@ -41,6 +43,8 @@ public class CreateWorkflowDefinitionNewVersionCommandHandler(
         var newDefinition = source.CreateNewVersion();
 
         await repository.AddAsync(newDefinition, cancellationToken);
+
+        cacheInvalidator.InvalidatePublishedList();
 
         return newDefinition.Id;
     }

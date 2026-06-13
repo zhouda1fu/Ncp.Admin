@@ -1,13 +1,29 @@
 using Microsoft.EntityFrameworkCore;
 using Ncp.Admin.Domain.AggregatesModel.DeptAggregate;
 using Ncp.Admin.Domain.AggregatesModel.UserAggregate;
+using Ncp.Admin.Web.Application.Services;
+using Ncp.Admin.Web.Application.Services.Workflow;
 
 namespace Ncp.Admin.Web.Application.Queries;
 
 /// <summary>
 /// 部门查询DTO
 /// </summary>
-public record DeptQueryDto(DeptId Id, string Name, string Remark, DeptId ParentId, UserId ManagerId, int Status, DateTimeOffset CreatedAt, DeletedTime? DeletedAt);
+public record DeptResponsibleUserQueryDto(UserId UserId, string Name, bool IsDefault, int SortOrder);
+
+/// <summary>
+/// 部门查询DTO
+/// </summary>
+public record DeptQueryDto(
+    DeptId Id,
+    string Name,
+    string Remark,
+    DeptId ParentId,
+    IReadOnlyList<DeptResponsibleUserQueryDto> ResponsibleUsers,
+    int Status,
+    int SortOrder,
+    DateTimeOffset CreatedAt,
+    DeletedTime? DeletedAt);
 
 /// <summary>
 /// 部门查询输入参数
@@ -28,8 +44,9 @@ public record DeptTreeDto(
     string Name,
     string Remark,
     DeptId ParentId,
-    UserId ManagerId,
+    IReadOnlyList<DeptResponsibleUserQueryDto> ResponsibleUsers,
     int Status,
+    int SortOrder,
     DateTimeOffset CreatedAt,
     IEnumerable<DeptTreeDto> Children);
 
@@ -63,10 +80,26 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
     /// </summary>
     public async Task<DeptQueryDto?> GetDeptByIdAsync(DeptId id, CancellationToken cancellationToken = default)
     {
-        return await DeptSet.AsNoTracking()
+        var dept = await DeptSet.AsNoTracking()
             .Where(d => d.Id == id)
-            .Select(d => new DeptQueryDto(d.Id, d.Name, d.Remark, d.ParentId, d.ManagerId, d.Status, d.CreatedAt, d.DeletedAt))
+            .Select(d => new { d.Id, d.Name, d.Remark, d.ParentId, d.Status, d.SortOrder, d.CreatedAt, d.DeletedAt })
             .FirstOrDefaultAsync(cancellationToken);
+        if (dept == null)
+        {
+            return null;
+        }
+
+        var responsibleUsers = await GetResponsibleUsersByDeptIdsAsync([dept.Id], cancellationToken);
+        return new DeptQueryDto(
+            dept.Id,
+            dept.Name,
+            dept.Remark,
+            dept.ParentId,
+            responsibleUsers.GetValueOrDefault(dept.Id, []),
+            dept.Status,
+            dept.SortOrder,
+            dept.CreatedAt,
+            dept.DeletedAt);
     }
 
     /// <summary>
@@ -82,14 +115,25 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
         var trimmed = name.Trim();
         var matches = await DeptSet.AsNoTracking()
             .Where(d => d.Name == trimmed)
-            .Select(d => new DeptQueryDto(d.Id, d.Name, d.Remark, d.ParentId, d.ManagerId, d.Status, d.CreatedAt, d.DeletedAt))
+            .Select(d => new { d.Id, d.Name, d.Remark, d.ParentId, d.Status, d.SortOrder, d.CreatedAt, d.DeletedAt })
             .ToListAsync(cancellationToken);
         if (matches.Count != 1)
         {
             return null;
         }
 
-        return matches[0];
+        var match = matches[0];
+        var responsibleUsers = await GetResponsibleUsersByDeptIdsAsync([match.Id], cancellationToken);
+        return new DeptQueryDto(
+            match.Id,
+            match.Name,
+            match.Remark,
+            match.ParentId,
+            responsibleUsers.GetValueOrDefault(match.Id, []),
+            match.Status,
+            match.SortOrder,
+            match.CreatedAt,
+            match.DeletedAt);
     }
 
     /// <summary>
@@ -97,14 +141,26 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
     /// </summary>
     public async Task<IEnumerable<DeptQueryDto>> GetAllDeptsAsync(DeptQueryInput query, CancellationToken cancellationToken)
     {
-        return await DeptSet.AsNoTracking()
+        var depts = await DeptSet.AsNoTracking()
             .WhereIf(!string.IsNullOrWhiteSpace(query.Name), d => d.Name.Contains(query.Name!))
             .WhereIf(!string.IsNullOrWhiteSpace(query.Remark), d => d.Remark.Contains(query.Remark!))
             .WhereIf(query.Status.HasValue, d => d.Status == query.Status)
             .WhereIf(query.ParentId != null, d => d.ParentId == query.ParentId)
-            .OrderBy(d => d.CreatedAt)
-            .Select(d => new DeptQueryDto(d.Id, d.Name, d.Remark, d.ParentId, d.ManagerId, d.Status, d.CreatedAt, d.DeletedAt))
+            .OrderBy(d => d.SortOrder)
+            .ThenBy(d => d.CreatedAt)
+            .Select(d => new { d.Id, d.Name, d.Remark, d.ParentId, d.Status, d.SortOrder, d.CreatedAt, d.DeletedAt })
             .ToListAsync(cancellationToken);
+        var responsibleUsers = await GetResponsibleUsersByDeptIdsAsync(depts.Select(d => d.Id).ToList(), cancellationToken);
+        return depts.Select(d => new DeptQueryDto(
+            d.Id,
+            d.Name,
+            d.Remark,
+            d.ParentId,
+            responsibleUsers.GetValueOrDefault(d.Id, []),
+            d.Status,
+            d.SortOrder,
+            d.CreatedAt,
+            d.DeletedAt));
     }
 
     /// <summary>
@@ -122,11 +178,16 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
                 Name = d.Name,
                 Remark = d.Remark,
                 ParentId = d.ParentId,
-                ManagerId = d.ManagerId,
                 Status = d.Status,
+                SortOrder = d.SortOrder,
                 CreatedAt = d.CreatedAt
             })
             .ToListAsync(cancellationToken);
+        var responsibleUsers = await GetResponsibleUsersByDeptIdsAsync(allDepts.Select(d => d.Id).ToList(), cancellationToken);
+        foreach (var dept in allDepts)
+        {
+            dept.ResponsibleUsers = responsibleUsers.GetValueOrDefault(dept.Id, []);
+        }
 
         // 构建树形结构
         var treeStructure = BuildTreeStructureFromProjection(allDepts);
@@ -147,13 +208,13 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
         foreach (var dept in allDepts)
         {
             // 只处理根节点（ParentId为0）
-            if (dept.ParentId == new DeptId(0))
+            if (dept.ParentId == DeptId.Unassigned)
             {
                 result.Add(BuildTreeDtoFromProjection(dept, deptDict));
             }
         }
 
-        return result.OrderBy(d => d.CreatedAt).ToList();
+        return result.OrderBy(d => d.SortOrder).ThenBy(d => d.CreatedAt).ToList();
     }
 
     /// <summary>
@@ -168,7 +229,8 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
         // 查找所有以当前部门为父级的子部门
         var childDepts = allDepts.Values
             .Where(d => d.ParentId == dept.Id)
-            .OrderBy(d => d.CreatedAt);
+            .OrderBy(d => d.SortOrder)
+            .ThenBy(d => d.CreatedAt);
 
         foreach (var child in childDepts)
         {
@@ -181,8 +243,9 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
             Name = dept.Name,
             Remark = dept.Remark,
             ParentId = dept.ParentId,
-            ManagerId = dept.ManagerId,
+            ResponsibleUsers = dept.ResponsibleUsers,
             Status = dept.Status,
+            SortOrder = dept.SortOrder,
             CreatedAt = dept.CreatedAt,
             Children = children
         };
@@ -202,6 +265,97 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
         return result;
     }
 
+    /// <summary>名为「营销中心」的部门及其全部下级部门 ID（含根）。名称不存在时返回空列表。</summary>
+    public async Task<IReadOnlyList<DeptId>> GetMarketingCenterSubtreeDeptIdsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var root = await GetDeptByExactNameAsync("营销中心", cancellationToken);
+        if (root is null)
+            return Array.Empty<DeptId>();
+        return await GetAllChildDeptIdsAsync(root.Id, cancellationToken);
+    }
+
+    /// <summary>部门名称是否包含「营销」（客户公海片区分配人员范围口径）。</summary>
+    public async Task<bool> IsMarketingDeptByNameAsync(DeptId deptId, CancellationToken cancellationToken = default)
+    {
+        var deptName = await DeptSet.AsNoTracking()
+            .Where(d => d.Id == deptId)
+            .Select(d => d.Name)
+            .FirstOrDefaultAsync(cancellationToken);
+        return !string.IsNullOrWhiteSpace(deptName) && deptName.Contains("营销", StringComparison.Ordinal);
+    }
+
+    /// <summary>名为「事务部」的部门及其全部下级部门 ID（含根）。名称不存在时返回空列表。</summary>
+    public async Task<IReadOnlyList<DeptId>> GetAffairsDeptSubtreeDeptIdsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var root = await GetDeptByExactNameAsync("事务部", cancellationToken);
+        if (root is null)
+            return Array.Empty<DeptId>();
+        return await GetAllChildDeptIdsAsync(root.Id, cancellationToken);
+    }
+
+    /// <summary>名为「技术部」的部门及其全部下级部门 ID（含根）。名称不存在时返回空列表。</summary>
+    public async Task<IReadOnlyList<DeptId>> GetTechnologyDeptSubtreeDeptIdsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var root = await GetDeptByExactNameAsync("技术部", cancellationToken);
+        if (root is null)
+            return Array.Empty<DeptId>();
+        return await GetAllChildDeptIdsAsync(root.Id, cancellationToken);
+    }
+
+    /// <summary>名为「产品研发中心」的部门及其全部下级部门 ID（含根）。名称不存在时返回空列表。</summary>
+    public async Task<IReadOnlyList<DeptId>> GetProductResearchCenterSubtreeDeptIdsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var root = await GetDeptByExactNameAsync("产品研发中心", cancellationToken);
+        if (root is null)
+            return Array.Empty<DeptId>();
+        return await GetAllChildDeptIdsAsync(root.Id, cancellationToken);
+    }
+
+    /// <summary>
+    /// 值日安排可选部门：「产品研发中心」「网络推广组」及其各自下级部门 ID（去重）。
+    /// </summary>
+    public async Task<IReadOnlyList<DeptId>> GetDutyAllowedDeptSubtreeIdsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var result = new List<DeptId>();
+
+        var productResearchIds = await GetProductResearchCenterSubtreeDeptIdsAsync(cancellationToken);
+        result.AddRange(productResearchIds);
+
+        var networkPromoRoot = await GetDeptByExactNameAsync("网络推广组", cancellationToken);
+        if (networkPromoRoot is not null)
+        {
+            var networkPromoIds = await GetAllChildDeptIdsAsync(networkPromoRoot.Id, cancellationToken);
+            result.AddRange(networkPromoIds);
+        }
+
+        return result.Distinct().ToList();
+    }
+
+    /// <summary>名为「仓储物流部」的部门及其全部下级部门 ID（含根）。名称不存在时返回空列表。</summary>
+    public async Task<IReadOnlyList<DeptId>> GetWarehouseDeptSubtreeDeptIdsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var root = await GetDeptByExactNameAsync("仓储物流部", cancellationToken);
+        if (root is null)
+            return Array.Empty<DeptId>();
+        return await GetAllChildDeptIdsAsync(root.Id, cancellationToken);
+    }
+
+    /// <summary>名为「财务部」的部门及其全部下级部门 ID（含根）。名称不存在时返回空列表。</summary>
+    public async Task<IReadOnlyList<DeptId>> GetFinanceDeptSubtreeDeptIdsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var root = await GetDeptByExactNameAsync("财务部", cancellationToken);
+        if (root is null)
+            return Array.Empty<DeptId>();
+        return await GetAllChildDeptIdsAsync(root.Id, cancellationToken);
+    }
+
     private static void AddChildIdsRecursive(DeptId parentId, List<(DeptId Id, DeptId ParentId)> allDepts, List<DeptId> result)
     {
         var children = allDepts.Where(d => d.ParentId == parentId).Select(d => d.Id).ToList();
@@ -218,7 +372,8 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
     private static DeptTreeDto ConvertToTreeDtoFromProjection(DeptTreeNode node)
     {
         var children = node.Children
-            .OrderBy(d => d.CreatedAt)
+            .OrderBy(d => d.SortOrder)
+            .ThenBy(d => d.CreatedAt)
             .Select(d => ConvertToTreeDtoFromProjection(d))
             .ToList();
 
@@ -227,11 +382,54 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
             node.Name,
             node.Remark,
             node.ParentId,
-            node.ManagerId,
+            node.ResponsibleUsers,
             node.Status,
+            node.SortOrder,
             node.CreatedAt,
             children
         );
+    }
+
+    /// <summary>
+    /// 批量加载部门负责人，并补齐负责人展示名，供部门详情、部门树和工作流负责人解析共用。
+    /// </summary>
+    public async Task<IReadOnlyDictionary<DeptId, IReadOnlyList<DeptResponsibleUserQueryDto>>> GetResponsibleUsersByDeptIdsAsync(
+        IReadOnlyList<DeptId> deptIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (deptIds.Count == 0)
+        {
+            return new Dictionary<DeptId, IReadOnlyList<DeptResponsibleUserQueryDto>>();
+        }
+
+        var rows = await applicationDbContext.DeptResponsibleUsers.AsNoTracking()
+            .Where(x => deptIds.Contains(x.DeptId))
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.CreatedAt)
+            .Select(x => new { x.DeptId, x.UserId, x.IsDefault, x.SortOrder })
+            .ToListAsync(cancellationToken);
+        if (rows.Count == 0)
+        {
+            return new Dictionary<DeptId, IReadOnlyList<DeptResponsibleUserQueryDto>>();
+        }
+
+        var userIds = rows.Select(x => x.UserId).Distinct().ToList();
+        var users = await applicationDbContext.Users.AsNoTracking()
+            .Where(u => userIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.RealName, u.Name })
+            .ToDictionaryAsync(u => u.Id, u => string.IsNullOrWhiteSpace(u.RealName) ? u.Name : u.RealName, cancellationToken);
+
+        return rows
+            .GroupBy(x => x.DeptId)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<DeptResponsibleUserQueryDto>)g
+                    .Select(x => new DeptResponsibleUserQueryDto(
+                        x.UserId,
+                        users.GetValueOrDefault(x.UserId, string.Empty),
+                        x.IsDefault,
+                        x.SortOrder))
+                    .ToList());
     }
 
     /// <summary>
@@ -243,9 +441,28 @@ public class DeptQuery(ApplicationDbContext applicationDbContext) : IQuery
         public string Name { get; set; } = string.Empty;
         public string Remark { get; set; } = string.Empty;
         public DeptId ParentId { get; set; } = default!;
-        public UserId ManagerId { get; set; } = default!;
+        public IReadOnlyList<DeptResponsibleUserQueryDto> ResponsibleUsers { get; set; } = [];
         public int Status { get; set; }
+        public int SortOrder { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public List<DeptTreeNode> Children { get; set; } = new();
+    }
+
+    /// <summary>
+    /// 构建流程定义导入时的部门 ID 重映射索引（按部门名称；重名部门仅保留首个匹配）。
+    /// </summary>
+    public async Task<WorkflowRemapDeptIndex> BuildWorkflowRemapDeptIndexAsync(CancellationToken cancellationToken = default)
+    {
+        var rows = await DeptSet.AsNoTracking()
+            .Select(d => new { d.Id, d.Name })
+            .ToListAsync(cancellationToken);
+
+        var index = new WorkflowRemapDeptIndex();
+        foreach (var row in rows)
+        {
+            index.Add(row.Id, row.Name);
+        }
+
+        return index;
     }
 }
