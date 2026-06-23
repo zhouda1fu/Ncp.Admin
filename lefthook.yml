@@ -40,3 +40,9 @@
 #
 #     - script: "hello.go"
 #       runner: go run
+
+pre-commit:
+  jobs:
+    - name: sync-agent-skills
+      glob: ".agents/skills/**/*.md"
+      run: powershell -ExecutionPolicy Bypass -File scripts/sync-agent-skills.ps1 -Stage

@@ -5,42 +5,23 @@ alwaysApply: true
 
 # Ncp.Admin 项目规范
 
-本仓库采用 **DDD 分层架构**（NetCorePal）。**后端**需求拆解、建模与通用编码约定以 `.cursor/skills/` 下 **cleanddd-*** 技能为准（尤其 **`cleanddd-dotnet-coding`**）。**前端**路径与摘要见 **`frontend-vben.mdc`**，易错点与权限清单见 **`ncp-admin-frontend`** 技能。
+通用仓库结构、构建命令、测试规范与命名约定以 **`AGENTS.md`** 为准。
 
-程序集与路径：**`Ncp.Admin.Domain` / `Ncp.Admin.Infrastructure` / `Ncp.Admin.Web`**（实现时勿使用模板中的 `ProjectName` 占位）。
+本规则只保留 Cursor 自动应用时最值得提前提醒的内容：
 
-## 项目结构
+- 后端通用 DDD / CleanDDD 编码约定：`.cursor/skills/cleanddd-dotnet-coding/SKILL.md`
+- 前端 Vben Admin 摘要：`.cursor/rules/frontend-vben.mdc`
+- 前端详细规范与易错点：`.cursor/skills/ncp-admin-frontend/SKILL.md`
+- 需求不清时优先进入：`.cursor/skills/cleanddd-requirements-analysis/SKILL.md`
 
-```
-Ncp.Admin.sln
-├── src/
-│   ├── Ncp.Admin.Domain/
-│   ├── Ncp.Admin.Infrastructure/
-│   └── Ncp.Admin.Web/
-└── test/
-    ├── Ncp.Admin.Domain.Tests/
-    ├── Ncp.Admin.Infrastructure.Tests/
-    └── Ncp.Admin.Web.Tests/
-```
-
-**分层依赖：** Web → Infrastructure → Domain（严格单向）。
-
-## 后端：CleanDDD 技能（按阶段选用）
-
-| 技能目录 | 用途 |
-|----------|------|
-| `cleanddd-requirements-analysis` | 需求澄清与结构化拆解（建模前） |
-| `cleanddd-modeling` | 聚合/命令/查询/事件/Endpoints 等建模蓝图 |
-| `cleanddd-dotnet-coding` | 分层、命名、强类型 ID、`KnownException`、命令不 `SaveChanges`、FastEndpoints、仓储/EF 异步等 |
-| `cleanddd-coach` | 可选：教练流程 |
-
-在对话中通过 @ 引用对应 `SKILL.md`（`cleanddd-coach` 若仅有 `SKILL.beta.md`，可将其视为该技能说明文档）。
+实现时使用真实程序集名称：`Ncp.Admin.Domain` / `Ncp.Admin.Infrastructure` / `Ncp.Admin.Web`，不要保留模板中的 `ProjectName` 占位。
 
 ## 后端：本仓库特有约定
 
 - 领域事件处理器实现 **`Handle()`**（非 `HandleAsync()`）。
-
-其余与 NetCorePal/CleanDDD 一致的约定见 **`cleanddd-dotnet-coding`**。
+- 保持分层依赖方向：`Web -> Infrastructure -> Domain`。
+- 业务异常使用 **`KnownException`**，不要抛普通 `Exception`。
+- Command Handler 不直接 `SaveChanges`；其余通用实现约定见 **`cleanddd-dotnet-coding`**。
 
 ## 新增需权限的接口时（后端 5 处）
 
@@ -62,10 +43,6 @@ Ncp.Admin.sln
 - 每个 Request/Response 须有 `<summary>` 与各参数 `<param>`；端点类同样；响应使用 `ResponseData<T>` 与 `.AsResponseData()`。
 - 若 Request 继承查询入参类型，端点类仍须补充 summary 与构造函数参数注释。
 
-## 前端开发时
-
-路径与常用约定摘要见 **`.cursor/rules/frontend-vben.mdc`**；易错点、权限与菜单、表单抽屉等见 **`.cursor/skills/ncp-admin-frontend/SKILL.md`**。
-
 ## GlobalUsings.cs
 
 - **Web**：`FluentValidation`、`MediatR`、`NetCorePal.Extensions.Primitives`、`FastEndpoints`、`NetCorePal.Extensions.Dto`、`NetCorePal.Extensions.Domain`
@@ -74,7 +51,3 @@ Ncp.Admin.sln
 - **Tests**：`Xunit`、`NetCorePal.Extensions.Primitives`
 
 手动 using 示例：查询处理器需 `Ncp.Admin.Domain.AggregatesModel.{AggregateFolder}` + `Ncp.Admin.Infrastructure`；端点需领域聚合、`Application.Commands` / `Queries` 等（与 cleanddd-dotnet-coding 中路径对照时替换为 `Ncp.Admin.*`）。
-
-## 异常处理
-
-业务异常须使用 **`KnownException`**（用法与示例见 **`cleanddd-dotnet-coding`**），勿使用普通 `Exception`。
