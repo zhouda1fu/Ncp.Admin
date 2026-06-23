@@ -2,6 +2,8 @@
 
 本文档说明本仓库在 `Codex`、`Claude Code`、`Cursor` 间如何组织 AI 规则与技能，避免多份说明长期漂移。
 
+日常怎么使用这些能力，可参考 `docs/ai-usage-examples.md`。
+
 ## 目标
 
 - 通用规范只维护一份
@@ -65,6 +67,19 @@ powershell -ExecutionPolicy Bypass -File scripts\sync-agent-skills.ps1
 
 如果仓库已启用 `lefthook`，提交时也会在 `pre-commit` 自动执行同步，并把镜像副本重新加入暂存区。
 
+### Trellis
+
+- `.trellis/spec/`
+- `.trellis/tasks/`
+- `.trellis/workspace/`
+
+Trellis 在本仓库中作为**复杂任务层**使用，不替代现有规则体系：
+
+- 现有规则继续放在 `AGENTS.md`、`CLAUDE.md`、`.cursor/rules/`、`skills`
+- `.trellis/` 用来记录复杂任务的 spec、task、verification 和跨会话记忆
+
+只有复杂、跨会话、跨前后端或需要显式验收记录的任务，才建议进入 `.trellis/`。
+
 ## 推荐维护原则
 
 - 通用规则优先写入 `AGENTS.md`
@@ -83,3 +98,9 @@ powershell -ExecutionPolicy Bypass -File scripts\sync-agent-skills.ps1
 - `AGENTS.md`：通用仓库说明
 - `.cursor/rules/project-conventions.mdc`：Cursor 自动应用时需要提前提醒的仓库特例
 - `.cursor/skills/cleanddd-dotnet-coding/SKILL.md`：详细 CleanDDD / .NET 实现规范
+
+## 当前 Trellis 边界
+
+- `.trellis/spec/`：引用现有规则，不重复维护正文
+- `.trellis/tasks/`：复杂任务的任务文档与验收记录
+- `.trellis/workspace/`：跨会话可复用的工作记忆
